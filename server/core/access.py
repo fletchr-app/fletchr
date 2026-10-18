@@ -36,10 +36,15 @@ def members_visible_to(user, team):
 
 
 def archers_visible_to(user):
-    """Users whose training data `user` may read: themselves plus archers in teams they coach."""
+    """Users whose training data `user` may read: themselves, the archers in teams they coach, and the
+    coaches of those teams who have turned on `also_shoots`."""
     coached = TeamMember.objects.filter(user=user, role__in=COACH_ROLES).values("team")
-    in_coached_teams = TeamMember.objects.filter(team__in=coached, role=Role.ARCHER).values("user")
-    return User.objects.filter(Q(pk=user.pk) | Q(pk__in=in_coached_teams))
+    shooters = (
+        TeamMember.objects.filter(team__in=coached)
+        .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
+        .values("user")
+    )
+    return User.objects.filter(Q(pk=user.pk) | Q(pk__in=shooters))
 
 
 @transaction.atomic

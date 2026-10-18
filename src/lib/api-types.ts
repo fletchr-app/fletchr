@@ -385,6 +385,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teams/{team_id}/membership/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description My own settings in a team. Only I can change them. */
+        patch: operations["teams_membership_partial_update"];
+        trace?: never;
+    };
     "/api/teams/{team_id}/overview/": {
         parameters: {
             query?: never;
@@ -392,7 +409,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description For coaches: each archer of the team with their latest session and arrows of the last 7 days. */
+        /**
+         * @description For coaches: each archer of the team (and each coach who shares their training) with their latest
+         *     session and arrows of the last 7 days.
+         */
         get: operations["teams_overview_list"];
         put?: never;
         post?: never;
@@ -468,6 +488,8 @@ export interface components {
     schemas: {
         ArcherOverview: {
             user_id: number;
+            /** @description archer, or coach/admin for a coach who shares their training */
+            role: string;
             name: string;
             last_session: components["schemas"]["LastSession"] | null;
             /** @description Arrows shot in sessions started in the last 7 days */
@@ -820,8 +842,12 @@ export interface components {
             /** Format: email */
             readonly email: string;
             role: components["schemas"]["RoleEnum"];
+            also_shoots?: boolean;
             /** Format: date-time */
             readonly joined_at: string;
+        };
+        MembershipSettings: {
+            also_shoots?: boolean;
         };
         PatchedArrowSetRequest: {
             is_active?: boolean;
@@ -878,6 +904,9 @@ export interface components {
         };
         PatchedMeRequest: {
             profile?: components["schemas"]["ProfileRequest"];
+        };
+        PatchedMembershipSettingsRequest: {
+            also_shoots?: boolean;
         };
         Profile: {
             name?: string;
@@ -1059,6 +1088,8 @@ export interface components {
             readonly id: number;
             name: string;
             readonly my_role: string;
+            /** @description Whether I share my own training with the other coaches */
+            readonly also_shoots: boolean;
         };
         TokenBlacklistRequest: {
             refresh: string;
@@ -2034,6 +2065,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    teams_membership_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedMembershipSettingsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedMembershipSettingsRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMembershipSettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipSettings"];
+                };
             };
         };
     };

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import django_filters
 from django.db import transaction
-from django.db.models import Count, IntegerField, OuterRef, Subquery, Sum
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to, is_coach_in
-from core.models import Role, Team, TeamMember
+from core.models import COACH_ROLES, Role, Team, TeamMember
 
 from .models import End, Shot, TrainingSession, VolumeEntry
 from .serializers import (
@@ -164,7 +164,8 @@ class VolumeEntryView(APIView):
 
 
 class TeamOverviewView(APIView):
-    """For coaches: each archer of the team with their latest session and arrows of the last 7 days."""
+    """For coaches: each archer of the team (and each coach who shares their training) with their latest
+    session and arrows of the last 7 days."""
 
     @extend_schema(responses=ArcherOverviewSerializer(many=True))
     def get(self, request, team_id):
@@ -189,7 +190,8 @@ class TeamOverviewView(APIView):
         )
         last = TrainingSession.objects.filter(owner=OuterRef("user")).order_by("-started_at")
         members = (
-            TeamMember.objects.filter(team=team, role=Role.ARCHER)
+            TeamMember.objects.filter(team=team)
+            .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
             .select_related("user__profile")
             .annotate(
                 last_session_id=Subquery(last.values("id")[:1]),
@@ -204,6 +206,7 @@ class TeamOverviewView(APIView):
             rows.append(
                 {
                     "user_id": m.user_id,
+                    "role": m.role,
                     "name": m.user.profile.name or m.user.email,
                     "arrows_7d": m.arrows_7d,
                     "last_session": s

@@ -166,6 +166,7 @@ class LastSessionSerializer(serializers.Serializer):
 
 class ArcherOverviewSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
+    role = serializers.CharField(help_text="archer, or coach/admin for a coach who shares their training")
     name = serializers.CharField()
     last_session = LastSessionSerializer(allow_null=True)
     arrows_7d = serializers.IntegerField(help_text="Arrows shot in sessions started in the last 7 days")

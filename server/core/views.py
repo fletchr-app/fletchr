@@ -12,10 +12,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import access
-from .models import Invite, Role, Team, TeamMember, User
+from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User
 from .serializers import (
     InviteSerializer,
     MemberSerializer,
+    MembershipSettingsSerializer,
     MeSerializer,
     RedeemSerializer,
     RegisterResponseSerializer,
@@ -75,6 +76,7 @@ class RedeemInviteView(APIView):
         except access.InviteError as e:
             raise ValidationError({"invite_code": str(e)})
         team.my_role = access.role_in(request.user, team)
+        team.also_shoots = False
         return Response(TeamSerializer(team).data, status=status.HTTP_201_CREATED)
 
 
@@ -92,8 +94,12 @@ class TeamListView(generics.ListAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Team.objects.none()
-        my_role = TeamMember.objects.filter(team=OuterRef("pk"), user=self.request.user).values("role")[:1]
-        return access.teams_of(self.request.user).annotate(my_role=Subquery(my_role)).order_by("name")
+        mine = TeamMember.objects.filter(team=OuterRef("pk"), user=self.request.user)
+        return (
+            access.teams_of(self.request.user)
+            .annotate(my_role=Subquery(mine.values("role")[:1]), also_shoots=Subquery(mine.values("also_shoots")[:1]))
+            .order_by("name")
+        )
 
 
 def get_my_team(request, team_id):
@@ -150,3 +156,18 @@ class InviteDetailView(APIView):
             raise PermissionDenied("Only team admins can manage invites")
         get_object_or_404(Invite, team=team, pk=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MyMembershipView(APIView):
+    """My own settings in a team. Only I can change them."""
+
+    @extend_schema(request=MembershipSettingsSerializer, responses=MembershipSettingsSerializer)
+    def patch(self, request, team_id):
+        team = get_my_team(request, team_id)
+        membership = TeamMember.objects.get(team=team, user=request.user)
+        if membership.role not in COACH_ROLES:
+            raise PermissionDenied("Only coaches can choose this: archers' sessions are always visible to their coaches")
+        serializer = MembershipSettingsSerializer(membership, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

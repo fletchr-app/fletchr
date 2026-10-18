@@ -1,6 +1,6 @@
 import { Link, useTheme } from 'expo-router';
-import { useCallback } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, Switch, Text, View } from 'react-native';
 
 import { ErrorText, Screen } from '@/components/form';
 import type { components } from '@/lib/api-types';
@@ -44,6 +44,7 @@ function TeamOverview({ team }: { team: Team }) {
   return (
     <View style={{ gap: 10 }}>
       <Text style={{ color: colors.text, fontSize: 20, fontWeight: '600' }}>{team.name}</Text>
+      <ShareTraining team={team} />
       <ErrorText>{error}</ErrorText>
       {data?.length === 0 && <Text style={{ color: colors.text }}>No archers in this team yet.</Text>}
       {data?.map((archer) => (
@@ -51,6 +52,7 @@ function TeamOverview({ team }: { team: Team }) {
           <View style={{ gap: 2 }}>
             <Text style={{ color: colors.text, fontWeight: '600' }}>
               {archer.name}
+              {archer.role !== 'archer' ? ' (coach)' : ''}
               {archer.last_session?.live ? '  ● shooting now' : ''}
             </Text>
             <Text style={{ color: colors.text, opacity: 0.7 }}>
@@ -63,6 +65,36 @@ function TeamOverview({ team }: { team: Team }) {
           </View>
         </Link>
       ))}
+    </View>
+  );
+}
+
+/** Coaches who also shoot can let the other coaches of the team see their training. Off until they turn it on. */
+function ShareTraining({ team }: { team: Team }) {
+  const { colors } = useTheme();
+  const { api } = useAuth();
+  const [shared, setShared] = useState(team.also_shoots);
+  const [error, setError] = useState<string | null>(null);
+
+  async function change(next: boolean) {
+    setShared(next);
+    setError(null);
+    try {
+      const { data } = await api.PATCH('/api/teams/{team_id}/membership/', { params: { path: { team_id: team.id } }, body: { also_shoots: next } });
+      if (!data) throw new Error('refused');
+    } catch {
+      setShared(!next);
+      setError('Could not save this setting');
+    }
+  }
+
+  return (
+    <View style={{ gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Switch value={shared} onValueChange={change} />
+        <Text style={{ color: colors.text, flex: 1 }}>Show my own training to the other coaches of this team</Text>
+      </View>
+      <ErrorText>{error}</ErrorText>
     </View>
   );
 }

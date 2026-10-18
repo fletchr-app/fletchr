@@ -90,6 +90,9 @@ class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
     role = models.CharField(max_length=10, choices=Role.choices)
+    # A coach or admin who also trains. Off by default: only when the person turns it on do the other
+    # coaches of the team see their sessions, as they see the archers'.
+    also_shoots = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

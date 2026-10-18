@@ -55,10 +55,17 @@ class RedeemSerializer(serializers.Serializer):
 
 class TeamSerializer(serializers.ModelSerializer):
     my_role = serializers.CharField(read_only=True)
+    also_shoots = serializers.BooleanField(read_only=True, help_text="Whether I share my own training with the other coaches")
 
     class Meta:
         model = Team
-        fields = ["id", "name", "my_role"]
+        fields = ["id", "name", "my_role", "also_shoots"]
+
+
+class MembershipSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamMember
+        fields = ["also_shoots"]
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -68,7 +75,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ["user_id", "name", "email", "role", "joined_at"]
+        fields = ["user_id", "name", "email", "role", "also_shoots", "joined_at"]
 
 
 class InviteSerializer(serializers.ModelSerializer):

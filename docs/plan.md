@@ -10,7 +10,7 @@ Draft v4, 2026-10-18 (reviewed end to end after adding self-hosting, arrow plott
 | **Coach** | Everything an archer can see, for every archer in their team; write notes on archers, sessions and video frames; fill in evaluations; team-wide stats |
 | **Admin** (default: the coach who creates the team) | Invite/remove archers and coaches |
 
-Archers join a **team** by invite link or code. One archer can be in several teams (e.g. club + squad); a team can have several coaches. Coach notes and evaluations are either **shared** with the archer or **coach-only** (default: shared). A coach sees all training data of the archers in their team; coach-only notes and evaluations are visible only to the coaches of the team they were written in.
+Archers join a **team** by invite link or code. One archer can be in several teams (e.g. club + squad); a team can have several coaches. A coach or admin who also trains can turn on "also shoots" for their membership in a team (off by default, only they can change it): the other coaches of that team then see their sessions and equipment, read-only, like an archer's. The setting is per team. Coach notes and evaluations are either **shared** with the archer or **coach-only** (default: shared). A coach sees all training data of the archers in their team; coach-only notes and evaluations are visible only to the coaches of the team they were written in.
 
 ## 2. Data model (Django models, SQLite)
 

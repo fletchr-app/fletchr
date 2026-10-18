@@ -1111,11 +1111,44 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/teams/{team_id}/membership/:
+    patch:
+      operationId: teams_membership_partial_update
+      description: My own settings in a team. Only I can change them.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMembershipSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMembershipSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMembershipSettingsRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipSettings'
+          description: ''
   /api/teams/{team_id}/overview/:
     get:
       operationId: teams_overview_list
-      description: 'For coaches: each archer of the team with their latest session
-        and arrows of the last 7 days.'
+      description: |-
+        For coaches: each archer of the team (and each coach who shares their training) with their latest
+        session and arrows of the last 7 days.
       parameters:
       - in: path
         name: team_id
@@ -1219,6 +1252,9 @@ components:
       properties:
         user_id:
           type: integer
+        role:
+          type: string
+          description: archer, or coach/admin for a coach who shares their training
         name:
           type: string
         last_session:
@@ -1232,6 +1268,7 @@ components:
       - arrows_7d
       - last_session
       - name
+      - role
       - user_id
     ArrowSet:
       type: object
@@ -1972,6 +2009,8 @@ components:
           readOnly: true
         role:
           $ref: '#/components/schemas/RoleEnum'
+        also_shoots:
+          type: boolean
         joined_at:
           type: string
           format: date-time
@@ -1982,6 +2021,11 @@ components:
       - name
       - role
       - user_id
+    MembershipSettings:
+      type: object
+      properties:
+        also_shoots:
+          type: boolean
     PatchedArrowSetRequest:
       type: object
       properties:
@@ -2084,6 +2128,11 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/ProfileRequest'
+    PatchedMembershipSettingsRequest:
+      type: object
+      properties:
+        also_shoots:
+          type: boolean
     Profile:
       type: object
       properties:
@@ -2530,7 +2579,12 @@ components:
         my_role:
           type: string
           readOnly: true
+        also_shoots:
+          type: boolean
+          readOnly: true
+          description: Whether I share my own training with the other coaches
       required:
+      - also_shoots
       - id
       - my_role
       - name
