@@ -1,11 +1,12 @@
 from datetime import timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import django_filters
 from django.db import transaction
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
@@ -15,8 +16,10 @@ from core.access import archers_visible_to, is_coach_in
 from core.models import COACH_ROLES, Role, Team, TeamMember
 
 from .models import End, Shot, TrainingSession, VolumeEntry
+from .stats import compute_stats
 from .serializers import (
     ArcherOverviewSerializer,
+    StatsSerializer,
     EndSerializer,
     SessionSerializer,
     SessionSummarySerializer,
@@ -219,3 +222,39 @@ class TeamOverviewView(APIView):
         # Live sessions first, then the most recent, then archers who haven't shot yet.
         rows.sort(key=lambda r: (not (r["last_session"] and r["last_session"]["live"]), -(r["last_session"]["started_at"].timestamp() if r["last_session"] else 0), r["name"]))
         return Response(ArcherOverviewSerializer(rows, many=True).data)
+
+
+class StatsView(APIView):
+    """Volume per week and average score per face and distance, for yourself or an archer you may see."""
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("owner", int, description="Whose stats; default: yours"),
+            OpenApiParameter("tz", str, description="IANA time zone that decides which day a session falls on; default UTC"),
+            OpenApiParameter("weeks", int, description="How many weeks of volume, 1 to 52; default 12"),
+        ],
+        responses=StatsSerializer,
+    )
+    def get(self, request):
+        params = request.query_params
+        try:
+            owner_id = int(params.get("owner", request.user.pk))
+            weeks = int(params.get("weeks", 12))
+        except ValueError:
+            raise ValidationError("owner and weeks must be numbers")
+        if not 1 <= weeks <= 52:
+            raise ValidationError({"weeks": "Between 1 and 52"})
+        try:
+            tz = ZoneInfo(params.get("tz", "UTC"))
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValidationError({"tz": "Unknown time zone"})
+        if not archers_visible_to(request.user).filter(pk=owner_id).exists():
+            raise NotFound()
+
+        shots = Shot.objects.filter(end__session__owner_id=owner_id).values_list(
+            "end__session_id", "end__session__started_at", "end__session__type", "end__distance_m", "end__face",
+            "value", "is_x", "is_miss",
+        )
+        volume = VolumeEntry.objects.filter(session__owner_id=owner_id).values_list("session__started_at", "arrow_count")
+        stats = compute_stats(list(shots), list(volume), timezone.now(), tz, weeks)
+        return Response(StatsSerializer({"owner": owner_id, "tz": str(tz), **stats}).data)

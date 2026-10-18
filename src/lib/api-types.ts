@@ -354,6 +354,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stats/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Volume per week and average score per face and distance, for yourself or an archer you may see. */
+        get: operations["stats_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teams/": {
         parameters: {
             query?: never;
@@ -1050,6 +1067,33 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "archer" | "coach" | "admin";
+        ScoreStats: {
+            face: string;
+            face_name: string;
+            distance_m: string;
+            /** @description Points of the best ring of this face */
+            max_value: number;
+            arrows: number;
+            /**
+             * Format: double
+             * @description Average points per arrow; X counts as 10, a miss as 0
+             */
+            average: number;
+            /**
+             * Format: double
+             * @description Share of arrows in the best ring (10s including Xs)
+             */
+            top_rate: number;
+            /**
+             * Format: double
+             * @description Share of Xs; null for faces without an X ring
+             */
+            x_rate: number | null;
+            /** Format: double */
+            miss_rate: number;
+            /** @description Oldest first */
+            sessions: components["schemas"]["SessionPoint"][];
+        };
         /** @description Full session for the detail view. */
         Session: {
             /** Format: uuid */
@@ -1075,6 +1119,19 @@ export interface components {
             readonly updated_at: string;
             readonly ends: components["schemas"]["End"][];
             readonly volume_entries: components["schemas"]["VolumeEntry"][];
+        };
+        SessionPoint: {
+            /** Format: uuid */
+            session: string;
+            /** Format: date */
+            date: string;
+            competition: boolean;
+            arrows: number;
+            /**
+             * Format: double
+             * @description Average points per arrow in this session
+             */
+            average: number;
         };
         SessionSummary: {
             /** Format: uuid */
@@ -1180,6 +1237,12 @@ export interface components {
              */
             y: number;
         };
+        Stats: {
+            owner: number;
+            tz: string;
+            volume: components["schemas"]["VolumeStats"];
+            scores: components["schemas"]["ScoreStats"][];
+        };
         Team: {
             readonly id: number;
             name: string;
@@ -1230,6 +1293,21 @@ export interface components {
             distance_m: string;
             /** Format: int64 */
             arrow_count: number;
+        };
+        VolumeStats: {
+            /** @description Oldest first, the current week last, zeros included */
+            weeks: components["schemas"]["WeekVolume"][];
+            this_week: number;
+            this_month: number;
+            total: number;
+        };
+        WeekVolume: {
+            /**
+             * Format: date
+             * @description The Monday of the week
+             */
+            week_start: string;
+            arrows: number;
         };
     };
     responses: never;
@@ -2183,6 +2261,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Setup"];
+                };
+            };
+        };
+    };
+    stats_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Whose stats; default: yours */
+                owner?: number;
+                /** @description IANA time zone that decides which day a session falls on; default UTC */
+                tz?: string;
+                /** @description How many weeks of volume, 1 to 52; default 12 */
+                weeks?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stats"];
                 };
             };
         };

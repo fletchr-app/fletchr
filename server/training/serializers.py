@@ -171,3 +171,43 @@ class ArcherOverviewSerializer(serializers.Serializer):
     last_session = LastSessionSerializer(allow_null=True)
     arrows_7d = serializers.IntegerField(help_text="Arrows shot in sessions started in the last 7 days")
 
+
+
+class WeekVolumeSerializer(serializers.Serializer):
+    week_start = serializers.DateField(help_text="The Monday of the week")
+    arrows = serializers.IntegerField()
+
+
+class VolumeStatsSerializer(serializers.Serializer):
+    weeks = WeekVolumeSerializer(many=True, help_text="Oldest first, the current week last, zeros included")
+    this_week = serializers.IntegerField()
+    this_month = serializers.IntegerField()
+    total = serializers.IntegerField()
+
+
+class SessionPointSerializer(serializers.Serializer):
+    session = serializers.UUIDField()
+    date = serializers.DateField()
+    competition = serializers.BooleanField()
+    arrows = serializers.IntegerField()
+    average = serializers.FloatField(help_text="Average points per arrow in this session")
+
+
+class ScoreStatsSerializer(serializers.Serializer):
+    face = serializers.CharField()
+    face_name = serializers.CharField()
+    distance_m = serializers.CharField()
+    max_value = serializers.IntegerField(help_text="Points of the best ring of this face")
+    arrows = serializers.IntegerField()
+    average = serializers.FloatField(help_text="Average points per arrow; X counts as 10, a miss as 0")
+    top_rate = serializers.FloatField(help_text="Share of arrows in the best ring (10s including Xs)")
+    x_rate = serializers.FloatField(allow_null=True, help_text="Share of Xs; null for faces without an X ring")
+    miss_rate = serializers.FloatField()
+    sessions = SessionPointSerializer(many=True, help_text="Oldest first")
+
+
+class StatsSerializer(serializers.Serializer):
+    owner = serializers.IntegerField()
+    tz = serializers.CharField()
+    volume = VolumeStatsSerializer()
+    scores = ScoreStatsSerializer(many=True)

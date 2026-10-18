@@ -1145,6 +1145,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/Setup'
           description: ''
+  /api/stats/:
+    get:
+      operationId: stats_retrieve
+      description: Volume per week and average score per face and distance, for yourself
+        or an archer you may see.
+      parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Whose stats; default: yours'
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: IANA time zone that decides which day a session falls on; default
+          UTC
+      - in: query
+        name: weeks
+        schema:
+          type: integer
+        description: How many weeks of volume, 1 to 52; default 12
+      tags:
+      - stats
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+          description: ''
   /api/teams/:
     get:
       operationId: teams_list
@@ -2518,6 +2551,52 @@ components:
         * `archer` - Archer
         * `coach` - Coach
         * `admin` - Admin
+    ScoreStats:
+      type: object
+      properties:
+        face:
+          type: string
+        face_name:
+          type: string
+        distance_m:
+          type: string
+        max_value:
+          type: integer
+          description: Points of the best ring of this face
+        arrows:
+          type: integer
+        average:
+          type: number
+          format: double
+          description: Average points per arrow; X counts as 10, a miss as 0
+        top_rate:
+          type: number
+          format: double
+          description: Share of arrows in the best ring (10s including Xs)
+        x_rate:
+          type: number
+          format: double
+          nullable: true
+          description: Share of Xs; null for faces without an X ring
+        miss_rate:
+          type: number
+          format: double
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionPoint'
+          description: Oldest first
+      required:
+      - arrows
+      - average
+      - distance_m
+      - face
+      - face_name
+      - max_value
+      - miss_rate
+      - sessions
+      - top_rate
+      - x_rate
     Session:
       type: object
       description: Full session for the detail view.
@@ -2595,6 +2674,29 @@ components:
       - type
       - updated_at
       - volume_entries
+    SessionPoint:
+      type: object
+      properties:
+        session:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        competition:
+          type: boolean
+        arrows:
+          type: integer
+        average:
+          type: number
+          format: double
+          description: Average points per arrow in this session
+      required:
+      - arrows
+      - average
+      - competition
+      - date
+      - session
     SessionSummary:
       type: object
       properties:
@@ -2846,6 +2948,24 @@ components:
       required:
       - x
       - y
+    Stats:
+      type: object
+      properties:
+        owner:
+          type: integer
+        tz:
+          type: string
+        volume:
+          $ref: '#/components/schemas/VolumeStats'
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreStats'
+      required:
+      - owner
+      - scores
+      - tz
+      - volume
     Team:
       type: object
       properties:
@@ -2972,6 +3092,37 @@ components:
       required:
       - arrow_count
       - distance_m
+    VolumeStats:
+      type: object
+      properties:
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekVolume'
+          description: Oldest first, the current week last, zeros included
+        this_week:
+          type: integer
+        this_month:
+          type: integer
+        total:
+          type: integer
+      required:
+      - this_month
+      - this_week
+      - total
+      - weeks
+    WeekVolume:
+      type: object
+      properties:
+        week_start:
+          type: string
+          format: date
+          description: The Monday of the week
+        arrows:
+          type: integer
+      required:
+      - arrows
+      - week_start
   securitySchemes:
     jwtAuth:
       type: http

@@ -48,6 +48,9 @@ export default function HomeScreen() {
       <Link href="/training" style={{ color: colors.primary, fontSize: 18, fontWeight: '600' }}>
         Training
       </Link>
+      <Link href="/stats" style={{ color: colors.primary, fontSize: 18, fontWeight: '600' }}>
+        Statistics
+      </Link>
       {teams?.some((t) => t.my_role !== 'archer') && (
         <Link href="/team" style={{ color: colors.primary, fontSize: 18, fontWeight: '600' }}>
           Team (coach)

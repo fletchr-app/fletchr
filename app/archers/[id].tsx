@@ -25,6 +25,9 @@ export default function ArcherSessions() {
     <ScrollView>
       <Stack.Screen options={{ title: name ?? 'Archer' }} />
       <Screen>
+        <Link href={{ pathname: '/stats', params: { owner: id, name } }} style={{ color: colors.primary, fontSize: 18, fontWeight: '600' }}>
+          Statistics
+        </Link>
         <NotesSection archerId={Number(id)} />
         <ErrorText>{error}</ErrorText>
         {loading && <Text style={{ color: colors.text }}>Loading…</Text>}
