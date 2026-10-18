@@ -1,17 +1,22 @@
+from datetime import timedelta
+
 import django_filters
 from django.db import transaction
 from django.db.models import Count, IntegerField, OuterRef, Subquery, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.access import archers_visible_to
+from core.access import archers_visible_to, is_coach_in
+from core.models import Role, Team, TeamMember
 
 from .models import End, Shot, TrainingSession, VolumeEntry
 from .serializers import (
+    ArcherOverviewSerializer,
     EndSerializer,
     SessionSerializer,
     SessionSummarySerializer,
@@ -20,8 +25,12 @@ from .serializers import (
 )
 
 
+LIVE_WINDOW = timedelta(hours=3)
+OVERVIEW_DAYS = 7
+
+
 def visible_sessions(user):
-    return TrainingSession.objects.filter(owner__in=archers_visible_to(user))
+    return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related("owner__profile")
 
 
 def get_session(request, session_id, write=False):
@@ -152,3 +161,58 @@ class VolumeEntryView(APIView):
             raise NotFound()
         touch(session)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TeamOverviewView(APIView):
+    """For coaches: each archer of the team with their latest session and arrows of the last 7 days."""
+
+    @extend_schema(responses=ArcherOverviewSerializer(many=True))
+    def get(self, request, team_id):
+        team = Team.objects.filter(pk=team_id, memberships__user=request.user).first()
+        if team is None:
+            raise NotFound()
+        if not is_coach_in(request.user, team):
+            raise PermissionDenied("Only coaches can see the team overview")
+        now = timezone.now()
+        since = now - timedelta(days=OVERVIEW_DAYS)
+        shots = (
+            Shot.objects.filter(end__session__owner=OuterRef("user"), end__session__started_at__gte=since)
+            .values("end__session__owner")
+            .annotate(total=Count("id"))
+            .values("total")
+        )
+        volume = (
+            VolumeEntry.objects.filter(session__owner=OuterRef("user"), session__started_at__gte=since)
+            .values("session__owner")
+            .annotate(total=Sum("arrow_count"))
+            .values("total")
+        )
+        last = TrainingSession.objects.filter(owner=OuterRef("user")).order_by("-started_at")
+        members = (
+            TeamMember.objects.filter(team=team, role=Role.ARCHER)
+            .select_related("user__profile")
+            .annotate(
+                last_session_id=Subquery(last.values("id")[:1]),
+                arrows_7d=Coalesce(Subquery(shots, output_field=IntegerField()), 0)
+                + Coalesce(Subquery(volume, output_field=IntegerField()), 0),
+            )
+        )
+        sessions = TrainingSession.objects.in_bulk([m.last_session_id for m in members if m.last_session_id])
+        rows = []
+        for m in members:
+            s = sessions.get(m.last_session_id)
+            rows.append(
+                {
+                    "user_id": m.user_id,
+                    "name": m.user.profile.name or m.user.email,
+                    "arrows_7d": m.arrows_7d,
+                    "last_session": s
+                    and {
+                        "id": s.pk, "started_at": s.started_at, "ended_at": s.ended_at, "updated_at": s.updated_at,
+                        "type": s.type, "live": s.ended_at is None and now - s.updated_at < LIVE_WINDOW,
+                    },
+                }
+            )
+        # Live sessions first, then the most recent, then archers who haven't shot yet.
+        rows.sort(key=lambda r: (not (r["last_session"] and r["last_session"]["live"]), -(r["last_session"]["started_at"].timestamp() if r["last_session"] else 0), r["name"]))
+        return Response(ArcherOverviewSerializer(rows, many=True).data)

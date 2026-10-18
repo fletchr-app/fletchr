@@ -1111,6 +1111,30 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/teams/{team_id}/overview/:
+    get:
+      operationId: teams_overview_list
+      description: 'For coaches: each archer of the team with their latest session
+        and arrows of the last 7 days.'
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArcherOverview'
+          description: ''
   /api/token/:
     post:
       operationId: token_create
@@ -1190,6 +1214,25 @@ paths:
           description: ''
 components:
   schemas:
+    ArcherOverview:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        last_session:
+          allOf:
+          - $ref: '#/components/schemas/LastSession'
+          nullable: true
+        arrows_7d:
+          type: integer
+          description: Arrows shot in sessions started in the last 7 days
+      required:
+      - arrows_7d
+      - last_session
+      - name
+      - user_id
     ArrowSet:
       type: object
       properties:
@@ -1870,6 +1913,34 @@ components:
         * `wa` - wa
         * `field` - field
         * `blank` - blank
+    LastSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+        type:
+          type: string
+        live:
+          type: boolean
+          description: Not finished and changed in the last few hours
+      required:
+      - ended_at
+      - id
+      - live
+      - started_at
+      - type
+      - updated_at
     Me:
       type: object
       properties:
@@ -2129,6 +2200,9 @@ components:
           readOnly: true
         owner:
           type: integer
+        owner_name:
+          type: string
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -2188,6 +2262,7 @@ components:
       - ends
       - id
       - owner
+      - owner_name
       - started_at
       - type
       - updated_at
@@ -2201,6 +2276,9 @@ components:
           readOnly: true
         owner:
           type: integer
+        owner_name:
+          type: string
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -2240,6 +2318,7 @@ components:
       - ends
       - id
       - owner
+      - owner_name
       - score_total
       - scored_arrows
       - started_at

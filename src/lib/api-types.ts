@@ -385,6 +385,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teams/{team_id}/overview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description For coaches: each archer of the team with their latest session and arrows of the last 7 days. */
+        get: operations["teams_overview_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/token/": {
         parameters: {
             query?: never;
@@ -449,6 +466,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ArcherOverview: {
+            user_id: number;
+            name: string;
+            last_session: components["schemas"]["LastSession"] | null;
+            /** @description Arrows shot in sessions started in the last 7 days */
+            arrows_7d: number;
+        };
         ArrowSet: {
             readonly id: number;
             readonly owner: number;
@@ -771,6 +795,19 @@ export interface components {
          * @enum {string}
          */
         KindEnum: "wa" | "field" | "blank";
+        LastSession: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            type: string;
+            /** @description Not finished and changed in the last few hours */
+            live: boolean;
+        };
         Me: {
             readonly id: number;
             /** Format: email */
@@ -893,6 +930,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             owner: number;
+            readonly owner_name: string;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
@@ -917,6 +955,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             owner: number;
+            readonly owner_name: string;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
@@ -1995,6 +2034,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    teams_overview_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArcherOverview"][];
+                };
             };
         };
     };

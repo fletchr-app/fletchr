@@ -4,10 +4,11 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EndEditor } from '@/components/end-editor';
 import { Button, ErrorText, Field, Screen } from '@/components/form';
+import { EndRows } from '@/components/end-rows';
+import { SessionPlots } from '@/components/session-plots';
 import { SyncBanner } from '@/components/sync-banner';
-import { getFace } from '@/lib/faces';
 import { useLog } from '@/lib/log';
-import { endTotal, LogSession, sessionTotals, shotLabel, sortedShots, usesEnds } from '@/lib/log-model';
+import { LogSession, sessionTotals, usesEnds } from '@/lib/log-model';
 import { newId } from '@/lib/uuid';
 
 export default function SessionScreen() {
@@ -65,16 +66,8 @@ function Ends({ session }: { session: LogSession }) {
         onDone={() => setEditing(null)}
       />
       {session.ends.length > 0 && <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginTop: 8 }}>Ends</Text>}
-      {[...session.ends].reverse().map((end) => (
-        <Pressable key={end.id} onPress={() => setEditing(end.id)}>
-          <Text style={{ color: colors.text, fontWeight: '600' }}>
-            End {end.index + 1} · {sortedShots(end.shots).map(shotLabel).join(' ')} = {endTotal(end)}
-          </Text>
-          <Text style={{ color: colors.text, opacity: 0.6 }}>
-            {end.distance_m} m · {getFace(end.face)?.name ?? end.face}
-          </Text>
-        </Pressable>
-      ))}
+      <EndRows ends={session.ends} onPress={(end) => setEditing(end.id)} />
+      <SessionPlots session={session} />
     </>
   );
 }

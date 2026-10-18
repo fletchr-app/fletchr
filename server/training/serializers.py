@@ -114,22 +114,31 @@ class SessionWriteSerializer(serializers.ModelSerializer):
         return setup
 
 
+def owner_name(session):
+    return session.owner.profile.name or session.owner.email
+
+
 class SessionSerializer(serializers.ModelSerializer):
     """Full session for the detail view."""
 
+    owner_name = serializers.SerializerMethodField()
     ends = EndSerializer(many=True, read_only=True)
     volume_entries = VolumeEntrySerializer(many=True, read_only=True)
 
     class Meta:
         model = TrainingSession
         fields = [
-            "id", "owner", "started_at", "ended_at", "type", "environment", "location", "weather",
+            "id", "owner", "owner_name", "started_at", "ended_at", "type", "environment", "location", "weather",
             "setup", "physical_rating", "mental_rating", "goals", "notes", "created_at", "updated_at",
             "ends", "volume_entries",
         ]
 
+    def get_owner_name(self, session) -> str:
+        return owner_name(session)
+
 
 class SessionSummarySerializer(serializers.ModelSerializer):
+    owner_name = serializers.SerializerMethodField()
     ends = serializers.IntegerField(source="end_count", read_only=True)
     scored_arrows = serializers.IntegerField(read_only=True)
     score_total = serializers.IntegerField(read_only=True)
@@ -138,7 +147,26 @@ class SessionSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainingSession
         fields = [
-            "id", "owner", "started_at", "ended_at", "type", "environment", "location", "setup",
+            "id", "owner", "owner_name", "started_at", "ended_at", "type", "environment", "location", "setup",
             "updated_at", "ends", "scored_arrows", "score_total", "volume_arrows",
         ]
+
+    def get_owner_name(self, session) -> str:
+        return owner_name(session)
+
+
+class LastSessionSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    started_at = serializers.DateTimeField()
+    ended_at = serializers.DateTimeField(allow_null=True)
+    updated_at = serializers.DateTimeField()
+    type = serializers.CharField()
+    live = serializers.BooleanField(help_text="Not finished and changed in the last few hours")
+
+
+class ArcherOverviewSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    name = serializers.CharField()
+    last_session = LastSessionSerializer(allow_null=True)
+    arrows_7d = serializers.IntegerField(help_text="Arrows shot in sessions started in the last 7 days")
 

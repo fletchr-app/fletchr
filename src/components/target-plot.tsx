@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, G, Line } from 'react-native-svg';
+
+import { FaceSvg, type Marker } from '@/components/face-svg';
 
 import type { Face } from '@/lib/faces';
 import { LogShot } from '@/lib/log-model';
@@ -9,65 +10,23 @@ import {
   magnifierPlacement,
   nearestShot,
   pickAt,
-  ringFill,
-  ringLine,
   sceneOf,
   toPixel,
   type PlotPoint,
   type Scene,
 } from '@/lib/plot';
-import { outerRadiusCm, score } from '@/lib/scoring';
+import { score } from '@/lib/scoring';
 import { newId } from '@/lib/uuid';
 
 const MAX_HEIGHT_PX = 380;
-const MARKER_PX = 5;
 const HIT_PX = 16; // how close a touch must be to an arrow to move it instead of placing a new one
 const MAGNIFIER_PX = 130;
 const ZOOM = 4;
 const GAP_PX = 36;
 
-type View4 = { x: number; y: number; w: number; h: number };
-type Marker = { cx: number; cy: number; selected: boolean };
-
 function shotAt(face: Face, point: PlotPoint, id: string, keep?: LogShot): LogShot {
   const result = score(face, point.x, point.y);
   return { ...keep, id, value: result.value, is_x: result.is_x, is_miss: result.is_miss, x: point.x, y: point.y, spot: point.spot };
-}
-
-/** The face drawn in cm, looking at `view`. Used for the whole face and, zoomed in, for the magnifier. */
-function FaceSvg({ face, view, width, height, cmPerPx, markers }: { face: Face; view: View4; width: number; height: number; cmPerPx: number; markers: Marker[] }) {
-  const line = cmPerPx;
-  const markerR = MARKER_PX * cmPerPx;
-  const radius = outerRadiusCm(face);
-  return (
-    <Svg width={width} height={height} viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}>
-      {face.spots.map((spot, i) => (
-        <G key={i}>
-          {face.rings.length === 0 ? (
-            <>
-              <Circle cx={spot.x} cy={-spot.y} r={radius} fill="#f2f2f2" stroke="#1c1c1c" strokeWidth={line} />
-              <Line x1={spot.x - radius} y1={-spot.y} x2={spot.x + radius} y2={-spot.y} stroke="#bbb" strokeWidth={line} />
-              <Line x1={spot.x} y1={-spot.y - radius} x2={spot.x} y2={-spot.y + radius} stroke="#bbb" strokeWidth={line} />
-            </>
-          ) : (
-            [...face.rings].reverse().map((ring) => {
-              const fill = ringFill(face, ring.value);
-              return <Circle key={ring.value} cx={spot.x} cy={-spot.y} r={ring.diameter_cm / 2} fill={fill} stroke={ringLine(fill)} strokeWidth={line} />;
-            })
-          )}
-          {face.x_diameter_cm ? (
-            <Circle cx={spot.x} cy={-spot.y} r={face.x_diameter_cm / 2} fill="none" stroke="#1c1c1c" strokeWidth={line} />
-          ) : null}
-        </G>
-      ))}
-      {markers.map((m, i) => (
-        <G key={i}>
-          {m.selected && <Circle cx={m.cx} cy={m.cy} r={markerR * 2} fill="none" stroke="#ff00ff" strokeWidth={line * 2} />}
-          <Circle cx={m.cx} cy={m.cy} r={markerR} fill="#00e676" stroke="#000" strokeWidth={line * 1.5} />
-        </G>
-      ))}
-    </Svg>
-  );
 }
 
 type Inputs = {
