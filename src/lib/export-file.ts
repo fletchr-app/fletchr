@@ -1,13 +1,22 @@
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
-/** On a phone: write the file to the cache and open the share sheet, so it can be saved or sent. */
+/** In the browser: download the file. On a phone: write it to the cache and open the share sheet, so it can be saved or sent. */
 export async function saveJson(filename: string, text: string): Promise<'saved' | 'shared'> {
-  const file = new File(Paths.cache, filename);
-  if (file.exists) file.delete();
-  file.create();
-  await file.write(text);
-  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this device');
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Your data', UTI: 'public.json' });
-  return 'shared';
+  if (Capacitor.isNativePlatform()) {
+    const { uri } = await Filesystem.writeFile({ path: filename, data: text, directory: Directory.Cache, encoding: Encoding.UTF8 });
+    if (!(await Share.canShare()).value) throw new Error('Sharing is not available on this device');
+    await Share.share({ title: 'Your data', files: [uri] });
+    return 'shared';
+  }
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  return 'saved';
 }

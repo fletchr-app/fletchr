@@ -1,20 +1,20 @@
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { Capacitor } from '@capacitor/core';
+import { SecureStorage } from '@aparajita/capacitor-secure-storage';
 
 export type Tokens = { access: string; refresh: string };
 
-// Keychain/Keystore on devices. expo-secure-store has no web support, so the
-// browser falls back to localStorage (readable by any script on the page).
+// Keychain/Keystore on devices. The browser falls back to localStorage (readable by any script on the page).
+const native = Capacitor.isNativePlatform();
 const store = {
-  get: (key: string) =>
-    Platform.OS === 'web' ? Promise.resolve(globalThis.localStorage?.getItem(key) ?? null) : SecureStore.getItemAsync(key),
+  get: async (key: string) =>
+    native ? ((await SecureStorage.get(key)) as string | null) : (globalThis.localStorage?.getItem(key) ?? null),
   set: async (key: string, value: string) => {
-    if (Platform.OS === 'web') globalThis.localStorage?.setItem(key, value);
-    else await SecureStore.setItemAsync(key, value);
+    if (native) await SecureStorage.set(key, value);
+    else globalThis.localStorage?.setItem(key, value);
   },
   remove: async (key: string) => {
-    if (Platform.OS === 'web') globalThis.localStorage?.removeItem(key);
-    else await SecureStore.deleteItemAsync(key);
+    if (native) await SecureStorage.remove(key);
+    else globalThis.localStorage?.removeItem(key);
   },
 };
 

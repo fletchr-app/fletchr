@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+import EndRows from '@/components/EndRows.vue'
+import ErrorText from '@/components/ErrorText.vue'
+import NotesSection from '@/components/NotesSection.vue'
+import SessionPlots from '@/components/SessionPlots.vue'
+import { useAuth } from '@/composables/useAuth'
+import { useRemote } from '@/composables/useRemote'
+import { gearLine, sessionTotals, usesEnds } from '@/lib/log-model'
+import { fromServer } from '@/lib/session-view'
+
+const REFRESH_MS = 5000
+
+// A session as the server has it, read-only. Used for sessions from other devices and by coaches.
+const route = useRoute()
+const { api } = useAuth()
+const id = route.params.id as string
+// An unfinished session is still being shot: keep fetching it, so a coach watches it fill up.
+const { data, error, loading } = useRemote(
+  async () => (await api.GET('/api/sessions/{session_id}/', { params: { path: { session_id: id } } })).data ?? null,
+  { pollMs: REFRESH_MS, keepPolling: (s) => !s.ended_at },
+)
+const session = computed(() => (data.value ? fromServer(data.value) : null))
+const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
+</script>
+
+<template>
+  <div v-if="!data || !session || !totals" class="screen">
+    <div v-if="loading">Loading…</div>
+    <ErrorText :message="error" />
+  </div>
+  <div v-else class="screen">
+    <h2 class="h5 m-0">{{ session.owner_name }} · {{ session.type }}</h2>
+    <div class="muted">
+      {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ' · finished' : ' · in progress' }}
+    </div>
+    <div>{{ totals.arrows }} arrows{{ usesEnds(session.type) ? ` · ${totals.score} points` : '' }}</div>
+    <div v-if="session.gear">Equipment: {{ gearLine(session.gear) }}</div>
+    <ErrorText :message="error" />
+    <SessionPlots :session="session" />
+    <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
+    <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
+    <div v-for="v in session.volume" :key="v.id">{{ v.arrow_count }} arrows at {{ Number(v.distance_m) }} m</div>
+  </div>
+</template>

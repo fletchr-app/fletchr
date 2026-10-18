@@ -1,8 +1,8 @@
-import createClient, { Middleware } from 'openapi-fetch';
+import createClient, { type Middleware } from 'openapi-fetch';
 
 import type { paths } from '@/lib/api-types';
 import { expiresAt } from '@/lib/jwt';
-import { loadTokens, saveTokens, Tokens } from '@/lib/token-storage';
+import { loadTokens, saveTokens, type Tokens } from '@/lib/token-storage';
 
 export type ApiClient = ReturnType<typeof createClient<paths>>;
 export type SessionState = { loaded: boolean; tokens: Tokens | null };
