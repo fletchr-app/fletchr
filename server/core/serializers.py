@@ -62,6 +62,20 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "my_role", "also_shoots"]
 
 
+class TeamNameSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("A team needs a name")
+        return value
+
+
+class RoleChangeSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=Role.choices)
+
+
 class MembershipSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamMember

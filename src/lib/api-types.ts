@@ -438,6 +438,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teams/{team_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teams_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Rename the team. Only admins. */
+        patch: operations["teams_partial_update"];
+        trace?: never;
+    };
     "/api/teams/{team_id}/invites/": {
         parameters: {
             query?: never;
@@ -499,7 +516,8 @@ export interface paths {
         delete: operations["teams_members_destroy"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Change someone's role. Only admins; a team always keeps at least one admin. */
+        patch: operations["teams_members_partial_update"];
         trace?: never;
     };
     "/api/teams/{team_id}/membership/": {
@@ -1110,6 +1128,12 @@ export interface components {
             end?: string | null;
             body?: string;
             visibility?: components["schemas"]["VisibilityEnum"];
+        };
+        PatchedRoleChangeRequest: {
+            role?: components["schemas"]["RoleEnum"];
+        };
+        PatchedTeamNameRequest: {
+            name?: string;
         };
         Profile: {
             name?: string;
@@ -2502,6 +2526,54 @@ export interface operations {
             };
         };
     };
+    teams_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    teams_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTeamNameRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTeamNameRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTeamNameRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
     teams_invites_list: {
         parameters: {
             query?: never;
@@ -2610,6 +2682,34 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    teams_members_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRoleChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRoleChangeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRoleChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
             };
         };
     };

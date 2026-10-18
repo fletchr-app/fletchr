@@ -1285,6 +1285,57 @@ paths:
                 items:
                   $ref: '#/components/schemas/Team'
           description: ''
+  /api/teams/{team_id}/:
+    get:
+      operationId: teams_retrieve
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    patch:
+      operationId: teams_partial_update
+      description: Rename the team. Only admins.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamNameRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamNameRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamNameRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
   /api/teams/{team_id}/invites/:
     get:
       operationId: teams_invites_list
@@ -1381,6 +1432,43 @@ paths:
                   $ref: '#/components/schemas/Member'
           description: ''
   /api/teams/{team_id}/members/{user_id}/:
+    patch:
+      operationId: teams_members_partial_update
+      description: Change someone's role. Only admins; a team always keeps at least
+        one admin.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleChangeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
     delete:
       operationId: teams_members_destroy
       parameters:
@@ -2645,6 +2733,18 @@ components:
           minLength: 1
         visibility:
           $ref: '#/components/schemas/VisibilityEnum'
+    PatchedRoleChangeRequest:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+    PatchedTeamNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
     Profile:
       type: object
       properties:

@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
@@ -20,6 +21,8 @@ from .serializers import (
     MemberSerializer,
     MembershipSettingsSerializer,
     MeSerializer,
+    RoleChangeSerializer,
+    TeamNameSerializer,
     RedeemSerializer,
     RegisterResponseSerializer,
     RegisterSerializer,
@@ -109,6 +112,32 @@ def get_my_team(request, team_id):
     return get_object_or_404(access.teams_of(request.user), pk=team_id)
 
 
+class TeamDetailView(APIView):
+    @staticmethod
+    def _team(request, team_id):
+        mine = TeamMember.objects.filter(team=OuterRef("pk"), user=request.user)
+        return get_object_or_404(
+            access.teams_of(request.user).annotate(my_role=Subquery(mine.values("role")[:1]), also_shoots=Subquery(mine.values("also_shoots")[:1])),
+            pk=team_id,
+        )
+
+    @extend_schema(responses=TeamSerializer)
+    def get(self, request, team_id):
+        return Response(TeamSerializer(self._team(request, team_id)).data)
+
+    @extend_schema(request=TeamNameSerializer, responses=TeamSerializer)
+    def patch(self, request, team_id):
+        """Rename the team. Only admins."""
+        team = self._team(request, team_id)
+        if team.my_role != Role.ADMIN:
+            raise PermissionDenied("Only team admins can rename the team")
+        serializer = TeamNameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        team.name = serializer.validated_data["name"]
+        team.save(update_fields=["name"])
+        return Response(TeamSerializer(team).data)
+
+
 class MemberListView(generics.ListAPIView):
     serializer_class = MemberSerializer
 
@@ -120,6 +149,24 @@ class MemberListView(generics.ListAPIView):
 
 
 class MemberDetailView(APIView):
+    @extend_schema(request=RoleChangeSerializer, responses=MemberSerializer)
+    def patch(self, request, team_id, user_id):
+        """Change someone's role. Only admins; a team always keeps at least one admin."""
+        team = get_my_team(request, team_id)
+        if not access.is_admin_in(request.user, team):
+            raise PermissionDenied("Only team admins can change roles")
+        member = get_object_or_404(TeamMember.objects.select_related("user__profile"), team=team, user_id=user_id)
+        serializer = RoleChangeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        role = serializer.validated_data["role"]
+        if member.role == Role.ADMIN and role != Role.ADMIN and not TeamMember.objects.filter(team=team, role=Role.ADMIN).exclude(pk=member.pk).exists():
+            raise ValidationError("A team needs at least one admin")
+        member.role = role
+        if role == Role.ARCHER:
+            member.also_shoots = False  # an archer's sessions are visible to the coaches anyway
+        member.save(update_fields=["role", "also_shoots"])
+        return Response(MemberSerializer(member).data)
+
     @extend_schema(responses={204: None})
     def delete(self, request, team_id, user_id):
         team = get_my_team(request, team_id)
@@ -144,7 +191,7 @@ class InviteListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Invite.objects.none()
-        return Invite.objects.filter(team=self.get_team(), used_at__isnull=True).order_by("-created_at")
+        return Invite.objects.filter(team=self.get_team(), used_at__isnull=True, expires_at__gt=timezone.now()).order_by("-created_at")
 
     def perform_create(self, serializer):
         serializer.save(team=self.get_team(), created_by=self.request.user)

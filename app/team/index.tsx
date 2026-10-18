@@ -44,6 +44,9 @@ function TeamOverview({ team }: { team: Team }) {
   return (
     <View style={{ gap: 10 }}>
       <Text style={{ color: colors.text, fontSize: 20, fontWeight: '600' }}>{team.name}</Text>
+      <Link href={{ pathname: '/team/[id]', params: { id: String(team.id) } }} style={{ color: colors.primary }}>
+        {team.my_role === 'admin' ? 'Manage team: members, invites, name' : 'Members'}
+      </Link>
       <ShareTraining team={team} />
       <ErrorText>{error}</ErrorText>
       {data?.length === 0 && <Text style={{ color: colors.text }}>No archers in this team yet.</Text>}

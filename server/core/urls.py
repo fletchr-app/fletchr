@@ -8,6 +8,7 @@ urlpatterns = [
     path("invites/redeem/", views.RedeemInviteView.as_view()),
     path("me/", views.MeView.as_view()),
     path("teams/", views.TeamListView.as_view()),
+    path("teams/<int:team_id>/", views.TeamDetailView.as_view()),
     path("teams/<int:team_id>/membership/", views.MyMembershipView.as_view()),
     path("teams/<int:team_id>/members/", views.MemberListView.as_view()),
     path("teams/<int:team_id>/members/<int:user_id>/", views.MemberDetailView.as_view()),
