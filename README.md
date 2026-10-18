@@ -27,6 +27,7 @@ cd deploy && docker compose up --build
 
 - Web app and API: http://localhost:8080
 - Django admin: http://localhost:8080/admin/ (create a superuser with `docker compose exec django uv run --no-dev python manage.py createsuperuser`)
+- First team and admin (signup is invite-only, so seed one): `docker compose exec django uv run --no-dev python manage.py seed --email you@example.com --password ... --name "Your Name"`. It prints an archer invite code; further invites come from `POST /api/teams/<id>/invites/` (team admins) or the Django admin
 - Health check: http://localhost:8080/api/health/
 - Data (database, uploads) lives in `deploy/data/django/`
 
