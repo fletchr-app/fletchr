@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { test } from 'vitest';
 
 import type { components } from './api-types.ts';
 import type { LogEnd } from './log-model.ts';

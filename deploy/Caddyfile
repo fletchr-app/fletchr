@@ -6,7 +6,7 @@ handle @django {
 	reverse_proxy django:8000
 }
 
-# Web app (static export from `npx expo export -p web`, single-page app)
+# Web app (output of `npm run build-only`, single-page app)
 handle {
 	root * /srv/web
 	try_files {path} /index.html

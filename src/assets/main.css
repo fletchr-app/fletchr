@@ -1,0 +1,79 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.min.css';
+
+/* Phone: keep content out of the status bar, notch and gesture bar (the viewport has viewport-fit=cover). */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: env(safe-area-inset-top);
+  background-color: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+.app-header .bar {
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 48px;
+}
+
+.screen {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.muted { opacity: 0.7; }
+.faint { opacity: 0.6; }
+
+/* Charts: colours from the reference palette (one series, slot 1 blue), checked on the light and the dark surface. */
+:root {
+  --chart-surface: #fcfcfb;
+  --chart-primary: #0b0b0b;
+  --chart-secondary: #52514e;
+  --chart-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-baseline: #c3c2b7;
+  --chart-border: rgba(11, 11, 11, 0.1);
+  --chart-series: #2a78d6;
+}
+[data-bs-theme='dark'] {
+  --chart-surface: #1a1a19;
+  --chart-primary: #f0efec;
+  --chart-secondary: #c3c2b7;
+  --chart-muted: #898781;
+  --chart-grid: #2c2c2a;
+  --chart-baseline: #383835;
+  --chart-border: rgba(255, 255, 255, 0.1);
+  --chart-series: #3987e5;
+}
+.chart-card {
+  background-color: var(--chart-surface);
+  border: 1px solid var(--chart-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--chart-secondary);
+}
+.chart-card .chart-title { color: var(--chart-primary); font-size: 16px; font-weight: 600; }
+.chart-card .chart-link { color: var(--chart-series); background: none; border: 0; padding: 0; text-align: left; }
+.chart-card .tabular { color: var(--chart-primary); font-variant-numeric: tabular-nums; }
+.chart-grid { stroke: var(--chart-grid); stroke-width: 1; }
+.chart-baseline { stroke: var(--chart-baseline); stroke-width: 1; }
+.chart-tick { fill: var(--chart-muted); font-size: 11px; }
+.chart-value { fill: var(--chart-primary); font-size: 12px; font-weight: 600; }
+.chart-series-line { fill: none; stroke: var(--chart-series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-series-fill { fill: var(--chart-series); }
+.chart-series-stroke { stroke: var(--chart-series); }
+.chart-surface-fill { fill: var(--chart-surface); }
+.chart-hit { position: absolute; background: none; border: 0; padding: 0; }

@@ -26,7 +26,7 @@ services:
       - "${HTTPS_PORT:-8443}:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Web app build; run `npx expo export -p web` in the repo root first.
+      # Web app build; run `npm run build-only` in the repo root first.
       - type: bind
         source: ../dist
         target: /srv/web

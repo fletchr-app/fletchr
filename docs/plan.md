@@ -1,6 +1,6 @@
 # Archery Coach: product and tech plan
 
-Draft v4, 2026-10-18 (reviewed end to end after adding self-hosting, arrow plotting, video analysis, skeleton detection, evaluations and iOS without a Mac). Defaults are marked **(default)**; any of them can be changed before code is written.
+Draft v5, 2026-10-18 (v4 reviewed end to end after adding self-hosting, arrow plotting, video analysis, skeleton detection, evaluations and iOS without a Mac; v5 replaces Expo/React Native with Vue 3 and Capacitor, so the stack matches pyobs-web-client; the last Expo version is the git tag `expo-final`). Defaults are marked **(default)**; any of them can be changed before code is written.
 
 ## 1. Roles
 
@@ -89,12 +89,12 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 
 ## 5. Stack (default)
 
-- **App: Expo (React Native) + TypeScript + Expo Router**, one codebase for **web, Android and iOS** (React Native Web for the browser)
-- **UI**: Tamagui or NativeWind (default: NativeWind, Tailwind-style), charts with react-native-svg based components so they render on web too
+- **App: Vue 3 + TypeScript + Vite + Vue Router, wrapped for phones with Capacitor**, one codebase for **web, Android and iOS**. The phone apps are the web app in a WebView plus Capacitor plugins (secure storage, preferences, share, app lifecycle). Same stack as pyobs-web-client, so one person can maintain both
+- **UI**: Bootstrap 5 (light and dark follow the system), charts as plain inline SVG in Vue components, so they render the same on web and in the phone apps
 - **Backend: Django + Django REST Framework + SQLite, self-hosted**. Chosen because the maintainer knows Python and Django, and the permission logic (coach/archer/team rules) is the riskiest part and is easiest to unit test as plain Python. Auth uses JWT (`djangorestframework-simplejwt`), the OpenAPI schema (`drf-spectacular`) generates the TypeScript types for the app, and the Django admin gives an admin UI. File storage, invites and sign-in providers are built by us. gunicorn runs behind Caddy. If the club grows far beyond a few hundred archers, switch the database to Postgres (a settings change). Considered and rejected: PocketBase (less to build, but its Go core and restricted JS hooks are not maintainable by us, and rules are filter strings), self-hosted Supabase (about ten containers, 4 GB+ RAM) and a Node API.
 - **Offline**: session logging works without signal from the start (saved on the device, uploaded when online), since ranges often have poor reception; video uploads are queued the same way
 - **Upload of sessions**: the app creates the ids (UUIDs) for sessions, ends, shots and volume entries, and uploads with idempotent `PUT`s: the session once, then each end with all its shots as soon as it is shot (so a coach sees results live, or as soon as the phone has signal again), so a retry never duplicates anything. The last write wins. The server recomputes every score from the position and returns its own values, which the app then shows. Coaches read sessions, they cannot change them. A coach's live view polls the session list (`/api/sessions/?updated_after=...`); push updates are not planned
-- **Builds and hosting**: EAS Build/Submit for the store apps; the web app is a static build served by your own server (section 6a), installable as a home-screen app (PWA)
+- **Builds and hosting**: Android Studio or Gradle (`npx cap sync`, then build) for the Android app, a macOS machine or CI runner with Xcode for the iOS app; the web app is a static build served by your own server (section 6a), installable as a home-screen app (PWA)
 - **Languages**: English and German from the start (i18n)
 
 ## 6. Photos and videos
@@ -109,8 +109,8 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 - **Loop A to B** around one shot, e.g. from set-up to follow-through.
 - **Coach notes on a frame**: a note stores the frame number and time, and tapping it jumps to that exact frame. The second half of milestone 2 adds **drawing on the frame** (lines, angles, circles, e.g. for bow-arm or draw-elbow alignment), saved with the note.
 - **Later**: two clips side by side with synced stepping (e.g. before/after a form change), and a ghost overlay.
-- **How it works**: the server stores the clip's exact frame rate; a step seeks to the middle of the next frame, which avoids landing on the neighbouring frame. On iOS and Android a small native module uses the platform's own frame-step functions; on web the player uses the browser's frame callback.
-- **Limits**: in web browsers, stepping is accurate on current Chrome, Edge, Safari and Firefox, but on old browsers or very slow laptops a step can occasionally show the neighbouring frame. Phones are frame-exact. Phone-recorded clips with variable frame rate are converted to constant frame rate on the server so frame numbers are reliable.
+- **How it works**: the server stores the clip's exact frame rate; a step seeks to the middle of the next frame, which avoids landing on the neighbouring frame. The player runs in the WebView on phones and in the browser on web, with the same code: it uses the video element's frame callback (`requestVideoFrameCallback`). To be checked on a real 120/240 fps clip in Android WebView and iOS WKWebView before the player is built; if it is not frame-exact there, a small native Capacitor plugin is the fallback.
+- **Limits**: in web browsers, stepping is accurate on current Chrome, Edge, Safari and Firefox, but on old browsers or very slow laptops a step can occasionally show the neighbouring frame. Frame accuracy in the phone WebViews is to be verified (see above). Phone-recorded clips with variable frame rate are converted to constant frame rate on the server so frame numbers are reliable.
 - **Size**: the frequent keyframes make files about 30 to 50% larger than normal; a 60-second 720p clip at 30 to 60 fps is roughly 40 to 80 MB. Slow-motion clips (120/240 fps) are 2 to 4 times larger per second, but are usually only a few seconds long.
 
 ### Automatic skeleton detection (advanced, milestone 5)
@@ -137,7 +137,7 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 - **Backups**: nightly, encrypted, off-site with restic to a storage box: first a consistent snapshot of the database, then the data folder. restic is incremental, so each video is copied only once (PocketBase's built-in backup zips all files every time, which would not scale with videos). 30 daily and 12 monthly copies kept. Data an archer has deleted stays in older backups until they rotate out (at most about a year); the privacy text for the stores has to say so. A restore is tested once during setup.
 - **Monitoring**: a free uptime check (e.g. Uptime Kuma or a hosted pinger) and unattended security updates on the server.
 - **Email**: sign-in and invite emails go through any SMTP account you already have.
-- **Push notifications**: Expo's push service (free) for the Android/iOS apps and standard Web Push for the web app and iPhone home-screen app, both sent by a server hook, for "new coach note" and "new evaluation" alerts.
+- **Push notifications**: Firebase Cloud Messaging (Android) and Apple's push service (iOS) through `@capacitor/push-notifications`, and standard Web Push for the web app and iPhone home-screen app, all sent by a server hook, for "new coach note" and "new evaluation" alerts. Needs a Firebase project and an Apple key; not set up yet.
 
 **Same setup locally and on the server.** The repository has one `deploy/docker-compose.yml`; only a `.env` file differs:
 
@@ -148,7 +148,7 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 | HTTPS | Off (or Caddy's local certificate) | Automatic via Let's Encrypt |
 | Data | `./data` folder next to the compose file | Same, on the server's disk |
 | Backups | Optional (e.g. to an external disk) | Nightly off-site (above) |
-| Phones | Expo Go / dev build on the same Wi-Fi uses `http://<your PC's LAN IP>:8080`; from outside, a tunnel (e.g. Tailscale or Cloudflare Tunnel) | Public domain |
+| Phones | Debug build on the same Wi-Fi uses `http://<your PC's LAN IP>:8080` (needs `androidScheme: 'http'`, see the README); from outside, a tunnel (e.g. Tailscale or Cloudflare Tunnel) | Public domain |
 
 Without Docker, the server also runs with `uv run python manage.py runserver` in `server/`. Moving from local to the server is copying the `data` folder (or restoring a backup) and starting the same compose file there. The app's server address is a setting, so one build can point at either.
 
@@ -167,9 +167,9 @@ So roughly **€10/month plus the store accounts**. Videos are the main growth d
 
 ## 6b. iOS without an Apple device
 
-- **Builds**: Expo's cloud build service (EAS Build) builds the iOS app on Apple hardware in the cloud, so no Mac is needed; EAS Submit uploads it to the App Store. The free EAS plan has a monthly build quota, which is enough here.
+- **Builds**: Capacitor's iOS project needs Xcode, so it has to be built on macOS. Without a Mac, use a macOS CI runner (e.g. GitHub Actions `macos` runners or Codemagic) that runs `npx cap sync ios`, builds and uploads to App Store Connect. Not set up yet; `ios/` does not exist until `npx cap add ios` is run on a Mac or in CI. Check the runners' current free quota and prices before relying on this.
 - **Account**: an Apple Developer account ($99/year) is required for TestFlight and the App Store; enrolment works in the browser.
-- **Testing**: an archer or coach with an iPhone tests through TestFlight (or Expo Go during development) and provides the App Store screenshots.
+- **Testing**: an archer or coach with an iPhone tests through TestFlight and provides the App Store screenshots.
 - **Sign-in**: an app in the App Store that offers Google sign-in must also offer Sign in with Apple, which is planned (section 5).
 - **Fallback**: the web app is installable on iPhones from Safari ("Add to Home Screen") and works like an app, including camera uploads, frame stepping and push notifications (iOS 16.4+). iPhone users can use this from day one.
 - **Order (default)**: web and Android first (testable on your own devices), iOS store app once an iPhone tester is available. Since it is one codebase, iOS needs no extra development, only testing and the store listing.
@@ -178,8 +178,11 @@ So roughly **€10/month plus the store accounts**. Videos are the main growth d
 
 ```
 archery-coach/
-  app/            Expo app (screens via Expo Router)
-  src/            components, hooks, stats, i18n
+  src/            Vue app: views (screens), components, composables, lib (logic and API client), router
+  android/        Capacitor Android project
+  public/         static files for the web build
+  resources/      source icon and splash image for the phone apps
+  shared/         files used by server and app (target faces, scoring test cases)
   server/         Django project (models, migrations, DRF permissions, seed command, tests), Dockerfile
   worker/         pose detection worker (milestone 5)
   deploy/         docker-compose.yml, Caddyfile, backup scripts

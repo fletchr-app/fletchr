@@ -1,41 +1,35 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# Archery Coach
 
-## Expo has changed — do not trust your training data
-
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
-
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+Vue 3 + TypeScript app (Vite, Vue Router, Bootstrap 5) for web, Android and iOS. The phone apps are the web build wrapped with Capacitor. Backend: Django REST Framework in `server/`. Plan and decisions: `docs/plan.md`. The old Expo (React Native) version is the git tag `expo-final`.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npm run dev            # Vite dev server, http://localhost:5173
+npm run type-check     # vue-tsc --build
+npm test               # Vitest (src/**/*.test.ts)
+npm run build-only     # web build into dist/ (Caddy serves it)
+npx cap sync android   # after a build or after adding a Capacitor plugin
+npm run types:api      # regenerate src/lib/api-types.ts after changing a serializer or view
+cd server && uv run pytest
 ```
 
-Run lint and typecheck before declaring any task done.
+Run `type-check` and `test` before declaring a task done.
 
-## Navigation & Routing
+## Layout and conventions
 
-- Use **Expo Router** for all navigation. Routes live in `app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+- `src/views/`: one file per route (routes are listed in `src/router/index.ts`, with `meta.title` and `meta.auth`: `'in'` signed in only, `'out'` signed out only).
+- `src/components/`: reusable pieces. Form basics are `FormField`, `ChipGroup`, `AppButton`, `ErrorText`.
+- `src/composables/`: app-wide state as module-level singletons (`useAuth`, `useServer`, `useLog`), plus `useRemote` (load, poll and reload data from the server) and `usePageTitle`.
+- `src/lib/`: logic without Vue, tested with Vitest (scoring, plotting, the local log and its upload queue). Keep it free of Vue and Capacitor imports, except the storage files (`token-storage.ts`, `local-store.ts`, `export-file.ts`).
+- `<RouterView>` is keyed by the full path, so every navigation creates a fresh screen. Screens read their route params once.
+- Styling is Bootstrap classes plus `src/assets/main.css`. Light and dark follow the system (`data-bs-theme` on `<html>`). Chart colours are CSS variables there.
+- Call the server through `useAuth().api` (a typed `openapi-fetch` client that adds and refreshes the token). Do not call `fetch` directly for API routes.
+- Sessions are logged on the device first (`useLog`) and uploaded from a queue; see `src/lib/log-sync.ts`. Screens that show other people's data read from the server with `useRemote`.
+- The Android project in `android/` is committed; its build output is not. The app version comes from `package.json`.
 
 ## Rules
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+- Never commit or push unless asked.
+- Capacitor plugins are native: after `npm install @capacitor/...` run `npx cap sync android` and rebuild the APK.
+- The app on the phone is served from `https://localhost`: the server's `DJANGO_CORS_ORIGINS` must contain it (see README).
