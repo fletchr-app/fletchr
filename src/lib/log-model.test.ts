@@ -8,6 +8,7 @@ import {
   nextEndDefaults,
   reduce,
   sessionTotals,
+  sortedShots,
   shotLabel,
   type LogAction,
   type LogEnd,
@@ -135,4 +136,10 @@ test('next end starts like the last one', () => {
   assert.equal(nextEndDefaults({ ...session(), environment: 'outdoor' }).face, 'wa-122');
   const withEnd = { ...session(), ends: [{ ...end('e1', 4), distance_m: '30', face: 'wa-80', arrows_per_end: 6 }] };
   assert.deepEqual(nextEndDefaults(withEnd), { index: 5, distance_m: '30', face: 'wa-80', arrows_per_end: 6 });
+});
+
+test('arrows sort best first: X before 10, misses last', () => {
+  const shots = [shot('m', null, { is_miss: true }), shot('a', 9), shot('x', 10, { is_x: true }), shot('t', 10), shot('b', 7)];
+  assert.deepEqual(sortedShots(shots).map(shotLabel), ['X', '10', '9', '7', 'M']);
+  assert.deepEqual(shots.map((s) => s.id), ['m', 'a', 'x', 't', 'b'], 'the original order is untouched');
 });

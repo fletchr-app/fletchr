@@ -150,3 +150,16 @@ test('an item that no longer exists locally is dropped instead of sent', async (
   assert.equal(h.calls.length, 0);
   assert.deepEqual(h.queued(), []);
 });
+
+test('plotted shots go up with their position, typed ones with their score', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session });
+  const plotted = { id: 'p', value: 10, is_x: false, is_miss: false, x: 0.05, y: -0.1, spot: 2 };
+  const typed = { id: 't', value: 9, is_x: false, is_miss: false };
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: { ...end([]), shots: [plotted, typed] } });
+  await h.run();
+  assert.deepEqual((h.calls[1].body as { shots: unknown[] }).shots, [
+    { id: 'p', x: 0.05, y: -0.1, spot: 2, value: 10, is_x: false, is_miss: false },
+    { id: 't', value: 9, is_x: false, is_miss: false },
+  ]);
+});

@@ -38,7 +38,12 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           distance_m: end.distance_m,
           face: end.face,
           arrows_per_end: end.arrows_per_end,
-          shots: end.shots.map((s) => ({ id: s.id, value: s.value, is_x: s.is_x, is_miss: s.is_miss })),
+          // A plotted shot is sent with its position, and the server works out the score; a typed one with its score.
+          shots: end.shots.map((s) =>
+            s.x === undefined || s.y === undefined
+              ? { id: s.id, value: s.value, is_x: s.is_x, is_miss: s.is_miss }
+              : { id: s.id, x: s.x, y: s.y, spot: s.spot ?? 0, value: s.value, is_x: s.is_x, is_miss: s.is_miss },
+          ),
         },
       });
     } else if (op.delete) {

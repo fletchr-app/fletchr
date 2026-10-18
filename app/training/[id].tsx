@@ -7,7 +7,7 @@ import { Button, ErrorText, Field, Screen } from '@/components/form';
 import { SyncBanner } from '@/components/sync-banner';
 import { getFace } from '@/lib/faces';
 import { useLog } from '@/lib/log';
-import { endTotal, LogSession, sessionTotals, shotLabel, usesEnds } from '@/lib/log-model';
+import { endTotal, LogSession, sessionTotals, shotLabel, sortedShots, usesEnds } from '@/lib/log-model';
 import { newId } from '@/lib/uuid';
 
 export default function SessionScreen() {
@@ -68,7 +68,7 @@ function Ends({ session }: { session: LogSession }) {
       {[...session.ends].reverse().map((end) => (
         <Pressable key={end.id} onPress={() => setEditing(end.id)}>
           <Text style={{ color: colors.text, fontWeight: '600' }}>
-            End {end.index + 1} · {end.shots.map(shotLabel).join(' ')} = {endTotal(end)}
+            End {end.index + 1} · {sortedShots(end.shots).map(shotLabel).join(' ')} = {endTotal(end)}
           </Text>
           <Text style={{ color: colors.text, opacity: 0.6 }}>
             {end.distance_m} m · {getFace(end.face)?.name ?? end.face}

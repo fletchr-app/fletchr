@@ -7,7 +7,16 @@ export type Environment = '' | 'indoor' | 'outdoor';
 /** Scoring and competition sessions are logged end by end; the others just count arrows. */
 export const usesEnds = (type: SessionType) => type === 'scoring' || type === 'competition';
 
-export type LogShot = { id: string; value: number | null; is_x: boolean; is_miss: boolean };
+/** A plotted shot has x, y and spot (the server works out its score from them); a typed one has only a score. */
+export type LogShot = {
+  id: string;
+  value: number | null;
+  is_x: boolean;
+  is_miss: boolean;
+  x?: number;
+  y?: number;
+  spot?: number;
+};
 export type LogEnd = { id: string; index: number; distance_m: string; face: string; arrows_per_end: number; shots: LogShot[] };
 export type LogVolume = { id: string; distance_m: string; arrow_count: number };
 export type LogSession = {
@@ -130,6 +139,11 @@ export function reduce(state: LogState, action: LogAction): LogState {
 
 export const shotPoints = (shot: LogShot) => (shot.is_miss ? 0 : (shot.value ?? 0));
 export const shotLabel = (shot: LogShot) => (shot.is_miss ? 'M' : shot.is_x ? 'X' : String(shot.value ?? '–'));
+/** Best arrow first: X, 10, 9 ... and misses last. */
+export function sortedShots(shots: LogShot[]): LogShot[] {
+  const rank = (s: LogShot) => (s.is_miss ? -1 : (s.value ?? 0) * 2 + (s.is_x ? 1 : 0));
+  return [...shots].sort((a, b) => rank(b) - rank(a));
+}
 export const endTotal = (end: LogEnd) => end.shots.reduce((sum, s) => sum + shotPoints(s), 0);
 
 export function sessionTotals(session: LogSession) {
