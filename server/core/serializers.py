@@ -43,6 +43,12 @@ class RegisterSerializer(serializers.Serializer):
         return attrs
 
 
+class RegisterResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+    user = MeSerializer()
+
+
 class RedeemSerializer(serializers.Serializer):
     invite_code = serializers.CharField()
 

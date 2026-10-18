@@ -115,3 +115,14 @@ def test_seed_is_repeatable(db, capsys):
     assert User.objects.filter(email="boss@club.test").count() == 1
     assert TeamMember.objects.get().role == Role.ADMIN
     assert Invite.objects.count() == 2
+
+
+def test_refresh_rotates_and_logout_revokes(client_for, club):
+    client = client_for()
+    login = client.post("/api/token/", {"email": "coach@a.test", "password": "correct-horse-battery"}).data
+    rotated = client.post("/api/token/refresh/", {"refresh": login["refresh"]}).data
+    assert rotated["refresh"] != login["refresh"]
+    # The old refresh token is revoked after rotation.
+    assert client.post("/api/token/refresh/", {"refresh": login["refresh"]}).status_code == 401
+    assert client.post("/api/token/blacklist/", {"refresh": rotated["refresh"]}).status_code == 200
+    assert client.post("/api/token/refresh/", {"refresh": rotated["refresh"]}).status_code == 401

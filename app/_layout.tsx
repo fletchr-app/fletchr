@@ -1,18 +1,37 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
+import { AuthProvider, useAuth } from '@/lib/auth';
 import { ServerProvider } from '@/lib/server';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
     <ServerProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="index" options={{ title: 'Archery Coach' }} />
-          <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-        </Stack>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <RootNavigator />
+        </ThemeProvider>
+      </AuthProvider>
     </ServerProvider>
+  );
+}
+
+function RootNavigator() {
+  const { status } = useAuth();
+  if (status === 'loading') return null;
+
+  return (
+    <Stack>
+      <Stack.Protected guard={status === 'signedIn'}>
+        <Stack.Screen name="index" options={{ title: 'Archery Coach' }} />
+        <Stack.Screen name="join-team" options={{ title: 'Join a team' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={status === 'signedOut'}>
+        <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />
+        <Stack.Screen name="register" options={{ title: 'Join with invite code' }} />
+      </Stack.Protected>
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+    </Stack>
   );
 }

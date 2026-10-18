@@ -1,33 +1,55 @@
-import { Link, useTheme } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Link, useFocusEffect, useTheme } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
 
-import { useServer, useServerHealth } from '@/lib/server';
+import { Button, ErrorText, Screen } from '@/components/form';
+import type { components } from '@/lib/api-types';
+import { useAuth } from '@/lib/auth';
 
-const HEALTH_LABEL = {
-  checking: 'Checking server…',
-  ok: 'Server reachable',
-  unreachable: 'Server not reachable',
-};
+type Me = components['schemas']['Me'];
+type Team = components['schemas']['Team'];
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { url } = useServer();
-  const health = useServerHealth();
+  const { api, signOut } = useAuth();
+  const [me, setMe] = useState<Me | null>(null);
+  const [teams, setTeams] = useState<Team[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reload when returning from the join screen.
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([api.GET('/api/me/'), api.GET('/api/teams/')])
+        .then(([meRes, teamsRes]) => {
+          if (meRes.data) setMe(meRes.data);
+          if (teamsRes.data) setTeams(teamsRes.data);
+          setError(meRes.data && teamsRes.data ? null : 'Could not load your data');
+        })
+        .catch(() => setError('Server not reachable'));
+    }, [api]),
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.text }]}>Archery Coach</Text>
-      <Text style={{ color: colors.text }}>{HEALTH_LABEL[health]}</Text>
-      <Text style={[styles.url, { color: colors.text }]}>{url}</Text>
-      <Link href="/settings" style={{ color: colors.primary }}>
-        Change server address
+    <Screen>
+      <Text style={{ color: colors.text, fontSize: 24, fontWeight: '600' }}>
+        {me ? `Hello ${me.profile.name || me.email}` : 'Archery Coach'}
+      </Text>
+      <ErrorText>{error}</ErrorText>
+      <Text style={{ color: colors.text, fontWeight: '600' }}>Your teams</Text>
+      {teams?.length === 0 && <Text style={{ color: colors.text }}>You are not in a team yet.</Text>}
+      {teams?.map((team) => (
+        <View key={team.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ color: colors.text }}>{team.name}</Text>
+          <Text style={{ color: colors.text, opacity: 0.6 }}>{team.my_role}</Text>
+        </View>
+      ))}
+      <Link href="/join-team" style={{ color: colors.primary }}>
+        Join another team
       </Link>
-    </View>
+      <Link href="/settings" style={{ color: colors.primary }}>
+        Server settings
+      </Link>
+      <Button title="Sign out" onPress={signOut} secondary />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16 },
-  title: { fontSize: 28, fontWeight: '600' },
-  url: { fontFamily: 'monospace', opacity: 0.7 },
-});

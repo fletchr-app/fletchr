@@ -1,7 +1,8 @@
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny
@@ -11,17 +12,19 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import access
-from .models import Invite, Role, TeamMember, User
+from .models import Invite, Role, Team, TeamMember, User
 from .serializers import (
     InviteSerializer,
     MemberSerializer,
     MeSerializer,
     RedeemSerializer,
+    RegisterResponseSerializer,
     RegisterSerializer,
     TeamSerializer,
 )
 
 
+@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField()}))
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
@@ -35,6 +38,7 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "invite"
 
+    @extend_schema(request=RegisterSerializer, responses={201: RegisterResponseSerializer})
     @transaction.atomic
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -62,6 +66,7 @@ class RedeemInviteView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "invite"
 
+    @extend_schema(request=RedeemSerializer, responses={201: TeamSerializer})
     def post(self, request):
         serializer = RedeemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -85,6 +90,8 @@ class TeamListView(generics.ListAPIView):
     serializer_class = TeamSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Team.objects.none()
         my_role = TeamMember.objects.filter(team=OuterRef("pk"), user=self.request.user).values("role")[:1]
         return access.teams_of(self.request.user).annotate(my_role=Subquery(my_role)).order_by("name")
 
@@ -98,11 +105,14 @@ class MemberListView(generics.ListAPIView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return TeamMember.objects.none()
         team = get_my_team(self.request, self.kwargs["team_id"])
         return access.members_visible_to(self.request.user, team).order_by("user__profile__name", "user__email")
 
 
 class MemberDetailView(APIView):
+    @extend_schema(responses={204: None})
     def delete(self, request, team_id, user_id):
         team = get_my_team(request, team_id)
         if not access.is_admin_in(request.user, team):
@@ -124,6 +134,8 @@ class InviteListCreateView(generics.ListCreateAPIView):
         return team
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Invite.objects.none()
         return Invite.objects.filter(team=self.get_team(), used_at__isnull=True).order_by("-created_at")
 
     def perform_create(self, serializer):
@@ -131,6 +143,7 @@ class InviteListCreateView(generics.ListCreateAPIView):
 
 
 class InviteDetailView(APIView):
+    @extend_schema(responses={204: None})
     def delete(self, request, team_id, pk):
         team = get_my_team(request, team_id)
         if not access.is_admin_in(request.user, team):

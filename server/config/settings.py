@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "django_filters",
     "corsheaders",
@@ -158,9 +160,20 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Archery Coach API",
     "VERSION": "0.1.0",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {"HandEnum": "core.models.Profile.Hand"},
 }
 
 # Only needed when the app is served from a different origin (Expo dev server, native apps).
 CORS_ALLOWED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CORS_ORIGINS", "").split(",") if o
 ]
+
+SIMPLE_JWT = {
+    # Short access tokens, long refresh tokens so phones stay logged in.
+    # Each refresh issues a new refresh token and revokes the old one.
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}

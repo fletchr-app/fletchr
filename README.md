@@ -57,6 +57,10 @@ DJANGO_SECRET_KEY=<long random string>
 
 Point the domain's DNS at the server, set `EXPO_PUBLIC_SERVER_URL=https://archery.example.de` before `npx expo export -p web`, then `docker compose up -d --build`. Caddy gets the HTTPS certificate automatically. Moving local data to the server means copying `deploy/data/django`.
 
+## API types
+
+The app's API types in `src/lib/api-types.ts` are generated from the Django schema. After changing a serializer or view, run `npm run types:api` and commit the result. After re-running `npx expo export -p web` while the stack is up, run `docker compose restart caddy` (the export replaces the `dist/` folder Caddy has mounted).
+
 ## Checks
 
 ```bash
