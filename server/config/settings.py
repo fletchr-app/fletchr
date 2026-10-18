@@ -18,6 +18,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Files shared with the app (target face catalogue, scoring test vectors).
+SHARED_DIR = Path(os.environ.get("DJANGO_SHARED_DIR", BASE_DIR.parent / "shared"))
+
 # Database and uploads live here (a mounted volume in Docker).
 DATA_DIR = Path(os.environ.get("DJANGO_DATA_DIR", BASE_DIR / "data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -52,6 +55,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "core",
     "equipment",
+    "targets",
 ]
 
 MIDDLEWARE = [

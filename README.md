@@ -9,6 +9,7 @@ app/       screens (Expo Router)
 src/       components, hooks, lib (server connection)
 server/    Django project (DRF, SQLite), Dockerfile
 deploy/    docker-compose.yml, Caddyfile, .env.example
+shared/    files used by both server and app (target faces, scoring test cases)
 worker/    pose detection worker (milestone 5)
 docs/      plan, decisions
 ```
@@ -66,5 +67,6 @@ The app's API types in `src/lib/api-types.ts` are generated from the Django sche
 ```bash
 npm run typecheck
 npm run lint
+npm test                 # scoring rules, app side
 cd server && uv run pytest
 ```

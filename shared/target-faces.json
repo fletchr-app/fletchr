@@ -1,0 +1,709 @@
+{
+ "_comment": "Target face catalogue, shared by the server (server/targets) and the app (src/lib/faces.ts). Sizes in cm. Coordinates of a shot: x to the right, y up, per spot, with 1 = outer edge of the outermost scoring ring (blank face: edge of the 40 cm circle). See docs/plan.md.",
+ "version": 1,
+ "faces": [
+  {
+   "slug": "wa-122",
+   "name": "WA 122 cm",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 12.2
+    },
+    {
+     "value": 9,
+     "diameter_cm": 24.4
+    },
+    {
+     "value": 8,
+     "diameter_cm": 36.6
+    },
+    {
+     "value": 7,
+     "diameter_cm": 48.8
+    },
+    {
+     "value": 6,
+     "diameter_cm": 61.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 73.2
+    },
+    {
+     "value": 4,
+     "diameter_cm": 85.4
+    },
+    {
+     "value": 3,
+     "diameter_cm": 97.6
+    },
+    {
+     "value": 2,
+     "diameter_cm": 109.8
+    },
+    {
+     "value": 1,
+     "diameter_cm": 122.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "x_diameter_cm": 6.1
+  },
+  {
+   "slug": "wa-80",
+   "name": "WA 80 cm",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 40.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 48.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 56.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 64.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 72.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 80.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "x_diameter_cm": 4.0
+  },
+  {
+   "slug": "wa-60",
+   "name": "WA 60 cm",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 6.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 18.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 30.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 36.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 42.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 48.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 54.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 60.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-40",
+   "name": "WA 40 cm",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 4.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 28.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 36.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 40.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-60-compound",
+   "name": "WA 60 cm, compound (small 10)",
+   "kind": "wa",
+   "compound": true,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 3.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 18.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 30.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 36.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 42.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 48.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 54.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 60.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-40-compound",
+   "name": "WA 40 cm, compound (small 10)",
+   "kind": "wa",
+   "compound": true,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 2.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 28.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 36.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 40.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-80-6ring",
+   "name": "WA 80 cm, 6 ring (rings 5 to 10)",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 40.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 48.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "x_diameter_cm": 4
+  },
+  {
+   "slug": "wa-40-triple-vertical",
+   "name": "WA 40 cm triple, vertical",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 4.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 22
+    },
+    {
+     "x": 0,
+     "y": 0
+    },
+    {
+     "x": 0,
+     "y": -22
+    }
+   ],
+   "note": "Spot size and scoring are from the WA rules; the spot positions are approximate and only used for drawing."
+  },
+  {
+   "slug": "wa-40-triple-vertical-compound",
+   "name": "WA 40 cm triple, vertical, compound (small 10)",
+   "kind": "wa",
+   "compound": true,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 2.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 22
+    },
+    {
+     "x": 0,
+     "y": 0
+    },
+    {
+     "x": 0,
+     "y": -22
+    }
+   ],
+   "note": "Spot size and scoring are from the WA rules; the spot positions are approximate and only used for drawing."
+  },
+  {
+   "slug": "wa-40-triple-triangle",
+   "name": "WA 40 cm triple, triangle",
+   "kind": "wa",
+   "compound": false,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 4.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 11.5
+    },
+    {
+     "x": -11.5,
+     "y": -9
+    },
+    {
+     "x": 11.5,
+     "y": -9
+    }
+   ],
+   "note": "Spot size and scoring are from the WA rules; the spot positions are approximate and only used for drawing."
+  },
+  {
+   "slug": "wa-40-triple-triangle-compound",
+   "name": "WA 40 cm triple, triangle, compound (small 10)",
+   "kind": "wa",
+   "compound": true,
+   "rings": [
+    {
+     "value": 10,
+     "diameter_cm": 2.0
+    },
+    {
+     "value": 9,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 8,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 7,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 6,
+     "diameter_cm": 20.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 11.5
+    },
+    {
+     "x": -11.5,
+     "y": -9
+    },
+    {
+     "x": 11.5,
+     "y": -9
+    }
+   ],
+   "note": "Spot size and scoring are from the WA rules; the spot positions are approximate and only used for drawing."
+  },
+  {
+   "slug": "wa-field-80",
+   "name": "WA field 80 cm",
+   "kind": "field",
+   "compound": false,
+   "rings": [
+    {
+     "value": 6,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 48.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 64.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 80.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-field-60",
+   "name": "WA field 60 cm",
+   "kind": "field",
+   "compound": false,
+   "rings": [
+    {
+     "value": 6,
+     "diameter_cm": 6.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 36.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 48.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 60.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-field-40",
+   "name": "WA field 40 cm",
+   "kind": "field",
+   "compound": false,
+   "rings": [
+    {
+     "value": 6,
+     "diameter_cm": 4.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 24.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 32.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 40.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "wa-field-20",
+   "name": "WA field 20 cm",
+   "kind": "field",
+   "compound": false,
+   "rings": [
+    {
+     "value": 6,
+     "diameter_cm": 2.0
+    },
+    {
+     "value": 5,
+     "diameter_cm": 4.0
+    },
+    {
+     "value": 4,
+     "diameter_cm": 8.0
+    },
+    {
+     "value": 3,
+     "diameter_cm": 12.0
+    },
+    {
+     "value": 2,
+     "diameter_cm": 16.0
+    },
+    {
+     "value": 1,
+     "diameter_cm": 20.0
+    }
+   ],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ]
+  },
+  {
+   "slug": "blank",
+   "name": "Blank (no scoring)",
+   "kind": "blank",
+   "compound": false,
+   "rings": [],
+   "spots": [
+    {
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "note": "For plotting arrows without scores. Positions are relative to a 40 cm circle."
+  }
+ ]
+}

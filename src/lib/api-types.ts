@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/faces/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["faces_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -606,6 +622,19 @@ export interface components {
             release_tab?: string;
             notes?: string;
         };
+        Face: {
+            slug: string;
+            name: string;
+            kind: components["schemas"]["KindEnum"];
+            /** @description Small 10 ring, as used for compound */
+            compound: boolean;
+            /** @description Inner to outer */
+            rings: components["schemas"]["Ring"][];
+            spots: components["schemas"]["Spot"][];
+            /** Format: double */
+            x_diameter_cm?: number;
+            note?: string;
+        };
         /**
          * @description * `right` - Right
          *     * `left` - Left
@@ -631,6 +660,13 @@ export interface components {
             /** @default archer */
             role: components["schemas"]["RoleEnum"];
         };
+        /**
+         * @description * `wa` - wa
+         *     * `field` - field
+         *     * `blank` - blank
+         * @enum {string}
+         */
+        KindEnum: "wa" | "field" | "blank";
         Me: {
             readonly id: number;
             /** Format: email */
@@ -733,6 +769,14 @@ export interface components {
             refresh: string;
             user: components["schemas"]["Me"];
         };
+        Ring: {
+            value: number;
+            /**
+             * Format: double
+             * @description Outer diameter of the ring
+             */
+            diameter_cm: number;
+        };
         /**
          * @description * `archer` - Archer
          *     * `coach` - Coach
@@ -753,6 +797,18 @@ export interface components {
         SetupRequest: {
             bow_revision: number;
             arrow_set_revision?: number | null;
+        };
+        Spot: {
+            /**
+             * Format: double
+             * @description cm from the middle of the face, right is positive
+             */
+            x: number;
+            /**
+             * Format: double
+             * @description cm from the middle of the face, up is positive
+             */
+            y: number;
         };
         Team: {
             readonly id: number;
@@ -1139,6 +1195,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BowRevision"][];
+                };
+            };
+        };
+    };
+    faces_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Face"][];
                 };
             };
         };

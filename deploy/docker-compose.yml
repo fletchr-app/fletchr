@@ -1,7 +1,10 @@
 # Same file locally and on the server; only deploy/.env differs (see .env.example).
 services:
   django:
-    build: ../server
+    build:
+      context: ../server
+      additional_contexts:
+        shared: ../shared
     restart: unless-stopped
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set DJANGO_SECRET_KEY in deploy/.env}

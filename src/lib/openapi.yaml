@@ -365,6 +365,22 @@ paths:
                 items:
                   $ref: '#/components/schemas/BowRevision'
           description: ''
+  /api/faces/:
+    get:
+      operationId: faces_list
+      tags:
+      - faces
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Face'
+          description: ''
   /api/health/:
     get:
       operationId: health_retrieve
@@ -1395,6 +1411,39 @@ components:
       - name
       - number
       - type
+    Face:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        compound:
+          type: boolean
+          description: Small 10 ring, as used for compound
+        rings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ring'
+          description: Inner to outer
+        spots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spot'
+        x_diameter_cm:
+          type: number
+          format: double
+        note:
+          type: string
+      required:
+      - compound
+      - kind
+      - name
+      - rings
+      - slug
+      - spots
     HandEnum:
       enum:
       - right
@@ -1449,6 +1498,16 @@ components:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
           default: archer
+    KindEnum:
+      enum:
+      - wa
+      - field
+      - blank
+      type: string
+      description: |-
+        * `wa` - wa
+        * `field` - field
+        * `blank` - blank
     Me:
       type: object
       properties:
@@ -1676,6 +1735,18 @@ components:
       - access
       - refresh
       - user
+    Ring:
+      type: object
+      properties:
+        value:
+          type: integer
+        diameter_cm:
+          type: number
+          format: double
+          description: Outer diameter of the ring
+      required:
+      - diameter_cm
+      - value
     RoleEnum:
       enum:
       - archer
@@ -1729,6 +1800,20 @@ components:
           nullable: true
       required:
       - bow_revision
+    Spot:
+      type: object
+      properties:
+        x:
+          type: number
+          format: double
+          description: cm from the middle of the face, right is positive
+        y:
+          type: number
+          format: double
+          description: cm from the middle of the face, up is positive
+      required:
+      - x
+      - y
     Team:
       type: object
       properties:

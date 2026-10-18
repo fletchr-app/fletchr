@@ -20,9 +20,9 @@ Archers join a **team** by invite link or code. One archer can be in several tea
 - **arrow_sets**: owner, shaft model, spine, length, point weight, nock, fletching, count
 - **setups**: a bow + arrow set combination with a snapshot of its settings, so old sessions keep the setup as it was then
 - **sessions**: archer, date/time, location, indoor/outdoor, weather/wind, type (scoring, volume, technique, competition), setup_id, physical/mental rating (1 to 5), goals, notes
-- **target_faces**: built-in catalogue (see section 3a): id, name, diameter, ring radii and values, X-ring, spot layout (single, triple vertical, triangle)
+- **target faces**: not a table. A built-in catalogue in `shared/target-faces.json` (see section 3a), read by the server and bundled in the app, so it works offline. Per face: slug, name, ring diameters and values, X ring, spot layout, compound flag. Sessions refer to a face by its slug
 - **ends**: session_id, index, distance, target_face_id, arrows per end
-- **shots**: end_id, x/y position (normalised to the face, centre = 0,0, edge = 1, so any face size works), spot index for multi-spot faces, score value and is_x derived from the position, is_miss, optional arrow number (to find a bad arrow in the set), manual-override flag
+- **shots**: end_id, x/y position (per spot: centre = 0,0, x to the right, y up, the outer edge of the outermost scoring ring = 1, so any face size works), spot index for multi-spot faces, score value and is_x derived from the position, is_miss, optional arrow number (to find a bad arrow in the set), manual-override flag
 - **volume_entries**: session_id, distance, arrow count (for blank-bale/no-score training)
 - **media**: owner, session_id (optional), kind (photo | video), file, thumbnail, caption; for videos also duration, frame rate, frame count, width/height and processing status (uploaded, converting, ready, failed)
 - **notes**: author (coach), archer_id, optional session_id / media_id + frame number, optional drawing (lines/angles as JSON), body, visibility (shared | coach_only)
@@ -57,12 +57,13 @@ Access control is enforced on the server in Django REST Framework (permission cl
 ## 3a. Arrow plotting (like MyTargets)
 
 - The end screen shows the chosen target face full width. The archer touches where the arrow hit; while the finger is down, a **magnifier** above the finger shows the area enlarged so the exact spot can be placed, and the arrow is set on release.
-- The score is **computed from the position** using the face's ring radii (line cutters count as the higher ring, as in WA rules). Tapping outside the face records a miss.
+- The score is **computed from the position** using the face's ring radii (an arrow touching a line is placed in the higher ring by the archer, as in WA rules). Tapping outside the face records a miss.
 - Placed arrows can be dragged to correct them or deleted. The end's arrows are listed under the face with their scores, sorted high to low.
 - Optional: assign the **arrow number** for each shot, to spot a single arrow that groups badly.
 - Multi-spot faces (40 cm triple, vertical or triangular) show all spots; each arrow belongs to the spot it was placed on.
 - After each end: end total, running total, and the end's group drawn on the face. The session view overlays all arrows with the group centre and spread.
-- Built-in faces at launch: WA 122/80/60/40 cm full, WA 80 cm 6-ring, WA 40 cm triple vertical and triangle, WA field, Vegas 3-spot, and an unscored "blank" face for plotting without scores. 3D scoring zones come later.
+- Built-in faces (`shared/target-faces.json`): WA 122, 80, 60 and 40 cm; WA 60 and 40 cm with the small compound 10; WA 80 cm 6-ring; WA 40 cm triple (vertical and triangle, recurve and compound); WA field 80, 60, 40 and 20 cm; and an unscored "blank" face. The WA Vegas 3-spot looks like the triangle triple, but its dimensions are not confirmed, so it is not listed separately. 3D scoring zones come later.
+- Scoring rules (`server/targets/scoring.py` and `src/lib/scoring.ts`, both tested against the hand-calculated cases in `shared/scoring-vectors.json`): the score comes from the plotted position only, and a position exactly on a line scores the higher value. An arrow that touches a line is dragged by the archer into the higher ring; the app does not model arrow width. The X counts at or inside the X ring. Outside the outermost ring is a miss. The server recomputes every score on upload and stores its own value.
 
 ## 4. Statistics
 
