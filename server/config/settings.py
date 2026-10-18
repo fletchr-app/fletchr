@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "core",
     "equipment",
     "targets",
+    "training",
 ]
 
 MIDDLEWARE = [
@@ -166,7 +167,11 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Archery Coach API",
     "VERSION": "0.1.0",
     "COMPONENT_SPLIT_REQUEST": True,
-    "ENUM_NAME_OVERRIDES": {"HandEnum": "core.models.Profile.Hand"},
+    "ENUM_NAME_OVERRIDES": {
+        "HandEnum": "core.models.Profile.Hand",
+        "BowTypeEnum": "equipment.models.BowFields.Type",
+        "SessionTypeEnum": "training.models.TrainingSession.Type",
+    },
 }
 
 # Only needed when the app is served from a different origin (Expo dev server, native apps).

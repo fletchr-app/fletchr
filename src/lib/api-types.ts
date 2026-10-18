@@ -204,6 +204,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Sessions you may see: your own and those of the archers you coach, newest first, with totals. */
+        get: operations["sessions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions_retrieve"];
+        /** @description Create the session with this id, or update it. Safe to repeat. */
+        put: operations["sessions_update"];
+        post?: never;
+        delete: operations["sessions_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/ends/{end_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Create or replace one end with all its shots. The server fills in the scores. Safe to repeat. */
+        put: operations["sessions_ends_update"];
+        post?: never;
+        delete: operations["sessions_ends_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/volume/{entry_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["sessions_volume_update"];
+        post?: never;
+        delete: operations["sessions_volume_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setups/": {
         parameters: {
             query?: never;
@@ -490,7 +557,7 @@ export interface components {
             readonly revision: number;
             readonly revision_number: number;
             name: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["BowTypeEnum"];
             riser?: string;
             limbs?: string;
             /**
@@ -522,7 +589,7 @@ export interface components {
         BowRequest: {
             is_active?: boolean;
             name: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["BowTypeEnum"];
             riser?: string;
             limbs?: string;
             /**
@@ -559,7 +626,7 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
             name: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["BowTypeEnum"];
             riser?: string;
             limbs?: string;
             /**
@@ -593,7 +660,7 @@ export interface components {
             /** Format: int64 */
             number: number;
             name: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["BowTypeEnum"];
             riser?: string;
             limbs?: string;
             /**
@@ -622,6 +689,43 @@ export interface components {
             release_tab?: string;
             notes?: string;
         };
+        /**
+         * @description * `recurve` - Recurve
+         *     * `compound` - Compound
+         *     * `barebow` - Barebow
+         *     * `longbow` - Longbow
+         *     * `traditional` - Traditional
+         * @enum {string}
+         */
+        BowTypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
+        End: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: int64 */
+            index: number;
+            /** Format: decimal */
+            distance_m: string;
+            /** @description Slug from shared/target-faces.json */
+            face: string;
+            arrows_per_end: number;
+            shots: components["schemas"]["Shot"][];
+        };
+        EndRequest: {
+            /** Format: int64 */
+            index: number;
+            /** Format: decimal */
+            distance_m: string;
+            /** @description Slug from shared/target-faces.json */
+            face: string;
+            arrows_per_end: number;
+            shots: components["schemas"]["ShotRequest"][];
+        };
+        /**
+         * @description * `indoor` - Indoor
+         *     * `outdoor` - Outdoor
+         * @enum {string}
+         */
+        EnvironmentEnum: "indoor" | "outdoor";
         Face: {
             slug: string;
             name: string;
@@ -706,7 +810,7 @@ export interface components {
         PatchedBowRequest: {
             is_active?: boolean;
             name?: string;
-            type?: components["schemas"]["TypeEnum"];
+            type?: components["schemas"]["BowTypeEnum"];
             riser?: string;
             limbs?: string;
             /**
@@ -784,6 +888,73 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "archer" | "coach" | "admin";
+        /** @description Full session for the detail view. */
+        Session: {
+            /** Format: uuid */
+            readonly id: string;
+            owner: number;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            type: components["schemas"]["SessionTypeEnum"];
+            environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
+            location?: string;
+            weather?: string;
+            setup?: number | null;
+            physical_rating?: number | null;
+            mental_rating?: number | null;
+            goals?: string;
+            notes?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly ends: components["schemas"]["End"][];
+            readonly volume_entries: components["schemas"]["VolumeEntry"][];
+        };
+        SessionSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            owner: number;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            type: components["schemas"]["SessionTypeEnum"];
+            environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
+            location?: string;
+            setup?: number | null;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly ends: number;
+            readonly scored_arrows: number;
+            readonly score_total: number;
+            readonly volume_arrows: number;
+        };
+        /**
+         * @description * `scoring` - Scoring
+         *     * `volume` - Volume
+         *     * `technique` - Technique
+         *     * `competition` - Competition
+         * @enum {string}
+         */
+        SessionTypeEnum: "scoring" | "volume" | "technique" | "competition";
+        SessionWriteRequest: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            type: components["schemas"]["SessionTypeEnum"];
+            environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
+            location?: string;
+            weather?: string;
+            setup?: number | null;
+            physical_rating?: number | null;
+            mental_rating?: number | null;
+            goals?: string;
+            notes?: string;
+        };
         Setup: {
             readonly id: number;
             readonly owner: number;
@@ -797,6 +968,41 @@ export interface components {
         SetupRequest: {
             bow_revision: number;
             arrow_set_revision?: number | null;
+        };
+        /** @description What the app sends for a shot. The score fields are advisory: the server works out its own. */
+        Shot: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            spot?: number;
+            /** Format: double */
+            x?: number | null;
+            /** Format: double */
+            y?: number | null;
+            /** Format: int64 */
+            value?: number | null;
+            is_x?: boolean;
+            is_miss?: boolean;
+            readonly is_manual: boolean;
+            /** Format: int64 */
+            arrow_number?: number | null;
+        };
+        /** @description What the app sends for a shot. The score fields are advisory: the server works out its own. */
+        ShotRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            spot?: number;
+            /** Format: double */
+            x?: number | null;
+            /** Format: double */
+            y?: number | null;
+            /** Format: int64 */
+            value?: number | null;
+            is_x?: boolean;
+            is_miss?: boolean;
+            /** Format: int64 */
+            arrow_number?: number | null;
         };
         Spot: {
             /**
@@ -834,20 +1040,25 @@ export interface components {
             refresh: string;
         };
         /**
-         * @description * `recurve` - Recurve
-         *     * `compound` - Compound
-         *     * `barebow` - Barebow
-         *     * `longbow` - Longbow
-         *     * `traditional` - Traditional
-         * @enum {string}
-         */
-        TypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
-        /**
          * @description * `metric` - Metric
          *     * `imperial` - Imperial
          * @enum {string}
          */
         UnitsEnum: "metric" | "imperial";
+        VolumeEntry: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: decimal */
+            distance_m: string;
+            /** Format: int64 */
+            arrow_count: number;
+        };
+        VolumeEntryRequest: {
+            /** Format: decimal */
+            distance_m: string;
+            /** Format: int64 */
+            arrow_count: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -1361,6 +1572,232 @@ export interface operations {
                         [key: string]: unknown;
                     };
                 };
+            };
+        };
+    };
+    sessions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `indoor` - Indoor
+                 *     * `outdoor` - Outdoor
+                 */
+                environment?: "indoor" | "outdoor";
+                owner?: number;
+                started_after?: string;
+                started_before?: string;
+                /**
+                 * @description * `scoring` - Scoring
+                 *     * `volume` - Volume
+                 *     * `technique` - Technique
+                 *     * `competition` - Competition
+                 */
+                type?: "competition" | "scoring" | "technique" | "volume";
+                updated_after?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummary"][];
+                };
+            };
+        };
+    };
+    sessions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
+    sessions_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SessionWriteRequest"];
+                "multipart/form-data": components["schemas"]["SessionWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
+    sessions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sessions_ends_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                end_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EndRequest"];
+                "multipart/form-data": components["schemas"]["EndRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["End"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["End"];
+                };
+            };
+        };
+    };
+    sessions_ends_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                end_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sessions_volume_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VolumeEntryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["VolumeEntryRequest"];
+                "multipart/form-data": components["schemas"]["VolumeEntryRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolumeEntry"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolumeEntry"];
+                };
+            };
+        };
+    };
+    sessions_volume_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -635,6 +635,280 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/sessions/:
+    get:
+      operationId: sessions_list
+      description: 'Sessions you may see: your own and those of the archers you coach,
+        newest first, with totals.'
+      parameters:
+      - in: query
+        name: environment
+        schema:
+          type: string
+          enum:
+          - indoor
+          - outdoor
+        description: |-
+          * `indoor` - Indoor
+          * `outdoor` - Outdoor
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      - in: query
+        name: started_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: started_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum:
+          - competition
+          - scoring
+          - technique
+          - volume
+        description: |-
+          * `scoring` - Scoring
+          * `volume` - Volume
+          * `technique` - Technique
+          * `competition` - Competition
+      - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionSummary'
+          description: ''
+  /api/sessions/{session_id}/:
+    get:
+      operationId: sessions_retrieve
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+    put:
+      operationId: sessions_update
+      description: Create the session with this id, or update it. Safe to repeat.
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SessionWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SessionWriteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+    delete:
+      operationId: sessions_destroy
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sessions/{session_id}/ends/{end_id}/:
+    put:
+      operationId: sessions_ends_update
+      description: Create or replace one end with all its shots. The server fills
+        in the scores. Safe to repeat.
+      parameters:
+      - in: path
+        name: end_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EndRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EndRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/End'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/End'
+          description: ''
+    delete:
+      operationId: sessions_ends_destroy
+      parameters:
+      - in: path
+        name: end_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sessions/{session_id}/volume/{entry_id}/:
+    put:
+      operationId: sessions_volume_update
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolumeEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VolumeEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VolumeEntryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolumeEntry'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolumeEntry'
+          description: ''
+    delete:
+      operationId: sessions_volume_destroy
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/setups/:
     get:
       operationId: setups_list
@@ -1162,7 +1436,7 @@ components:
           type: string
           maxLength: 150
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/BowTypeEnum'
         riser:
           type: string
           maxLength: 150
@@ -1225,7 +1499,7 @@ components:
           minLength: 1
           maxLength: 150
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/BowTypeEnum'
         riser:
           type: string
           maxLength: 150
@@ -1294,7 +1568,7 @@ components:
           type: string
           maxLength: 150
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/BowTypeEnum'
         riser:
           type: string
           maxLength: 150
@@ -1361,7 +1635,7 @@ components:
           minLength: 1
           maxLength: 150
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/BowTypeEnum'
         riser:
           type: string
           maxLength: 150
@@ -1411,6 +1685,94 @@ components:
       - name
       - number
       - type
+    BowTypeEnum:
+      enum:
+      - recurve
+      - compound
+      - barebow
+      - longbow
+      - traditional
+      type: string
+      description: |-
+        * `recurve` - Recurve
+        * `compound` - Compound
+        * `barebow` - Barebow
+        * `longbow` - Longbow
+        * `traditional` - Traditional
+    End:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        index:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        distance_m:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        face:
+          type: string
+          description: Slug from shared/target-faces.json
+          maxLength: 50
+        arrows_per_end:
+          type: integer
+          maximum: 12
+          minimum: 1
+        shots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shot'
+      required:
+      - arrows_per_end
+      - distance_m
+      - face
+      - id
+      - index
+      - shots
+    EndRequest:
+      type: object
+      properties:
+        index:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        distance_m:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        face:
+          type: string
+          minLength: 1
+          description: Slug from shared/target-faces.json
+          maxLength: 50
+        arrows_per_end:
+          type: integer
+          maximum: 12
+          minimum: 1
+        shots:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShotRequest'
+      required:
+      - arrows_per_end
+      - distance_m
+      - face
+      - index
+      - shots
+    EnvironmentEnum:
+      enum:
+      - indoor
+      - outdoor
+      type: string
+      description: |-
+        * `indoor` - Indoor
+        * `outdoor` - Outdoor
     Face:
       type: object
       properties:
@@ -1601,7 +1963,7 @@ components:
           minLength: 1
           maxLength: 150
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/BowTypeEnum'
         riser:
           type: string
           maxLength: 150
@@ -1757,6 +2119,187 @@ components:
         * `archer` - Archer
         * `coach` - Coach
         * `admin` - Admin
+    Session:
+      type: object
+      description: Full session for the detail view.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        owner:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          $ref: '#/components/schemas/SessionTypeEnum'
+        environment:
+          oneOf:
+          - $ref: '#/components/schemas/EnvironmentEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        location:
+          type: string
+          maxLength: 150
+        weather:
+          type: string
+          maxLength: 150
+        setup:
+          type: integer
+          nullable: true
+        physical_rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          nullable: true
+        mental_rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          nullable: true
+        goals:
+          type: string
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ends:
+          type: array
+          items:
+            $ref: '#/components/schemas/End'
+          readOnly: true
+        volume_entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/VolumeEntry'
+          readOnly: true
+      required:
+      - created_at
+      - ends
+      - id
+      - owner
+      - started_at
+      - type
+      - updated_at
+      - volume_entries
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        owner:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          $ref: '#/components/schemas/SessionTypeEnum'
+        environment:
+          oneOf:
+          - $ref: '#/components/schemas/EnvironmentEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        location:
+          type: string
+          maxLength: 150
+        setup:
+          type: integer
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ends:
+          type: integer
+          readOnly: true
+        scored_arrows:
+          type: integer
+          readOnly: true
+        score_total:
+          type: integer
+          readOnly: true
+        volume_arrows:
+          type: integer
+          readOnly: true
+      required:
+      - ends
+      - id
+      - owner
+      - score_total
+      - scored_arrows
+      - started_at
+      - type
+      - updated_at
+      - volume_arrows
+    SessionTypeEnum:
+      enum:
+      - scoring
+      - volume
+      - technique
+      - competition
+      type: string
+      description: |-
+        * `scoring` - Scoring
+        * `volume` - Volume
+        * `technique` - Technique
+        * `competition` - Competition
+    SessionWriteRequest:
+      type: object
+      properties:
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          $ref: '#/components/schemas/SessionTypeEnum'
+        environment:
+          oneOf:
+          - $ref: '#/components/schemas/EnvironmentEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        location:
+          type: string
+          maxLength: 150
+        weather:
+          type: string
+          maxLength: 150
+        setup:
+          type: integer
+          nullable: true
+        physical_rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          nullable: true
+        mental_rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          nullable: true
+        goals:
+          type: string
+        notes:
+          type: string
+      required:
+      - started_at
+      - type
     Setup:
       type: object
       properties:
@@ -1800,6 +2343,88 @@ components:
           nullable: true
       required:
       - bow_revision
+    Shot:
+      type: object
+      description: 'What the app sends for a shot. The score fields are advisory:
+        the server works out its own.'
+      properties:
+        id:
+          type: string
+          format: uuid
+        spot:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        x:
+          type: number
+          format: double
+          nullable: true
+        y:
+          type: number
+          format: double
+          nullable: true
+        value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        is_x:
+          type: boolean
+        is_miss:
+          type: boolean
+        is_manual:
+          type: boolean
+          readOnly: true
+        arrow_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+      required:
+      - id
+      - is_manual
+    ShotRequest:
+      type: object
+      description: 'What the app sends for a shot. The score fields are advisory:
+        the server works out its own.'
+      properties:
+        id:
+          type: string
+          format: uuid
+        spot:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        x:
+          type: number
+          format: double
+          nullable: true
+        y:
+          type: number
+          format: double
+          nullable: true
+        value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        is_x:
+          type: boolean
+        is_miss:
+          type: boolean
+        arrow_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+      required:
+      - id
     Spot:
       type: object
       properties:
@@ -1884,20 +2509,6 @@ components:
           minLength: 1
       required:
       - refresh
-    TypeEnum:
-      enum:
-      - recurve
-      - compound
-      - barebow
-      - longbow
-      - traditional
-      type: string
-      description: |-
-        * `recurve` - Recurve
-        * `compound` - Compound
-        * `barebow` - Barebow
-        * `longbow` - Longbow
-        * `traditional` - Traditional
     UnitsEnum:
       enum:
       - metric
@@ -1906,6 +2517,41 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    VolumeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        distance_m:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        arrow_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+      required:
+      - arrow_count
+      - distance_m
+      - id
+    VolumeEntryRequest:
+      type: object
+      properties:
+        distance_m:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        arrow_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+      required:
+      - arrow_count
+      - distance_m
   securitySchemes:
     jwtAuth:
       type: http

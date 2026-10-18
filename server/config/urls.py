@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/", include("core.urls")),
     path("api/", include("equipment.urls")),
     path("api/", include("targets.urls")),
+    path("api/", include("training.urls")),
     path("api/token/", TokenObtainPairView.as_view()),
     path("api/token/refresh/", TokenRefreshView.as_view()),
     path("api/token/blacklist/", TokenBlacklistView.as_view()),
