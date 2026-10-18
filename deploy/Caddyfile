@@ -1,0 +1,14 @@
+{$SITE_ADDRESS}
+
+# Django API, admin and static files
+@django path /api/* /admin/* /static/*
+handle @django {
+	reverse_proxy django:8000
+}
+
+# Web app (static export from `npx expo export -p web`, single-page app)
+handle {
+	root * /srv/web
+	try_files {path} /index.html
+	file_server
+}

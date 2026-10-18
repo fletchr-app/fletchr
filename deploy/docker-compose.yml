@@ -1,0 +1,33 @@
+# Same file locally and on the server; only deploy/.env differs (see .env.example).
+services:
+  django:
+    build: ../server
+    restart: unless-stopped
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set DJANGO_SECRET_KEY in deploy/.env}
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DJANGO_CORS_ORIGINS: ${DJANGO_CORS_ORIGINS:-}
+    volumes:
+      - ./data/django:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - django
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Web app build; run `npx expo export -p web` in the repo root first.
+      - type: bind
+        source: ../dist
+        target: /srv/web
+        read_only: true
+        bind:
+          create_host_path: false
+      - ./data/caddy:/data
