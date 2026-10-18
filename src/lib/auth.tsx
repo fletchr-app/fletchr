@@ -2,6 +2,8 @@ import { createContext, ReactNode, useCallback, useContext, useMemo, useSyncExte
 
 import type { components } from '@/lib/api-types';
 import { ApiClient, AuthSession } from '@/lib/auth-session';
+import { errorMessage } from '@/lib/errors';
+import { userIdOf } from '@/lib/jwt';
 import { useServer } from '@/lib/server';
 
 export type RegisterBody = components['schemas']['RegisterRequest'];
@@ -11,6 +13,8 @@ type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 type AuthContextValue = {
   status: AuthStatus;
   api: ApiClient;
+  /** Id of the signed-in user, read from the access token so it is known offline. */
+  userId: string | null;
   // The sign-in functions return an error message, or null on success.
   signIn: (email: string, password: string) => Promise<string | null>;
   register: (body: RegisterBody) => Promise<string | null>;
@@ -18,16 +22,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-// DRF errors look like {detail: "..."} or {field: ["..."]}.
-export function errorMessage(error: unknown): string {
-  if (error && typeof error === 'object') {
-    const parts = Object.values(error as Record<string, unknown>).flatMap((v) => (Array.isArray(v) ? v : [v]));
-    const text = parts.filter((p) => typeof p === 'string').join(' ');
-    if (text) return text;
-  }
-  return 'Something went wrong';
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { url } = useServer();
@@ -76,7 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [api, session]);
 
   const status: AuthStatus = !loaded ? 'loading' : tokens ? 'signedIn' : 'signedOut';
-  const value = useMemo(() => ({ status, api, signIn, register, signOut }), [status, api, signIn, register, signOut]);
+  const userId = tokens ? userIdOf(tokens.access) : null;
+  const value = useMemo(
+    () => ({ status, api, userId, signIn, register, signOut }),
+    [status, api, userId, signIn, register, signOut],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

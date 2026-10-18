@@ -43,6 +43,9 @@ export default function HomeScreen() {
           <Text style={{ color: colors.text, opacity: 0.6 }}>{team.my_role}</Text>
         </View>
       ))}
+      <Link href="/training" style={{ color: colors.primary, fontSize: 18, fontWeight: '600' }}>
+        Training
+      </Link>
       <Link href="/equipment" style={{ color: colors.primary }}>
         My equipment
       </Link>

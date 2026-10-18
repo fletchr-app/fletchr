@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { Button, ErrorText, Field, Screen } from '@/components/form';
-import { errorMessage, useAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
+import { errorMessage } from '@/lib/errors';
 
 export default function JoinTeamScreen() {
   const { api } = useAuth();

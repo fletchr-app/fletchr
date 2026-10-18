@@ -48,6 +48,35 @@ export function Button({
   );
 }
 
+export function Chips<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.field}>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <View style={styles.chips}>
+        {options.map((option) => (
+          <Pressable
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            style={[styles.chip, { backgroundColor: value === option.value ? colors.primary : colors.border }]}>
+            <Text style={{ color: value === option.value ? 'white' : colors.text }}>{option.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export function ErrorText({ children }: { children?: string | null }) {
   const { colors } = useTheme();
   return children ? <Text style={{ color: colors.notification }}>{children}</Text> : null;
@@ -58,5 +87,7 @@ const styles = StyleSheet.create({
   field: { gap: 4 },
   label: { fontSize: 14, fontWeight: '600' },
   input: { borderWidth: 1, borderRadius: 8, padding: 10, fontSize: 16 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 },
   button: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
 });

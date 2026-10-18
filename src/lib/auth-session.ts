@@ -1,6 +1,7 @@
 import createClient, { Middleware } from 'openapi-fetch';
 
 import type { paths } from '@/lib/api-types';
+import { expiresAt } from '@/lib/jwt';
 import { loadTokens, saveTokens, Tokens } from '@/lib/token-storage';
 
 export type ApiClient = ReturnType<typeof createClient<paths>>;
@@ -9,15 +10,6 @@ export type SessionState = { loaded: boolean; tokens: Tokens | null };
 // Endpoints that must not carry (or wait for) an access token.
 const PUBLIC_PATHS = ['/api/token/', '/api/token/refresh/', '/api/token/blacklist/', '/api/register/', '/api/health/'];
 const REFRESH_MARGIN_MS = 30_000;
-
-function expiresAt(jwt: string): number {
-  try {
-    const payload = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(payload)).exp * 1000;
-  } catch {
-    return 0;
-  }
-}
 
 /** Tokens for one server, kept outside React so the API client can read them at any time. */
 export class AuthSession {

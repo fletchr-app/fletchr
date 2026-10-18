@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { LogProvider } from '@/lib/log';
 import { ServerProvider } from '@/lib/server';
 
 export default function RootLayout() {
@@ -10,7 +11,9 @@ export default function RootLayout() {
     <ServerProvider>
       <AuthProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <RootNavigator />
+          <LogProvider>
+            <RootNavigator />
+          </LogProvider>
         </ThemeProvider>
       </AuthProvider>
     </ServerProvider>
@@ -26,6 +29,9 @@ function RootNavigator() {
       <Stack.Protected guard={status === 'signedIn'}>
         <Stack.Screen name="index" options={{ title: 'Archery Coach' }} />
         <Stack.Screen name="join-team" options={{ title: 'Join a team' }} />
+        <Stack.Screen name="training/index" options={{ title: 'Training' }} />
+        <Stack.Screen name="training/new" options={{ title: 'New session' }} />
+        <Stack.Screen name="training/[id]" options={{ title: 'Session' }} />
         <Stack.Screen name="equipment/index" options={{ title: 'Equipment' }} />
         <Stack.Screen name="equipment/bows/[id]" options={{ title: 'Bow' }} />
         <Stack.Screen name="equipment/arrow-sets/[id]" options={{ title: 'Arrow set' }} />

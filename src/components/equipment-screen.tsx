@@ -1,8 +1,8 @@
 import { router, useLocalSearchParams, useTheme } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { ScrollView, Switch, Text, View } from 'react-native';
 
-import { Button, ErrorText, Field, Screen } from '@/components/form';
+import { Button, Chips, ErrorText, Field, Screen } from '@/components/form';
 import type { FieldSpec } from '@/lib/equipment-fields';
 
 type Item = { id: number; is_active?: boolean; revision_number: number } & Record<string, unknown>;
@@ -107,24 +107,13 @@ function EquipmentForm({
       <Screen>
         {fields.map((f) =>
           f.kind === 'choice' ? (
-            <View key={f.key} style={{ gap: 4 }}>
-              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>{f.label}</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {f.options?.map((option) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => setValues((v) => ({ ...v, [f.key]: option }))}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 16,
-                      backgroundColor: values[f.key] === option ? colors.primary : colors.border,
-                    }}>
-                    <Text style={{ color: values[f.key] === option ? 'white' : colors.text }}>{option}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <Chips
+              key={f.key}
+              label={f.label}
+              options={(f.options ?? []).map((o) => ({ value: o, label: o }))}
+              value={values[f.key]}
+              onChange={(option) => setValues((v) => ({ ...v, [f.key]: option }))}
+            />
           ) : (
             <Field
               key={f.key}

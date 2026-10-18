@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 
 import { EquipmentAdapter, EquipmentScreen } from '@/components/equipment-screen';
 import type { components } from '@/lib/api-types';
-import { errorMessage, useAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
+import { errorMessage } from '@/lib/errors';
 import { ARROW_SET_FIELDS } from '@/lib/equipment-fields';
 
 type Body = components['schemas']['ArrowSetRequest'];
