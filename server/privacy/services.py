@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction
 
+from core.models import Invite, Role, TeamMember
 from equipment.models import ArrowSet, Bow, Setup
 from notes.models import Note
 from training.models import Shot, TrainingSession
@@ -42,3 +43,42 @@ def delete_my_data(user) -> dict:
     counts = {**_delete_training(user), **_delete_equipment(user), **_delete_notes_about(user)}
     logger.info("User %s deleted their data: %s", user.pk, counts)
     return counts
+
+
+class AccountBlocked(Exception):
+    """The user is the only admin of teams that other people still belong to."""
+
+    def __init__(self, teams):
+        self.teams = teams  # [(team, number of other members)]
+
+
+def _teams_to_hand_over(user):
+    blocked = []
+    for membership in TeamMember.objects.filter(user=user, role=Role.ADMIN).select_related("team"):
+        others = TeamMember.objects.filter(team=membership.team).exclude(user=user)
+        if others.exists() and not others.filter(role=Role.ADMIN).exists():
+            blocked.append((membership.team, others.count()))
+    return blocked
+
+
+@transaction.atomic
+def delete_account(user) -> dict:
+    """
+    Erase the user and everything of theirs. Refused (nothing changes) while they are the only admin of a
+    team others belong to. Teams they were the only member of go with them; other teams carry on.
+    Notes they wrote about others stay, shown as written by a former coach.
+    """
+    blocked = _teams_to_hand_over(user)
+    if blocked:
+        raise AccountBlocked(blocked)
+    counts = delete_my_data(user)  # first, in the right order: setups are protected while sessions use them
+    alone = [m.team for m in TeamMember.objects.filter(user=user).select_related("team") if not TeamMember.objects.filter(team=m.team).exclude(user=user).exists()]
+    teams_left = TeamMember.objects.filter(user=user).count() - len(alone)
+    for team in alone:
+        team.delete()
+    # An invite nobody used yet should not outlive the person who made it.
+    Invite.objects.filter(created_by=user, used_at__isnull=True).delete()
+    pk = user.pk
+    user.delete()
+    logger.info("User %s deleted their account: %s", pk, counts)
+    return {"deleted": counts, "teams_left": teams_left, "teams_deleted": len(alone)}

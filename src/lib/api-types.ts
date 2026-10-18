@@ -165,6 +165,23 @@ export interface paths {
         patch: operations["me_partial_update"];
         trace?: never;
     };
+    "/api/me/delete-account/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Erase my account and all my data, for good. Needs my password. Refused while I am the only admin of a team others are in. */
+        post: operations["me_delete_account_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/delete-data/": {
         parameters: {
             query?: never;
@@ -554,10 +571,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Takes a refresh type JSON web token and returns an access type JSON web
-         *     token if the refresh token is valid.
-         */
+        /** @description simplejwt crashes (500) when the account behind a refresh token has been deleted: refuse it (401) instead. */
         post: operations["token_refresh_create"];
         delete?: never;
         options?: never;
@@ -569,6 +583,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountBlocked: {
+            detail: string;
+            teams: components["schemas"]["BlockingTeam"][];
+        };
         ArcherOverview: {
             user_id: number;
             /** @description archer, or coach/admin for a coach who shares their training */
@@ -677,6 +695,12 @@ export interface components {
         };
         /** @enum {unknown} */
         BlankEnum: "";
+        BlockingTeam: {
+            id: number;
+            name: string;
+            /** @description Members other than me */
+            members: number;
+        };
         Bow: {
             readonly id: number;
             readonly owner: number;
@@ -827,9 +851,23 @@ export interface components {
          * @enum {string}
          */
         BowTypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
+        /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
+        DeleteAccountRequestRequest: {
+            password: string;
+            /** @description The confirmation word shown in the app */
+            confirm: string;
+        };
+        DeleteAccountResponse: {
+            deleted: components["schemas"]["DeletedCounts"];
+            /** @description Teams I was a member of; they go on without me */
+            teams_left: number;
+            /** @description Teams where I was the only member */
+            teams_deleted: number;
+        };
+        /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteDataRequestRequest: {
             password: string;
-            /** @description Must be the word "DELETE" */
+            /** @description The confirmation word shown in the app */
             confirm: string;
         };
         DeleteDataResponse: {
@@ -1812,6 +1850,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    me_delete_account_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DeleteAccountRequestRequest"];
+                "multipart/form-data": components["schemas"]["DeleteAccountRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteAccountResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountBlocked"];
                 };
             };
         };

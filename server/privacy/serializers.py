@@ -1,21 +1,30 @@
 from rest_framework import serializers
 
-CONFIRMATION_WORD = "DELETE"
 
+class ConfirmedRequestSerializer(serializers.Serializer):
+    """Password plus a confirmation word that is typed out, so it cannot be done by accident."""
 
-class DeleteDataRequestSerializer(serializers.Serializer):
+    confirmation_word = ""
     password = serializers.CharField(write_only=True)
-    confirm = serializers.CharField(write_only=True, help_text=f'Must be the word "{CONFIRMATION_WORD}"')
+    confirm = serializers.CharField(write_only=True, help_text="The confirmation word shown in the app")
 
     def validate_confirm(self, value):
-        if value.strip() != CONFIRMATION_WORD:
-            raise serializers.ValidationError(f'Type the word "{CONFIRMATION_WORD}" to confirm')
+        if value.strip() != self.confirmation_word:
+            raise serializers.ValidationError(f'Type the words "{self.confirmation_word}" to confirm')
         return value
 
     def validate_password(self, value):
         if not self.context["request"].user.check_password(value):
             raise serializers.ValidationError("Wrong password")
         return value
+
+
+class DeleteDataRequestSerializer(ConfirmedRequestSerializer):
+    confirmation_word = "DELETE"
+
+
+class DeleteAccountRequestSerializer(ConfirmedRequestSerializer):
+    confirmation_word = "DELETE ACCOUNT"
 
 
 class DeletedCountsSerializer(serializers.Serializer):
@@ -28,3 +37,19 @@ class DeletedCountsSerializer(serializers.Serializer):
 
 class DeleteDataResponseSerializer(serializers.Serializer):
     deleted = DeletedCountsSerializer()
+
+
+class DeleteAccountResponseSerializer(DeleteDataResponseSerializer):
+    teams_left = serializers.IntegerField(help_text="Teams I was a member of; they go on without me")
+    teams_deleted = serializers.IntegerField(help_text="Teams where I was the only member")
+
+
+class BlockingTeamSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    members = serializers.IntegerField(help_text="Members other than me")
+
+
+class AccountBlockedSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+    teams = BlockingTeamSerializer(many=True)

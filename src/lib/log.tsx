@@ -43,6 +43,8 @@ type LogContextValue = {
   retryFailed: () => void;
   discardFailed: () => void;
   deleteMyData: (password: string, confirm: string) => Promise<{ deleted: DeletedCounts } | { error: string }>;
+  /** Deletes the account too; on success you are signed out, so the screen is gone when this returns. */
+  deleteMyAccount: (password: string, confirm: string) => Promise<{ error: string; teams: string[] }>;
 };
 
 export type DeletedCounts = components['schemas']['DeletedCounts'];
@@ -50,7 +52,7 @@ export type DeletedCounts = components['schemas']['DeletedCounts'];
 const LogContext = createContext<LogContextValue | null>(null);
 
 export function LogProvider({ children }: { children: ReactNode }) {
-  const { api, userId, status } = useAuth();
+  const { api, userId, status, signOut } = useAuth();
   const { url } = useServer();
   // Each user on each server has their own local log.
   const storageKey = userId !== null ? `log:${url}:${userId}` : null;
@@ -104,22 +106,50 @@ export function LogProvider({ children }: { children: ReactNode }) {
     }
   }, [api, loaded, status, dispatch]);
 
+  // Uploads wait while the server erases something, and for any upload already on its way.
+  const withUploadsPaused = useCallback(async <T,>(action: () => Promise<T>): Promise<T> => {
+    paused.current = true;
+    try {
+      await inflight.current?.catch(() => {});
+      return await action();
+    } finally {
+      paused.current = false;
+    }
+  }, []);
+
   const deleteMyData = useCallback(
-    async (password: string, confirm: string) => {
-      paused.current = true;
-      try {
-        await inflight.current?.catch(() => {});
-        const { data, error } = await api.POST('/api/me/delete-data/', { body: { password, confirm } });
-        if (!data) return { error: errorMessage(error) };
-        dispatch({ type: 'reset' });
-        return { deleted: data.deleted };
-      } catch {
-        return { error: 'Server not reachable. Nothing was deleted.' };
-      } finally {
-        paused.current = false;
-      }
-    },
-    [api, dispatch],
+    (password: string, confirm: string) =>
+      withUploadsPaused(async () => {
+        try {
+          const { data, error } = await api.POST('/api/me/delete-data/', { body: { password, confirm } });
+          if (!data) return { error: errorMessage(error) };
+          dispatch({ type: 'reset' });
+          return { deleted: data.deleted };
+        } catch {
+          return { error: 'Server not reachable. Nothing was deleted.' };
+        }
+      }),
+    [api, dispatch, withUploadsPaused],
+  );
+
+  const deleteMyAccount = useCallback(
+    (password: string, confirm: string) =>
+      withUploadsPaused(async () => {
+        try {
+          const { data, error } = await api.POST('/api/me/delete-account/', { body: { password, confirm } });
+          if (!data) {
+            const blocking = (error as { teams?: { name: string }[] } | undefined)?.teams ?? [];
+            return { error: errorMessage(error), teams: blocking.map((t) => t.name) };
+          }
+          dispatch({ type: 'reset' });
+          if (storageKey) await AsyncStorage.removeItem(storageKey).catch(() => {});
+          await signOut(); // the account is gone: back to the sign-in screen
+          return { error: '', teams: [] };
+        } catch {
+          return { error: 'Server not reachable. Nothing was deleted.', teams: [] };
+        }
+      }),
+    [api, dispatch, withUploadsPaused, storageKey, signOut],
   );
 
   // Your equipment is copied to the device whenever it is online, so a session can start at the range without a connection.
@@ -182,8 +212,9 @@ export function LogProvider({ children }: { children: ReactNode }) {
       },
       discardFailed: () => dispatch({ type: 'discardFailed' }),
       deleteMyData,
+      deleteMyAccount,
     }),
-    [loaded, state.sessions, state.equipment, refreshEquipment, waiting, failed, dispatch, flush, deleteMyData],
+    [loaded, state.sessions, state.equipment, refreshEquipment, waiting, failed, dispatch, flush, deleteMyData, deleteMyAccount],
   );
   return <LogContext.Provider value={value}>{children}</LogContext.Provider>;
 }

@@ -16,7 +16,7 @@ function summary(d: DeletedCounts) {
   ].join(', ');
 }
 
-export default function YourData() {
+function DeleteData() {
   const { colors } = useTheme();
   const { deleteMyData } = useLog();
   const [password, setPassword] = useState('');
@@ -40,8 +40,7 @@ export default function YourData() {
 
   const text = { color: colors.text };
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-      <Screen>
+    <>
         <Text style={[text, { fontSize: 20, fontWeight: '600' }]}>Delete my data</Text>
         <Text style={text}>
           This erases, for good: all your sessions with their arrows, all your bows and arrow sets, and the coach notes written about you
@@ -62,6 +61,53 @@ export default function YourData() {
             <Button title="Delete my data" onPress={erase} busy={busy} />
           </>
         )}
+    </>
+  );
+}
+
+function DeleteAccount() {
+  const { colors } = useTheme();
+  const { deleteMyAccount } = useLog();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ error: string; teams: string[] } | null>(null);
+
+  async function erase() {
+    setBusy(true);
+    setResult(null);
+    // On success you are signed out and this screen disappears.
+    setResult(await deleteMyAccount(password, confirm));
+    setBusy(false);
+  }
+
+  const text = { color: colors.text };
+  return (
+    <>
+      <Text style={[text, { fontSize: 20, fontWeight: '600', marginTop: 24 }]}>Delete my account</Text>
+      <Text style={text}>
+        This erases everything above and also your account: your login, your profile and your membership of every team. You are signed out
+        and cannot sign in again. The teams carry on without you, a team you are alone in is deleted, and notes you wrote about other
+        archers stay, shown as written by a former coach. Invites you made that nobody has used yet are cancelled.
+      </Text>
+      <Text style={text}>
+        If you are the only admin of a team that others belong to, make someone else an admin first (for now in the server&apos;s admin
+        pages); then you can delete your account. It cannot be undone.
+      </Text>
+      <Field label="Your password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+      <Field label="Type DELETE ACCOUNT to confirm" value={confirm} onChangeText={setConfirm} autoCapitalize="characters" onSubmitEditing={erase} />
+      <ErrorText>{result?.error}</ErrorText>
+      <Button title="Delete my account" onPress={erase} busy={busy} />
+    </>
+  );
+}
+
+export default function YourData() {
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+      <Screen>
+        <DeleteData />
+        <DeleteAccount />
       </Screen>
     </ScrollView>
   );

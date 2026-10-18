@@ -461,6 +461,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/me/delete-account/:
+    post:
+      operationId: me_delete_account_create
+      description: Erase my account and all my data, for good. Needs my password.
+        Refused while I am the only admin of a team others are in.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAccountResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBlocked'
+          description: ''
   /api/me/delete-data/:
     post:
       operationId: me_delete_data_create
@@ -1448,9 +1482,8 @@ paths:
   /api/token/refresh/:
     post:
       operationId: token_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
+      description: 'simplejwt crashes (500) when the account behind a refresh token
+        has been deleted: refuse it (401) instead.'
       tags:
       - token
       requestBody:
@@ -1474,6 +1507,18 @@ paths:
           description: ''
 components:
   schemas:
+    AccountBlocked:
+      type: object
+      properties:
+        detail:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockingTeam'
+      required:
+      - detail
+      - teams
     ArcherOverview:
       type: object
       properties:
@@ -1718,6 +1763,20 @@ components:
     BlankEnum:
       enum:
       - ''
+    BlockingTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        members:
+          type: integer
+          description: Members other than me
+      required:
+      - id
+      - members
+      - name
     Bow:
       type: object
       properties:
@@ -2006,8 +2065,10 @@ components:
         * `barebow` - Barebow
         * `longbow` - Longbow
         * `traditional` - Traditional
-    DeleteDataRequestRequest:
+    DeleteAccountRequestRequest:
       type: object
+      description: Password plus a confirmation word that is typed out, so it cannot
+        be done by accident.
       properties:
         password:
           type: string
@@ -2017,7 +2078,39 @@ components:
           type: string
           writeOnly: true
           minLength: 1
-          description: Must be the word "DELETE"
+          description: The confirmation word shown in the app
+      required:
+      - confirm
+      - password
+    DeleteAccountResponse:
+      type: object
+      properties:
+        deleted:
+          $ref: '#/components/schemas/DeletedCounts'
+        teams_left:
+          type: integer
+          description: Teams I was a member of; they go on without me
+        teams_deleted:
+          type: integer
+          description: Teams where I was the only member
+      required:
+      - deleted
+      - teams_deleted
+      - teams_left
+    DeleteDataRequestRequest:
+      type: object
+      description: Password plus a confirmation word that is typed out, so it cannot
+        be done by accident.
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: The confirmation word shown in the app
       required:
       - confirm
       - password

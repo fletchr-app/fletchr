@@ -9,7 +9,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from . import access
 from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User
@@ -171,3 +173,13 @@ class MyMembershipView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class SafeTokenRefreshView(TokenRefreshView):
+    """simplejwt crashes (500) when the account behind a refresh token has been deleted: refuse it (401) instead."""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except User.DoesNotExist:
+            raise InvalidToken("This account no longer exists")
