@@ -53,3 +53,12 @@ class BlockingTeamSerializer(serializers.Serializer):
 class AccountBlockedSerializer(serializers.Serializer):
     detail = serializers.CharField()
     teams = BlockingTeamSerializer(many=True)
+
+
+class ExportRequestSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+
+    def validate_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Wrong password")
+        return value

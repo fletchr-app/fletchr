@@ -1,3 +1,6 @@
+from datetime import date
+
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -11,7 +14,9 @@ from .serializers import (
     DeleteAccountResponseSerializer,
     DeleteDataRequestSerializer,
     DeleteDataResponseSerializer,
+    ExportRequestSerializer,
 )
+from .export import export_user_data
 from .services import AccountBlocked, delete_account, delete_my_data
 
 
@@ -50,3 +55,18 @@ class DeleteMyAccountView(APIView):
                 {"detail": f"You are the only admin of {names}. Make someone else an admin there first.", "teams": teams},
                 status=status.HTTP_409_CONFLICT,
             )
+
+
+class ExportMyDataView(APIView):
+    """Everything the server has about me, as one JSON document. Needs my password."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sensitive"
+
+    @extend_schema(request=ExportRequestSerializer, responses=OpenApiTypes.OBJECT)
+    def post(self, request):
+        serializer = ExportRequestSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        response = Response(export_user_data(request.user))
+        response["Content-Disposition"] = f'attachment; filename="archery-coach-data-{date.today().isoformat()}.json"'
+        return response

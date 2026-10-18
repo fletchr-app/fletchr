@@ -199,6 +199,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Everything the server has about me, as one JSON document. Needs my password. */
+        post: operations["me_export_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notes/": {
         parameters: {
             query?: never;
@@ -908,6 +925,9 @@ export interface components {
          * @enum {string}
          */
         EnvironmentEnum: "indoor" | "outdoor";
+        ExportRequestRequest: {
+            password: string;
+        };
         Face: {
             slug: string;
             name: string;
@@ -1908,6 +1928,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeleteDataResponse"];
+                };
+            };
+        };
+    };
+    me_export_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];
+                "multipart/form-data": components["schemas"]["ExportRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

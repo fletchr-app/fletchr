@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 
 import { Button, ErrorText, Field, Screen } from '@/components/form';
+import { useAuth } from '@/lib/auth';
+import { errorMessage } from '@/lib/errors';
+import { saveJson } from '@/lib/export-file';
 import { useLog, type DeletedCounts } from '@/lib/log';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -14,6 +17,49 @@ function summary(d: DeletedCounts) {
     plural(d.arrow_sets, 'arrow set', 'arrow sets'),
     plural(d.notes_about_me, 'coach note about you', 'coach notes about you'),
   ].join(', ');
+}
+
+function ExportData() {
+  const { colors } = useTheme();
+  const { api } = useAuth();
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  async function download() {
+    setBusy(true);
+    setError(null);
+    setDone(false);
+    try {
+      const { data, error } = await api.POST('/api/me/export/', { body: { password } });
+      if (!data) setError(errorMessage(error));
+      else {
+        await saveJson(`archery-coach-data-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2));
+        setPassword('');
+        setDone(true);
+      }
+    } catch (e) {
+      setError(e instanceof Error && e.message.startsWith('Sharing') ? e.message : 'Could not get your data. Is the server reachable?');
+    }
+    setBusy(false);
+  }
+
+  const text = { color: colors.text };
+  return (
+    <>
+      <Text style={[text, { fontSize: 20, fontWeight: '600' }]}>Download my data</Text>
+      <Text style={text}>
+        One file (JSON) with everything the server has about you: your profile and teams, your equipment with its history, all your
+        sessions with every arrow, and the coach notes about you, including the ones that were not shared with you, and the notes you
+        wrote yourself.
+      </Text>
+      <Field label="Your password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" onSubmitEditing={download} />
+      <ErrorText>{error}</ErrorText>
+      {done && <Text style={[text, { fontWeight: '600' }]}>Your data was exported.</Text>}
+      <Button title="Download my data" onPress={download} busy={busy} />
+    </>
+  );
 }
 
 function DeleteData() {
@@ -41,7 +87,7 @@ function DeleteData() {
   const text = { color: colors.text };
   return (
     <>
-        <Text style={[text, { fontSize: 20, fontWeight: '600' }]}>Delete my data</Text>
+        <Text style={[text, { fontSize: 20, fontWeight: '600', marginTop: 24 }]}>Delete my data</Text>
         <Text style={text}>
           This erases, for good: all your sessions with their arrows, all your bows and arrow sets, and the coach notes written about you
           (also the ones that were not shared with you). It also clears the copy on this device, including anything still waiting to upload.
@@ -106,6 +152,7 @@ export default function YourData() {
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
       <Screen>
+        <ExportData />
         <DeleteData />
         <DeleteAccount />
       </Screen>

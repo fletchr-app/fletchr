@@ -523,6 +523,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeleteDataResponse'
           description: ''
+  /api/me/export/:
+    post:
+      operationId: me_export_create
+      description: Everything the server has about me, as one JSON document. Needs
+        my password.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/notes/:
     get:
       operationId: notes_list
@@ -2214,6 +2243,15 @@ components:
       description: |-
         * `indoor` - Indoor
         * `outdoor` - Outdoor
+    ExportRequestRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
     Face:
       type: object
       properties:
