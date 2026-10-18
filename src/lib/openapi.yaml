@@ -3,6 +3,368 @@ info:
   title: Archery Coach API
   version: 0.1.0
 paths:
+  /api/arrow-sets/:
+    get:
+      operationId: arrow_sets_list
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      tags:
+      - arrow-sets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArrowSet'
+          description: ''
+    post:
+      operationId: arrow_sets_create
+      tags:
+      - arrow-sets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
+  /api/arrow-sets/{id}/:
+    get:
+      operationId: arrow_sets_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arrow set.
+        required: true
+      tags:
+      - arrow-sets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
+    put:
+      operationId: arrow_sets_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arrow set.
+        required: true
+      tags:
+      - arrow-sets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArrowSetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
+    patch:
+      operationId: arrow_sets_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arrow set.
+        required: true
+      tags:
+      - arrow-sets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedArrowSetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedArrowSetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedArrowSetRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
+    delete:
+      operationId: arrow_sets_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arrow set.
+        required: true
+      tags:
+      - arrow-sets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/arrow-sets/{id}/revisions/:
+    get:
+      operationId: arrow_sets_revisions_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arrow set.
+        required: true
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      tags:
+      - arrow-sets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArrowSetRevision'
+          description: ''
+  /api/bows/:
+    get:
+      operationId: bows_list
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      tags:
+      - bows
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bow'
+          description: ''
+    post:
+      operationId: bows_create
+      tags:
+      - bows
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
+          description: ''
+  /api/bows/{id}/:
+    get:
+      operationId: bows_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bow.
+        required: true
+      tags:
+      - bows
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
+          description: ''
+    put:
+      operationId: bows_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bow.
+        required: true
+      tags:
+      - bows
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BowRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
+          description: ''
+    patch:
+      operationId: bows_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bow.
+        required: true
+      tags:
+      - bows
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBowRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBowRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBowRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
+          description: ''
+    delete:
+      operationId: bows_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bow.
+        required: true
+      tags:
+      - bows
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/bows/{id}/revisions/:
+    get:
+      operationId: bows_revisions_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bow.
+        required: true
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      tags:
+      - bows
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BowRevision'
+          description: ''
   /api/health/:
     get:
       operationId: health_retrieve
@@ -257,6 +619,76 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/setups/:
+    get:
+      operationId: setups_list
+      description: Setups are immutable. Posting a pair of revisions returns the existing
+        setup for it if there is one.
+      parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      tags:
+      - setups
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Setup'
+          description: ''
+    post:
+      operationId: setups_create
+      description: Setups are immutable. Posting a pair of revisions returns the existing
+        setup for it if there is one.
+      tags:
+      - setups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setup'
+          description: ''
+  /api/setups/{id}/:
+    get:
+      operationId: setups_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - setups
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setup'
+          description: ''
   /api/teams/:
     get:
       operationId: teams_list
@@ -468,9 +900,501 @@ paths:
           description: ''
 components:
   schemas:
+    ArrowSet:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        revision:
+          type: integer
+          readOnly: true
+        revision_number:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+      required:
+      - created_at
+      - id
+      - name
+      - owner
+      - revision
+      - revision_number
+    ArrowSetRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+      required:
+      - name
+    ArrowSetRevision:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        arrow_set:
+          type: integer
+        number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+      required:
+      - arrow_set
+      - created_at
+      - id
+      - name
+      - number
+    ArrowSetRevisionRequest:
+      type: object
+      properties:
+        arrow_set:
+          type: integer
+        number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+      required:
+      - arrow_set
+      - name
+      - number
     BlankEnum:
       enum:
       - ''
+    Bow:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        revision:
+          type: integer
+          readOnly: true
+        revision_number:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
+      required:
+      - created_at
+      - id
+      - name
+      - owner
+      - revision
+      - revision_number
+      - type
+    BowRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
+      required:
+      - name
+      - type
+    BowRevision:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bow:
+          type: integer
+        number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
+      required:
+      - bow
+      - created_at
+      - id
+      - name
+      - number
+      - type
+    BowRevisionRequest:
+      type: object
+      properties:
+        bow:
+          type: integer
+        number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
+      required:
+      - bow
+      - name
+      - number
+      - type
     HandEnum:
       enum:
       - right
@@ -566,6 +1490,103 @@ components:
       - name
       - role
       - user_id
+    PatchedArrowSetRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+    PatchedBowRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
     PatchedMeRequest:
       type: object
       properties:
@@ -665,6 +1686,49 @@ components:
         * `archer` - Archer
         * `coach` - Coach
         * `admin` - Admin
+    Setup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        bow_revision:
+          type: integer
+        arrow_set_revision:
+          type: integer
+          nullable: true
+        bow:
+          allOf:
+          - $ref: '#/components/schemas/BowRevision'
+          readOnly: true
+        arrow_set:
+          allOf:
+          - $ref: '#/components/schemas/ArrowSetRevision'
+          readOnly: true
+      required:
+      - arrow_set
+      - bow
+      - bow_revision
+      - created_at
+      - id
+      - owner
+    SetupRequest:
+      type: object
+      properties:
+        bow_revision:
+          type: integer
+        arrow_set_revision:
+          type: integer
+          nullable: true
+      required:
+      - bow_revision
     Team:
       type: object
       properties:
@@ -735,6 +1799,20 @@ components:
           minLength: 1
       required:
       - refresh
+    TypeEnum:
+      enum:
+      - recurve
+      - compound
+      - barebow
+      - longbow
+      - traditional
+      type: string
+      description: |-
+        * `recurve` - Recurve
+        * `compound` - Compound
+        * `barebow` - Barebow
+        * `longbow` - Longbow
+        * `traditional` - Traditional
     UnitsEnum:
       enum:
       - metric

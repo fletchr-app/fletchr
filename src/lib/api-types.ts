@@ -4,6 +4,102 @@
  */
 
 export interface paths {
+    "/api/arrow-sets/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["arrow_sets_list"];
+        put?: never;
+        post: operations["arrow_sets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/arrow-sets/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["arrow_sets_retrieve"];
+        put: operations["arrow_sets_update"];
+        post?: never;
+        delete: operations["arrow_sets_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["arrow_sets_partial_update"];
+        trace?: never;
+    };
+    "/api/arrow-sets/{id}/revisions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["arrow_sets_revisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bows/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bows_list"];
+        put?: never;
+        post: operations["bows_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bows/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bows_retrieve"];
+        put: operations["bows_update"];
+        post?: never;
+        delete: operations["bows_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["bows_partial_update"];
+        trace?: never;
+    };
+    "/api/bows/{id}/revisions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bows_revisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -84,6 +180,40 @@ export interface paths {
          *     - JSON: application/vnd.oai.openapi+json
          */
         get: operations["schema_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setups/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Setups are immutable. Posting a pair of revisions returns the existing setup for it if there is one. */
+        get: operations["setups_list"];
+        put?: never;
+        /** @description Setups are immutable. Posting a pair of revisions returns the existing setup for it if there is one. */
+        post: operations["setups_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setups/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["setups_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -236,8 +366,246 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ArrowSet: {
+            readonly id: number;
+            readonly owner: number;
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly revision: number;
+            readonly revision_number: number;
+            name: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
+        ArrowSetRequest: {
+            is_active?: boolean;
+            name: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
+        ArrowSetRevision: {
+            readonly id: number;
+            arrow_set: number;
+            /** Format: int64 */
+            number: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            name: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
+        ArrowSetRevisionRequest: {
+            arrow_set: number;
+            /** Format: int64 */
+            number: number;
+            name: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
         /** @enum {unknown} */
         BlankEnum: "";
+        Bow: {
+            readonly id: number;
+            readonly owner: number;
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly revision: number;
+            readonly revision_number: number;
+            name: string;
+            type: components["schemas"]["TypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
+        };
+        BowRequest: {
+            is_active?: boolean;
+            name: string;
+            type: components["schemas"]["TypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
+        };
+        BowRevision: {
+            readonly id: number;
+            bow: number;
+            /** Format: int64 */
+            number: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            name: string;
+            type: components["schemas"]["TypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
+        };
+        BowRevisionRequest: {
+            bow: number;
+            /** Format: int64 */
+            number: number;
+            name: string;
+            type: components["schemas"]["TypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
+        };
         /**
          * @description * `right` - Right
          *     * `left` - Left
@@ -277,6 +645,59 @@ export interface components {
             role: components["schemas"]["RoleEnum"];
             /** Format: date-time */
             readonly joined_at: string;
+        };
+        PatchedArrowSetRequest: {
+            is_active?: boolean;
+            name?: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
+        PatchedBowRequest: {
+            is_active?: boolean;
+            name?: string;
+            type?: components["schemas"]["TypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
         };
         PatchedMeRequest: {
             profile?: components["schemas"]["ProfileRequest"];
@@ -319,6 +740,20 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "archer" | "coach" | "admin";
+        Setup: {
+            readonly id: number;
+            readonly owner: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            bow_revision: number;
+            arrow_set_revision?: number | null;
+            readonly bow: components["schemas"]["BowRevision"];
+            readonly arrow_set: components["schemas"]["ArrowSetRevision"];
+        };
+        SetupRequest: {
+            bow_revision: number;
+            arrow_set_revision?: number | null;
+        };
         Team: {
             readonly id: number;
             name: string;
@@ -343,6 +778,15 @@ export interface components {
             refresh: string;
         };
         /**
+         * @description * `recurve` - Recurve
+         *     * `compound` - Compound
+         *     * `barebow` - Barebow
+         *     * `longbow` - Longbow
+         *     * `traditional` - Traditional
+         * @enum {string}
+         */
+        TypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
+        /**
          * @description * `metric` - Metric
          *     * `imperial` - Imperial
          * @enum {string}
@@ -357,6 +801,348 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    arrow_sets_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                owner?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"][];
+                };
+            };
+        };
+    };
+    arrow_sets_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArrowSetRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ArrowSetRequest"];
+                "multipart/form-data": components["schemas"]["ArrowSetRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+        };
+    };
+    arrow_sets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this arrow set. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+        };
+    };
+    arrow_sets_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this arrow set. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArrowSetRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ArrowSetRequest"];
+                "multipart/form-data": components["schemas"]["ArrowSetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+        };
+    };
+    arrow_sets_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this arrow set. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    arrow_sets_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this arrow set. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedArrowSetRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedArrowSetRequest"];
+                "multipart/form-data": components["schemas"]["PatchedArrowSetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+        };
+    };
+    arrow_sets_revisions_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                owner?: number;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this arrow set. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSetRevision"][];
+                };
+            };
+        };
+    };
+    bows_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                owner?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"][];
+                };
+            };
+        };
+    };
+    bows_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BowRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BowRequest"];
+                "multipart/form-data": components["schemas"]["BowRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
+                };
+            };
+        };
+    };
+    bows_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this bow. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
+                };
+            };
+        };
+    };
+    bows_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this bow. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BowRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BowRequest"];
+                "multipart/form-data": components["schemas"]["BowRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
+                };
+            };
+        };
+    };
+    bows_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this bow. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bows_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this bow. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBowRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBowRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBowRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
+                };
+            };
+        };
+    };
+    bows_revisions_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                owner?: number;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this bow. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BowRevision"][];
+                };
+            };
+        };
+    };
     health_retrieve: {
         parameters: {
             query?: never;
@@ -499,6 +1285,73 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    setups_list: {
+        parameters: {
+            query?: {
+                owner?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Setup"][];
+                };
+            };
+        };
+    };
+    setups_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SetupRequest"];
+                "multipart/form-data": components["schemas"]["SetupRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Setup"];
+                };
+            };
+        };
+    };
+    setups_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Setup"];
                 };
             };
         };

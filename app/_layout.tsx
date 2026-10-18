@@ -26,6 +26,9 @@ function RootNavigator() {
       <Stack.Protected guard={status === 'signedIn'}>
         <Stack.Screen name="index" options={{ title: 'Archery Coach' }} />
         <Stack.Screen name="join-team" options={{ title: 'Join a team' }} />
+        <Stack.Screen name="equipment/index" options={{ title: 'Equipment' }} />
+        <Stack.Screen name="equipment/bows/[id]" options={{ title: 'Bow' }} />
+        <Stack.Screen name="equipment/arrow-sets/[id]" options={{ title: 'Arrow set' }} />
       </Stack.Protected>
       <Stack.Protected guard={status === 'signedOut'}>
         <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />

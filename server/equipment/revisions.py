@@ -1,0 +1,23 @@
+from django.db import transaction
+
+from .models import ARROW_SET_FIELDS, BOW_FIELDS, ArrowSet, ArrowSetRevision, Bow, BowRevision
+
+KINDS = {
+    Bow: (BowRevision, BOW_FIELDS, "bow"),
+    ArrowSet: (ArrowSetRevision, ARROW_SET_FIELDS, "arrow_set"),
+}
+
+
+@transaction.atomic
+def record_revision(item):
+    """Make sure the item's current revision matches its current values; write a new one only if they differ."""
+    revision_model, fields, link = KINDS[type(item)]
+    values = {f: getattr(item, f) for f in fields}
+    last = item.current_revision
+    if last is not None and all(getattr(last, f) == v for f, v in values.items()):
+        return last
+    number = last.number + 1 if last else 1
+    revision = revision_model.objects.create(**{link: item}, number=number, **values)
+    item.current_revision = revision
+    item.save(update_fields=["current_revision"])
+    return revision
