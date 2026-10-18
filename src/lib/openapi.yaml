@@ -461,6 +461,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/me/delete-data/:
+    post:
+      operationId: me_delete_data_create
+      description: Erase my sessions, equipment and the coach notes about me, for
+        good. Needs my password.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteDataRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteDataRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeleteDataRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteDataResponse'
+          description: ''
   /api/notes/:
     get:
       operationId: notes_list
@@ -1978,6 +2006,47 @@ components:
         * `barebow` - Barebow
         * `longbow` - Longbow
         * `traditional` - Traditional
+    DeleteDataRequestRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Must be the word "DELETE"
+      required:
+      - confirm
+      - password
+    DeleteDataResponse:
+      type: object
+      properties:
+        deleted:
+          $ref: '#/components/schemas/DeletedCounts'
+      required:
+      - deleted
+    DeletedCounts:
+      type: object
+      properties:
+        sessions:
+          type: integer
+        shots:
+          type: integer
+        bows:
+          type: integer
+        arrow_sets:
+          type: integer
+        notes_about_me:
+          type: integer
+      required:
+      - arrow_sets
+      - bows
+      - notes_about_me
+      - sessions
+      - shots
     End:
       type: object
       properties:

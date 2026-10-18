@@ -62,6 +62,9 @@ export default function HomeScreen() {
       <Link href="/join-team" style={{ color: colors.primary }}>
         Join another team
       </Link>
+      <Link href="/privacy" style={{ color: colors.primary }}>
+        Your data
+      </Link>
       <Link href="/settings" style={{ color: colors.primary }}>
         Server settings
       </Link>

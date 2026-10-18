@@ -29,9 +29,10 @@ function harness(handler: Handler) {
     },
   });
   const run = () => drain(() => state, dispatch, (s, op) => send(api, s, op));
-  return { dispatch, calls, run, state: () => state, queued: () => state.outbox.map((o) => `${o.kind}${o.delete ? '-delete' : ''}${o.error ? '!' : ''}`) };
+  return { api, dispatch, calls, run, state: () => state, queued: () => state.outbox.map((o) => `${o.kind}${o.delete ? '-delete' : ''}${o.error ? '!' : ''}`) };
 }
 
+const apiOf = (h: { api: ReturnType<typeof createClient<paths>> }) => h.api;
 const ok = (call: Call) => (call.method === 'DELETE' ? noContent() : json(200));
 const session: LogSession = {
   id: 's1', started_at: '2026-10-18T09:00:00Z', ended_at: null, type: 'scoring', environment: 'indoor', location: 'Hall', ends: [], volume: [],
@@ -225,4 +226,26 @@ test('no connection or a refusal gives no equipment instead of an error', async 
   assert.equal(await fetchEquipment(down, 7), null);
   const refused = createClient<paths>({ baseUrl: 'http://server', fetch: async () => json(403, { detail: 'no' }) });
   assert.equal(await fetchEquipment(refused, 7), null);
+});
+
+test('uploads can be paused: nothing is sent while the stop signal is on, the queue stays', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await drain(() => h.state(), h.dispatch, (s, op) => send(h.api, s, op), () => true);
+  assert.equal(h.calls.length, 0);
+  assert.deepEqual(h.queued(), ['session', 'end']);
+});
+
+test('a pause that starts in the middle stops after the item being sent', async () => {
+  let paused = false;
+  const h = harness((call, n) => {
+    if (n === 1) paused = true; // the pause begins while the first item is on its way
+    return ok(call);
+  });
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await drain(() => h.state(), h.dispatch, (state, op) => send(apiOf(h), state, op), () => paused);
+  assert.equal(h.calls.length, 1);
+  assert.deepEqual(h.queued(), ['end'], 'the finished item left the queue, the rest waits');
 });

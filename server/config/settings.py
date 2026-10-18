@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "targets",
     "training",
     "notes",
+    "privacy",
 ]
 
 MIDDLEWARE = [
@@ -160,7 +161,7 @@ REST_FRAMEWORK = {
     # Deny by default; endpoints that should be public opt out explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour"},
+    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour"},
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 

@@ -79,14 +79,16 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
 /**
  * Send queued items one by one, oldest first. An item the server accepts leaves the queue; one it
  * refuses is marked failed and skipped; no connection (or a server error) ends the run and leaves
- * everything for the next attempt.
+ * everything for the next attempt. `stop` is checked before each item, to pause the uploads.
  */
 export async function drain(
   get: () => LogState,
   dispatch: (action: LogAction) => void,
   sendOp: (state: LogState, op: Op) => Promise<SendResult>,
+  stop: () => boolean = () => false,
 ): Promise<void> {
   for (;;) {
+    if (stop()) return;
     const state = get();
     const op = state.outbox.find((o) => !o.error);
     if (!op) return;

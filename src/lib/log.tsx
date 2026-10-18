@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { components } from '@/lib/api-types';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { useAuth } from '@/lib/auth';
+import { errorMessage } from '@/lib/errors';
 import {
   EMPTY_LOG,
   Environment,
@@ -40,7 +42,10 @@ type LogContextValue = {
   deleteVolume: (sessionId: string, entryId: string) => void;
   retryFailed: () => void;
   discardFailed: () => void;
+  deleteMyData: (password: string, confirm: string) => Promise<{ deleted: DeletedCounts } | { error: string }>;
 };
+
+export type DeletedCounts = components['schemas']['DeletedCounts'];
 
 const LogContext = createContext<LogContextValue | null>(null);
 
@@ -55,6 +60,9 @@ export function LogProvider({ children }: { children: ReactNode }) {
   // The ref is the current truth, so the upload loop sees its own updates immediately.
   const current = useRef<LogState>(EMPTY_LOG);
   const flushing = useRef(false);
+  // Uploads stop while the server erases your data, so a queued upload cannot bring it back.
+  const paused = useRef(false);
+  const inflight = useRef<Promise<void> | null>(null);
 
   const dispatch = useCallback((action: LogAction) => {
     current.current = reduce(current.current, action);
@@ -84,14 +92,35 @@ export function LogProvider({ children }: { children: ReactNode }) {
   }, [state, loaded, storageKey]);
 
   const flush = useCallback(async () => {
-    if (flushing.current || !loaded || status !== 'signedIn') return;
+    if (flushing.current || paused.current || !loaded || status !== 'signedIn') return;
     flushing.current = true;
+    const run = drain(() => current.current, dispatch, (state, op) => send(api, state, op), () => paused.current);
+    inflight.current = run;
     try {
-      await drain(() => current.current, dispatch, (state, op) => send(api, state, op));
+      await run;
     } finally {
       flushing.current = false;
+      inflight.current = null;
     }
   }, [api, loaded, status, dispatch]);
+
+  const deleteMyData = useCallback(
+    async (password: string, confirm: string) => {
+      paused.current = true;
+      try {
+        await inflight.current?.catch(() => {});
+        const { data, error } = await api.POST('/api/me/delete-data/', { body: { password, confirm } });
+        if (!data) return { error: errorMessage(error) };
+        dispatch({ type: 'reset' });
+        return { deleted: data.deleted };
+      } catch {
+        return { error: 'Server not reachable. Nothing was deleted.' };
+      } finally {
+        paused.current = false;
+      }
+    },
+    [api, dispatch],
+  );
 
   // Your equipment is copied to the device whenever it is online, so a session can start at the range without a connection.
   const refreshEquipment = useCallback(async () => {
@@ -152,8 +181,9 @@ export function LogProvider({ children }: { children: ReactNode }) {
         void flush();
       },
       discardFailed: () => dispatch({ type: 'discardFailed' }),
+      deleteMyData,
     }),
-    [loaded, state.sessions, state.equipment, refreshEquipment, waiting, failed, dispatch, flush],
+    [loaded, state.sessions, state.equipment, refreshEquipment, waiting, failed, dispatch, flush, deleteMyData],
   );
   return <LogContext.Provider value={value}>{children}</LogContext.Provider>;
 }

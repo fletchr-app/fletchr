@@ -194,3 +194,13 @@ test('the stored equipment is kept and old saved logs without it still load', ()
   const old = { sessions: [], outbox: [], nextRev: 5 } as unknown as LogState;
   assert.deepEqual(reduce(EMPTY_LOG, { type: 'load', state: old }).equipment, { bows: [], arrowSets: [] });
 });
+
+test('reset forgets everything on the device', () => {
+  const s = run(
+    { type: 'setEquipment', equipment },
+    { type: 'startSession', session: session() },
+    { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) },
+    { type: 'reset' },
+  );
+  assert.deepEqual(s, EMPTY_LOG);
+});

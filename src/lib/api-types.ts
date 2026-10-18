@@ -165,6 +165,23 @@ export interface paths {
         patch: operations["me_partial_update"];
         trace?: never;
     };
+    "/api/me/delete-data/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Erase my sessions, equipment and the coach notes about me, for good. Needs my password. */
+        post: operations["me_delete_data_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notes/": {
         parameters: {
             query?: never;
@@ -810,6 +827,21 @@ export interface components {
          * @enum {string}
          */
         BowTypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
+        DeleteDataRequestRequest: {
+            password: string;
+            /** @description Must be the word "DELETE" */
+            confirm: string;
+        };
+        DeleteDataResponse: {
+            deleted: components["schemas"]["DeletedCounts"];
+        };
+        DeletedCounts: {
+            sessions: number;
+            shots: number;
+            bows: number;
+            arrow_sets: number;
+            notes_about_me: number;
+        };
         End: {
             /** Format: uuid */
             readonly id: string;
@@ -1780,6 +1812,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    me_delete_data_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteDataRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DeleteDataRequestRequest"];
+                "multipart/form-data": components["schemas"]["DeleteDataRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteDataResponse"];
                 };
             };
         };

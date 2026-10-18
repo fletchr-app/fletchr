@@ -70,6 +70,7 @@ export type LogAction =
   | { type: 'startSession'; session: LogSession }
   | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear'>> }
   | { type: 'setEquipment'; equipment: Equipment }
+  | { type: 'reset' }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }
   | { type: 'deleteEnd'; sessionId: string; endId: string }
   | { type: 'saveVolume'; sessionId: string; entry: LogVolume }
@@ -101,6 +102,9 @@ export function reduce(state: LogState, action: LogAction): LogState {
     case 'load':
       // Older saved logs have no equipment yet.
       return { ...EMPTY_LOG, ...action.state };
+    case 'reset':
+      // Everything on this device: sessions, the upload queue and the stored equipment.
+      return EMPTY_LOG;
     case 'setEquipment':
       return { ...state, equipment: action.equipment };
     case 'startSession':
