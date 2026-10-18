@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { ErrorText, Screen } from '@/components/form';
+import { NotesSection } from '@/components/notes-section';
 import { useAuth } from '@/lib/auth';
 import { useRemote } from '@/lib/use-remote';
 
@@ -24,6 +25,7 @@ export default function ArcherSessions() {
     <ScrollView>
       <Stack.Screen options={{ title: name ?? 'Archer' }} />
       <Screen>
+        <NotesSection archerId={Number(id)} />
         <ErrorText>{error}</ErrorText>
         {loading && <Text style={{ color: colors.text }}>Loading…</Text>}
         {data?.length === 0 && <Text style={{ color: colors.text }}>No sessions yet.</Text>}

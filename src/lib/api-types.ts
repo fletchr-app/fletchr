@@ -165,6 +165,55 @@ export interface paths {
         patch: operations["me_partial_update"];
         trace?: never;
     };
+    "/api/notes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notes_list"];
+        put?: never;
+        post: operations["notes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notes_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["notes_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["notes_partial_update"];
+        trace?: never;
+    };
+    "/api/notes/teams/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Where I may write notes about this archer. Empty if I am not their coach. */
+        get: operations["notes_teams_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/register/": {
         parameters: {
             query?: never;
@@ -849,6 +898,42 @@ export interface components {
         MembershipSettings: {
             also_shoots?: boolean;
         };
+        Note: {
+            readonly id: number;
+            /** @description Only needed if you coach this archer in several teams */
+            team?: number;
+            readonly author: number | null;
+            readonly author_name: string;
+            archer: number;
+            readonly archer_name: string;
+            /** Format: uuid */
+            session?: string | null;
+            /** Format: uuid */
+            end?: string | null;
+            body: string;
+            visibility?: components["schemas"]["VisibilityEnum"];
+            readonly can_edit: boolean;
+            readonly can_delete: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        NoteRequest: {
+            /** @description Only needed if you coach this archer in several teams */
+            team?: number;
+            archer: number;
+            /** Format: uuid */
+            session?: string | null;
+            /** Format: uuid */
+            end?: string | null;
+            body: string;
+            visibility?: components["schemas"]["VisibilityEnum"];
+        };
+        NoteTeam: {
+            id: number;
+            name: string;
+        };
         PatchedArrowSetRequest: {
             is_active?: boolean;
             name?: string;
@@ -907,6 +992,17 @@ export interface components {
         };
         PatchedMembershipSettingsRequest: {
             also_shoots?: boolean;
+        };
+        PatchedNoteRequest: {
+            /** @description Only needed if you coach this archer in several teams */
+            team?: number;
+            archer?: number;
+            /** Format: uuid */
+            session?: string | null;
+            /** Format: uuid */
+            end?: string | null;
+            body?: string;
+            visibility?: components["schemas"]["VisibilityEnum"];
         };
         Profile: {
             name?: string;
@@ -1115,6 +1211,12 @@ export interface components {
          * @enum {string}
          */
         UnitsEnum: "metric" | "imperial";
+        /**
+         * @description * `coach_only` - Coach Only
+         *     * `shared` - Shared
+         * @enum {string}
+         */
+        VisibilityEnum: "coach_only" | "shared";
         VolumeEntry: {
             /** Format: uuid */
             readonly id: string;
@@ -1583,6 +1685,153 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    notes_list: {
+        parameters: {
+            query?: {
+                archer?: number;
+                author?: number;
+                end?: string;
+                session?: string;
+                team?: number;
+                /**
+                 * @description * `coach_only` - Coach Only
+                 *     * `shared` - Shared
+                 */
+                visibility?: "coach_only" | "shared";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"][];
+                };
+            };
+        };
+    };
+    notes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["NoteRequest"];
+                "multipart/form-data": components["schemas"]["NoteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"];
+                };
+            };
+        };
+    };
+    notes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this note. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"];
+                };
+            };
+        };
+    };
+    notes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this note. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    notes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this note. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedNoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedNoteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedNoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"];
+                };
+            };
+        };
+    };
+    notes_teams_list: {
+        parameters: {
+            query: {
+                archer: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteTeam"][];
                 };
             };
         };

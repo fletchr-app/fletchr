@@ -47,6 +47,18 @@ def archers_visible_to(user):
     return User.objects.filter(Q(pk=user.pk) | Q(pk__in=shooters))
 
 
+def note_teams(coach, archer):
+    """Teams in which `coach` may write notes about `archer`: teams they coach where the person is an
+    archer, or a coach who shares their training."""
+    coached = TeamMember.objects.filter(user=coach, role__in=COACH_ROLES).values("team")
+    shooting = (
+        TeamMember.objects.filter(user=archer)
+        .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
+        .values("team")
+    )
+    return Team.objects.filter(pk__in=coached).filter(pk__in=shooting).order_by("name")
+
+
 @transaction.atomic
 def redeem_invite(code, user):
     """Add `user` to the invite's team. The same error for every failure, so codes can't be probed."""

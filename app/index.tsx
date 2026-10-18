@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, ErrorText, Screen } from '@/components/form';
+import { LatestNotes } from '@/components/latest-notes';
 import type { components } from '@/lib/api-types';
 import { useAuth } from '@/lib/auth';
 
@@ -35,6 +36,7 @@ export default function HomeScreen() {
         {me ? `Hello ${me.profile.name || me.email}` : 'Archery Coach'}
       </Text>
       <ErrorText>{error}</ErrorText>
+      {me && <LatestNotes userId={me.id} />}
       <Text style={{ color: colors.text, fontWeight: '600' }}>Your teams</Text>
       {teams?.length === 0 && <Text style={{ color: colors.text }}>You are not in a team yet.</Text>}
       {teams?.map((team) => (

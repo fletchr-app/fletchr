@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { EndRows } from '@/components/end-rows';
+import { NotesSection } from '@/components/notes-section';
 import { ErrorText, Screen } from '@/components/form';
 import { SessionPlots } from '@/components/session-plots';
 import type { components } from '@/lib/api-types';
@@ -54,6 +55,7 @@ export default function SessionDetail() {
         <ErrorText>{error}</ErrorText>
         <SessionPlots session={session} />
         {session.ends.length > 0 && <EndRows ends={session.ends} />}
+        <NotesSection archerId={data.owner} sessionId={data.id} ends={session.ends} />
         {session.volume.map((v) => (
           <View key={v.id}>
             <Text style={{ color: colors.text }}>

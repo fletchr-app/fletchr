@@ -461,6 +461,172 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/notes/:
+    get:
+      operationId: notes_list
+      parameters:
+      - in: query
+        name: archer
+        schema:
+          type: integer
+      - in: query
+        name: author
+        schema:
+          type: integer
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: session
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: team
+        schema:
+          type: integer
+      - in: query
+        name: visibility
+        schema:
+          type: string
+          enum:
+          - coach_only
+          - shared
+        description: |-
+          * `coach_only` - Coach Only
+          * `shared` - Shared
+      tags:
+      - notes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+          description: ''
+    post:
+      operationId: notes_create
+      tags:
+      - notes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+  /api/notes/{id}/:
+    get:
+      operationId: notes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      tags:
+      - notes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+    patch:
+      operationId: notes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      tags:
+      - notes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNoteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+    delete:
+      operationId: notes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      tags:
+      - notes
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notes/teams/:
+    get:
+      operationId: notes_teams_list
+      description: Where I may write notes about this archer. Empty if I am not their
+        coach.
+      parameters:
+      - in: query
+        name: archer
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NoteTeam'
+          description: ''
   /api/register/:
     post:
       operationId: register_create
@@ -2026,6 +2192,98 @@ components:
       properties:
         also_shoots:
           type: boolean
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          description: Only needed if you coach this archer in several teams
+        author:
+          type: integer
+          readOnly: true
+          nullable: true
+        author_name:
+          type: string
+          readOnly: true
+        archer:
+          type: integer
+        archer_name:
+          type: string
+          readOnly: true
+        session:
+          type: string
+          format: uuid
+          nullable: true
+        end:
+          type: string
+          format: uuid
+          nullable: true
+        body:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        can_edit:
+          type: boolean
+          readOnly: true
+        can_delete:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archer
+      - archer_name
+      - author
+      - author_name
+      - body
+      - can_delete
+      - can_edit
+      - created_at
+      - id
+      - updated_at
+    NoteRequest:
+      type: object
+      properties:
+        team:
+          type: integer
+          description: Only needed if you coach this archer in several teams
+        archer:
+          type: integer
+        session:
+          type: string
+          format: uuid
+          nullable: true
+        end:
+          type: string
+          format: uuid
+          nullable: true
+        body:
+          type: string
+          minLength: 1
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+      required:
+      - archer
+      - body
+    NoteTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
     PatchedArrowSetRequest:
       type: object
       properties:
@@ -2133,6 +2391,27 @@ components:
       properties:
         also_shoots:
           type: boolean
+    PatchedNoteRequest:
+      type: object
+      properties:
+        team:
+          type: integer
+          description: Only needed if you coach this archer in several teams
+        archer:
+          type: integer
+        session:
+          type: string
+          format: uuid
+          nullable: true
+        end:
+          type: string
+          format: uuid
+          nullable: true
+        body:
+          type: string
+          minLength: 1
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
     Profile:
       type: object
       properties:
@@ -2650,6 +2929,14 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    VisibilityEnum:
+      enum:
+      - coach_only
+      - shared
+      type: string
+      description: |-
+        * `coach_only` - Coach Only
+        * `shared` - Shared
     VolumeEntry:
       type: object
       properties:

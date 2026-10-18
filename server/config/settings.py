@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "equipment",
     "targets",
     "training",
+    "notes",
 ]
 
 MIDDLEWARE = [
