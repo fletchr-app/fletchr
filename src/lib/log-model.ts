@@ -19,6 +19,21 @@ export type LogShot = {
 };
 export type LogEnd = { id: string; index: number; distance_m: string; face: string; arrows_per_end: number; shots: LogShot[] };
 export type LogVolume = { id: string; distance_m: string; arrow_count: number };
+/** The equipment of a session: ids to find the items again, revisions to send, labels to show. */
+export type Gear = {
+  bow_id: number | null;
+  bow_revision: number | null;
+  bow_label: string;
+  arrow_set_id: number | null;
+  arrow_set_revision: number | null;
+  arrow_label: string;
+};
+
+/** A copy of your active equipment from the last time the app was online, so a session can start without a connection. */
+export type CachedBow = { id: number; name: string; type: string; revision: number; revision_number: number };
+export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number };
+export type Equipment = { bows: CachedBow[]; arrowSets: CachedArrowSet[] };
+
 export type LogSession = {
   id: string;
   started_at: string;
@@ -28,6 +43,8 @@ export type LogSession = {
   location: string;
   ends: LogEnd[];
   volume: LogVolume[];
+  /** Left out when no choice was made, so uploading it does not clear what the server has. */
+  gear?: Gear | null;
 };
 
 /**
@@ -45,13 +62,14 @@ export type Op = {
   error?: string;
 };
 
-export type LogState = { sessions: LogSession[]; outbox: Op[]; nextRev: number };
-export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1 };
+export type LogState = { sessions: LogSession[]; outbox: Op[]; nextRev: number; equipment: Equipment };
+export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equipment: { bows: [], arrowSets: [] } };
 
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear'>> }
+  | { type: 'setEquipment'; equipment: Equipment }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }
   | { type: 'deleteEnd'; sessionId: string; endId: string }
   | { type: 'saveVolume'; sessionId: string; entry: LogVolume }
@@ -81,7 +99,10 @@ const mapSession = (state: LogState, id: string, fn: (s: LogSession) => LogSessi
 export function reduce(state: LogState, action: LogAction): LogState {
   switch (action.type) {
     case 'load':
-      return action.state;
+      // Older saved logs have no equipment yet.
+      return { ...EMPTY_LOG, ...action.state };
+    case 'setEquipment':
+      return { ...state, equipment: action.equipment };
     case 'startSession':
       return queue({ ...state, sessions: [action.session, ...state.sessions] }, 'session', action.session.id);
     case 'updateSession':
@@ -178,3 +199,34 @@ export function nextEndDefaults(session: LogSession) {
     arrows_per_end: last?.arrows_per_end ?? 3,
   };
 }
+
+// --- equipment ----------------------------------------------------------------------------------
+
+/** The gear for a choice of bow and arrow set, using their current revisions from the stored equipment. */
+export function gearFor(equipment: Equipment, bowId: number | null, arrowSetId: number | null): Gear {
+  const bow = equipment.bows.find((b) => b.id === bowId);
+  const arrows = equipment.arrowSets.find((a) => a.id === arrowSetId);
+  return {
+    bow_id: bow?.id ?? null,
+    bow_revision: bow?.revision ?? null,
+    bow_label: bow ? `${bow.name} (r${bow.revision_number})` : '',
+    // Arrows go with a bow: a server cannot make a setup of arrows alone.
+    arrow_set_id: bow ? (arrows?.id ?? null) : null,
+    arrow_set_revision: bow ? (arrows?.revision ?? null) : null,
+    arrow_label: bow && arrows ? `${arrows.name} (r${arrows.revision_number})` : '',
+  };
+}
+
+/** What to preselect when starting a session: what was used last, else the only one there is. */
+export function defaultChoice(equipment: Equipment, sessions: LogSession[]): { bowId: number | null; arrowSetId: number | null } {
+  const last = sessions.find((s) => s.gear?.bow_id != null)?.gear;
+  const bowId = equipment.bows.some((b) => b.id === last?.bow_id) ? last!.bow_id : equipment.bows.length === 1 ? equipment.bows[0].id : null;
+  const arrowSetId = equipment.arrowSets.some((a) => a.id === last?.arrow_set_id)
+    ? last!.arrow_set_id
+    : equipment.arrowSets.length === 1
+      ? equipment.arrowSets[0].id
+      : null;
+  return { bowId, arrowSetId };
+}
+
+export const gearLine = (gear: Gear | null | undefined) => [gear?.bow_label, gear?.arrow_label].filter(Boolean).join(' · ');

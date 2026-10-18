@@ -3,13 +3,17 @@ import { test } from 'node:test';
 
 import {
   EMPTY_LOG,
+  defaultChoice,
   endTotal,
+  gearFor,
+  gearLine,
   keypadFor,
   nextEndDefaults,
   reduce,
   sessionTotals,
   sortedShots,
   shotLabel,
+  type Equipment,
   type LogAction,
   type LogEnd,
   type LogSession,
@@ -142,4 +146,51 @@ test('arrows sort best first: X before 10, misses last', () => {
   const shots = [shot('m', null, { is_miss: true }), shot('a', 9), shot('x', 10, { is_x: true }), shot('t', 10), shot('b', 7)];
   assert.deepEqual(sortedShots(shots).map(shotLabel), ['X', '10', '9', '7', 'M']);
   assert.deepEqual(shots.map((s) => s.id), ['m', 'a', 'x', 't', 'b'], 'the original order is untouched');
+});
+
+const equipment: Equipment = {
+  bows: [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2 }, { id: 2, name: 'Mathews', type: 'compound', revision: 12, revision_number: 1 }],
+  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }],
+};
+
+test('gear takes the current revisions and labels from the stored equipment', () => {
+  assert.deepEqual(gearFor(equipment, 1, 5), {
+    bow_id: 1, bow_revision: 11, bow_label: 'Hoyt (r2)', arrow_set_id: 5, arrow_set_revision: 21, arrow_label: 'X10 (r3)',
+  });
+  assert.equal(gearLine(gearFor(equipment, 1, 5)), 'Hoyt (r2) · X10 (r3)');
+  assert.equal(gearLine(gearFor(equipment, 2, null)), 'Mathews (r1)');
+  assert.equal(gearLine(gearFor(equipment, null, null)), '');
+  assert.equal(gearLine(undefined), '');
+});
+
+test('arrows without a bow are dropped, as a setup needs a bow', () => {
+  const gear = gearFor(equipment, null, 5);
+  assert.deepEqual([gear.bow_revision, gear.arrow_set_revision, gear.arrow_label], [null, null, '']);
+});
+
+test('an item that is not in the stored equipment is treated as not chosen', () => {
+  assert.equal(gearFor(equipment, 99, null).bow_revision, null);
+  assert.equal(gearFor(equipment, 1, 99).arrow_set_revision, null);
+});
+
+test('the preselection is the last pair used, else the only item, else nothing', () => {
+  assert.deepEqual(defaultChoice(equipment, []), { bowId: null, arrowSetId: 5 }, 'two bows: no guess; one arrow set: that one');
+  const used = (bowId: number, arrowSetId: number | null): LogSession => ({ ...session(), gear: gearFor(equipment, bowId, arrowSetId) });
+  assert.deepEqual(defaultChoice(equipment, [used(2, null), used(1, 5)]), { bowId: 2, arrowSetId: 5 }, 'newest session first');
+  assert.deepEqual(defaultChoice(equipment, [{ ...session(), gear: null }, used(1, 5)]), { bowId: 1, arrowSetId: 5 }, 'sessions without a bow are skipped');
+  const gone: LogSession = { ...session(), gear: { ...gearFor(equipment, 1, 5), bow_id: 77, arrow_set_id: 88 } };
+  assert.deepEqual(defaultChoice(equipment, [gone]), { bowId: null, arrowSetId: 5 }, 'equipment that is no longer active is not suggested');
+  assert.deepEqual(defaultChoice({ bows: [equipment.bows[0]], arrowSets: [] }, []), { bowId: 1, arrowSetId: null });
+});
+
+test('changing the equipment of a session queues the session again', () => {
+  const s = run({ type: 'startSession', session: session() }, { type: 'updateSession', id: 's1', patch: { gear: gearFor(equipment, 1, 5) } });
+  assert.equal(s.sessions[0].gear?.bow_label, 'Hoyt (r2)');
+  assert.deepEqual(keys(s), ['session']);
+});
+
+test('the stored equipment is kept and old saved logs without it still load', () => {
+  assert.deepEqual(reduce(EMPTY_LOG, { type: 'setEquipment', equipment }).equipment, equipment);
+  const old = { sessions: [], outbox: [], nextRev: 5 } as unknown as LogState;
+  assert.deepEqual(reduce(EMPTY_LOG, { type: 'load', state: old }).equipment, { bows: [], arrowSets: [] });
 });

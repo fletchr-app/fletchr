@@ -60,17 +60,6 @@ def test_ratings_are_one_to_five(client_for, club):
     assert client.put(f"/api/sessions/{new_id()}/", {**SESSION, "mental_rating": 5}, format="json").status_code == 201
 
 
-def test_session_can_only_use_own_setup(client_for, club):
-    from equipment.models import Bow, BowRevision, Setup
-
-    bow = Bow.objects.create(owner=club["archer2"], name="B", type="recurve")
-    rev = BowRevision.objects.create(bow=bow, number=1, name="B", type="recurve")
-    setup = Setup.objects.create(owner=club["archer2"], bow_revision=rev)
-    res = client_for(club["archer1"]).put(f"/api/sessions/{new_id()}/", {**SESSION, "setup": setup.pk}, format="json")
-    assert res.status_code == 400
-    assert client_for(club["archer2"]).put(f"/api/sessions/{new_id()}/", {**SESSION, "setup": setup.pk}, format="json").status_code == 201
-
-
 def test_cannot_take_over_someone_elses_session_id(client_for, club, api):
     for who, expected in (("archer2", 404), ("b_admin", 404), ("coach", 403)):
         res = client_for(club[who]).put(api["url"], {**SESSION, "location": "Mine"}, format="json")

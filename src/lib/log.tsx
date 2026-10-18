@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth';
 import {
   EMPTY_LOG,
   Environment,
+  Equipment,
+  Gear,
   LogAction,
   LogEnd,
   LogSession,
@@ -15,7 +17,7 @@ import {
   reduce,
   SessionType,
 } from '@/lib/log-model';
-import { drain, send } from '@/lib/log-sync';
+import { drain, fetchEquipment, send } from '@/lib/log-sync';
 import { useServer } from '@/lib/server';
 import { newId } from '@/lib/uuid';
 
@@ -26,7 +28,10 @@ type LogContextValue = {
   sessions: LogSession[];
   waiting: number;
   failed: Op[];
-  startSession: (type: SessionType, environment: Environment, location: string) => string;
+  equipment: Equipment;
+  refreshEquipment: () => Promise<void>;
+  startSession: (type: SessionType, environment: Environment, location: string, gear?: Gear) => string;
+  setGear: (id: string, gear: Gear) => void;
   finishSession: (id: string, finished: boolean) => void;
   deleteSession: (id: string) => void;
   saveEnd: (sessionId: string, end: LogEnd) => void;
@@ -88,6 +93,16 @@ export function LogProvider({ children }: { children: ReactNode }) {
     }
   }, [api, loaded, status, dispatch]);
 
+  // Your equipment is copied to the device whenever it is online, so a session can start at the range without a connection.
+  const refreshEquipment = useCallback(async () => {
+    if (!loaded || status !== 'signedIn' || userId === null) return;
+    const equipment = await fetchEquipment(api, Number(userId));
+    if (equipment) dispatch({ type: 'setEquipment', equipment });
+  }, [api, loaded, status, userId, dispatch]);
+  useEffect(() => {
+    void refreshEquipment();
+  }, [refreshEquipment]);
+
   const waiting = state.outbox.filter((o) => !o.error).length;
   const failed = useMemo(() => state.outbox.filter((o) => o.error), [state.outbox]);
 
@@ -109,16 +124,22 @@ export function LogProvider({ children }: { children: ReactNode }) {
     () => ({
       loaded,
       sessions: loaded ? state.sessions : [],
+      equipment: state.equipment,
+      refreshEquipment,
       waiting,
       failed,
-      startSession: (type, environment, location) => {
+      startSession: (type, environment, location, gear) => {
         const id = newId();
         dispatch({
           type: 'startSession',
-          session: { id, started_at: new Date().toISOString(), ended_at: null, type, environment, location, ends: [], volume: [] },
+          session: {
+            id, started_at: new Date().toISOString(), ended_at: null, type, environment, location, ends: [], volume: [],
+            ...(gear ? { gear } : {}),
+          },
         });
         return id;
       },
+      setGear: (id, gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
       finishSession: (id, finished) =>
         dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),
       deleteSession: (id) => dispatch({ type: 'deleteSession', id }),
@@ -132,7 +153,7 @@ export function LogProvider({ children }: { children: ReactNode }) {
       },
       discardFailed: () => dispatch({ type: 'discardFailed' }),
     }),
-    [loaded, state.sessions, waiting, failed, dispatch, flush],
+    [loaded, state.sessions, state.equipment, refreshEquipment, waiting, failed, dispatch, flush],
   );
   return <LogContext.Provider value={value}>{children}</LogContext.Provider>;
 }

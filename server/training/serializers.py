@@ -1,9 +1,10 @@
 import logging
 from math import hypot, isfinite
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from equipment.models import Setup
+from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
 
@@ -101,17 +102,65 @@ class VolumeEntrySerializer(serializers.ModelSerializer):
 
 
 class SessionWriteSerializer(serializers.ModelSerializer):
+    """
+    The equipment is chosen by revision: the app knows the revision ids from its stored copy of your
+    equipment, and the server finds or creates the setup for that pair. Leave both out to keep the
+    session's equipment as it is; send null to clear it.
+    """
+
+    bow_revision = serializers.PrimaryKeyRelatedField(queryset=BowRevision.objects.all(), required=False, allow_null=True)
+    arrow_set_revision = serializers.PrimaryKeyRelatedField(queryset=ArrowSetRevision.objects.all(), required=False, allow_null=True)
+
     class Meta:
         model = TrainingSession
         fields = [
             "started_at", "ended_at", "type", "environment", "location", "weather",
-            "setup", "physical_rating", "mental_rating", "goals", "notes",
+            "bow_revision", "arrow_set_revision", "physical_rating", "mental_rating", "goals", "notes",
         ]
 
-    def validate_setup(self, setup):
-        if setup is not None and setup.owner_id != self.context["request"].user.id:
-            raise serializers.ValidationError("Not your setup")
-        return setup
+    def validate_bow_revision(self, revision):
+        if revision is not None and revision.bow.owner_id != self.context["request"].user.id:
+            raise serializers.ValidationError("Not your bow")
+        return revision
+
+    def validate_arrow_set_revision(self, revision):
+        if revision is not None and revision.arrow_set.owner_id != self.context["request"].user.id:
+            raise serializers.ValidationError("Not your arrow set")
+        return revision
+
+    def validate(self, attrs):
+        if attrs.get("arrow_set_revision") is not None and attrs.get("bow_revision") is None:
+            raise serializers.ValidationError({"arrow_set_revision": "Arrows go with a bow: choose the bow too"})
+        return attrs
+
+    def _with_setup(self, validated_data):
+        if "bow_revision" in validated_data or "arrow_set_revision" in validated_data:
+            bow = validated_data.pop("bow_revision", None)
+            arrows = validated_data.pop("arrow_set_revision", None)
+            if bow is None:
+                validated_data["setup"] = None
+            else:
+                owner = self.context["request"].user
+                validated_data["setup"], _ = Setup.objects.get_or_create(owner=owner, bow_revision=bow, arrow_set_revision=arrows)
+        return validated_data
+
+    def create(self, validated_data):
+        return super().create(self._with_setup(validated_data))
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._with_setup(validated_data))
+
+
+class SetupInfoSerializer(serializers.Serializer):
+    """The equipment of a session, as it was when the session used it."""
+
+    bow_name = serializers.CharField()
+    bow_type = serializers.CharField()
+    bow_revision = serializers.IntegerField()
+    bow_revision_number = serializers.IntegerField()
+    arrow_set_name = serializers.CharField(allow_null=True)
+    arrow_set_revision = serializers.IntegerField(allow_null=True)
+    arrow_set_revision_number = serializers.IntegerField(allow_null=True)
 
 
 def owner_name(session):
@@ -122,6 +171,7 @@ class SessionSerializer(serializers.ModelSerializer):
     """Full session for the detail view."""
 
     owner_name = serializers.SerializerMethodField()
+    setup_info = serializers.SerializerMethodField()
     ends = EndSerializer(many=True, read_only=True)
     volume_entries = VolumeEntrySerializer(many=True, read_only=True)
 
@@ -129,12 +179,25 @@ class SessionSerializer(serializers.ModelSerializer):
         model = TrainingSession
         fields = [
             "id", "owner", "owner_name", "started_at", "ended_at", "type", "environment", "location", "weather",
-            "setup", "physical_rating", "mental_rating", "goals", "notes", "created_at", "updated_at",
+            "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "created_at", "updated_at",
             "ends", "volume_entries",
         ]
 
     def get_owner_name(self, session) -> str:
         return owner_name(session)
+
+    @extend_schema_field(SetupInfoSerializer(allow_null=True))
+    def get_setup_info(self, session):
+        setup = session.setup
+        if setup is None:
+            return None
+        bow, arrows = setup.bow_revision, setup.arrow_set_revision
+        return {
+            "bow_name": bow.name, "bow_type": bow.type, "bow_revision": bow.pk, "bow_revision_number": bow.number,
+            "arrow_set_name": arrows.name if arrows else None,
+            "arrow_set_revision": arrows.pk if arrows else None,
+            "arrow_set_revision_number": arrows.number if arrows else None,
+        }
 
 
 class SessionSummarySerializer(serializers.ModelSerializer):

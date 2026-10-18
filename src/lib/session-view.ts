@@ -1,14 +1,28 @@
 // A session as shown on screen, whether it comes from this device or from the server. No React.
 import type { components } from './api-types.ts';
 import { groupOf, type Group } from './group.ts';
-import type { LogEnd, LogSession, LogShot } from './log-model.ts';
+import type { Gear, LogEnd, LogSession, LogShot } from './log-model.ts';
 
 export type ViewSession = LogSession & { owner_name?: string; updated_at?: string };
 
 type ServerSession = components['schemas']['Session'];
 
+/** The equipment as the server describes it, in the shape the screens already show. */
+function gearOf(info: ServerSession['setup_info']): Gear | null {
+  if (!info) return null;
+  return {
+    bow_id: null,
+    bow_revision: info.bow_revision,
+    bow_label: `${info.bow_name} (r${info.bow_revision_number})`,
+    arrow_set_id: null,
+    arrow_set_revision: info.arrow_set_revision ?? null,
+    arrow_label: info.arrow_set_name ? `${info.arrow_set_name} (r${info.arrow_set_revision_number})` : '',
+  };
+}
+
 export function fromServer(s: ServerSession): ViewSession {
   return {
+    gear: gearOf(s.setup_info),
     id: s.id,
     owner_name: s.owner_name,
     updated_at: s.updated_at,

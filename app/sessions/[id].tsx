@@ -8,7 +8,7 @@ import { ErrorText, Screen } from '@/components/form';
 import { SessionPlots } from '@/components/session-plots';
 import type { components } from '@/lib/api-types';
 import { useAuth } from '@/lib/auth';
-import { sessionTotals, usesEnds } from '@/lib/log-model';
+import { gearLine, sessionTotals, usesEnds } from '@/lib/log-model';
 import { fromServer } from '@/lib/session-view';
 import { useRemote } from '@/lib/use-remote';
 
@@ -52,6 +52,7 @@ export default function SessionDetail() {
         <Text style={{ color: colors.text }}>
           {arrows} arrows{usesEnds(session.type) ? ` · ${score} points` : ''}
         </Text>
+        {session.gear && <Text style={{ color: colors.text }}>Equipment: {gearLine(session.gear)}</Text>}
         <ErrorText>{error}</ErrorText>
         <SessionPlots session={session} />
         {session.ends.length > 0 && <EndRows ends={session.ends} />}

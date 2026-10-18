@@ -1109,6 +1109,7 @@ export interface components {
             location?: string;
             weather?: string;
             setup?: number | null;
+            readonly setup_info: components["schemas"]["SetupInfo"] | null;
             physical_rating?: number | null;
             mental_rating?: number | null;
             goals?: string;
@@ -1161,6 +1162,11 @@ export interface components {
          * @enum {string}
          */
         SessionTypeEnum: "scoring" | "volume" | "technique" | "competition";
+        /**
+         * @description The equipment is chosen by revision: the app knows the revision ids from its stored copy of your
+         *     equipment, and the server finds or creates the setup for that pair. Leave both out to keep the
+         *     session's equipment as it is; send null to clear it.
+         */
         SessionWriteRequest: {
             /** Format: date-time */
             started_at: string;
@@ -1170,7 +1176,8 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
-            setup?: number | null;
+            bow_revision?: number | null;
+            arrow_set_revision?: number | null;
             physical_rating?: number | null;
             mental_rating?: number | null;
             goals?: string;
@@ -1185,6 +1192,16 @@ export interface components {
             arrow_set_revision?: number | null;
             readonly bow: components["schemas"]["BowRevision"];
             readonly arrow_set: components["schemas"]["ArrowSetRevision"];
+        };
+        /** @description The equipment of a session, as it was when the session used it. */
+        SetupInfo: {
+            bow_name: string;
+            bow_type: string;
+            bow_revision: number;
+            bow_revision_number: number;
+            arrow_set_name: string | null;
+            arrow_set_revision: number | null;
+            arrow_set_revision_number: number | null;
         };
         SetupRequest: {
             bow_revision: number;

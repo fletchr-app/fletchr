@@ -33,7 +33,9 @@ OVERVIEW_DAYS = 7
 
 
 def visible_sessions(user):
-    return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related("owner__profile")
+    return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related(
+        "owner__profile", "setup__bow_revision", "setup__arrow_set_revision"
+    )
 
 
 def get_session(request, session_id, write=False):
@@ -99,7 +101,11 @@ class SessionDetailView(APIView):
         serializer = SessionWriteSerializer(existing, data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         session = serializer.save(**({} if existing else {"id": session_id, "owner": request.user}))
-        session = TrainingSession.objects.prefetch_related("ends__shots", "volume_entries").get(pk=session.pk)
+        session = (
+            TrainingSession.objects.select_related("owner__profile", "setup__bow_revision", "setup__arrow_set_revision")
+            .prefetch_related("ends__shots", "volume_entries")
+            .get(pk=session.pk)
+        )
         return Response(SessionSerializer(session).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
 
     @extend_schema(responses={204: None})

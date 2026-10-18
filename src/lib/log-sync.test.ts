@@ -4,8 +4,8 @@ import { test } from 'node:test';
 import createClient from 'openapi-fetch';
 
 import type { paths } from './api-types.ts';
-import { drain, send } from './log-sync.ts';
-import { EMPTY_LOG, reduce, type LogAction, type LogEnd, type LogSession, type LogState } from './log-model.ts';
+import { drain, fetchEquipment, send } from './log-sync.ts';
+import { EMPTY_LOG, gearFor, reduce, type LogAction, type LogEnd, type LogSession, type LogState } from './log-model.ts';
 
 type Call = { method: string; path: string; body: unknown };
 type Handler = (call: Call, n: number) => Response | Promise<Response>;
@@ -162,4 +162,67 @@ test('plotted shots go up with their position, typed ones with their score', asy
     { id: 'p', x: 0.05, y: -0.1, spot: 2, value: 10, is_x: false, is_miss: false },
     { id: 't', value: 9, is_x: false, is_miss: false },
   ]);
+});
+
+const equipment = {
+  bows: [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2 }],
+  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }],
+};
+
+test('the session is uploaded with the revisions of its equipment', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session: { ...session, gear: gearFor(equipment, 1, 5) } });
+  await h.run();
+  assert.deepEqual(h.calls[0].body, {
+    started_at: '2026-10-18T09:00:00Z', ended_at: null, type: 'scoring', environment: 'indoor', location: 'Hall',
+    bow_revision: 11, arrow_set_revision: 21,
+  });
+});
+
+test('a session without a choice leaves the equipment out, and "none" clears it', async () => {
+  const none = harness(ok);
+  none.dispatch({ type: 'startSession', session });
+  await none.run();
+  assert.ok(!('bow_revision' in (none.calls[0].body as object)));
+
+  const cleared = harness(ok);
+  cleared.dispatch({ type: 'startSession', session: { ...session, gear: null } });
+  await cleared.run();
+  assert.deepEqual(
+    [(cleared.calls[0].body as any).bow_revision, (cleared.calls[0].body as any).arrow_set_revision],
+    [null, null],
+  );
+});
+
+test('changing the equipment later uploads the session again', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session: { ...session, gear: gearFor(equipment, 1, null) } });
+  await h.run();
+  h.dispatch({ type: 'updateSession', id: 's1', patch: { gear: gearFor(equipment, 1, 5) } });
+  await h.run();
+  assert.equal(h.calls.length, 2);
+  assert.deepEqual([(h.calls[1].body as any).bow_revision, (h.calls[1].body as any).arrow_set_revision], [11, 21]);
+});
+
+test('the stored equipment is fetched for active items of the user only', async () => {
+  const urls: string[] = [];
+  const api = createClient<paths>({
+    baseUrl: 'http://server',
+    fetch: async (request: Request) => {
+      urls.push(request.url);
+      return request.url.includes('/bows/')
+        ? json(200, [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2, notes: 'not kept' }])
+        : json(200, [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }]);
+    },
+  });
+  assert.deepEqual(await fetchEquipment(api, 7), equipment);
+  assert.equal(urls.length, 2);
+  assert.ok(urls.every((u) => u.includes('owner=7') && u.includes('is_active=true')), urls.join(' '));
+});
+
+test('no connection or a refusal gives no equipment instead of an error', async () => {
+  const down = createClient<paths>({ baseUrl: 'http://server', fetch: async () => { throw new TypeError('offline'); } });
+  assert.equal(await fetchEquipment(down, 7), null);
+  const refused = createClient<paths>({ baseUrl: 'http://server', fetch: async () => json(403, { detail: 'no' }) });
+  assert.equal(await fetchEquipment(refused, 7), null);
 });

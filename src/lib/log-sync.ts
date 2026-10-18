@@ -1,7 +1,7 @@
 // Uploading the queue of a local log. No React here, so the retry rules can be tested with `npm test`.
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
-import type { LogAction, LogState, Op } from './log-model.ts';
+import type { Equipment, LogAction, LogState, Op } from './log-model.ts';
 
 export type SendResult = { kind: 'ok' } | { kind: 'retry' } | { kind: 'failed'; message: string };
 
@@ -22,6 +22,12 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           type: session.type,
           environment: session.environment,
           location: session.location,
+          // Left out when nothing was chosen, so the server keeps what it has; null clears it.
+          ...(session.gear
+            ? { bow_revision: session.gear.bow_revision, arrow_set_revision: session.gear.arrow_set_revision }
+            : session.gear === null
+              ? { bow_revision: null, arrow_set_revision: null }
+              : {}),
         },
       });
     } else if (op.kind === 'end' && op.delete) {
@@ -88,5 +94,23 @@ export async function drain(
     if (result.kind === 'ok') dispatch({ type: 'opDone', key: op.key, rev: op.rev });
     else if (result.kind === 'failed') dispatch({ type: 'opFailed', key: op.key, rev: op.rev, error: result.message });
     else return;
+  }
+}
+
+/** Your active bows and arrow sets with their current revisions, or null if the server cannot be reached. */
+export async function fetchEquipment(api: ApiClient, userId: number): Promise<Equipment | null> {
+  try {
+    const query = { owner: userId, is_active: true };
+    const [bows, arrowSets] = await Promise.all([
+      api.GET('/api/bows/', { params: { query } }),
+      api.GET('/api/arrow-sets/', { params: { query } }),
+    ]);
+    if (!bows.data || !arrowSets.data) return null;
+    return {
+      bows: bows.data.map((b) => ({ id: b.id, name: b.name, type: b.type, revision: b.revision, revision_number: b.revision_number })),
+      arrowSets: arrowSets.data.map((a) => ({ id: a.id, name: a.name, revision: a.revision, revision_number: a.revision_number })),
+    };
+  } catch {
+    return null;
   }
 }

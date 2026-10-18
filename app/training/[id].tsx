@@ -4,18 +4,20 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { EndEditor } from '@/components/end-editor';
 import { Button, ErrorText, Field, Screen } from '@/components/form';
+import { GearPicker } from '@/components/gear-picker';
 import { EndRows } from '@/components/end-rows';
 import { SessionPlots } from '@/components/session-plots';
 import { SyncBanner } from '@/components/sync-banner';
 import { useLog } from '@/lib/log';
-import { LogSession, sessionTotals, usesEnds } from '@/lib/log-model';
+import { gearFor, gearLine, LogSession, sessionTotals, usesEnds } from '@/lib/log-model';
 import { newId } from '@/lib/uuid';
 
 export default function SessionScreen() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { loaded, sessions, finishSession, deleteSession } = useLog();
+  const { loaded, sessions, equipment, setGear, finishSession, deleteSession } = useLog();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [changingGear, setChangingGear] = useState(false);
   const session = sessions.find((s) => s.id === id);
 
   if (!session) {
@@ -35,6 +37,20 @@ export default function SessionScreen() {
           {arrows} arrows{usesEnds(session.type) ? ` · ${score} points` : ''}
           {session.ended_at ? ' · finished' : ''}
         </Text>
+        <Text style={{ color: colors.text, opacity: 0.7 }}>
+          Equipment: {gearLine(session.gear) || 'none chosen'}{' '}
+          <Text style={{ color: colors.primary }} onPress={() => setChangingGear((open) => !open)}>
+            {changingGear ? 'done' : 'change'}
+          </Text>
+        </Text>
+        {changingGear && (
+          <GearPicker
+            equipment={equipment}
+            bowId={session.gear?.bow_id ?? null}
+            arrowSetId={session.gear?.arrow_set_id ?? null}
+            onChange={(bowId, arrowSetId) => setGear(session.id, gearFor(equipment, bowId, arrowSetId))}
+          />
+        )}
         {usesEnds(session.type) ? <Ends session={session} /> : <Volume session={session} />}
         <Button
           title={session.ended_at ? 'Reopen session' : 'Finish session'}

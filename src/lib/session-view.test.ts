@@ -67,3 +67,19 @@ test('server sessions become the same shape as local ones, with missing position
   assert.equal(view.ends[0].shots[2].is_miss, true);
   assert.deepEqual(view.volume, [{ id: 'v', distance_m: '30.0', arrow_count: 12 }]);
 });
+
+test('the equipment of a server session is shown with its revision numbers', () => {
+  const base = { id: 's', owner: 1, owner_name: 'A', started_at: 'x', ended_at: null, type: 'scoring', ends: [], volume_entries: [], updated_at: 'x' };
+  const withGear = fromServer({
+    ...base,
+    setup_info: { bow_name: 'Hoyt', bow_type: 'recurve', bow_revision: 11, bow_revision_number: 2, arrow_set_name: 'X10', arrow_set_revision: 21, arrow_set_revision_number: 3 },
+  } as unknown as components['schemas']['Session']);
+  assert.equal(withGear.gear?.bow_label, 'Hoyt (r2)');
+  assert.equal(withGear.gear?.arrow_label, 'X10 (r3)');
+  const bowOnly = fromServer({
+    ...base,
+    setup_info: { bow_name: 'Hoyt', bow_type: 'recurve', bow_revision: 11, bow_revision_number: 2, arrow_set_name: null, arrow_set_revision: null, arrow_set_revision_number: null },
+  } as unknown as components['schemas']['Session']);
+  assert.equal(bowOnly.gear?.arrow_label, '');
+  assert.equal(fromServer({ ...base, setup_info: null } as unknown as components['schemas']['Session']).gear, null);
+});

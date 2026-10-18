@@ -2632,6 +2632,11 @@ components:
         setup:
           type: integer
           nullable: true
+        setup_info:
+          allOf:
+          - $ref: '#/components/schemas/SetupInfo'
+          nullable: true
+          readOnly: true
         physical_rating:
           type: integer
           maximum: 5
@@ -2670,6 +2675,7 @@ components:
       - id
       - owner
       - owner_name
+      - setup_info
       - started_at
       - type
       - updated_at
@@ -2769,6 +2775,10 @@ components:
         * `competition` - Competition
     SessionWriteRequest:
       type: object
+      description: |-
+        The equipment is chosen by revision: the app knows the revision ids from its stored copy of your
+        equipment, and the server finds or creates the setup for that pair. Leave both out to keep the
+        session's equipment as it is; send null to clear it.
       properties:
         started_at:
           type: string
@@ -2789,7 +2799,10 @@ components:
         weather:
           type: string
           maxLength: 150
-        setup:
+        bow_revision:
+          type: integer
+          nullable: true
+        arrow_set_revision:
           type: integer
           nullable: true
         physical_rating:
@@ -2842,6 +2855,35 @@ components:
       - created_at
       - id
       - owner
+    SetupInfo:
+      type: object
+      description: The equipment of a session, as it was when the session used it.
+      properties:
+        bow_name:
+          type: string
+        bow_type:
+          type: string
+        bow_revision:
+          type: integer
+        bow_revision_number:
+          type: integer
+        arrow_set_name:
+          type: string
+          nullable: true
+        arrow_set_revision:
+          type: integer
+          nullable: true
+        arrow_set_revision_number:
+          type: integer
+          nullable: true
+      required:
+      - arrow_set_name
+      - arrow_set_revision
+      - arrow_set_revision_number
+      - bow_name
+      - bow_revision
+      - bow_revision_number
+      - bow_type
     SetupRequest:
       type: object
       properties:
