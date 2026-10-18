@@ -53,7 +53,7 @@ The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. The version come
 The app inside the phone is served from `https://localhost`, so:
 
 - The server must allow that origin: add `https://localhost` to `DJANGO_CORS_ORIGINS` in `deploy/.env` (the web app on the same address needs nothing).
-- A plain `http://` server (your PC's LAN IP) is blocked as mixed content. For a debug build against such a server, set `server: { androidScheme: 'http' }` in `capacitor.config.ts` and add `http://localhost` to `DJANGO_CORS_ORIGINS`. A server on `https://` needs neither.
+- A plain `http://` server (your PC's LAN IP) is blocked as mixed content. For a debug build against such a server, set `server: { androidScheme: 'http' }` in `capacitor.config.ts` (don't commit that) and add `http://localhost` to `DJANGO_CORS_ORIGINS`. Debug builds already allow plain http (`android/app/src/debug/AndroidManifest.xml`); release builds do not. A server on `https://` needs none of this.
 
 Login tokens go to the Android Keystore, the local session log (anything not uploaded yet) to the app's preferences. In the browser both are in localStorage.
 
