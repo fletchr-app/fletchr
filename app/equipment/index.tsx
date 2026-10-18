@@ -1,4 +1,4 @@
-import { Link, useFocusEffect, useTheme } from 'expo-router';
+import { Link, useFocusEffect, useTheme, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -69,7 +69,7 @@ function Row({
   detail,
   item,
 }: {
-  href: `/equipment/${string}`;
+  href: Href;
   title: string;
   detail: string;
   item: { is_active?: boolean; revision_number: number };
