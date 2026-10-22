@@ -197,6 +197,22 @@ class TeamDetailView(APIView):
     def get(self, request, team_id):
         return Response(TeamSerializer(self._team(request, team_id)).data)
 
+    @extend_schema(responses={204: None})
+    @transaction.atomic
+    def delete(self, request, team_id):
+        """
+        Delete the team for good. Only admins. Goes with it: memberships, invites, claim codes, the notes
+        written in the team, and the profiles of archers without an account. Real accounts and their
+        sessions and equipment stay.
+        """
+        team = self._team(request, team_id)
+        if team.my_role != Role.ADMIN:
+            raise PermissionDenied("Only team admins can delete the team")
+        profiles = User.objects.filter(is_managed=True, memberships__team=team)
+        profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()  # only those of this team alone
+        Team.objects.filter(pk=team.pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @extend_schema(request=TeamNameSerializer, responses=TeamSerializer)
     def patch(self, request, team_id):
         """Rename the team. Only admins."""
@@ -367,6 +383,16 @@ class MyMembershipView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, team_id):
+        """Leave the team. Your sessions and equipment stay yours; a team keeps at least one admin."""
+        team = get_my_team(request, team_id)
+        membership = TeamMember.objects.get(team=team, user=request.user)
+        if membership.role == Role.ADMIN and not TeamMember.objects.filter(team=team, role=Role.ADMIN).exclude(pk=membership.pk).exists():
+            raise ValidationError("You are the only admin. Make someone else an admin first, or delete the team.")
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SafeTokenRefreshView(TokenRefreshView):

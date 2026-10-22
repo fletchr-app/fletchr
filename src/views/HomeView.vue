@@ -37,7 +37,7 @@ onIonViewWillEnter(() =>
       <div v-if="teams?.length === 0">You are not in a team yet. Under More you can join one with an invite code, or create your own.</div>
       <IonList v-if="teams?.length" inset>
         <IonListHeader>Your teams</IonListHeader>
-        <IonItem v-for="team in teams" :key="team.id" lines="full">
+        <IonItem v-for="team in teams" :key="team.id" :router-link="`/team/${team.id}`" detail lines="full">
           <IonLabel>{{ team.name }}</IonLabel>
           <IonNote slot="end">{{ team.my_role }}</IonNote>
         </IonItem>

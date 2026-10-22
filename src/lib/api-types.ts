@@ -500,7 +500,12 @@ export interface paths {
         get: operations["teams_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * @description Delete the team for good. Only admins. Goes with it: memberships, invites, claim codes, the notes
+         *     written in the team, and the profiles of archers without an account. Real accounts and their
+         *     sessions and equipment stay.
+         */
+        delete: operations["teams_destroy"];
         options?: never;
         head?: never;
         /** @description Rename the team. Only admins. */
@@ -633,7 +638,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Leave the team. Your sessions and equipment stay yours; a team keeps at least one admin. */
+        delete: operations["teams_membership_destroy"];
         options?: never;
         head?: never;
         /** @description My own settings in a team. Only I can change them. */
@@ -2790,6 +2796,26 @@ export interface operations {
             };
         };
     };
+    teams_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     teams_partial_update: {
         parameters: {
             query?: never;
@@ -3051,6 +3077,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Member"];
                 };
+            };
+        };
+    };
+    teams_membership_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

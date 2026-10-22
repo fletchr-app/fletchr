@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import ErrorText from '@/components/ErrorText.vue'
 import InvitesSection from '@/components/InvitesSection.vue'
 import MembersSection from '@/components/MembersSection.vue'
+import TeamLeaveDelete from '@/components/TeamLeaveDelete.vue'
 import TeamRename from '@/components/TeamRename.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
@@ -53,6 +54,7 @@ function reload() {
           @changed="reload"
         />
         <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />
+        <TeamLeaveDelete :team-id="teamId" :team-name="team.data.value.name" :is-admin="isAdmin" />
       </template>
     </div>
   </AppPage>

@@ -1448,6 +1448,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Team'
           description: ''
+    delete:
+      operationId: teams_destroy
+      description: |-
+        Delete the team for good. Only admins. Goes with it: memberships, invites, claim codes, the notes
+        written in the team, and the profiles of archers without an account. Real accounts and their
+        sessions and equipment stay.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/teams/{team_id}/archers/:
     post:
       operationId: teams_archers_create
@@ -1752,6 +1771,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/MembershipSettings'
           description: ''
+    delete:
+      operationId: teams_membership_destroy
+      description: Leave the team. Your sessions and equipment stay yours; a team
+        keeps at least one admin.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/teams/{team_id}/overview/:
     get:
       operationId: teams_overview_list
