@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import AppPage from '@/components/AppPage.vue'
+import { onIonViewWillEnter } from '@ionic/vue'
 import { computed } from 'vue'
 
-import ErrorText from '@/components/ErrorText.vue'
+import AppPage from '@/components/AppPage.vue'
 import TeamOverview from '@/components/TeamOverview.vue'
-import { useAuth } from '@/composables/useAuth'
-import { useRemote } from '@/composables/useRemote'
+import { useTeams } from '@/composables/useTeams'
 
-const { api } = useAuth()
-const { data, error } = useRemote(async () => (await api.GET('/api/teams/')).data ?? null)
-const coached = computed(() => (data.value ?? []).filter((t) => t.my_role !== 'archer'))
+const { teams, loaded, load } = useTeams()
+const coached = computed(() => teams.value.filter((t) => t.my_role !== 'archer'))
+
+onIonViewWillEnter(load)
 </script>
 
 <template>
-  <AppPage title="Team">
+  <AppPage title="Team" :back="false">
     <div class="screen">
-      <ErrorText :message="error" />
-      <div v-if="data && coached.length === 0">You are not a coach in any team.</div>
+      <div v-if="loaded && coached.length === 0">You are not a coach in any team.</div>
       <TeamOverview v-for="team in coached" :key="team.id" :team="team" />
     </div>
   </AppPage>

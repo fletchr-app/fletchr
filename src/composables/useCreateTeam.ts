@@ -3,19 +3,24 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
+import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
 /** Asks for a name and creates a team with you as its admin; then opens the Team screen. */
 export function useCreateTeam() {
   const router = useRouter()
   const { api } = useAuth()
+  const { load } = useTeams()
   const error = ref<string | null>(null)
 
   async function create(name: string) {
     error.value = null
     try {
       const { data, error: failure } = await api.POST('/api/teams/', { body: { name } })
-      if (data) void router.push('/team')
+      if (data) {
+        await load() // the Team tab appears once I am an admin
+        void router.push('/team')
+      }
       else error.value = errorMessage(failure)
     } catch {
       error.value = 'Server not reachable'

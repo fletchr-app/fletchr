@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue'
-import { ellipsisHorizontal, home, listCircle, statsChart } from 'ionicons/icons'
+import { ellipsisHorizontal, home, listCircle, people, statsChart } from 'ionicons/icons'
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
+import { useTeams } from '@/composables/useTeams'
 
 const route = useRoute()
 const router = useRouter()
 const { status } = useAuth()
+const { isCoach } = useTeams()
 
 // Signing in or out moves you to the right side of the app, wherever you were.
 watch(status, (s) => {
@@ -35,6 +37,10 @@ const showTabs = computed(() => route.meta.tab === true)
         <IonTabButton tab="stats" href="/stats">
           <IonIcon :icon="statsChart" />
           <IonLabel>Statistics</IonLabel>
+        </IonTabButton>
+        <IonTabButton v-if="isCoach" tab="team" href="/team">
+          <IonIcon :icon="people" />
+          <IonLabel>Team</IonLabel>
         </IonTabButton>
         <IonTabButton tab="more" href="/more">
           <IonIcon :icon="ellipsisHorizontal" />

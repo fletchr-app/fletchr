@@ -8,11 +8,13 @@ import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCodePreview } from '@/composables/useCodePreview'
+import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
 const router = useRouter()
 const { api } = useAuth()
 const { preview, check } = useCodePreview()
+const { load } = useTeams()
 const code = ref('')
 const error = ref<string | null>(null)
 const busy = ref(false)
@@ -32,7 +34,10 @@ async function redeem(path: '/api/invites/redeem/' | '/api/claims/redeem/') {
   error.value = null
   try {
     const { data, error: failure } = await api.POST(path, { body: { invite_code: code.value.trim() } })
-    if (data) void router.replace('/')
+    if (data) {
+      await load()
+      void router.replace('/')
+    }
     else error.value = errorMessage(failure)
   } catch {
     error.value = 'Server not reachable'
