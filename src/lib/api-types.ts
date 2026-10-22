@@ -482,7 +482,8 @@ export interface paths {
         };
         get: operations["teams_list"];
         put?: never;
-        post?: never;
+        /** @description Create a team. You become its admin; invite archers and coaches from there. */
+        post: operations["teams_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1518,6 +1519,9 @@ export interface components {
             readonly my_role: string;
             /** @description Whether I share my own training with the other coaches */
             readonly also_shoots: boolean;
+        };
+        TeamNameRequest: {
+            name: string;
         };
         TokenBlacklistRequest: {
             refresh: string;
@@ -2734,6 +2738,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Team"][];
+                };
+            };
+        };
+    };
+    teams_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamNameRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TeamNameRequest"];
+                "multipart/form-data": components["schemas"]["TeamNameRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
                 };
             };
         };

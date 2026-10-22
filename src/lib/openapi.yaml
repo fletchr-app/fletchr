@@ -1368,6 +1368,33 @@ paths:
                 items:
                   $ref: '#/components/schemas/Team'
           description: ''
+    post:
+      operationId: teams_create
+      description: Create a team. You become its admin; invite archers and coaches
+        from there.
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamNameRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamNameRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamNameRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
   /api/teams/{team_id}/:
     get:
       operationId: teams_retrieve
@@ -3614,6 +3641,15 @@ components:
       - also_shoots
       - id
       - my_role
+      - name
+    TeamNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
       - name
     TokenBlacklistRequest:
       type: object

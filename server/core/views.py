@@ -141,8 +141,32 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+MAX_TEAMS_PER_USER = 5  # teams one person may administer
+
+
 class TeamListView(generics.ListAPIView):
     serializer_class = TeamSerializer
+
+    def get_throttles(self):
+        # Only creating a team is limited, not reading the list.
+        if self.request.method == "POST":
+            self.throttle_scope = "team_create"
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
+
+    @extend_schema(request=TeamNameSerializer, responses={201: TeamSerializer}, methods=["POST"])
+    @transaction.atomic
+    def post(self, request):
+        """Create a team. You become its admin; invite archers and coaches from there."""
+        serializer = TeamNameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if TeamMember.objects.filter(user=request.user, role=Role.ADMIN).count() >= MAX_TEAMS_PER_USER:
+            raise ValidationError(f"You already manage {MAX_TEAMS_PER_USER} teams")
+        team = Team.objects.create(name=serializer.validated_data["name"])
+        TeamMember.objects.create(team=team, user=request.user, role=Role.ADMIN)
+        team.my_role = Role.ADMIN
+        team.also_shoots = False
+        return Response(TeamSerializer(team).data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
