@@ -22,7 +22,7 @@ async function download() {
     const { data, error: failure } = await api.POST('/api/me/export/', { body: { password: password.value } })
     if (!data) error.value = errorMessage(failure)
     else {
-      await saveJson(`archery-coach-data-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
+      await saveJson(`fletchr-data-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
       password.value = ''
       done.value = true
     }

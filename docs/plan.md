@@ -1,4 +1,4 @@
-# Archery Coach: product and tech plan
+# Fletchr: product and tech plan
 
 Draft v5, 2026-10-18 (v4 reviewed end to end after adding self-hosting, arrow plotting, video analysis, skeleton detection, evaluations and iOS without a Mac; v5 replaces Expo/React Native with Vue 3 and Capacitor, so the stack matches pyobs-web-client; the last Expo version is the git tag `expo-final`). Defaults are marked **(default)**; any of them can be changed before code is written.
 
@@ -178,7 +178,7 @@ So roughly **€10/month plus the store accounts**. Videos are the main growth d
 ## 7. Repository layout
 
 ```
-archery-coach/
+fletchr/
   src/            Vue app: views (screens), components, composables, lib (logic and API client), router
   android/        Capacitor Android project
   public/         static files for the web build

@@ -166,7 +166,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Archery Coach API",
+    "TITLE": "Fletchr API",
     "VERSION": "0.1.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {

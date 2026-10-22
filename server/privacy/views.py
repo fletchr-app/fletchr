@@ -68,5 +68,5 @@ class ExportMyDataView(APIView):
         serializer = ExportRequestSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         response = Response(export_user_data(request.user))
-        response["Content-Disposition"] = f'attachment; filename="archery-coach-data-{date.today().isoformat()}.json"'
+        response["Content-Disposition"] = f'attachment; filename="fletchr-data-{date.today().isoformat()}.json"'
         return response

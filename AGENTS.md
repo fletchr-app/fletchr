@@ -1,4 +1,4 @@
-# Archery Coach
+# Fletchr
 
 Vue 3 + TypeScript app (Vite, Ionic Vue with its router). Mobile app only for now (Android first, iOS later), the web build is wrapped with Capacitor; no separate web product. Backend: Django REST Framework in `server/`. Plan and decisions: `docs/plan.md`. The old Expo (React Native) version is the git tag `expo-final`.
 

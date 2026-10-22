@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'de.fletchr.app',
-  appName: 'Archery Coach',
+  appName: 'Fletchr',
   webDir: 'dist',
   // Capacitor's default ('debug') logs every bridge call and result in debug builds, which
   // includes SecureStorage reads, i.e. the login tokens in plain text in logcat.

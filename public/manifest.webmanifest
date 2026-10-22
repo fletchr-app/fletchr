@@ -1,6 +1,6 @@
 {
-  "name": "Archery Coach",
-  "short_name": "Archery",
+  "name": "Fletchr",
+  "short_name": "Fletchr",
   "description": "Training log, coaching notes and evaluations for archers and coaches",
   "start_url": "/",
   "scope": "/",

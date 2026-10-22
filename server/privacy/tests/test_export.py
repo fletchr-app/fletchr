@@ -124,7 +124,7 @@ def test_exporting_changes_nothing(client_for, club):
 
 def test_the_file_has_a_name_for_browsers(client_for, club):
     res = export(client_for, club["archer1"])
-    assert res["Content-Disposition"].startswith('attachment; filename="archery-coach-data-')
+    assert res["Content-Disposition"].startswith('attachment; filename="fletchr-data-')
 
 
 @pytest.mark.parametrize("body", [{"password": "wrong"}, {"password": ""}, {}])
