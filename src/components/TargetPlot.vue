@@ -2,31 +2,32 @@
 import { computed, ref } from 'vue'
 
 import FaceSvg, { type Marker } from '@/components/FaceSvg.vue'
-import { useElementWidth } from '@/composables/useElementWidth'
+import { useElementSize } from '@/composables/useElementSize'
 import type { Face } from '@/lib/faces'
 import type { LogShot } from '@/lib/log-model'
 import { fitScale, magnifierPlacement, nearestShot, pickAt, sceneOf, toPixel, type PlotPoint } from '@/lib/plot'
 import { score } from '@/lib/scoring'
 import { newId } from '@/lib/uuid'
 
-const MAX_HEIGHT_PX = 380
 const HIT_PX = 16 // how close a touch must be to an arrow to move it instead of placing a new one
 const MAGNIFIER_PX = 130
 const ZOOM = 4
 const GAP_PX = 36
 
 // Touch the face to place an arrow: while the finger is down a magnifier above it shows the exact
-// spot, and lifting places the arrow. Touching an existing arrow moves it instead.
+// spot, and lifting places the arrow. Touching an existing arrow moves it instead. The face is
+// drawn as large as fits the space the parent gives this component (it fills the parent's height).
 const props = defineProps<{ face: Face; shots: LogShot[]; max: number; selectedId: string | null }>()
 const emit = defineEmits<{ change: [shots: LogShot[]] }>()
 
 const box = ref<HTMLElement | null>(null)
-const boxWidth = useElementWidth(box)
+const boxSize = useElementSize(box)
+const boxWidth = computed(() => boxSize.value.width)
 const touch = ref<{ px: number; py: number } | null>(null)
 const dragIndex = ref(-1)
 
 const scene = computed(() => sceneOf(props.face))
-const scale = computed(() => (boxWidth.value > 0 ? fitScale(scene.value, boxWidth.value, MAX_HEIGHT_PX) : 1))
+const scale = computed(() => (boxWidth.value > 0 && boxSize.value.height > 0 ? fitScale(scene.value, boxWidth.value, boxSize.value.height) : 1))
 const width = computed(() => scene.value.width * scale.value)
 const height = computed(() => scene.value.height * scale.value)
 
@@ -117,8 +118,8 @@ const centreY = computed(() => (touch.value ? scene.value.y0 + touch.value.py / 
 </script>
 
 <template>
-  <div ref="box" class="w-100 d-flex justify-content-center">
-    <div v-if="boxWidth > 0" class="position-relative" :style="{ width: `${width}px`, height: `${height}px` }">
+  <div ref="box" class="w-100 d-flex justify-content-center align-items-center" style="flex: 1 1 0; min-height: 0">
+    <div v-if="boxWidth > 0 && boxSize.height > 0" class="position-relative" :style="{ width: `${width}px`, height: `${height}px` }">
       <FaceSvg
         :face="face"
         :view="{ x: scene.x0, y: scene.y0, w: scene.width, h: scene.height }"

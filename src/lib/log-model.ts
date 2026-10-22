@@ -193,14 +193,24 @@ export function keypadFor(face: KeypadFace): KeypadKey[] {
   return keys;
 }
 
+/** The settings of a first end, before anything was shot. */
+export function firstEndDefaults(environment: Environment) {
+  return {
+    distance_m: environment === 'outdoor' ? '70' : '18',
+    face: environment === 'outdoor' ? 'wa-122' : 'wa-40',
+    arrows_per_end: 3,
+  };
+}
+
 /** Where the next end starts from: same distance, face and arrow count as the last one. */
 export function nextEndDefaults(session: LogSession) {
   const last = session.ends[session.ends.length - 1];
+  const first = firstEndDefaults(session.environment);
   return {
     index: last ? last.index + 1 : 0,
-    distance_m: last?.distance_m ?? (session.environment === 'outdoor' ? '70' : '18'),
-    face: last?.face ?? (session.environment === 'outdoor' ? 'wa-122' : 'wa-40'),
-    arrows_per_end: last?.arrows_per_end ?? 3,
+    distance_m: last?.distance_m ?? first.distance_m,
+    face: last?.face ?? first.face,
+    arrows_per_end: last?.arrows_per_end ?? first.arrows_per_end,
   };
 }
 

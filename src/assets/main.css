@@ -77,3 +77,17 @@ body {
 .chart-series-stroke { stroke: var(--chart-series); }
 .chart-surface-fill { fill: var(--chart-surface); }
 .chart-hit { position: absolute; background: none; border: 0; padding: 0; }
+
+/* A screen that fills the viewport below the header and never scrolls (the arrow entry: touching the
+   target face must not move the page). */
+.entry {
+  max-width: 600px;
+  margin: 0 auto;
+  height: calc(100dvh - 49px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  overscroll-behavior: none;
+}

@@ -89,12 +89,12 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 
 ## 5. Stack (default)
 
-- **App: Vue 3 + TypeScript + Vite + Vue Router, wrapped for phones with Capacitor**, one codebase for **web, Android and iOS**. The phone apps are the web app in a WebView plus Capacitor plugins (secure storage, preferences, share, app lifecycle). Same stack as pyobs-web-client, so one person can maintain both
+- **App: Vue 3 + TypeScript + Vite + Vue Router, wrapped for phones with Capacitor**, one codebase, **mobile app only in the beginning (Android first, iOS later)**; the web build is the dev shell and the base of the phone apps, not a released product yet. The phone apps are the web app in a WebView plus Capacitor plugins (secure storage, preferences, share, app lifecycle). Same stack as pyobs-web-client, so one person can maintain both
 - **UI**: Bootstrap 5 (light and dark follow the system), charts as plain inline SVG in Vue components, so they render the same on web and in the phone apps
 - **Backend: Django + Django REST Framework + SQLite, self-hosted**. Chosen because the maintainer knows Python and Django, and the permission logic (coach/archer/team rules) is the riskiest part and is easiest to unit test as plain Python. Auth uses JWT (`djangorestframework-simplejwt`), the OpenAPI schema (`drf-spectacular`) generates the TypeScript types for the app, and the Django admin gives an admin UI. File storage, invites and sign-in providers are built by us. gunicorn runs behind Caddy. If the club grows far beyond a few hundred archers, switch the database to Postgres (a settings change). Considered and rejected: PocketBase (less to build, but its Go core and restricted JS hooks are not maintainable by us, and rules are filter strings), self-hosted Supabase (about ten containers, 4 GB+ RAM) and a Node API.
 - **Offline**: session logging works without signal from the start (saved on the device, uploaded when online), since ranges often have poor reception; video uploads are queued the same way
 - **Upload of sessions**: the app creates the ids (UUIDs) for sessions, ends, shots and volume entries, and uploads with idempotent `PUT`s: the session once, then each end with all its shots as soon as it is shot (so a coach sees results live, or as soon as the phone has signal again), so a retry never duplicates anything. The last write wins. The server recomputes every score from the position and returns its own values, which the app then shows. Coaches read sessions, they cannot change them. A coach's live view polls the session list (`/api/sessions/?updated_after=...`); push updates are not planned
-- **Builds and hosting**: Android Studio or Gradle (`npx cap sync`, then build) for the Android app, a macOS machine or CI runner with Xcode for the iOS app; the web app is a static build served by your own server (section 6a), installable as a home-screen app (PWA)
+- **Builds and hosting**: Android Studio or Gradle (`npx cap sync`, then build) for the Android app, a macOS machine or CI runner with Xcode for the iOS app; the web build is served by your own server (section 6a) for development and testing, a public web app/PWA is postponed
 - **Languages**: English and German from the start (i18n)
 
 ## 6. Photos and videos
@@ -111,6 +111,7 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 - **Later**: two clips side by side with synced stepping (e.g. before/after a form change), and a ghost overlay.
 - **How it works**: the server stores the clip's exact frame rate; a step seeks to the middle of the next frame, which avoids landing on the neighbouring frame. The player runs in the WebView on phones and in the browser on web, with the same code: it uses the video element's frame callback (`requestVideoFrameCallback`). To be checked on a real 120/240 fps clip in Android WebView and iOS WKWebView before the player is built; if it is not frame-exact there, a small native Capacitor plugin is the fallback.
 - **Limits**: in web browsers, stepping is accurate on current Chrome, Edge, Safari and Firefox, but on old browsers or very slow laptops a step can occasionally show the neighbouring frame. Frame accuracy in the phone WebViews is to be verified (see above). Phone-recorded clips with variable frame rate are converted to constant frame rate on the server so frame numbers are reliable.
+- **Prototype before milestone 2 (decides Capacitor vs. native Kotlin)**: a throwaway page in the Capacitor Android app, tested on a real 240 fps clip and on the weakest target phone. Checks: (1) frame stepping is exact, i.e. the frame counter matches known frames when stepping forward and back; (2) a line/angle drawing overlay stays in sync with the frame; (3) a large clip (e.g. 200 MB) uploads in the background with the app minimised and resumes after a connection drop; (4) memory stays stable on a long clip. If all pass, stay with Capacitor. If one fails, write a small native Kotlin Capacitor plugin for that piece (Media3/ExoPlayer for the player, WorkManager for uploads) before considering a full native app.
 - **Size**: the frequent keyframes make files about 30 to 50% larger than normal; a 60-second 720p clip at 30 to 60 fps is roughly 40 to 80 MB. Slow-motion clips (120/240 fps) are 2 to 4 times larger per second, but are usually only a few seconds long.
 
 ### Automatic skeleton detection (advanced, milestone 5)
@@ -172,7 +173,7 @@ So roughly **€10/month plus the store accounts**. Videos are the main growth d
 - **Testing**: an archer or coach with an iPhone tests through TestFlight and provides the App Store screenshots.
 - **Sign-in**: an app in the App Store that offers Google sign-in must also offer Sign in with Apple, which is planned (section 5).
 - **Fallback**: the web app is installable on iPhones from Safari ("Add to Home Screen") and works like an app, including camera uploads, frame stepping and push notifications (iOS 16.4+). iPhone users can use this from day one.
-- **Order (default)**: web and Android first (testable on your own devices), iOS store app once an iPhone tester is available. Since it is one codebase, iOS needs no extra development, only testing and the store listing.
+- **Order (default)**: Android only at first (mobile app only, no public web app), Android is testable on your own devices; the iOS store app follows once an iPhone tester is available. Since it is one codebase, iOS needs no extra development, only testing and the store listing.
 
 ## 7. Repository layout
 
@@ -191,7 +192,7 @@ archery-coach/
 
 ## 8. Milestones
 
-1. **MVP**: auth, teams/invites, equipment, session logging by tapping arrows on the target face (works offline), session plot with group centre, coach notes, basic stats (volume, average score), account and data deletion (GDPR and store requirement), Docker setup for local and server. Runs as web app (also installable on iPhones) and Android app
+1. **MVP**: auth, teams/invites, equipment, session logging by tapping arrows on the target face (works offline), session plot with group centre, coach notes, basic stats (volume, average score), account and data deletion (GDPR and store requirement), Docker setup for local and server. Ships as Android app only (the web build is for development; a public web app/PWA and iOS come later)
 2. **Media and evaluations**: evaluation forms with trend charts, photo/video upload with server conversion, gallery, frame-by-frame player, notes on video frames, off-site backups; then drawing tools on frames
 3. **Deeper stats**: heatmaps, group trend, per-arrow analysis, setup comparison, team dashboard
 4. **Polish and release**: push notifications, Google Play release, iOS App Store release once an iPhone tester is available (section 6b)

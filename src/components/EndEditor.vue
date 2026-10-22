@@ -2,62 +2,44 @@
 import { computed, ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
-import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
-import FormField from '@/components/FormField.vue'
 import TargetPlot from '@/components/TargetPlot.vue'
 import { useLog } from '@/composables/useLog'
 import { FACES, getFace } from '@/lib/faces'
 import { endTotal, keypadFor, type LogEnd, type LogSession, type LogShot, nextEndDefaults, shotLabel } from '@/lib/log-model'
 import { newId } from '@/lib/uuid'
 
-// One end: set distance, face and arrow count, place the arrows on the face (or type the scores),
-// confirm. Uploads as soon as it is confirmed.
-const props = defineProps<{ session: LogSession; editing: LogEnd | null }>()
+// One end: place the arrows on the face (or type the scores) and confirm. Distance, face and arrow
+// count come from the setup screen. Uploads as soon as it is confirmed. Fills the height its parent
+// gives it and never scrolls, so touching the face cannot move the page.
+const props = defineProps<{ session: LogSession; editing: LogEnd | null; distance: string; face: string; arrows: number }>()
 const emit = defineEmits<{ done: [] }>()
 
 const { saveEnd, deleteEnd } = useLog()
 
-const start = props.editing ?? { ...nextEndDefaults(props.session), id: newId(), shots: [] as LogShot[] }
-const distance = ref(start.distance_m)
-const faceSlug = ref(start.face)
-const arrows = ref(String(start.arrows_per_end))
-const shots = ref<LogShot[]>(start.shots)
-const pickingFace = ref(false)
+const start = props.editing ?? { index: nextEndDefaults(props.session).index, id: newId() }
+// Arrows from another face do not carry over.
+const shots = ref<LogShot[]>(props.editing && props.editing.face === props.face ? props.editing.shots : [])
 const mode = ref<'plot' | 'pad'>('plot')
 const selectedId = ref<string | null>(null)
 const error = ref<string | null>(null)
 
-const face = computed(() => getFace(faceSlug.value) ?? FACES[0]!)
-const arrowCount = computed(() => Math.max(1, Math.min(12, Math.round(Number(arrows.value)) || 1)))
-const full = computed(() => shots.value.length >= arrowCount.value)
+const face = computed(() => getFace(props.face) ?? FACES[0]!)
+const full = computed(() => shots.value.length >= props.arrows)
 const keypad = computed(() => keypadFor(face.value))
-const total = computed(() => endTotal({ ...start, shots: shots.value }))
+const total = computed(() => endTotal({ ...start, distance_m: props.distance, face: face.value.slug, arrows_per_end: props.arrows, shots: shots.value }))
 
 function save() {
-  const metres = Number(distance.value.replace(',', '.'))
-  if (!(metres > 0)) return (error.value = 'Enter the distance in metres')
-  if (!(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = 'Arrows per end must be between 1 and 12')
   if (shots.value.length === 0) return (error.value = 'Enter at least one arrow')
-  if (shots.value.length > arrowCount.value) return (error.value = 'More arrows entered than arrows per end')
   saveEnd(props.session.id, {
     id: start.id,
     index: start.index,
-    distance_m: metres.toFixed(1),
+    distance_m: Number(props.distance).toFixed(1),
     face: face.value.slug,
-    arrows_per_end: arrowCount.value,
+    arrows_per_end: props.arrows,
     shots: shots.value,
   })
   emit('done')
-}
-
-function chooseFace(slug: string) {
-  if (slug !== face.value.slug) {
-    shots.value = [] // arrows from another face do not carry over
-    selectedId.value = null
-  }
-  faceSlug.value = slug
-  pickingFace.value = false
 }
 
 function deleteSelected() {
@@ -72,40 +54,21 @@ function remove() {
 </script>
 
 <template>
-  <div class="d-flex flex-column gap-3">
-    <h2 class="h5 m-0">{{ editing ? `Edit end ${start.index + 1}` : `End ${start.index + 1}` }}</h2>
-    <div class="row g-3">
-      <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
-      <div class="col-6"><FormField v-model="arrows" label="Arrows per end" inputmode="numeric" /></div>
+  <div class="entry">
+    <div class="d-flex align-items-center gap-2">
+      <div class="flex-grow-1 text-truncate">
+        <span class="fw-semibold">End {{ start.index + 1 }}</span>
+        <span class="muted"> · {{ distance }} m · {{ face.name }}</span>
+      </div>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Enter arrows by">
+        <button type="button" class="btn" :class="mode === 'plot' ? 'btn-primary' : 'btn-secondary'" @click="mode = 'plot'">Touch</button>
+        <button type="button" class="btn" :class="mode === 'pad' ? 'btn-primary' : 'btn-secondary'" @click="mode = 'pad'">Type</button>
+      </div>
     </div>
-    <button type="button" class="btn btn-link text-start p-0" @click="pickingFace = !pickingFace">
-      Face: {{ face.name }} {{ pickingFace ? '▴' : '▾' }}
-    </button>
-    <template v-if="pickingFace">
-      <button
-        v-for="f in FACES"
-        :key="f.slug"
-        type="button"
-        class="btn btn-link text-start py-1 px-0 text-reset"
-        :class="f.slug === face.slug ? 'fw-bold' : ''"
-        @click="chooseFace(f.slug)"
-      >
-        {{ f.name }}
-      </button>
-    </template>
-
-    <ChipGroup
-      v-model="mode"
-      label="Enter arrows by"
-      :options="[
-        { value: 'plot', label: 'Touching the face' },
-        { value: 'pad', label: 'Typing the score' },
-      ]"
-    />
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
       <button
-        v-for="i in arrowCount"
+        v-for="i in arrows"
         :key="i"
         type="button"
         class="btn d-flex align-items-center justify-content-center p-0 fs-5 fw-semibold"
@@ -116,20 +79,21 @@ function remove() {
       >
         {{ shots[i - 1] ? shotLabel(shots[i - 1]!) : '' }}
       </button>
-      <span class="fs-5 ms-2">= {{ total }}</span>
+      <span class="fs-5 ms-1">= {{ total }}</span>
+      <button
+        v-if="selectedId !== null && shots.some((s) => s.id === selectedId)"
+        type="button"
+        class="btn btn-outline-secondary ms-auto"
+        style="width: 44px; height: 44px"
+        aria-label="Delete the selected arrow"
+        @click="deleteSelected"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
     </div>
-    <AppButton v-if="selectedId !== null && shots.some((s) => s.id === selectedId)" secondary @click="deleteSelected">
-      Delete the selected arrow
-    </AppButton>
 
-    <template v-if="mode === 'plot'">
-      <TargetPlot :face="face" :shots="shots" :max="arrowCount" :selected-id="selectedId" @change="shots = $event" />
-      <div class="faint">
-        Touch the face and move to the exact spot, then lift to place the arrow. Touch an arrow to move it. An arrow touching a line
-        counts for the higher ring: move it over the line.
-      </div>
-    </template>
-    <div v-else class="d-flex flex-wrap gap-2">
+    <TargetPlot v-if="mode === 'plot'" :face="face" :shots="shots" :max="arrows" :selected-id="selectedId" @change="shots = $event" />
+    <div v-else class="d-flex flex-wrap gap-2 align-content-start" style="flex: 1 1 0; min-height: 0">
       <div v-if="keypad.length === 0" class="muted">This face has no scores to type. Place the arrows on it instead.</div>
       <button
         v-for="key in keypad"
@@ -148,10 +112,12 @@ function remove() {
     </div>
 
     <ErrorText :message="error" />
-    <AppButton @click="save">{{ editing ? 'Save end' : 'Confirm end' }}</AppButton>
-    <template v-if="editing">
-      <AppButton secondary @click="emit('done')">Cancel</AppButton>
-      <AppButton secondary @click="remove">Delete end</AppButton>
-    </template>
+    <div class="d-flex gap-2">
+      <template v-if="editing">
+        <AppButton secondary @click="emit('done')">Cancel</AppButton>
+        <AppButton secondary @click="remove">Delete</AppButton>
+      </template>
+      <AppButton @click="save">{{ editing ? 'Save end' : 'Confirm end' }}</AppButton>
+    </div>
   </div>
 </template>

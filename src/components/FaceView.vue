@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 
 import FaceSvg, { type GroupMark, type Marker } from '@/components/FaceSvg.vue'
-import { useElementWidth } from '@/composables/useElementWidth'
+import { useElementSize } from '@/composables/useElementSize'
 import type { Face } from '@/lib/faces'
 import { groupOf } from '@/lib/group'
 import type { LogShot } from '@/lib/log-model'
@@ -11,12 +11,14 @@ import { fitScale, sceneOf } from '@/lib/plot'
 const MAX_HEIGHT_PX = 380
 
 // The face with the arrows that have a position, and for each spot the centre and spread of its group. Read-only.
-const props = defineProps<{ face: Face; shots: LogShot[] }>()
+// With `fill` it is drawn as large as fits the height its parent gives it, instead of at most MAX_HEIGHT_PX.
+const props = defineProps<{ face: Face; shots: LogShot[]; fill?: boolean }>()
 
 const box = ref<HTMLElement | null>(null)
-const boxWidth = useElementWidth(box)
+const boxSize = useElementSize(box)
+const boxWidth = computed(() => boxSize.value.width)
 const scene = computed(() => sceneOf(props.face))
-const scale = computed(() => (boxWidth.value > 0 ? fitScale(scene.value, boxWidth.value, MAX_HEIGHT_PX) : 1))
+const scale = computed(() => (boxWidth.value > 0 && (!props.fill || boxSize.value.height > 0) ? fitScale(scene.value, boxWidth.value, props.fill ? boxSize.value.height : MAX_HEIGHT_PX) : 1))
 
 const at = (spot: number, x: number, y: number) => {
   const s = props.face.spots[Math.min(spot, props.face.spots.length - 1)]!
@@ -33,9 +35,9 @@ const groups = computed<GroupMark[]>(() =>
 </script>
 
 <template>
-  <div ref="box" class="w-100 d-flex justify-content-center">
+  <div ref="box" class="w-100 d-flex justify-content-center align-items-center" :style="fill ? 'flex: 1 1 0; min-height: 0' : undefined">
     <FaceSvg
-      v-if="boxWidth > 0"
+      v-if="boxWidth > 0 && (!fill || boxSize.height > 0)"
       :face="face"
       :view="{ x: scene.x0, y: scene.y0, w: scene.width, h: scene.height }"
       :width="scene.width * scale"

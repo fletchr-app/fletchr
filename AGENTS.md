@@ -1,6 +1,6 @@
 # Archery Coach
 
-Vue 3 + TypeScript app (Vite, Vue Router, Bootstrap 5) for web, Android and iOS. The phone apps are the web build wrapped with Capacitor. Backend: Django REST Framework in `server/`. Plan and decisions: `docs/plan.md`. The old Expo (React Native) version is the git tag `expo-final`.
+Vue 3 + TypeScript app (Vite, Vue Router, Bootstrap 5). Mobile app only for now (Android first, iOS later), the web build is wrapped with Capacitor; no separate web product. Backend: Django REST Framework in `server/`. Plan and decisions: `docs/plan.md`. The old Expo (React Native) version is the git tag `expo-final`.
 
 ## Commands
 

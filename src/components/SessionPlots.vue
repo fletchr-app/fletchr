@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import FaceView from '@/components/FaceView.vue'
 import { getFace } from '@/lib/faces'
@@ -7,7 +7,8 @@ import { describeCentre, spreadCm } from '@/lib/group'
 import type { LogSession } from '@/lib/log-model'
 import { blocksOf } from '@/lib/session-view'
 
-const props = defineProps<{ session: Pick<LogSession, 'ends'> }>()
+// With `fill` it takes the height its parent gives it and shows one distance and face at a time (chips switch between them).
+const props = defineProps<{ session: Pick<LogSession, 'ends'>; fill?: boolean }>()
 
 // For each distance and face of the session: where the arrows hit, and the group centre and spread.
 const blocks = computed(() =>
@@ -20,10 +21,34 @@ const blocks = computed(() =>
       return [{ block, face, radius }]
     }),
 )
+const shown = ref(0)
+const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.length - 1)])
 </script>
 
 <template>
-  <div v-if="blocks.length > 0" class="d-flex flex-column gap-3">
+  <div v-if="fill && current" class="d-flex flex-column gap-1" style="flex: 1 1 0; min-height: 0">
+    <div v-if="blocks.length > 1" class="d-flex flex-wrap gap-2">
+      <button
+        v-for="(b, i) in blocks"
+        :key="b.block.key"
+        type="button"
+        class="btn btn-sm rounded-pill"
+        :class="blocks.indexOf(current) === i ? 'btn-primary' : 'btn-secondary'"
+        @click="shown = i"
+      >
+        {{ Number(b.block.distance_m) }} m · {{ b.face.name }}
+      </button>
+    </div>
+    <div class="fw-semibold">{{ Number(current.block.distance_m) }} m · {{ current.face.name }} · {{ current.block.plotted.length + current.block.typed }} arrows</div>
+    <FaceView v-if="current.block.plotted.length > 0" fill :face="current.face" :shots="current.block.plotted" />
+    <div v-else class="flex-grow-1"></div>
+    <div v-for="{ spot, group } in current.block.groups" :key="spot" class="muted">
+      {{ current.face.spots.length > 1 ? `Spot ${spot + 1}: ` : 'Group: ' }}centre {{ describeCentre(group, current.radius) }} · spread
+      {{ spreadCm(group, current.radius).toFixed(1) }} cm
+    </div>
+    <div v-if="current.block.typed > 0" class="faint">{{ current.block.typed }} typed in, not drawn.</div>
+  </div>
+  <div v-else-if="blocks.length > 0" class="d-flex flex-column gap-3">
     <div v-for="{ block, face, radius } in blocks" :key="block.key" class="d-flex flex-column gap-1">
       <div class="fw-semibold">{{ Number(block.distance_m) }} m · {{ face.name }} · {{ block.plotted.length + block.typed }} arrows</div>
       <FaceView v-if="block.plotted.length > 0" :face="face" :shots="block.plotted" />

@@ -1,56 +1,77 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
-import EndEditor from '@/components/EndEditor.vue'
-import EndRows from '@/components/EndRows.vue'
-import GearPicker from '@/components/GearPicker.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import VolumeLog from '@/components/VolumeLog.vue'
 import { useLog } from '@/composables/useLog'
-import { gearFor, gearLine, sessionTotals, usesEnds } from '@/lib/log-model'
+import { gearLine, nextEndDefaults, sessionTotals, usesEnds } from '@/lib/log-model'
 
 const route = useRoute()
-const { loaded, sessions, equipment, setGear, finishSession, deleteSession } = useLog()
+const router = useRouter()
+const { loaded, sessions, waiting, failed, finishSession, deleteSession } = useLog()
 const confirmDelete = ref(false)
-const changingGear = ref(false)
-// null: a new end; otherwise the id of the end being edited. The key restarts the editor each time.
-const editing = ref<string | null>(null)
 
 const session = computed(() => sessions.value.find((s) => s.id === route.params.id))
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
-const editedEnd = computed(() => session.value?.ends.find((e) => e.id === editing.value) ?? null)
+
+// A session left before anything was entered would only clutter the list.
+onBeforeRouteLeave((to) => {
+  const s = session.value
+  if (s && !to.path.startsWith(`/training/${s.id}`) && s.ends.length === 0 && s.volume.length === 0) deleteSession(s.id)
+})
+
+// The settings are asked once, before the first end; later ends start from the previous one (changeable via the link).
+function entry(settings: { distance_m: string; face: string; arrows_per_end: number }) {
+  const query = { distance: settings.distance_m, face: settings.face, arrows: String(settings.arrows_per_end) }
+  void router.push({ path: `/training/${session.value!.id}/end`, query })
+}
+// Finishing goes back to the home screen; reopening stays here.
+function finish() {
+  const s = session.value!
+  finishSession(s.id, !s.ended_at)
+  if (!s.ended_at) void router.replace('/')
+}
+function newEnd() {
+  if (session.value!.ends.length === 0) void router.push(`/training/${session.value!.id}/setup`)
+  else entry(nextEndDefaults(session.value!))
+}
 </script>
 
 <template>
   <div v-if="!session || !totals" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+  <!-- Ends sessions: one screen without scrolling. The list of ends and delete are on the ends page. -->
+  <div v-else-if="usesEnds(session.type)" class="entry">
+    <!-- Uploads that wait show as an icon, so the screen does not jump when they finish; only refused ones need the full banner. -->
+    <SyncBanner v-if="failed.length > 0" />
+    <div class="d-flex align-items-center gap-2">
+      <h2 class="h5 m-0 flex-grow-1">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+      <i v-if="waiting > 0" class="bi bi-cloud-arrow-up muted" :title="`${waiting} waiting to upload`"></i>
+    </div>
+    <div class="muted">
+      {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows · {{ totals.score }} points{{ session.ended_at ? ' · finished' : '' }}
+    </div>
+    <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+    <SessionPlots fill :session="session" />
+    <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
+    <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face or equipment</RouterLink>
+    <AppButton @click="newEnd">New end</AppButton>
+    <div class="d-flex gap-2">
+      <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">All ends</AppButton>
+      <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen' : 'Finish session' }}</AppButton>
+    </div>
+  </div>
   <div v-else class="screen">
     <SyncBanner />
     <h2 class="h5 m-0">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
     <div class="muted">
-      {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ usesEnds(session.type) ? ` · ${totals.score} points` : '' }}{{ session.ended_at ? ' · finished' : '' }}
+      {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ session.ended_at ? ' · finished' : '' }}
     </div>
-    <div class="muted">
-      Equipment: {{ gearLine(session.gear) || 'none chosen' }}
-      <a href="#" @click.prevent="changingGear = !changingGear">{{ changingGear ? 'done' : 'change' }}</a>
-    </div>
-    <GearPicker
-      v-if="changingGear"
-      :equipment="equipment"
-      :bow-id="session.gear?.bow_id ?? null"
-      :arrow-set-id="session.gear?.arrow_set_id ?? null"
-      @change="(bowId, arrowSetId) => setGear(session!.id, gearFor(equipment, bowId, arrowSetId))"
-    />
-    <template v-if="usesEnds(session.type)">
-      <EndEditor :key="editedEnd?.id ?? `new-${session.ends.length}`" :session="session" :editing="editedEnd" @done="editing = null" />
-      <h3 v-if="session.ends.length > 0" class="h6 mt-2 mb-0">Ends</h3>
-      <EndRows :ends="session.ends" clickable @select="editing = $event.id" />
-      <SessionPlots :session="session" />
-    </template>
-    <VolumeLog v-else :session="session" />
-    <AppButton secondary @click="finishSession(session.id, !session.ended_at)">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
+    <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+    <VolumeLog :session="session" />
+    <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
     <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
       {{ confirmDelete ? 'Tap again to delete this session' : 'Delete session' }}
     </AppButton>
