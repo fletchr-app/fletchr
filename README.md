@@ -1,11 +1,11 @@
 # Archery Coach
 
-Training log, coaching notes and evaluations for archers and coaches. One Vue 3 + TypeScript app for web, Android and iOS (the phone apps are the same app wrapped with [Capacitor](https://capacitorjs.com)), backed by a self-hosted Django REST Framework server. See [docs/plan.md](docs/plan.md) for the full plan. The previous React Native (Expo) version is the git tag `expo-final`.
+Training log, coaching notes and evaluations for archers and coaches. One Vue 3 + TypeScript app (Ionic Vue), shipped as a mobile app first (Android now, iOS later) and wrapped with [Capacitor](https://capacitorjs.com). The web build is the dev shell and the base of the phone apps, not a product of its own for now. It talks to a self-hosted Django REST Framework server. See [docs/plan.md](docs/plan.md) for the full plan. The previous React Native (Expo) version is the git tag `expo-final`.
 
 ## Layout
 
 ```
-src/       Vue app: views/ (screens), components/, composables/ (auth, log, server, ...), lib/ (logic, API client), router/
+src/       Vue app: views/ (screens), components/, composables/ (auth, log, teams, theme, ...), lib/ (logic, API client), router/
 android/   Capacitor Android project
 public/    static files of the web build
 resources/ source icon and splash image for the phone apps
@@ -15,6 +15,14 @@ shared/    files used by both server and app (target faces, scoring test cases)
 worker/    pose detection worker (milestone 5)
 docs/      plan, decisions
 ```
+
+## What it does
+
+- **Training log:** sessions with ends, arrows placed on the target face (works offline, uploaded when there is a connection), group plots, statistics.
+- **Teams and roles:** archer, coach, admin. Anyone signed in can create a team (More, Create a team) and becomes its admin; people join with invite codes, anyone can leave, admins can delete the team. Signing up itself is invite-only.
+- **Archers without an account:** a coach adds an archer by name, writes notes and logs sessions for them. The archer takes the profile over later with a claim code (confirmed in the app); sessions and notes move to their account.
+- **Coach notes:** about an archer, a session or an end. Three levels: only me (the author alone), coach only (the coaches of the team), shared with the archer.
+- **Your data:** download everything the server has about you, delete your data, delete your account (More, Your data).
 
 ## Run locally
 
@@ -30,7 +38,7 @@ cd deploy && docker compose up --build
 
 - Web app and API: http://localhost:8080
 - Django admin: http://localhost:8080/admin/ (create a superuser with `docker compose exec django uv run --no-dev python manage.py createsuperuser`)
-- First team and admin (signup is invite-only, so seed one): `docker compose exec django uv run --no-dev python manage.py seed --email you@example.com --password ... --name "Your Name"`. It prints an archer invite code; further invites come from `POST /api/teams/<id>/invites/` (team admins) or the Django admin
+- First account (signup is invite-only, so seed one): `docker compose exec django uv run --no-dev python manage.py seed --email you@example.com --password ... --name "Your Name"`. It creates a team with you as admin and prints an archer invite code. Further teams are created in the app (More, Create a team); invites come from the team screen (admins), `POST /api/teams/<id>/invites/` or the Django admin
 - Health check: http://localhost:8080/api/health/
 - Data (database, uploads) lives in `deploy/data/django/`
 
@@ -53,7 +61,7 @@ The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. The version come
 The app inside the phone is served from `https://localhost`, so:
 
 - The server must allow that origin: add `https://localhost` to `DJANGO_CORS_ORIGINS` in `deploy/.env` (the web app on the same address needs nothing).
-- A plain `http://` server (your PC's LAN IP) is blocked as mixed content. For a debug build against such a server, set `server: { androidScheme: 'http' }` in `capacitor.config.ts` (don't commit that) and add `http://localhost` to `DJANGO_CORS_ORIGINS`. Debug builds already allow plain http (`android/app/src/debug/AndroidManifest.xml`); release builds do not. A server on `https://` needs none of this.
+- A plain `http://` server (your PC's LAN IP) is blocked as mixed content. For a debug build against such a server, sync with `CAP_ANDROID_SCHEME=http npx cap sync android` (it sets `server: { androidScheme: 'http' }` for that sync only) and add `http://localhost` to `DJANGO_CORS_ORIGINS`. Debug builds already allow plain http (`android/app/src/debug/AndroidManifest.xml`); release builds do not. A server on `https://` needs none of this.
 
 Login tokens go to the Android Keystore, the local session log (anything not uploaded yet) to the app's preferences. In the browser both are in localStorage.
 
@@ -90,3 +98,7 @@ npm run type-check
 npm test                 # scoring rules and the local log, app side
 cd server && uv run pytest
 ```
+
+## License
+
+[AGPL-3.0-or-later](LICENSE).
