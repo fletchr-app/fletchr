@@ -148,3 +148,15 @@ def test_it_is_valid_json_that_survives_a_round_trip(client_for, club):
     fill(club["archer1"])
     raw = client_for(club["archer1"]).post(URL, {"password": PASSWORD}, format="json").content
     assert json.loads(json.dumps(json.loads(raw))) == json.loads(raw)
+
+
+def test_private_notes_are_in_the_authors_export_not_in_the_archers(client_for, club):
+    from notes.models import Note
+
+    Note.objects.create(team=club["a"], author=club["coach"], archer=club["archer1"], body="mine alone", visibility="private")
+    Note.objects.create(team=club["a"], author=club["coach"], archer=club["archer1"], body="for the coaches", visibility="coach_only")
+    about = client_for(club["archer1"]).post("/api/me/export/", {"password": "correct-horse-battery"}, format="json")
+    assert about.status_code == 200
+    assert [n["body"] for n in about.data["notes_about_me"]] == ["for the coaches"]
+    wrote = client_for(club["coach"]).post("/api/me/export/", {"password": "correct-horse-battery"}, format="json")
+    assert {n["body"] for n in wrote.data["notes_i_wrote"]} == {"mine alone", "for the coaches"}

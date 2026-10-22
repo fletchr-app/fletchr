@@ -230,3 +230,49 @@ def test_writable_teams(api, club, join):
 @pytest.mark.parametrize("url", ["/api/notes/", "/api/notes/teams/?archer=1"])
 def test_login_required(client_for, db, url):
     assert client_for().get(url).status_code == 401
+
+
+# --- private notes ("only me") --------------------------------------------------------------------
+
+
+def test_a_private_note_is_for_its_author_alone(api, club):
+    note = write(api, club, visibility="private").data["id"]
+    assert note in ids(api("coach").get("/api/notes/"))
+    assert api("coach").get(f"/api/notes/{note}/").status_code == 200
+    # not the other coaches and admins of the team, not the archer, nobody elsewhere
+    for who in ("admin", "archer1", "archer2", "b_admin", "b_archer"):
+        assert api(who).get("/api/notes/").data == [], who
+        assert api(who).get(f"/api/notes/{note}/").status_code == 404, who
+
+
+def test_nobody_else_can_change_or_delete_a_private_note(api, club):
+    note = write(api, club, visibility="private").data["id"]
+    for who in ("admin", "archer1"):
+        assert api(who).patch(f"/api/notes/{note}/", {"body": "x"}, format="json").status_code == 404, who
+        assert api(who).delete(f"/api/notes/{note}/").status_code == 404, who
+    assert Note.objects.get(pk=note).body == "Watch the bow arm"
+
+
+def test_the_author_edits_and_deletes_it(api, club):
+    note = write(api, club, visibility="private").data
+    assert note["can_edit"] is True and note["can_delete"] is True
+    res = api("coach").patch(f"/api/notes/{note['id']}/", {"visibility": "coach_only"}, format="json")
+    assert res.status_code == 200
+    assert note["id"] in ids(api("admin").get("/api/notes/"))  # now the other coaches see it
+    again = api("coach").patch(f"/api/notes/{note['id']}/", {"visibility": "private"}, format="json")
+    assert again.status_code == 200 and api("admin").get("/api/notes/").data == []
+    assert api("coach").delete(f"/api/notes/{note['id']}/").status_code == 204
+
+
+def test_filters_never_show_what_you_may_not_read(api, club):
+    write(api, club, visibility="private")
+    admin = api("admin")
+    assert admin.get("/api/notes/", {"visibility": "private"}).data == []
+    assert admin.get("/api/notes/", {"author": club["coach"].pk}).data == []
+    assert len(api("coach").get("/api/notes/", {"visibility": "private"}).data) == 1
+
+
+def test_a_private_note_survives_the_author_losing_the_coach_role(api, club):
+    note = write(api, club, visibility="private").data["id"]
+    TeamMember.objects.filter(user=club["coach"]).update(role=Role.ARCHER)
+    assert note in ids(api("coach").get("/api/notes/"))

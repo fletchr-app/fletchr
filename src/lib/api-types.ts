@@ -1548,11 +1548,12 @@ export interface components {
          */
         UnitsEnum: "metric" | "imperial";
         /**
-         * @description * `coach_only` - Coach Only
+         * @description * `private` - Private
+         *     * `coach_only` - Coach Only
          *     * `shared` - Shared
          * @enum {string}
          */
-        VisibilityEnum: "coach_only" | "shared";
+        VisibilityEnum: "private" | "coach_only" | "shared";
         VolumeEntry: {
             /** Format: uuid */
             readonly id: string;
@@ -2205,10 +2206,11 @@ export interface operations {
                 session?: string;
                 team?: number;
                 /**
-                 * @description * `coach_only` - Coach Only
+                 * @description * `private` - Private
+                 *     * `coach_only` - Coach Only
                  *     * `shared` - Shared
                  */
-                visibility?: "coach_only" | "shared";
+                visibility?: "coach_only" | "private" | "shared";
             };
             header?: never;
             path?: never;

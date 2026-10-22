@@ -38,8 +38,8 @@ async function download() {
     <h2 class="h5 m-0">Download my data</h2>
     <p class="m-0">
       One file (JSON) with everything the server has about you: your profile and teams, your equipment with its history, all your
-      sessions with every arrow, and the coach notes about you, including the ones that were not shared with you, and the notes you
-      wrote yourself.
+      sessions with every arrow, and the coach notes about you, including the ones that were not shared with you (but not what a coach keeps
+      only for themselves), and the notes you wrote yourself.
     </p>
     <FormField v-model="password" label="Your password" type="password" autocomplete="current-password" @enter="download" />
     <ErrorText :message="error" />

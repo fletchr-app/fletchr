@@ -8,8 +8,9 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 
-type Visibility = 'coach_only' | 'shared'
+type Visibility = 'private' | 'coach_only' | 'shared'
 const VISIBILITY: { value: Visibility; label: string }[] = [
+  { value: 'private', label: 'Only me' },
   { value: 'coach_only', label: 'Coach only' },
   { value: 'shared', label: 'Shared with the archer' },
 ]

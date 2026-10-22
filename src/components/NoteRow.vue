@@ -12,8 +12,9 @@ import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
 
 type Note = components['schemas']['Note']
-type Visibility = 'coach_only' | 'shared'
+type Visibility = 'private' | 'coach_only' | 'shared'
 const VISIBILITY: { value: Visibility; label: string }[] = [
+  { value: 'private', label: 'Only me' },
   { value: 'coach_only', label: 'Coach only' },
   { value: 'shared', label: 'Shared with the archer' },
 ]
@@ -56,7 +57,7 @@ const remove = () =>
 <template>
   <div class="d-flex flex-column gap-1 py-1">
     <div class="muted">
-      {{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }} · {{ note.visibility === 'shared' ? 'shared' : 'coach only'
+      {{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }} · {{ note.visibility === 'shared' ? 'shared' : note.visibility === 'private' ? 'only me' : 'coach only'
       }}{{ endIndex !== undefined ? ` · end ${endIndex + 1}` : '' }}
     </div>
     <template v-if="editing">

@@ -52,9 +52,15 @@ class NoteViewSet(viewsets.ModelViewSet):
             return Note.objects.none()
         user = self.request.user
         coached = TeamMember.objects.filter(user=user, role__in=COACH_ROLES).values("team")
-        # Coaches see every note of their teams; an archer sees the shared notes about them.
+        # Coaches see every note of their teams except what others keep private; an archer sees the
+        # shared notes about them; the author always sees their own private notes.
+        private = Note.Visibility.PRIVATE
         return (
-            Note.objects.filter(Q(team__in=coached) | Q(archer=user, visibility=Note.Visibility.SHARED))
+            Note.objects.filter(
+                Q(team__in=coached) & ~Q(visibility=private)
+                | Q(archer=user, visibility=Note.Visibility.SHARED)
+                | Q(author=user, visibility=private)
+            )
             .select_related("author__profile", "archer__profile")
         )
 

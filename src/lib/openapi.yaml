@@ -661,8 +661,10 @@ paths:
           type: string
           enum:
           - coach_only
+          - private
           - shared
         description: |-
+          * `private` - Private
           * `coach_only` - Coach Only
           * `shared` - Shared
       tags:
@@ -3715,10 +3717,12 @@ components:
         * `imperial` - Imperial
     VisibilityEnum:
       enum:
+      - private
       - coach_only
       - shared
       type: string
       description: |-
+        * `private` - Private
         * `coach_only` - Coach Only
         * `shared` - Shared
     VolumeEntry:

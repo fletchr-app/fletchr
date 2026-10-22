@@ -5,11 +5,13 @@ from django.db import models
 class Note(models.Model):
     """A coach's note about an archer, optionally about one session or one end of it.
 
-    Written in a team: coach-only notes are for the coaches of that team, shared ones are also
-    for the archer. The note stays if the session or end it is about is deleted.
+    Written in a team. Private notes are for the author alone (not even team admins read them),
+    coach-only ones for the coaches of that team, shared ones also for the archer. The note stays
+    if the session or end it is about is deleted.
     """
 
     class Visibility(models.TextChoices):
+        PRIVATE = "private"
         COACH_ONLY = "coach_only"
         SHARED = "shared"
 

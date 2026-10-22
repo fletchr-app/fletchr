@@ -42,8 +42,9 @@ def export_user_data(user) -> dict:
         .prefetch_related("ends__shots", "volume_entries")
         .order_by("started_at")
     )
-    # Coach notes about the user, the coach-only ones included: they are data about this person.
-    about = Note.objects.filter(archer=user).select_related("team", "author__profile").order_by("created_at")
+    # Coach notes about the user, the coach-only ones included: they are data about this person. What a
+    # coach keeps private, for themselves, is left out; it is in that coach's own export.
+    about = Note.objects.filter(archer=user).exclude(visibility=Note.Visibility.PRIVATE).select_related("team", "author__profile").order_by("created_at")
     wrote = Note.objects.filter(author=user).select_related("team", "archer__profile").order_by("created_at")
     profile = user.profile
     return {
