@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -10,7 +11,8 @@ import { useCodePreview } from '@/composables/useCodePreview'
 
 const { register } = useAuth()
 const { preview, check } = useCodePreview()
-const form = reactive({ invite_code: '', name: '', email: '', password: '' })
+const route = useRoute()
+const form = reactive({ invite_code: typeof route.query.code === 'string' ? route.query.code : '', name: '', email: '', password: '' })
 const error = ref<string | null>(null)
 const busy = ref(false)
 

@@ -75,17 +75,9 @@ On a phone, `localhost` is the phone itself. Use your PC's LAN IP instead, e.g. 
 
 ## Run on a server
 
-Same compose file, different `deploy/.env`:
+On a server that already has nginx or Apache in front, only Django runs in Docker (`deploy/docker-compose.prod.yml`), next to a static site for the domain (`site/`). The step-by-step guide, with DNS, HTTPS, backups and invite links, is in [docs/deploy.md](docs/deploy.md).
 
-```
-SITE_ADDRESS=archery.example.de
-HTTP_PORT=80
-HTTPS_PORT=443
-DJANGO_ALLOWED_HOSTS=archery.example.de
-DJANGO_SECRET_KEY=<long random string>
-```
-
-Point the domain's DNS at the server, set `VITE_SERVER_URL=https://archery.example.de` before `npm run build-only`, then `docker compose up -d --build`. Caddy gets the HTTPS certificate automatically. Moving local data to the server means copying `deploy/data/django`.
+The `docker-compose.yml` with Caddy is for local use, or for a server with nothing else on ports 80 and 443: set `SITE_ADDRESS` in `deploy/.env` to the domain and Caddy fetches the certificate itself.
 
 ## API types
 

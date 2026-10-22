@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -11,11 +11,13 @@ import { useCodePreview } from '@/composables/useCodePreview'
 import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
+const route = useRoute()
 const router = useRouter()
 const { api } = useAuth()
 const { preview, check } = useCodePreview()
 const { load } = useTeams()
-const code = ref('')
+// With an invite link the code is filled in and what it does is shown first: nothing is joined until you tap.
+const code = ref(typeof route.query.code === 'string' ? route.query.code : '')
 const error = ref<string | null>(null)
 const busy = ref(false)
 
@@ -45,6 +47,12 @@ async function redeem(path: '/api/invites/redeem/' | '/api/claims/redeem/') {
   busy.value = false
 }
 
+if (code.value) {
+  void check(code.value).then((found) => {
+    if ('error' in found) error.value = found.error
+  })
+}
+
 function change() {
   preview.value = null
   error.value = null
@@ -62,6 +70,12 @@ function change() {
         </div>
         <ErrorText :message="error" />
         <AppButton :busy="busy" @click="redeem('/api/claims/redeem/')">Link {{ preview.profile_name }} to my account</AppButton>
+        <AppButton secondary @click="change">Cancel</AppButton>
+      </template>
+      <template v-else-if="preview?.kind === 'invite'">
+        <div>You are invited to join <b>{{ preview.team_name }}</b>.</div>
+        <ErrorText :message="error" />
+        <AppButton :busy="busy" @click="redeem('/api/invites/redeem/')">Join {{ preview.team_name }}</AppButton>
         <AppButton secondary @click="change">Cancel</AppButton>
       </template>
       <template v-else>

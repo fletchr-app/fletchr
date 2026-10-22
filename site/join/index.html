@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Einladung zu Fletchr</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><a class="brand" href="/">Fletchr</a></header>
+  <main>
+    <h1>Einladung zu Fletchr</h1>
+    <p id="what" class="muted">Einen Moment, die Einladung wird geprüft.</p>
+
+    <div class="card" id="codebox" hidden>
+      <div class="muted">Dein Code</div>
+      <div class="code" id="code"></div>
+    </div>
+
+    <p id="actions" hidden>
+      <a class="button" id="open" href="#">In der App öffnen</a>
+    </p>
+    <p id="help" class="muted" hidden>
+      Falls die App sich nicht öffnet: Installiere Fletchr, öffne sie und tippe auf "Ich habe einen Einladungscode".
+      Wenn du schon ein Konto hast, geh auf "Mehr" und "Einem Verein beitreten". Gib dort den Code ein.
+    </p>
+  </main>
+  <footer>
+    <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/konto-loeschen">Konto löschen</a>
+  </footer>
+  <script>
+    // The code is the last part of the address: /join/<code>. Letters and digits only.
+    const code = decodeURIComponent(location.pathname.replace(/^\/join\/?/, ''))
+      .replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20);
+    const what = document.getElementById('what');
+
+    if (!code) {
+      what.textContent = 'Dieser Link enthält keinen Code.';
+    } else {
+      document.getElementById('code').textContent = code;
+      document.getElementById('codebox').hidden = false;
+      document.getElementById('open').href = 'de.fletchr.app://join/' + code;
+      document.getElementById('actions').hidden = false;
+      document.getElementById('help').hidden = false;
+
+      // What the code is for, from the server (the code is the secret; nothing is used up by looking).
+      fetch('https://app.fletchr.de/api/codes/preview/', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ invite_code: code }),
+      })
+        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+        .then((p) => {
+          // textContent, never innerHTML: names come from other people.
+          what.textContent = p.kind === 'claim'
+            ? 'Dein Trainer im Verein "' + p.team_name + '" führt ein Profil für dich: "' + p.profile_name + '". Mit dem Code übernimmst du es in dein Konto.'
+            : 'Du wirst in den Verein "' + p.team_name + '" eingeladen.';
+        })
+        .catch(() => {
+          what.textContent = 'Der Code ist ungültig oder abgelaufen. Frag den, der dich eingeladen hat, nach einem neuen.';
+          document.getElementById('actions').hidden = true;
+        });
+    }
+  </script>
+</body>
+</html>

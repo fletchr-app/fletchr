@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue'
 import { ellipsisHorizontal, home, listCircle, people, statsChart } from 'ionicons/icons'
-import { computed, watch } from 'vue'
+import { App as CapacitorApp } from '@capacitor/app'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
 import { useTeams } from '@/composables/useTeams'
+import { codeFromUrl } from '@/lib/invite-link'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +19,13 @@ watch(status, (s) => {
   if (s === 'signedOut' && route.meta.auth === 'in') void router.replace('/sign-in')
   if (s === 'signedIn' && route.meta.auth === 'out') void router.replace('/')
 })
+
+// An invite link opens the app on the right screen with the code filled in: signed in, you join; otherwise you register.
+const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+  const code = codeFromUrl(url)
+  if (code) void router.push({ path: status.value === 'signedIn' ? '/join-team' : '/register', query: { code } })
+})
+onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
 
 const showTabs = computed(() => route.meta.tab === true)
 </script>
