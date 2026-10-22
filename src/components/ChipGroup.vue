@@ -1,4 +1,6 @@
 <script setup lang="ts" generic="T extends string">
+import { IonChip } from '@ionic/vue'
+
 defineProps<{ label: string; options: { value: T; label: string }[] }>()
 const model = defineModel<T>({ required: true })
 </script>
@@ -6,17 +8,17 @@ const model = defineModel<T>({ required: true })
 <template>
   <div>
     <div class="fw-semibold mb-1">{{ label }}</div>
-    <div class="d-flex flex-wrap gap-2">
-      <button
+    <div class="d-flex flex-wrap gap-1">
+      <IonChip
         v-for="option in options"
         :key="option.value"
-        type="button"
-        class="btn btn-sm rounded-pill"
-        :class="model === option.value ? 'btn-primary' : 'btn-secondary'"
+        class="m-0 chip"
+        :outline="model !== option.value"
+        :class="{ selected: model === option.value }"
         @click="model = option.value"
       >
         {{ option.label }}
-      </button>
+      </IonChip>
     </div>
   </div>
 </template>

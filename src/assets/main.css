@@ -1,31 +1,53 @@
-@import 'bootstrap/dist/css/bootstrap.min.css';
-@import 'bootstrap-icons/font/bootstrap-icons.min.css';
+/* Layout helpers (d-flex, gap-*, fw-*, ...) from Bootstrap; the components are Ionic's. */
+@import 'bootstrap/dist/css/bootstrap-utilities.min.css';
 
-/* Phone: keep content out of the status bar, notch and gesture bar (the viewport has viewport-fit=cover). */
-body {
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
+/* Brand colour, light and dark (the navy of the icon). */
+:root {
+  --ion-color-primary: #1d3557;
+  --ion-color-primary-rgb: 29, 53, 87;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1a2f4d;
+  --ion-color-primary-tint: #354a68;
+}
+.ion-palette-dark {
+  --ion-color-primary: #7ba3e3;
+  --ion-color-primary-rgb: 123, 163, 227;
+  --ion-color-primary-contrast: #000000;
+  --ion-color-primary-contrast-rgb: 0, 0, 0;
+  --ion-color-primary-shade: #6c90c8;
+  --ion-color-primary-tint: #88ace6;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding-top: env(safe-area-inset-top);
-  background-color: var(--bs-body-bg);
-  border-bottom: 1px solid var(--bs-border-color);
+/* An app, not a page: no text selection or long-press menus on the interface, only in what you typed. */
+ion-app {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
-.app-header .bar {
-  max-width: 600px;
-  margin: 0 auto;
-  min-height: 48px;
+ion-input,
+ion-textarea,
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
 }
+ion-chip.chip {
+  min-height: 36px;
+}
+ion-chip.chip.selected {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+}
+
+h2.h4,
+.h4 { font-size: 1.5rem; font-weight: 600; }
+.h5 { font-size: 1.25rem; font-weight: 600; }
+.h6 { font-size: 1rem; font-weight: 600; }
 
 .screen {
   max-width: 600px;
   margin: 0 auto;
-  padding: 16px 16px 48px;
+  padding: 16px 16px calc(48px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -78,16 +100,43 @@ body {
 .chart-surface-fill { fill: var(--chart-surface); }
 .chart-hit { position: absolute; background: none; border: 0; padding: 0; }
 
-/* A screen that fills the viewport below the header and never scrolls (the arrow entry: touching the
-   target face must not move the page). */
+/* A screen that fills the page and never scrolls (the arrow entry: touching the target face must not
+   move the page). Used inside a fixed AppPage. */
 .entry {
   max-width: 600px;
   margin: 0 auto;
-  height: calc(100dvh - 49px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  padding: 8px 12px;
+  height: 100%;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/* Arrow chips and keypad keys. */
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-step-300, #b3b3b3);
+  background: var(--ion-color-step-100, #e6e6e6);
+  color: var(--ion-text-color);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.key:disabled { opacity: 0.4; }
+.key.selected { border: 3px solid #ff00ff; }
+.key.outline { background: transparent; }
+
+/* Lists inside a .screen line up with the other content. */
+.screen ion-list { margin: 0; }
+
+/* Two fields side by side. */
+.row { display: flex; gap: 12px; }
+.row > .col-6 { flex: 1 1 0; min-width: 0; }
+
+/* Buttons side by side share the row. */
+.d-flex:not(.flex-column) > ion-button { flex: 1 1 0; min-width: 0; }

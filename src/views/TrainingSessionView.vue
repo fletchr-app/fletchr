@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
+import { IonIcon } from '@ionic/vue'
+import { cloudUploadOutline } from 'ionicons/icons'
 import { computed, ref } from 'vue'
 import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
@@ -14,7 +17,9 @@ const router = useRouter()
 const { loaded, sessions, waiting, failed, finishSession, deleteSession } = useLog()
 const confirmDelete = ref(false)
 
-const session = computed(() => sessions.value.find((s) => s.id === route.params.id))
+const sessionId = route.params.id as string
+const session = computed(() => sessions.value.find((s) => s.id === sessionId))
+const fixed = computed(() => !!session.value && usesEnds(session.value.type))
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
 
 // A session left before anything was entered would only clutter the list.
@@ -41,39 +46,41 @@ function newEnd() {
 </script>
 
 <template>
-  <div v-if="!session || !totals" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
-  <!-- Ends sessions: one screen without scrolling. The list of ends and delete are on the ends page. -->
-  <div v-else-if="usesEnds(session.type)" class="entry">
-    <!-- Uploads that wait show as an icon, so the screen does not jump when they finish; only refused ones need the full banner. -->
-    <SyncBanner v-if="failed.length > 0" />
-    <div class="d-flex align-items-center gap-2">
-      <h2 class="h5 m-0 flex-grow-1">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
-      <i v-if="waiting > 0" class="bi bi-cloud-arrow-up muted" :title="`${waiting} waiting to upload`"></i>
+  <AppPage title="Session" :fixed="fixed">
+    <div v-if="!session || !totals" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+    <!-- Ends sessions: one screen without scrolling. The list of ends and delete are on the ends page. -->
+    <div v-else-if="usesEnds(session.type)" class="entry">
+      <!-- Uploads that wait show as an icon, so the screen does not jump when they finish; only refused ones need the full banner. -->
+      <SyncBanner v-if="failed.length > 0" />
+      <div class="d-flex align-items-center gap-2">
+        <h2 class="h5 m-0 flex-grow-1">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+        <IonIcon v-if="waiting > 0" :icon="cloudUploadOutline" class="muted" :title="`${waiting} waiting to upload`" />
+      </div>
+      <div class="muted">
+        {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows · {{ totals.score }} points{{ session.ended_at ? ' · finished' : '' }}
+      </div>
+      <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <SessionPlots fill :session="session" />
+      <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
+      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face or equipment</RouterLink>
+      <AppButton @click="newEnd">New end</AppButton>
+      <div class="d-flex gap-2">
+        <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">All ends</AppButton>
+        <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen' : 'Finish session' }}</AppButton>
+      </div>
     </div>
-    <div class="muted">
-      {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows · {{ totals.score }} points{{ session.ended_at ? ' · finished' : '' }}
+    <div v-else class="screen">
+      <SyncBanner />
+      <h2 class="h5 m-0">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+      <div class="muted">
+        {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ session.ended_at ? ' · finished' : '' }}
+      </div>
+      <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <VolumeLog :session="session" />
+      <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
+      <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
+        {{ confirmDelete ? 'Tap again to delete this session' : 'Delete session' }}
+      </AppButton>
     </div>
-    <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
-    <SessionPlots fill :session="session" />
-    <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
-    <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face or equipment</RouterLink>
-    <AppButton @click="newEnd">New end</AppButton>
-    <div class="d-flex gap-2">
-      <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">All ends</AppButton>
-      <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen' : 'Finish session' }}</AppButton>
-    </div>
-  </div>
-  <div v-else class="screen">
-    <SyncBanner />
-    <h2 class="h5 m-0">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
-    <div class="muted">
-      {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ session.ended_at ? ' · finished' : '' }}
-    </div>
-    <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
-    <VolumeLog :session="session" />
-    <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
-    <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
-      {{ confirmDelete ? 'Tap again to delete this session' : 'Delete session' }}
-    </AppButton>
-  </div>
+  </AppPage>
 </template>

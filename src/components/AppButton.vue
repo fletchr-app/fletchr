@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { IonButton, IonSpinner } from '@ionic/vue'
+
 defineProps<{ busy?: boolean; secondary?: boolean }>()
 </script>
 
 <template>
-  <button type="button" class="btn w-100" :class="secondary ? 'btn-secondary' : 'btn-primary'" :disabled="busy">
-    <span v-if="busy" class="spinner-border spinner-border-sm" role="status"></span>
+  <IonButton expand="block" class="m-0" :fill="secondary ? 'outline' : 'solid'" :disabled="busy">
+    <IonSpinner v-if="busy" name="crescent" />
     <slot v-else />
-  </button>
+  </IonButton>
 </template>

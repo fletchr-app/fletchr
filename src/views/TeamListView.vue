@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 
 import ErrorText from '@/components/ErrorText.vue'
@@ -12,9 +13,11 @@ const coached = computed(() => (data.value ?? []).filter((t) => t.my_role !== 'a
 </script>
 
 <template>
-  <div class="screen">
-    <ErrorText :message="error" />
-    <div v-if="data && coached.length === 0">You are not a coach in any team.</div>
-    <TeamOverview v-for="team in coached" :key="team.id" :team="team" />
-  </div>
+  <AppPage title="Team">
+    <div class="screen">
+      <ErrorText :message="error" />
+      <div v-if="data && coached.length === 0">You are not a coach in any team.</div>
+      <TeamOverview v-for="team in coached" :key="team.id" :team="team" />
+    </div>
+  </AppPage>
 </template>

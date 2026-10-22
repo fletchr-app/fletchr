@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -24,14 +25,16 @@ function reset() {
 </script>
 
 <template>
-  <div class="screen">
-    <ChipGroup :model-value="mode" label="Theme" :options="THEMES" @update:model-value="setMode" />
-    <FormField v-model="draft" label="Server address" inputmode="url" :placeholder="DEFAULT_SERVER_URL" />
-    <div class="muted">Default from build: {{ DEFAULT_SERVER_URL }}{{ isOverride ? ' (overridden on this device)' : '' }}</div>
-    <div>Status: {{ health }}</div>
-    <div class="d-flex gap-3">
-      <AppButton @click="setUrl(draft)">Save</AppButton>
-      <AppButton secondary @click="reset">Reset to default</AppButton>
+  <AppPage title="Settings">
+    <div class="screen">
+      <ChipGroup :model-value="mode" label="Theme" :options="THEMES" @update:model-value="setMode" />
+      <FormField v-model="draft" label="Server address" inputmode="url" :placeholder="DEFAULT_SERVER_URL" />
+      <div class="muted">Default from build: {{ DEFAULT_SERVER_URL }}{{ isOverride ? ' (overridden on this device)' : '' }}</div>
+      <div>Status: {{ health }}</div>
+      <div class="d-flex gap-3">
+        <AppButton @click="setUrl(draft)">Save</AppButton>
+        <AppButton secondary @click="reset">Reset to default</AppButton>
+      </div>
     </div>
-  </div>
+  </AppPage>
 </template>

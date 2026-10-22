@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -29,9 +30,11 @@ async function submit() {
 </script>
 
 <template>
-  <div class="screen">
-    <FormField v-model="code" label="Invite code" capitalize="characters" @enter="submit" />
-    <ErrorText :message="error" />
-    <AppButton :busy="busy" @click="submit">Join team</AppButton>
-  </div>
+  <AppPage title="Join a team">
+    <div class="screen">
+      <FormField v-model="code" label="Invite code" capitalize="characters" @enter="submit" />
+      <ErrorText :message="error" />
+      <AppButton :busy="busy" @click="submit">Join team</AppButton>
+    </div>
+  </AppPage>
 </template>

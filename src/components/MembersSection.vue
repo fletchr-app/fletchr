@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IonIcon, IonItem, IonLabel } from '@ionic/vue'
+import { chevronDown, chevronUp } from 'ionicons/icons'
 import { ref } from 'vue'
 
 import MemberActions from '@/components/MemberActions.vue'
@@ -18,17 +20,13 @@ const open = ref<number | null>(null)
   <div class="d-flex flex-column gap-3">
     <h2 class="h5 m-0">Members</h2>
     <div v-for="m in sortMembers(members)" :key="m.user_id" class="d-flex flex-column gap-2">
-      <component
-        :is="isAdmin ? 'button' : 'div'"
-        :type="isAdmin ? 'button' : undefined"
-        class="text-start p-0 border-0 bg-transparent text-reset"
-        @click="isAdmin && (open = open === m.user_id ? null : m.user_id)"
-      >
-        <div class="fw-semibold">{{ m.name || m.email }}{{ m.user_id === myId ? ' (you)' : '' }}</div>
-        <div class="muted">
-          {{ roleLabel(m.role) }} · {{ m.email }}{{ m.also_shoots ? ' · shares own training' : '' }}{{ isAdmin ? (open === m.user_id ? '  ▴' : '  ▾') : '' }}
-        </div>
-      </component>
+      <IonItem :button="isAdmin" :detail="false" lines="full" @click="isAdmin && (open = open === m.user_id ? null : m.user_id)">
+        <IonLabel class="ion-text-wrap">
+          <h3>{{ m.name || m.email }}{{ m.user_id === myId ? ' (you)' : '' }}</h3>
+          <p>{{ roleLabel(m.role) }} · {{ m.email }}{{ m.also_shoots ? ' · shares own training' : '' }}</p>
+        </IonLabel>
+        <IonIcon v-if="isAdmin" slot="end" :icon="open === m.user_id ? chevronUp : chevronDown" />
+      </IonItem>
       <MemberActions
         v-if="isAdmin && open === m.user_id"
         :team-id="teamId"

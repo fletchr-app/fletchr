@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core'
+import { StatusBar, Style } from '@capacitor/status-bar'
 import { ref, watch } from 'vue'
 
 import { localStore } from '@/lib/local-store'
@@ -11,6 +13,9 @@ const system = window.matchMedia('(prefers-color-scheme: dark)')
 function apply() {
   const dark = mode.value === 'dark' || (mode.value === 'system' && system.matches)
   document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light')
+  document.documentElement.classList.toggle('ion-palette-dark', dark)
+  // Light icons on a dark bar and the other way round (Style.Dark means "for a dark background").
+  if (Capacitor.isNativePlatform()) void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light })
 }
 
 /** Applies the theme now (the system's) and again once the saved choice is read. Call once at startup. */

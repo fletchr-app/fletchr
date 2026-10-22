@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { reactive, ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -19,12 +20,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="screen">
-    <FormField v-model="form.invite_code" label="Invite code" capitalize="characters" />
-    <FormField v-model="form.name" label="Name" capitalize="words" autocomplete="name" />
-    <FormField v-model="form.email" label="Email" type="email" inputmode="email" autocomplete="email" />
-    <FormField v-model="form.password" label="Password" type="password" autocomplete="new-password" @enter="submit" />
-    <ErrorText :message="error" />
-    <AppButton :busy="busy" @click="submit">Create account</AppButton>
-  </div>
+  <AppPage title="Join with invite code" back-href="/sign-in">
+    <div class="screen">
+      <FormField v-model="form.invite_code" label="Invite code" capitalize="characters" />
+      <FormField v-model="form.name" label="Name" capitalize="words" autocomplete="name" />
+      <FormField v-model="form.email" label="Email" type="email" inputmode="email" autocomplete="email" />
+      <FormField v-model="form.password" label="Password" type="password" autocomplete="new-password" @enter="submit" />
+      <ErrorText :message="error" />
+      <AppButton :busy="busy" @click="submit">Create account</AppButton>
+    </div>
+  </AppPage>
 </template>

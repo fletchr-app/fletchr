@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue'
+import { backspaceOutline, trashOutline } from 'ionicons/icons'
 import { computed, ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -60,10 +62,10 @@ function remove() {
         <span class="fw-semibold">End {{ start.index + 1 }}</span>
         <span class="muted"> · {{ distance }} m · {{ face.name }}</span>
       </div>
-      <div class="btn-group btn-group-sm" role="group" aria-label="Enter arrows by">
-        <button type="button" class="btn" :class="mode === 'plot' ? 'btn-primary' : 'btn-secondary'" @click="mode = 'plot'">Touch</button>
-        <button type="button" class="btn" :class="mode === 'pad' ? 'btn-primary' : 'btn-secondary'" @click="mode = 'pad'">Type</button>
-      </div>
+      <IonSegment v-model="mode" style="width: 160px; flex: none" aria-label="Enter arrows by">
+        <IonSegmentButton value="plot">Touch</IonSegmentButton>
+        <IonSegmentButton value="pad">Type</IonSegmentButton>
+      </IonSegment>
     </div>
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -71,9 +73,9 @@ function remove() {
         v-for="i in arrows"
         :key="i"
         type="button"
-        class="btn d-flex align-items-center justify-content-center p-0 fs-5 fw-semibold"
-        :class="shots[i - 1] && shots[i - 1]!.id === selectedId ? 'border-3' : ''"
-        :style="{ width: '44px', height: '44px', borderColor: shots[i - 1] && shots[i - 1]!.id === selectedId ? '#ff00ff' : undefined }"
+        class="key"
+        :class="{ selected: shots[i - 1] && shots[i - 1]!.id === selectedId }"
+        style="width: 44px; height: 44px"
         :disabled="!shots[i - 1]"
         @click="selectedId = shots[i - 1]!.id === selectedId ? null : shots[i - 1]!.id"
       >
@@ -83,12 +85,12 @@ function remove() {
       <button
         v-if="selectedId !== null && shots.some((s) => s.id === selectedId)"
         type="button"
-        class="btn btn-outline-secondary ms-auto"
+        class="key outline ms-auto"
         style="width: 44px; height: 44px"
         aria-label="Delete the selected arrow"
         @click="deleteSelected"
       >
-        <i class="bi bi-trash"></i>
+        <IonIcon :icon="trashOutline" />
       </button>
     </div>
 
@@ -99,15 +101,15 @@ function remove() {
         v-for="key in keypad"
         :key="key.label"
         type="button"
-        class="btn btn-secondary fs-5 fw-semibold p-0"
+        class="key"
         style="width: 56px; height: 56px"
         :disabled="full"
         @click="shots = [...shots, { id: newId(), value: key.value, is_x: key.is_x, is_miss: key.is_miss }]"
       >
         {{ key.label }}
       </button>
-      <button type="button" class="btn btn-outline-secondary fs-5 p-0" style="width: 56px; height: 56px" aria-label="Remove the last arrow" @click="shots = shots.slice(0, -1)">
-        <i class="bi bi-backspace"></i>
+      <button type="button" class="key outline" style="width: 56px; height: 56px" aria-label="Remove the last arrow" @click="shots = shots.slice(0, -1)">
+        <IonIcon :icon="backspaceOutline" />
       </button>
     </div>
 

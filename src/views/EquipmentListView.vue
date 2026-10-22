@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { IonItem, IonLabel, IonList, IonListHeader } from '@ionic/vue'
+import AppPage from '@/components/AppPage.vue'
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -29,19 +30,29 @@ onMounted(() =>
 </script>
 
 <template>
-  <div class="screen">
-    <ErrorText :message="error" />
-    <h2 class="h5 m-0">Bows</h2>
-    <RouterLink v-for="bow in bows" :key="bow.id" :to="`/equipment/bows/${bow.id}`" class="text-reset text-decoration-none" :style="{ opacity: bow.is_active === false ? 0.5 : 1 }">
-      <div class="fw-semibold">{{ bow.name }}{{ bow.is_active === false ? ' (inactive)' : '' }}</div>
-      <div class="muted">{{ bow.type ? `${bow.type} · ` : '' }}revision {{ bow.revision_number }}</div>
-    </RouterLink>
-    <RouterLink to="/equipment/bows/new">Add a bow</RouterLink>
-    <h2 class="h5 mt-3 mb-0">Arrow sets</h2>
-    <RouterLink v-for="set in arrowSets" :key="set.id" :to="`/equipment/arrow-sets/${set.id}`" class="text-reset text-decoration-none" :style="{ opacity: set.is_active === false ? 0.5 : 1 }">
-      <div class="fw-semibold">{{ set.name }}{{ set.is_active === false ? ' (inactive)' : '' }}</div>
-      <div class="muted">{{ [set.shaft_model, set.spine].filter(Boolean).join(' ') ? `${[set.shaft_model, set.spine].filter(Boolean).join(' ')} · ` : '' }}revision {{ set.revision_number }}</div>
-    </RouterLink>
-    <RouterLink to="/equipment/arrow-sets/new">Add an arrow set</RouterLink>
-  </div>
+  <AppPage title="Equipment">
+    <div class="screen">
+      <ErrorText :message="error" />
+      <IonList inset>
+        <IonListHeader>Bows</IonListHeader>
+        <IonItem v-for="bow in bows" :key="bow.id" :router-link="`/equipment/bows/${bow.id}`" detail lines="full" :style="{ opacity: bow.is_active === false ? 0.5 : 1 }">
+          <IonLabel>
+            <h3>{{ bow.name }}{{ bow.is_active === false ? ' (inactive)' : '' }}</h3>
+            <p>{{ bow.type ? `${bow.type} · ` : '' }}revision {{ bow.revision_number }}</p>
+          </IonLabel>
+        </IonItem>
+        <IonItem router-link="/equipment/bows/new" detail lines="none"><IonLabel color="primary">Add a bow</IonLabel></IonItem>
+      </IonList>
+      <IonList inset>
+        <IonListHeader>Arrow sets</IonListHeader>
+        <IonItem v-for="set in arrowSets" :key="set.id" :router-link="`/equipment/arrow-sets/${set.id}`" detail lines="full" :style="{ opacity: set.is_active === false ? 0.5 : 1 }">
+          <IonLabel>
+            <h3>{{ set.name }}{{ set.is_active === false ? ' (inactive)' : '' }}</h3>
+            <p>{{ [set.shaft_model, set.spine].filter(Boolean).join(' ') ? `${[set.shaft_model, set.spine].filter(Boolean).join(' ')} · ` : '' }}revision {{ set.revision_number }}</p>
+          </IonLabel>
+        </IonItem>
+        <IonItem router-link="/equipment/arrow-sets/new" detail lines="none"><IonLabel color="primary">Add an arrow set</IonLabel></IonItem>
+      </IonList>
+    </div>
+  </AppPage>
 </template>

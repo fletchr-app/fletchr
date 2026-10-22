@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonButton } from '@ionic/vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -68,8 +69,8 @@ const remove = () =>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">About a session</RouterLink>
     <ErrorText :message="error" />
     <div v-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">
-      <a v-if="note.can_edit" href="#" @click.prevent="editing = true">Edit</a>
-      <a v-if="note.can_delete" href="#" @click.prevent="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? 'Tap again to delete' : 'Delete' }}</a>
+      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="editing = true">Edit</IonButton>
+      <IonButton v-if="note.can_delete" fill="clear" size="small" class="m-0" @click="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? 'Tap again to delete' : 'Delete' }}</IonButton>
     </div>
   </div>
 </template>

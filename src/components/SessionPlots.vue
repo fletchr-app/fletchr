@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonChip } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
 import FaceView from '@/components/FaceView.vue'
@@ -28,16 +29,16 @@ const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.l
 <template>
   <div v-if="fill && current" class="d-flex flex-column gap-1" style="flex: 1 1 0; min-height: 0">
     <div v-if="blocks.length > 1" class="d-flex flex-wrap gap-2">
-      <button
+      <IonChip
         v-for="(b, i) in blocks"
         :key="b.block.key"
-        type="button"
-        class="btn btn-sm rounded-pill"
-        :class="blocks.indexOf(current) === i ? 'btn-primary' : 'btn-secondary'"
+        class="m-0 chip"
+        :outline="blocks.indexOf(current) !== i"
+        :class="{ selected: blocks.indexOf(current) === i }"
         @click="shown = i"
       >
         {{ Number(b.block.distance_m) }} m · {{ b.face.name }}
-      </button>
+      </IonChip>
     </div>
     <div class="fw-semibold">{{ Number(current.block.distance_m) }} m · {{ current.face.name }} · {{ current.block.plotted.length + current.block.typed }} arrows</div>
     <FaceView v-if="current.block.plotted.length > 0" fill :face="current.face" :shots="current.block.plotted" />

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonButton } from '@ionic/vue'
 import { Capacitor } from '@capacitor/core'
 import { Share } from '@capacitor/share'
 import { ref } from 'vue'
@@ -49,8 +50,8 @@ async function cancel() {
     <div class="fs-5 fw-bold user-select-all" style="letter-spacing: 2px">{{ invite.code }}</div>
     <div class="muted">{{ roleLabel(invite.role ?? 'archer') }} · until {{ new Date(invite.expires_at).toLocaleDateString() }}</div>
     <div class="d-flex gap-3">
-      <a href="#" @click.prevent="share">{{ native ? 'Share' : 'Copy invite text' }}</a>
-      <a href="#" @click.prevent="confirmCancel ? cancel() : (confirmCancel = true)">{{ confirmCancel ? 'Tap again to cancel the invite' : 'Cancel invite' }}</a>
+      <IonButton fill="clear" size="small" class="m-0" @click="share">{{ native ? 'Share' : 'Copy invite text' }}</IonButton>
+      <IonButton fill="clear" size="small" class="m-0" @click="confirmCancel ? cancel() : (confirmCancel = true)">{{ confirmCancel ? 'Tap again to cancel the invite' : 'Cancel invite' }}</IonButton>
     </div>
     <div v-if="note" class="muted">{{ note }}</div>
   </div>

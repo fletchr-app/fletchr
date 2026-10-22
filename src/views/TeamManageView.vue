@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -7,7 +8,6 @@ import InvitesSection from '@/components/InvitesSection.vue'
 import MembersSection from '@/components/MembersSection.vue'
 import TeamRename from '@/components/TeamRename.vue'
 import { useAuth } from '@/composables/useAuth'
-import { usePageTitle } from '@/composables/usePageTitle'
 import { useRemote } from '@/composables/useRemote'
 
 const REFRESH_MS = 15000
@@ -27,7 +27,7 @@ const invites = useRemote(async () => {
   return (await api.GET('/api/teams/{team_id}/invites/', { params: { path: { team_id: teamId } } })).data ?? null
 }, { ...poll, watch: [isAdmin] })
 
-usePageTitle(() => team.data.value?.name ?? 'Team')
+const title = computed(() => team.data.value?.name ?? 'Team')
 
 // After a change, fetch everything again.
 function reload() {
@@ -38,20 +38,22 @@ function reload() {
 </script>
 
 <template>
-  <div class="screen">
-    <ErrorText :message="team.error.value ?? members.error.value" />
-    <div v-if="team.loading.value">Loading…</div>
-    <template v-if="team.data.value">
-      <TeamRename v-if="isAdmin" :key="team.data.value.name" :team-id="teamId" :name="team.data.value.name" @changed="reload" />
-      <MembersSection
-        v-if="members.data.value"
-        :team-id="teamId"
-        :members="members.data.value"
-        :is-admin="isAdmin"
-        :my-id="userId === null ? null : Number(userId)"
-        @changed="reload"
-      />
-      <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />
-    </template>
-  </div>
+  <AppPage :title="title">
+    <div class="screen">
+      <ErrorText :message="team.error.value ?? members.error.value" />
+      <div v-if="team.loading.value">Loading…</div>
+      <template v-if="team.data.value">
+        <TeamRename v-if="isAdmin" :key="team.data.value.name" :team-id="teamId" :name="team.data.value.name" @changed="reload" />
+        <MembersSection
+          v-if="members.data.value"
+          :team-id="teamId"
+          :members="members.data.value"
+          :is-admin="isAdmin"
+          :my-id="userId === null ? null : Number(userId)"
+          @changed="reload"
+        />
+        <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />
+      </template>
+    </div>
+  </AppPage>
 </template>

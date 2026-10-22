@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -23,12 +24,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="screen">
-    <FormField v-model="email" label="Email" type="email" inputmode="email" autocomplete="email" />
-    <FormField v-model="password" label="Password" type="password" autocomplete="current-password" @enter="submit" />
-    <ErrorText :message="error" />
-    <AppButton :busy="busy" @click="submit">Sign in</AppButton>
-    <RouterLink to="/register">I have an invite code</RouterLink>
-    <div class="muted">Server: {{ url }} <RouterLink to="/settings">change</RouterLink></div>
-  </div>
+  <AppPage title="Sign in" :back="false">
+    <div class="screen">
+      <FormField v-model="email" label="Email" type="email" inputmode="email" autocomplete="email" />
+      <FormField v-model="password" label="Password" type="password" autocomplete="current-password" @enter="submit" />
+      <ErrorText :message="error" />
+      <AppButton :busy="busy" @click="submit">Sign in</AppButton>
+      <RouterLink to="/register">I have an invite code</RouterLink>
+      <div class="muted">Server: {{ url }} <RouterLink to="/settings">change</RouterLink></div>
+    </div>
+  </AppPage>
 </template>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IonSelect, IonSelectOption } from '@ionic/vue'
+import AppPage from '@/components/AppPage.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -58,24 +60,23 @@ function start() {
 </script>
 
 <template>
-  <div class="screen">
-    <ChipGroup v-model="type" label="Type" :options="TYPES" />
-    <ChipGroup v-model="environment" label="Where" :options="ENVIRONMENTS" />
-    <FormField v-model="location" label="Location (optional)" capitalize="sentences" />
-    <template v-if="usesEnds(type)">
-      <div class="row g-3">
-        <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
-        <div class="col-6"><FormField v-model="arrows" label="Arrows per end" inputmode="numeric" /></div>
-      </div>
-      <div>
-        <label for="face" class="form-label fw-semibold mb-1">Face</label>
-        <select id="face" v-model="faceSlug" class="form-select">
-          <option v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</option>
-        </select>
-      </div>
-    </template>
-    <GearPicker :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
-    <ErrorText :message="error" />
-    <AppButton @click="start">Start</AppButton>
-  </div>
+  <AppPage title="New session">
+    <div class="screen">
+      <ChipGroup v-model="type" label="Type" :options="TYPES" />
+      <ChipGroup v-model="environment" label="Where" :options="ENVIRONMENTS" />
+      <FormField v-model="location" label="Location (optional)" capitalize="sentences" />
+      <template v-if="usesEnds(type)">
+        <div class="row g-3">
+          <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
+          <div class="col-6"><FormField v-model="arrows" label="Arrows per end" inputmode="numeric" /></div>
+        </div>
+        <IonSelect v-model="faceSlug" label="Face" label-placement="stacked" fill="outline" interface="action-sheet">
+          <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
+        </IonSelect>
+      </template>
+      <GearPicker :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
+      <ErrorText :message="error" />
+      <AppButton @click="start">Start</AppButton>
+    </div>
+  </AppPage>
 </template>

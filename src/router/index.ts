@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from '@ionic/vue-router'
 
 import { authReady, useAuth } from '@/composables/useAuth'
 
@@ -7,22 +7,26 @@ declare module 'vue-router' {
     title: string
     /** 'in': signed-in users only. 'out': signed-out users only. Otherwise open to everybody. */
     auth?: 'in' | 'out'
+    /** A top-level screen, reached from the tab bar. */
+    tab?: boolean
   }
 }
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { title: 'Archery Coach', auth: 'in' } },
+    { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { title: 'Archery Coach', auth: 'in', tab: true } },
+    { path: '/more', component: () => import('@/views/MoreView.vue'), meta: { title: 'More', auth: 'in', tab: true } },
     { path: '/join-team', component: () => import('@/views/JoinTeamView.vue'), meta: { title: 'Join a team', auth: 'in' } },
-    { path: '/training', component: () => import('@/views/TrainingListView.vue'), meta: { title: 'Training', auth: 'in' } },
+    { path: '/training', component: () => import('@/views/TrainingListView.vue'), meta: { title: 'Training', auth: 'in', tab: true } },
     { path: '/training/new', component: () => import('@/views/NewSessionView.vue'), meta: { title: 'New session', auth: 'in' } },
     { path: '/training/:id', component: () => import('@/views/TrainingSessionView.vue'), meta: { title: 'Session', auth: 'in' } },
     { path: '/training/:id/setup', component: () => import('@/views/EndSetupView.vue'), meta: { title: 'New end', auth: 'in' } },
     { path: '/training/:id/end', component: () => import('@/views/EndEntryView.vue'), meta: { title: 'Arrows', auth: 'in' } },
     { path: '/training/:id/ends', component: () => import('@/views/SessionEndsView.vue'), meta: { title: 'Ends', auth: 'in' } },
     { path: '/privacy', component: () => import('@/views/PrivacyView.vue'), meta: { title: 'Your data', auth: 'in' } },
-    { path: '/stats', component: () => import('@/views/StatsView.vue'), meta: { title: 'Statistics', auth: 'in' } },
+    { path: '/stats', component: () => import('@/views/StatsView.vue'), meta: { title: 'Statistics', auth: 'in', tab: true } },
+    { path: '/archers/:id/stats', component: () => import('@/views/StatsView.vue'), meta: { title: 'Statistics', auth: 'in' } },
     { path: '/sessions/:id', component: () => import('@/views/SessionDetailView.vue'), meta: { title: 'Session', auth: 'in' } },
     { path: '/team', component: () => import('@/views/TeamListView.vue'), meta: { title: 'Team', auth: 'in' } },
     { path: '/team/:id', component: () => import('@/views/TeamManageView.vue'), meta: { title: 'Team', auth: 'in' } },

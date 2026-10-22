@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonToggle } from '@ionic/vue'
 import { ref } from 'vue'
 
 import ErrorText from '@/components/ErrorText.vue'
@@ -26,10 +27,7 @@ async function change(next: boolean) {
 
 <template>
   <div>
-    <div class="form-check form-switch">
-      <input :id="`share-${team.id}`" class="form-check-input" type="checkbox" role="switch" :checked="shared" @change="change(($event.target as HTMLInputElement).checked)" />
-      <label class="form-check-label" :for="`share-${team.id}`">Show my own training to the other coaches of this team</label>
-    </div>
+    <IonToggle :checked="shared" class="ion-text-wrap" @ion-change="change($event.detail.checked)">Show my own training to the other coaches of this team</IonToggle>
     <ErrorText :message="error" />
   </div>
 </template>

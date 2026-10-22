@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue'
+import { ellipsisHorizontal, home, listCircle, statsChart } from 'ionicons/icons'
 import { computed, watch } from 'vue'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
-import { titleOverride } from '@/composables/usePageTitle'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,26 +16,31 @@ watch(status, (s) => {
   if (s === 'signedIn' && route.meta.auth === 'out') void router.replace('/')
 })
 
-const title = computed(() => titleOverride.value ?? route.meta.title ?? 'Archery Coach')
-const canGoBack = computed(() => route.path !== '/' && route.path !== '/sign-in')
-
-function back() {
-  if (window.history.state?.back) router.back()
-  else void router.replace(status.value === 'signedIn' ? '/' : '/sign-in')
-}
+const showTabs = computed(() => route.meta.tab === true)
 </script>
 
 <template>
-  <header class="app-header">
-    <div class="bar d-flex align-items-center gap-2 px-2">
-      <button v-if="canGoBack" type="button" class="btn btn-link p-2" aria-label="Back" @click="back">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-      <h1 class="h5 m-0 flex-grow-1 text-truncate" :class="{ 'ps-2': !canGoBack }">{{ title }}</h1>
-      <RouterLink v-if="status === 'signedOut' && route.path !== '/settings'" to="/settings" class="btn btn-link p-2" aria-label="Server settings">
-        <i class="bi bi-gear"></i>
-      </RouterLink>
-    </div>
-  </header>
-  <RouterView v-if="status !== 'loading'" :key="route.fullPath" />
+  <IonApp>
+    <IonTabs>
+      <IonRouterOutlet />
+      <IonTabBar slot="bottom" :style="{ display: showTabs ? undefined : 'none' }">
+        <IonTabButton tab="home" href="/">
+          <IonIcon :icon="home" />
+          <IonLabel>Home</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="training" href="/training">
+          <IonIcon :icon="listCircle" />
+          <IonLabel>Training</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="stats" href="/stats">
+          <IonIcon :icon="statsChart" />
+          <IonLabel>Statistics</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="more" href="/more">
+          <IonIcon :icon="ellipsisHorizontal" />
+          <IonLabel>More</IonLabel>
+        </IonTabButton>
+      </IonTabBar>
+    </IonTabs>
+  </IonApp>
 </template>

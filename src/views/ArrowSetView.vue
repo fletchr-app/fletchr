@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import EquipmentForm, { type EquipmentAdapter } from '@/components/EquipmentForm.vue'
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
@@ -27,5 +28,7 @@ const adapter: EquipmentAdapter = {
 </script>
 
 <template>
-  <EquipmentForm label="arrow set" :fields="ARROW_SET_FIELDS" :adapter="adapter" />
+  <AppPage title="Arrow set">
+    <EquipmentForm label="arrow set" :fields="ARROW_SET_FIELDS" :adapter="adapter" />
+  </AppPage>
 </template>

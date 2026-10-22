@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -27,21 +28,23 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
 </script>
 
 <template>
-  <div v-if="!data || !session || !totals" class="screen">
-    <div v-if="loading">Loading…</div>
-    <ErrorText :message="error" />
-  </div>
-  <div v-else class="screen">
-    <h2 class="h5 m-0">{{ session.owner_name }} · {{ session.type }}</h2>
-    <div class="muted">
-      {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ' · finished' : ' · in progress' }}
+  <AppPage title="Session">
+    <div v-if="!data || !session || !totals" class="screen">
+      <div v-if="loading">Loading…</div>
+      <ErrorText :message="error" />
     </div>
-    <div>{{ totals.arrows }} arrows{{ usesEnds(session.type) ? ` · ${totals.score} points` : '' }}</div>
-    <div v-if="session.gear">Equipment: {{ gearLine(session.gear) }}</div>
-    <ErrorText :message="error" />
-    <SessionPlots :session="session" />
-    <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
-    <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
-    <div v-for="v in session.volume" :key="v.id">{{ v.arrow_count }} arrows at {{ Number(v.distance_m) }} m</div>
-  </div>
+    <div v-else class="screen">
+      <h2 class="h5 m-0">{{ session.owner_name }} · {{ session.type }}</h2>
+      <div class="muted">
+        {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ' · finished' : ' · in progress' }}
+      </div>
+      <div>{{ totals.arrows }} arrows{{ usesEnds(session.type) ? ` · ${totals.score} points` : '' }}</div>
+      <div v-if="session.gear">Equipment: {{ gearLine(session.gear) }}</div>
+      <ErrorText :message="error" />
+      <SessionPlots :session="session" />
+      <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
+      <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
+      <div v-for="v in session.volume" :key="v.id">{{ v.arrow_count }} arrows at {{ Number(v.distance_m) }} m</div>
+    </div>
+  </AppPage>
 </template>

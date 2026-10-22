@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonButton } from '@ionic/vue'
 import { ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -36,6 +37,6 @@ function add() {
   <AppButton @click="add">Add</AppButton>
   <div v-for="entry in session.volume" :key="entry.id" class="d-flex justify-content-between">
     <span>{{ entry.arrow_count }} arrows at {{ entry.distance_m }} m</span>
-    <a href="#" @click.prevent="deleteVolume(session.id, entry.id)">Remove</a>
+    <IonButton fill="clear" size="small" class="m-0" @click="deleteVolume(session.id, entry.id)">Remove</IonButton>
   </div>
 </template>

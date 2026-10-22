@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IonItem, IonLabel, IonList } from '@ionic/vue'
+
 import { getFace } from '@/lib/faces'
 import { endTotal, type LogEnd, shotLabel, sortedShots } from '@/lib/log-model'
 
@@ -10,17 +12,19 @@ const newestFirst = () => [...props.ends].reverse()
 
 <!-- The ends of a session, newest first, each with its arrows best first and its total. -->
 <template>
-  <div class="d-flex flex-column gap-2">
-    <component
-      :is="clickable ? 'button' : 'div'"
-      v-for="end in newestFirst()"
+  <IonList inset class="m-0">
+    <IonItem
+      v-for="(end, i) in newestFirst()"
       :key="end.id"
-      :type="clickable ? 'button' : undefined"
-      class="text-start p-0 border-0 bg-transparent text-reset"
+      :button="clickable"
+      :detail="clickable"
+      :lines="i === ends.length - 1 ? 'none' : 'full'"
       @click="clickable && $emit('select', end)"
     >
-      <div class="fw-semibold">End {{ end.index + 1 }} · {{ sortedShots(end.shots).map(shotLabel).join(' ') }} = {{ endTotal(end) }}</div>
-      <div class="faint">{{ end.distance_m }} m · {{ getFace(end.face)?.name ?? end.face }}</div>
-    </component>
-  </div>
+      <IonLabel>
+        <h3>End {{ end.index + 1 }} · {{ sortedShots(end.shots).map(shotLabel).join(' ') }} = {{ endTotal(end) }}</h3>
+        <p>{{ end.distance_m }} m · {{ getFace(end.face)?.name ?? end.face }}</p>
+      </IonLabel>
+    </IonItem>
+  </IonList>
 </template>

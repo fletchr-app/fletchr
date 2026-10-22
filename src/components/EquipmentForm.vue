@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IonToggle } from '@ionic/vue'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -113,10 +114,7 @@ function changes(rev: Revision, prev: Revision | undefined) {
           :capitalize="f.kind === 'text' || f.kind === 'multiline' ? 'sentences' : 'none'"
         />
       </template>
-      <div class="form-check form-switch">
-        <input id="active" v-model="isActive" class="form-check-input" type="checkbox" role="switch" />
-        <label class="form-check-label" for="active">Active (shown when logging sessions)</label>
-      </div>
+      <IonToggle v-model="isActive" class="ion-text-wrap">Active (shown when logging sessions)</IonToggle>
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="save">{{ id === null ? `Add ${label}` : 'Save' }}</AppButton>
       <AppButton v-if="id !== null" secondary @click="confirmDelete ? run(() => adapter.remove(id!)) : (confirmDelete = true)">

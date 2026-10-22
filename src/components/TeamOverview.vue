@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { IonItem, IonLabel, IonList } from '@ionic/vue'
+
+import AppButton from '@/components/AppButton.vue'
 
 import ErrorText from '@/components/ErrorText.vue'
 import ShareTraining from '@/components/ShareTraining.vue'
@@ -20,21 +22,26 @@ const { data, error } = useRemote(
 <template>
   <div class="d-flex flex-column gap-2">
     <h2 class="h5 m-0">{{ team.name }}</h2>
-    <RouterLink :to="`/team/${team.id}`">{{ team.my_role === 'admin' ? 'Manage team: members, invites, name' : 'Members' }}</RouterLink>
+    <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? 'Manage team: members, invites, name' : 'Members' }}</AppButton>
     <ShareTraining :team="team" />
     <ErrorText :message="error" />
     <div v-if="data?.length === 0">No archers in this team yet.</div>
-    <RouterLink
-      v-for="archer in data"
-      :key="archer.user_id"
-      :to="{ path: `/archers/${archer.user_id}`, query: { name: archer.name } }"
-      class="text-reset text-decoration-none"
-    >
-      <div class="fw-semibold">{{ archer.name }}{{ archer.role !== 'archer' ? ' (coach)' : '' }}{{ archer.last_session?.live ? '  ● shooting now' : '' }}</div>
-      <div class="muted">
-        {{ archer.last_session ? `Last session ${new Date(archer.last_session.started_at).toLocaleDateString()} · ${archer.last_session.type}` : 'No sessions yet' }} ·
-        {{ archer.arrows_7d }} arrows in 7 days
-      </div>
-    </RouterLink>
+    <IonList v-if="data?.length" inset>
+      <IonItem
+        v-for="archer in data"
+        :key="archer.user_id"
+        :router-link="`/archers/${archer.user_id}?name=${encodeURIComponent(archer.name)}`"
+        detail
+        lines="full"
+      >
+        <IonLabel class="ion-text-wrap">
+          <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ' (coach)' : '' }}{{ archer.last_session?.live ? '  ● shooting now' : '' }}</h3>
+          <p>
+            {{ archer.last_session ? `Last session ${new Date(archer.last_session.started_at).toLocaleDateString()} · ${archer.last_session.type}` : 'No sessions yet' }} ·
+            {{ archer.arrows_7d }} arrows in 7 days
+          </p>
+        </IonLabel>
+      </IonItem>
+    </IonList>
   </div>
 </template>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { IonItem, IonLabel, IonList } from '@ionic/vue'
+
+import AppButton from '@/components/AppButton.vue'
+import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
@@ -48,15 +51,21 @@ const rows = computed<Row[]>(() =>
 </script>
 
 <template>
-  <div class="screen">
-    <SyncBanner />
-    <RouterLink to="/training/new" class="fs-5 fw-semibold">Start a session</RouterLink>
-    <ErrorText :message="remote.error.value" />
-    <RouterLink v-for="row in rows" :key="row.id" :to="row.to" class="text-reset text-decoration-none">
-      <div class="fw-semibold">{{ new Date(row.started_at).toLocaleString() }} · {{ row.type }}{{ row.finished ? '' : ' (in progress)' }}</div>
-      <div class="muted">
-        {{ row.location ? `${row.location} · ` : '' }}{{ row.ends }} ends · {{ row.arrows }} arrows{{ row.ends > 0 ? ` · ${row.points} points` : '' }}
-      </div>
-    </RouterLink>
-  </div>
+  <AppPage title="Training" :back="false">
+    <div class="screen">
+      <SyncBanner />
+      <AppButton router-link="/training/new">Start a session</AppButton>
+      <ErrorText :message="remote.error.value" />
+      <IonList v-if="rows.length > 0" inset>
+        <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
+          <IonLabel class="ion-text-wrap">
+            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ row.type }}{{ row.finished ? '' : ' (in progress)' }}</h3>
+            <p>
+              {{ row.location ? `${row.location} · ` : '' }}{{ row.ends }} ends · {{ row.arrows }} arrows{{ row.ends > 0 ? ` · ${row.points} points` : '' }}
+            </p>
+          </IonLabel>
+        </IonItem>
+      </IonList>
+    </div>
+  </AppPage>
 </template>
