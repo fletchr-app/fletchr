@@ -15,7 +15,8 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
     } else if (op.kind === 'session') {
       if (!session) return { kind: 'ok' };
       result = await api.PUT('/api/sessions/{session_id}/', {
-        params: { path: { session_id: op.sessionId } },
+        // `owner` only matters when the session is created: a coach logging for an archer without an account.
+        params: { path: { session_id: op.sessionId }, query: session.owner ? { owner: session.owner } : undefined },
         body: {
           started_at: session.started_at,
           ended_at: session.ended_at,

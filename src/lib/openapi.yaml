@@ -3,6 +3,27 @@ info:
   title: Archery Coach API
   version: 0.1.0
 paths:
+  /api/archers/{user_id}/:
+    get:
+      operationId: archers_retrieve
+      description: Who this is, for an archer whose training I may see.
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - archers
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Archer'
+          description: ''
   /api/arrow-sets/:
     get:
       operationId: arrow_sets_list
@@ -364,6 +385,62 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BowRevision'
+          description: ''
+  /api/claims/redeem/:
+    post:
+      operationId: claims_redeem_create
+      description: An archer takes over a profile that a coach kept for them.
+      tags:
+      - claims
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/codes/preview/:
+    post:
+      operationId: codes_preview_create
+      description: What a code would do, so the screen can ask for confirmation first.
+        Open to everybody (the code is the secret).
+      tags:
+      - codes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodePreview'
           description: ''
   /api/faces/:
     get:
@@ -979,6 +1056,12 @@ paths:
       operationId: sessions_update
       description: Create the session with this id, or update it. Safe to repeat.
       parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Create the session for an archer without an account that you
+          coach; default: yourself'
       - in: path
         name: session_id
         schema:
@@ -1336,6 +1419,125 @@ paths:
               schema:
                 $ref: '#/components/schemas/Team'
           description: ''
+  /api/teams/{team_id}/archers/:
+    post:
+      operationId: teams_archers_create
+      description: 'Add an archer without an account: a profile that only the coaches
+        of the team can see.'
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArcherNameRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArcherNameRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArcherNameRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/teams/{team_id}/archers/{user_id}/:
+    patch:
+      operationId: teams_archers_partial_update
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedArcherNameRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedArcherNameRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedArcherNameRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    delete:
+      operationId: teams_archers_destroy
+      description: Remove the profile with its sessions and the notes about it, for
+        good.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/teams/{team_id}/archers/{user_id}/claim-code/:
+    post:
+      operationId: teams_archers_claim_code_create
+      description: A new code for the archer to take over this profile. An earlier
+        code stops working.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimCode'
+          description: ''
   /api/teams/{team_id}/invites/:
     get:
       operationId: teams_invites_list
@@ -1636,6 +1838,38 @@ components:
       required:
       - detail
       - teams
+    Archer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        managed:
+          type: boolean
+          description: A profile kept by a coach, without an account
+        team_id:
+          type: integer
+          nullable: true
+          description: A team you coach that the archer is in
+        team_name:
+          type: string
+          nullable: true
+      required:
+      - id
+      - managed
+      - name
+      - team_id
+      - team_name
+    ArcherNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
+      - name
     ArcherOverview:
       type: object
       properties:
@@ -1646,6 +1880,9 @@ components:
           description: archer, or coach/admin for a coach who shares their training
         name:
           type: string
+        managed:
+          type: boolean
+          description: A profile kept by a coach, without an account
         last_session:
           allOf:
           - $ref: '#/components/schemas/LastSession'
@@ -1656,6 +1893,7 @@ components:
       required:
       - arrows_7d
       - last_session
+      - managed
       - name
       - role
       - user_id
@@ -2182,6 +2420,42 @@ components:
         * `barebow` - Barebow
         * `longbow` - Longbow
         * `traditional` - Traditional
+    ClaimCode:
+      type: object
+      properties:
+        code:
+          type: string
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - expires_at
+    CodePreview:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/CodePreviewKindEnum'
+        team_name:
+          type: string
+        profile_name:
+          type: string
+          nullable: true
+          description: 'For a claim code: the profile you would take over'
+      required:
+      - kind
+      - profile_name
+      - team_name
+    CodePreviewKindEnum:
+      enum:
+      - invite
+      - claim
+      type: string
+      description: |-
+        * `invite` - invite
+        * `claim` - claim
     DeleteAccountRequestRequest:
       type: object
       description: Password plus a confirmation word that is typed out, so it cannot
@@ -2348,7 +2622,7 @@ components:
         name:
           type: string
         kind:
-          $ref: '#/components/schemas/KindEnum'
+          $ref: '#/components/schemas/FaceKindEnum'
         compound:
           type: boolean
           description: Small 10 ring, as used for compound
@@ -2373,6 +2647,16 @@ components:
       - rings
       - slug
       - spots
+    FaceKindEnum:
+      enum:
+      - wa
+      - field
+      - blank
+      type: string
+      description: |-
+        * `wa` - wa
+        * `field` - field
+        * `blank` - blank
     HandEnum:
       enum:
       - right
@@ -2427,16 +2711,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
           default: archer
-    KindEnum:
-      enum:
-      - wa
-      - field
-      - blank
-      type: string
-      description: |-
-        * `wa` - wa
-        * `field` - field
-        * `blank` - blank
     LastSession:
       type: object
       properties:
@@ -2492,8 +2766,12 @@ components:
           readOnly: true
         email:
           type: string
-          format: email
           readOnly: true
+          description: Empty for an archer without an account
+        managed:
+          type: boolean
+          readOnly: true
+          description: A profile kept by a coach, without an account
         role:
           $ref: '#/components/schemas/RoleEnum'
         also_shoots:
@@ -2505,6 +2783,7 @@ components:
       required:
       - email
       - joined_at
+      - managed
       - name
       - role
       - user_id
@@ -2605,6 +2884,13 @@ components:
       required:
       - id
       - name
+    PatchedArcherNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
     PatchedArrowSetRequest:
       type: object
       properties:

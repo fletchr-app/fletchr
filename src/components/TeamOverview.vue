@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList } from '@ionic/vue'
 
+import AddArcher from '@/components/AddArcher.vue'
 import AppButton from '@/components/AppButton.vue'
 
 import ErrorText from '@/components/ErrorText.vue'
@@ -13,7 +14,7 @@ const REFRESH_MS = 10000
 
 const props = defineProps<{ team: components['schemas']['Team'] }>()
 const { api } = useAuth()
-const { data, error } = useRemote(
+const { data, error, reload } = useRemote(
   async () => (await api.GET('/api/teams/{team_id}/overview/', { params: { path: { team_id: props.team.id } } })).data ?? null,
   { pollMs: REFRESH_MS, keepPolling: () => true },
 )
@@ -24,6 +25,7 @@ const { data, error } = useRemote(
     <h2 class="h5 m-0">{{ team.name }}</h2>
     <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? 'Manage team: members, invites, name' : 'Members' }}</AppButton>
     <ShareTraining :team="team" />
+    <AddArcher :team-id="team.id" @added="reload" />
     <ErrorText :message="error" />
     <div v-if="data?.length === 0">No archers in this team yet.</div>
     <IonList v-if="data?.length" inset>
@@ -35,7 +37,7 @@ const { data, error } = useRemote(
         lines="full"
       >
         <IonLabel class="ion-text-wrap">
-          <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ' (coach)' : '' }}{{ archer.last_session?.live ? '  ● shooting now' : '' }}</h3>
+          <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ' (coach)' : '' }}{{ archer.managed ? ' (no account)' : '' }}{{ archer.last_session?.live ? '  ● shooting now' : '' }}</h3>
           <p>
             {{ archer.last_session ? `Last session ${new Date(archer.last_session.started_at).toLocaleDateString()} · ${archer.last_session.type}` : 'No sessions yet' }} ·
             {{ archer.arrows_7d }} arrows in 7 days

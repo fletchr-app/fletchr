@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import Invite, Profile, Role, Team, TeamMember, User
+from .models import ClaimCode, Invite, Profile, Role, Team, TeamMember, User
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -85,11 +85,15 @@ class MembershipSettingsSerializer(serializers.ModelSerializer):
 class MemberSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     name = serializers.CharField(source="user.profile.name", read_only=True)
-    email = serializers.EmailField(source="user.email", read_only=True)
+    email = serializers.SerializerMethodField(help_text="Empty for an archer without an account")
+    managed = serializers.BooleanField(source="user.is_managed", read_only=True, help_text="A profile kept by a coach, without an account")
 
     class Meta:
         model = TeamMember
-        fields = ["user_id", "name", "email", "role", "also_shoots", "joined_at"]
+        fields = ["user_id", "name", "email", "managed", "role", "also_shoots", "joined_at"]
+
+    def get_email(self, obj) -> str:
+        return "" if obj.user.is_managed else obj.user.email
 
 
 class InviteSerializer(serializers.ModelSerializer):
@@ -99,3 +103,34 @@ class InviteSerializer(serializers.ModelSerializer):
         model = Invite
         fields = ["id", "code", "role", "created_at", "expires_at", "used_at"]
         read_only_fields = ["id", "code", "created_at", "expires_at", "used_at"]
+
+
+class ArcherNameSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("An archer needs a name")
+        return value
+
+
+class ClaimCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClaimCode
+        fields = ["code", "expires_at"]
+        read_only_fields = ["code", "expires_at"]
+
+
+class ArcherSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    managed = serializers.BooleanField(help_text="A profile kept by a coach, without an account")
+    team_id = serializers.IntegerField(allow_null=True, help_text="A team you coach that the archer is in")
+    team_name = serializers.CharField(allow_null=True)
+
+
+class CodePreviewSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=["invite", "claim"])
+    team_name = serializers.CharField()
+    profile_name = serializers.CharField(allow_null=True, help_text="For a claim code: the profile you would take over")

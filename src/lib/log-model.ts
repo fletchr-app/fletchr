@@ -45,6 +45,9 @@ export type LogSession = {
   volume: LogVolume[];
   /** Left out when no choice was made, so uploading it does not clear what the server has. */
   gear?: Gear | null;
+  /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
+  owner?: number;
+  owner_name?: string;
 };
 
 /**

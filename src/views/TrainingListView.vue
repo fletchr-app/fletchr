@@ -10,21 +10,9 @@ import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
-import { sessionTotals } from '@/lib/log-model'
+import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 15000
-
-type Row = {
-  id: string
-  to: string
-  started_at: string
-  type: string
-  location: string
-  finished: boolean
-  ends: number
-  arrows: number
-  points: number
-}
 
 const { api, userId } = useAuth()
 const { sessions: local } = useLog()
@@ -33,21 +21,8 @@ const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: 
   keepPolling: () => true,
 })
 
-// Sessions on this device can be edited. Others (from another device) are shown as the server has them.
-const rows = computed<Row[]>(() =>
-  [
-    ...local.value.map((s) => {
-      const { arrows, score } = sessionTotals(s)
-      return { id: s.id, to: `/training/${s.id}`, started_at: s.started_at, type: s.type, location: s.location, finished: !!s.ended_at, ends: s.ends.length, arrows, points: score }
-    }),
-    ...(remote.data.value ?? [])
-      .filter((s) => !local.value.some((l) => l.id === s.id))
-      .map((s) => ({
-        id: s.id, to: `/sessions/${s.id}`, started_at: s.started_at, type: s.type, location: s.location ?? '',
-        finished: !!s.ended_at, ends: s.ends, arrows: s.scored_arrows + s.volume_arrows, points: s.score_total,
-      })),
-  ].sort((a, b) => b.started_at.localeCompare(a.started_at)),
-)
+// Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.
+const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? []))
 </script>
 
 <template>

@@ -1,13 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Invite, Profile, Team, TeamMember, User
+from .models import ClaimCode, Invite, Profile, Team, TeamMember, User
 
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     ordering = ["email"]
-    list_display = ["email", "is_staff", "is_active"]
+    list_display = ["email", "is_staff", "is_active", "is_managed"]
     search_fields = ["email"]
     fieldsets = [
         (None, {"fields": ["email", "password"]}),
@@ -34,4 +34,10 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(Invite)
 class InviteAdmin(admin.ModelAdmin):
     list_display = ["code", "team", "role", "expires_at", "used_by"]
+    readonly_fields = ["code"]
+
+
+@admin.register(ClaimCode)
+class ClaimCodeAdmin(admin.ModelAdmin):
+    list_display = ["code", "profile", "team", "expires_at"]
     readonly_fields = ["code"]

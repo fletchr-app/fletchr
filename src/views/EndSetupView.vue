@@ -49,6 +49,7 @@ function begin() {
         <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
       </IonSelect>
       <GearPicker
+      v-if="!session.owner"
         :equipment="equipment"
         :bow-id="session.gear?.bow_id ?? null"
         :arrow-set-id="session.gear?.arrow_set_id ?? null"

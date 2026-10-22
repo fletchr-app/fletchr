@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/archers/{user_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Who this is, for an archer whose training I may see. */
+        get: operations["archers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/arrow-sets/": {
         parameters: {
             query?: never;
@@ -94,6 +111,40 @@ export interface paths {
         get: operations["bows_revisions_list"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/claims/redeem/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description An archer takes over a profile that a coach kept for them. */
+        post: operations["claims_redeem_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/codes/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description What a code would do, so the screen can ask for confirmation first. Open to everybody (the code is the secret). */
+        post: operations["codes_preview_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -455,6 +506,57 @@ export interface paths {
         patch: operations["teams_partial_update"];
         trace?: never;
     };
+    "/api/teams/{team_id}/archers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add an archer without an account: a profile that only the coaches of the team can see. */
+        post: operations["teams_archers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teams/{team_id}/archers/{user_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Remove the profile with its sessions and the notes about it, for good. */
+        delete: operations["teams_archers_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["teams_archers_partial_update"];
+        trace?: never;
+    };
+    "/api/teams/{team_id}/archers/{user_id}/claim-code/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A new code for the archer to take over this profile. An earlier code stops working. */
+        post: operations["teams_archers_claim_code_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teams/{team_id}/invites/": {
         parameters: {
             query?: never;
@@ -622,11 +724,25 @@ export interface components {
             detail: string;
             teams: components["schemas"]["BlockingTeam"][];
         };
+        Archer: {
+            id: number;
+            name: string;
+            /** @description A profile kept by a coach, without an account */
+            managed: boolean;
+            /** @description A team you coach that the archer is in */
+            team_id: number | null;
+            team_name: string | null;
+        };
+        ArcherNameRequest: {
+            name: string;
+        };
         ArcherOverview: {
             user_id: number;
             /** @description archer, or coach/admin for a coach who shares their training */
             role: string;
             name: string;
+            /** @description A profile kept by a coach, without an account */
+            managed: boolean;
             last_session: components["schemas"]["LastSession"] | null;
             /** @description Arrows shot in sessions started in the last 7 days */
             arrows_7d: number;
@@ -886,6 +1002,23 @@ export interface components {
          * @enum {string}
          */
         BowTypeEnum: "recurve" | "compound" | "barebow" | "longbow" | "traditional";
+        ClaimCode: {
+            readonly code: string;
+            /** Format: date-time */
+            readonly expires_at: string;
+        };
+        CodePreview: {
+            kind: components["schemas"]["CodePreviewKindEnum"];
+            team_name: string;
+            /** @description For a claim code: the profile you would take over */
+            profile_name: string | null;
+        };
+        /**
+         * @description * `invite` - invite
+         *     * `claim` - claim
+         * @enum {string}
+         */
+        CodePreviewKindEnum: "invite" | "claim";
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteAccountRequestRequest: {
             password: string;
@@ -949,7 +1082,7 @@ export interface components {
         Face: {
             slug: string;
             name: string;
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["FaceKindEnum"];
             /** @description Small 10 ring, as used for compound */
             compound: boolean;
             /** @description Inner to outer */
@@ -959,6 +1092,13 @@ export interface components {
             x_diameter_cm?: number;
             note?: string;
         };
+        /**
+         * @description * `wa` - wa
+         *     * `field` - field
+         *     * `blank` - blank
+         * @enum {string}
+         */
+        FaceKindEnum: "wa" | "field" | "blank";
         /**
          * @description * `right` - Right
          *     * `left` - Left
@@ -984,13 +1124,6 @@ export interface components {
             /** @default archer */
             role: components["schemas"]["RoleEnum"];
         };
-        /**
-         * @description * `wa` - wa
-         *     * `field` - field
-         *     * `blank` - blank
-         * @enum {string}
-         */
-        KindEnum: "wa" | "field" | "blank";
         LastSession: {
             /** Format: uuid */
             id: string;
@@ -1013,8 +1146,10 @@ export interface components {
         Member: {
             readonly user_id: number;
             readonly name: string;
-            /** Format: email */
+            /** @description Empty for an archer without an account */
             readonly email: string;
+            /** @description A profile kept by a coach, without an account */
+            readonly managed: boolean;
             role: components["schemas"]["RoleEnum"];
             also_shoots?: boolean;
             /** Format: date-time */
@@ -1058,6 +1193,9 @@ export interface components {
         NoteTeam: {
             id: number;
             name: string;
+        };
+        PatchedArcherNameRequest: {
+            name?: string;
         };
         PatchedArrowSetRequest: {
             is_active?: boolean;
@@ -1449,6 +1587,27 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    archers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Archer"];
+                };
+            };
+        };
+    };
     arrow_sets_list: {
         parameters: {
             query?: {
@@ -1787,6 +1946,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BowRevision"][];
+                };
+            };
+        };
+    };
+    claims_redeem_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RedeemRequest"];
+                "multipart/form-data": components["schemas"]["RedeemRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    codes_preview_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RedeemRequest"];
+                "multipart/form-data": components["schemas"]["RedeemRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodePreview"];
                 };
             };
         };
@@ -2247,7 +2456,10 @@ export interface operations {
     };
     sessions_update: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Create the session for an archer without an account that you coach; default: yourself */
+                owner?: number;
+            };
             header?: never;
             path: {
                 session_id: string;
@@ -2570,6 +2782,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    teams_archers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArcherNameRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ArcherNameRequest"];
+                "multipart/form-data": components["schemas"]["ArcherNameRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+        };
+    };
+    teams_archers_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    teams_archers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedArcherNameRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedArcherNameRequest"];
+                "multipart/form-data": components["schemas"]["PatchedArcherNameRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+        };
+    };
+    teams_archers_claim_code_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimCode"];
                 };
             };
         };

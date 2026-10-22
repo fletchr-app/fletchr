@@ -2,7 +2,7 @@
 import { IonSelect, IonSelectOption } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
@@ -25,7 +25,10 @@ const ENVIRONMENTS: { value: Environment; label: string }[] = [
   { value: '', label: 'Not set' },
 ]
 
+const route = useRoute()
 const router = useRouter()
+// A coach logging for an archer without an account (?for=<id>&name=...): no equipment, it is the archer's.
+const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? 'the archer') } : undefined
 const { startSession, sessions, equipment, refreshEquipment } = useLog()
 const type = ref<SessionType>('scoring')
 const environment = ref<Environment>('indoor')
@@ -51,8 +54,8 @@ function start() {
   if (ends && !(metres > 0)) return (error.value = 'Enter the distance in metres')
   if (ends && !(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = 'Arrows per end must be between 1 and 12')
   const { bowId, arrowSetId } = choice.value
-  const gear = bowId === null ? undefined : gearFor(equipment.value, bowId, arrowSetId)
-  const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear)}`
+  const gear = archer || bowId === null ? undefined : gearFor(equipment.value, bowId, arrowSetId)
+  const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear, archer)}`
   void router.replace(overview)
   // Straight to the first end, with the overview behind it.
   if (ends) void router.push({ path: `${overview}/end`, query: { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) } })
@@ -60,7 +63,7 @@ function start() {
 </script>
 
 <template>
-  <AppPage title="New session">
+  <AppPage :title="archer ? `New session for ${archer.name}` : 'New session'">
     <div class="screen">
       <ChipGroup v-model="type" label="Type" :options="TYPES" />
       <ChipGroup v-model="environment" label="Where" :options="ENVIRONMENTS" />
@@ -74,7 +77,7 @@ function start() {
           <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
         </IonSelect>
       </template>
-      <GearPicker :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
+      <GearPicker v-if="!archer" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
       <ErrorText :message="error" />
       <AppButton @click="start">Start</AppButton>
     </div>

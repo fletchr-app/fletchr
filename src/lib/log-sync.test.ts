@@ -7,7 +7,7 @@ import type { paths } from './api-types.ts';
 import { drain, fetchEquipment, send } from './log-sync.ts';
 import { EMPTY_LOG, gearFor, reduce, type LogAction, type LogEnd, type LogSession, type LogState } from './log-model.ts';
 
-type Call = { method: string; path: string; body: unknown };
+type Call = { method: string; path: string; search: string; body: unknown };
 type Handler = (call: Call, n: number) => Response | Promise<Response>;
 
 const json = (status: number, body: unknown = {}) =>
@@ -23,7 +23,7 @@ function harness(handler: Handler) {
     baseUrl: 'http://server',
     fetch: async (request: Request) => {
       const text = await request.clone().text();
-      const call = { method: request.method, path: new URL(request.url).pathname, body: text ? JSON.parse(text) : null };
+      const call = { method: request.method, path: new URL(request.url).pathname, search: new URL(request.url).search, body: text ? JSON.parse(text) : null };
       calls.push(call);
       return handler(call, calls.length);
     },
@@ -40,6 +40,14 @@ const session: LogSession = {
 const end = (shots: string[]): LogEnd => ({
   id: 'e1', index: 0, distance_m: '18.0', face: 'wa-40', arrows_per_end: 3,
   shots: shots.map((id, i) => ({ id, value: 10 - i, is_x: false, is_miss: false })),
+});
+
+test('a session a coach logs for an archer without an account is created for that archer', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session: { ...session, owner: 7, owner_name: 'Max' } });
+  h.dispatch({ type: 'startSession', session: { ...session, id: 's2' } });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => `${c.path}${c.search}`), ['/api/sessions/s1/?owner=7', '/api/sessions/s2/']);
 });
 
 test('uploads in order with the right requests', async () => {

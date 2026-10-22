@@ -37,7 +37,8 @@ function entry(settings: { distance_m: string; face: string; arrows_per_end: num
 function finish() {
   const s = session.value!
   finishSession(s.id, !s.ended_at)
-  if (!s.ended_at) void router.replace('/')
+  // Back to the home screen, or for a coach to the archer's page.
+  if (!s.ended_at) void router.replace(s.owner ? { path: `/archers/${s.owner}`, query: { name: s.owner_name } } : '/')
 }
 function newEnd() {
   if (session.value!.ends.length === 0) void router.push(`/training/${session.value!.id}/setup`)
@@ -59,10 +60,11 @@ function newEnd() {
       <div class="muted">
         {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows · {{ totals.score }} points{{ session.ended_at ? ' · finished' : '' }}
       </div>
-      <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <div v-if="session.owner_name" class="muted">For {{ session.owner_name }}</div>
+      <div v-else class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
-      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face or equipment</RouterLink>
+      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face{{ session.owner ? '' : ' or equipment' }}</RouterLink>
       <AppButton @click="newEnd">New end</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">All ends</AppButton>
@@ -75,7 +77,8 @@ function newEnd() {
       <div class="muted">
         {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ session.ended_at ? ' · finished' : '' }}
       </div>
-      <div class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <div v-if="session.owner_name" class="muted">For {{ session.owner_name }}</div>
+      <div v-else class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
       <VolumeLog :session="session" />
       <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

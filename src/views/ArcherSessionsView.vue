@@ -1,49 +1,67 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList } from '@ionic/vue'
-
-import AppButton from '@/components/AppButton.vue'
-import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import AppButton from '@/components/AppButton.vue'
+import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import ManagedArcherActions from '@/components/ManagedArcherActions.vue'
 import NotesSection from '@/components/NotesSection.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
+import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 10000
 
-// The sessions of one archer, for their coach.
+// One archer: their sessions, statistics and the coach notes, for their coach. For an archer without an
+// account the coach can also log sessions for them and manage the profile.
 const route = useRoute()
 const id = route.params.id as string
 const name = route.query.name as string | undefined
-const title = name ?? 'Archer'
 
 const { api } = useAuth()
+const { sessions: local } = useLog()
+const info = useRemote(async () => (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: Number(id) } } })).data ?? null)
 const { data, error, loading } = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(id) } } })).data ?? null, {
   pollMs: REFRESH_MS,
   keepPolling: () => true,
 })
+
+const title = computed(() => info.data.value?.name || name || 'Archer')
+const shownName = computed(() => info.data.value?.name || name || '')
+// Sessions the coach logged on this device (editable), then those the server has.
+const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? []))
 </script>
 
 <template>
   <AppPage :title="title">
     <div class="screen">
-      <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(name ?? '')}`">Statistics</AppButton>
+      <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">Start a session for {{ shownName }}</AppButton>
+      <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">Statistics</AppButton>
       <NotesSection :archer-id="Number(id)" />
       <ErrorText :message="error" />
       <div v-if="loading">Loading…</div>
-      <div v-if="data?.length === 0">No sessions yet.</div>
-      <IonList v-if="data?.length" inset>
-        <IonItem v-for="s in data" :key="s.id" :router-link="`/sessions/${s.id}`" detail lines="full">
+      <div v-if="!loading && rows.length === 0">No sessions yet.</div>
+      <IonList v-if="rows.length > 0" inset>
+        <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
           <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(s.started_at).toLocaleString() }} · {{ s.type }}{{ s.ended_at ? '' : '  ● in progress' }}</h3>
+            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ row.type }}{{ row.finished ? '' : '  ● in progress' }}</h3>
             <p>
-              {{ s.location ? `${s.location} · ` : '' }}{{ s.ends }} ends · {{ s.scored_arrows + s.volume_arrows }} arrows{{ s.ends > 0 ? ` · ${s.score_total} points` : '' }}
+              {{ row.location ? `${row.location} · ` : '' }}{{ row.ends }} ends · {{ row.arrows }} arrows{{ row.ends > 0 ? ` · ${row.points} points` : '' }}
             </p>
           </IonLabel>
         </IonItem>
       </IonList>
+      <ManagedArcherActions
+        v-if="info.data.value?.managed && info.data.value.team_id"
+        :archer-id="Number(id)"
+        :name="shownName"
+        :team-id="info.data.value.team_id"
+        :team-name="info.data.value.team_name ?? ''"
+        @renamed="info.reload"
+      />
     </div>
   </AppPage>
 </template>

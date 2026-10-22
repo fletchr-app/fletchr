@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { inviteMessage, roleChangeWarning, roleLabel, sortMembers, type TeamRole } from './team-admin.ts';
+import { claimMessage, inviteMessage, roleChangeWarning, roleLabel, sortMembers, type TeamRole } from './team-admin.ts';
 
 const roles: TeamRole[] = ['archer', 'coach', 'admin'];
 
@@ -47,4 +47,13 @@ test('the invite message has the team, the code and the date', () => {
 
 test('role names for display', () => {
   assert.deepEqual(['archer', 'coach', 'admin', 'x'].map(roleLabel), ['Archer', 'Coach', 'Admin', 'x']);
+});
+
+test('the claim message has the team, the code, the date and both ways to enter it', () => {
+  const text = claimMessage('Archery Göttingen', 'AB12CD34EF', '2026-11-01T12:00:00Z', 'en-GB');
+  assert.match(text, /Archery Göttingen/);
+  assert.match(text, /AB12CD34EF/);
+  assert.match(text, /1 November 2026/);
+  assert.match(text, /I have an invite code/);
+  assert.match(text, /Join another team/);
 });

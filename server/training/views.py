@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to, is_coach_in
-from core.models import COACH_ROLES, Role, Team, TeamMember
+from core.claims import can_write_sessions_of
+from core.models import COACH_ROLES, Role, Team, TeamMember, User
 
 from .models import End, Shot, TrainingSession, VolumeEntry
 from .stats import compute_stats
@@ -43,7 +44,7 @@ def get_session(request, session_id, write=False):
     session = visible_sessions(request.user).filter(pk=session_id).first()
     if session is None:
         raise NotFound()
-    if write and session.owner_id != request.user.id:
+    if write and not can_write_sessions_of(request.user, session.owner):
         raise PermissionDenied("Only the archer can change a session")
     return session
 
@@ -92,15 +93,27 @@ class SessionDetailView(APIView):
         session = visible_sessions(request.user).prefetch_related("ends__shots", "volume_entries").get(pk=session.pk)
         return Response(SessionSerializer(session).data)
 
-    @extend_schema(request=SessionWriteSerializer, responses={200: SessionSerializer, 201: SessionSerializer})
+    @extend_schema(
+        request=SessionWriteSerializer,
+        parameters=[OpenApiParameter("owner", int, description="Create the session for an archer without an account that you coach; default: yourself")],
+        responses={200: SessionSerializer, 201: SessionSerializer},
+    )
     def put(self, request, session_id):
         """Create the session with this id, or update it. Safe to repeat."""
         existing = TrainingSession.objects.filter(pk=session_id).first()
         if existing is not None:
             existing = get_session(request, session_id, write=True)
+        owner = request.user
+        if existing is None and "owner" in request.query_params:
+            try:
+                owner = User.objects.filter(pk=int(request.query_params["owner"])).first()
+            except ValueError:
+                raise ValidationError({"owner": "Give the id of the archer"})
+            if owner is None or not can_write_sessions_of(request.user, owner):
+                raise NotFound()
         serializer = SessionWriteSerializer(existing, data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        session = serializer.save(**({} if existing else {"id": session_id, "owner": request.user}))
+        session = serializer.save(**({} if existing else {"id": session_id, "owner": owner}))
         session = (
             TrainingSession.objects.select_related("owner__profile", "setup__bow_revision", "setup__arrow_set_revision")
             .prefetch_related("ends__shots", "volume_entries")
@@ -217,6 +230,7 @@ class TeamOverviewView(APIView):
                     "user_id": m.user_id,
                     "role": m.role,
                     "name": m.user.profile.name or m.user.email,
+                    "managed": m.user.is_managed,
                     "arrows_7d": m.arrows_7d,
                     "last_session": s
                     and {

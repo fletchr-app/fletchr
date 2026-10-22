@@ -42,3 +42,9 @@ export function inviteMessage(teamName: string, code: string, expiresAt: string,
   const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   return `Join ${teamName} on Archery Coach: open the app, tap "I have an invite code" and enter ${code}. The code works until ${until}.`;
 }
+
+/** The text to send an archer with, to take over the profile their coach keeps for them. */
+export function claimMessage(teamName: string, code: string, expiresAt: string, locale?: string): string {
+  const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+  return `Your coach in ${teamName} keeps your training notes on Archery Coach. To take them over, open the app, tap "I have an invite code" and enter ${code}. If you already have an account, use More, "Join another team". The code works until ${until}.`;
+}

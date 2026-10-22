@@ -5,7 +5,7 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -14,9 +14,13 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from . import access
-from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User
+from . import access, claims
+from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User
 from .serializers import (
+    ArcherNameSerializer,
+    ArcherSerializer,
+    ClaimCodeSerializer,
+    CodePreviewSerializer,
     InviteSerializer,
     MemberSerializer,
     MembershipSettingsSerializer,
@@ -54,8 +58,12 @@ class RegisterView(APIView):
         user.profile.name = data["name"]
         user.profile.save()
         try:
-            access.redeem_invite(data["invite_code"], user)
-        except access.InviteError as e:
+            # A code from a coach for a profile they keep (an archer without an account), or an invite.
+            if claims.find_claim(data["invite_code"]) is not None:
+                claims.claim_profile(data["invite_code"], user)
+            else:
+                access.redeem_invite(data["invite_code"], user)
+        except (access.InviteError, claims.ClaimError) as e:
             # Roll back the user so a bad code doesn't leave an account behind.
             transaction.set_rollback(True)
             raise ValidationError({"invite_code": str(e)})
@@ -79,6 +87,46 @@ class RedeemInviteView(APIView):
         try:
             team = access.redeem_invite(serializer.validated_data["invite_code"], request.user)
         except access.InviteError as e:
+            raise ValidationError({"invite_code": str(e)})
+        team.my_role = access.role_in(request.user, team)
+        team.also_shoots = False
+        return Response(TeamSerializer(team).data, status=status.HTTP_201_CREATED)
+
+
+class CodePreviewView(APIView):
+    """What a code would do, so the screen can ask for confirmation first. Open to everybody (the code is the secret)."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "invite"
+
+    @extend_schema(request=RedeemSerializer, responses=CodePreviewSerializer)
+    def post(self, request):
+        serializer = RedeemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        code = serializer.validated_data["invite_code"].strip().upper()
+        invite = Invite.objects.select_related("team").filter(code=code).first()
+        if invite is not None and invite.is_usable:
+            return Response({"kind": "invite", "team_name": invite.team.name, "profile_name": None})
+        claim = claims.find_claim(code)
+        if claim is not None and claim.is_usable:
+            return Response({"kind": "claim", "team_name": claim.team.name, "profile_name": claim.profile.profile.name})
+        raise ValidationError({"invite_code": "Invalid or expired code"})
+
+
+class RedeemClaimView(APIView):
+    """An archer takes over a profile that a coach kept for them."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "invite"
+
+    @extend_schema(request=RedeemSerializer, responses={201: TeamSerializer})
+    def post(self, request):
+        serializer = RedeemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            team = claims.claim_profile(serializer.validated_data["invite_code"], request.user)
+        except claims.ClaimError as e:
             raise ValidationError({"invite_code": str(e)})
         team.my_role = access.role_in(request.user, team)
         team.also_shoots = False
@@ -205,6 +253,81 @@ class InviteDetailView(APIView):
             raise PermissionDenied("Only team admins can manage invites")
         get_object_or_404(Invite, team=team, pk=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def coached_team(request, team_id):
+    team = get_my_team(request, team_id)
+    if not access.is_coach_in(request.user, team):
+        raise PermissionDenied("Only coaches can manage the archers of a team")
+    return team
+
+
+class ManagedArcherListView(APIView):
+    @extend_schema(request=ArcherNameSerializer, responses={201: MemberSerializer})
+    @transaction.atomic
+    def post(self, request, team_id):
+        """Add an archer without an account: a profile that only the coaches of the team can see."""
+        team = coached_team(request, team_id)
+        serializer = ArcherNameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.create_managed(serializer.validated_data["name"])
+        member = TeamMember.objects.create(team=team, user=user, role=Role.ARCHER)
+        return Response(MemberSerializer(member).data, status=status.HTTP_201_CREATED)
+
+
+class ManagedArcherDetailView(APIView):
+    @staticmethod
+    def _profile(request, team_id, user_id):
+        team = coached_team(request, team_id)
+        profile = claims.managed_archer(request.user, team, user_id)
+        if profile is None:
+            raise NotFound()
+        return team, profile
+
+    @extend_schema(request=ArcherNameSerializer, responses=MemberSerializer)
+    def patch(self, request, team_id, user_id):
+        team, profile = self._profile(request, team_id, user_id)
+        serializer = ArcherNameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        profile.profile.name = serializer.validated_data["name"]
+        profile.profile.save(update_fields=["name"])
+        return Response(MemberSerializer(TeamMember.objects.get(team=team, user=profile)).data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, team_id, user_id):
+        """Remove the profile with its sessions and the notes about it, for good."""
+        _, profile = self._profile(request, team_id, user_id)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ClaimCodeView(APIView):
+    @extend_schema(request=None, responses={201: ClaimCodeSerializer})
+    @transaction.atomic
+    def post(self, request, team_id, user_id):
+        """A new code for the archer to take over this profile. An earlier code stops working."""
+        team, profile = ManagedArcherDetailView._profile(request, team_id, user_id)
+        profile.claim_codes.all().delete()
+        claim = ClaimCode.objects.create(profile=profile, team=team, created_by=request.user)
+        return Response(ClaimCodeSerializer(claim).data, status=status.HTTP_201_CREATED)
+
+
+class ArcherView(APIView):
+    @extend_schema(responses=ArcherSerializer)
+    def get(self, request, user_id):
+        """Who this is, for an archer whose training I may see."""
+        archer = get_object_or_404(access.archers_visible_to(request.user).select_related("profile"), pk=user_id)
+        coached = TeamMember.objects.filter(user=request.user, role__in=COACH_ROLES).values("team")
+        team = Team.objects.filter(pk__in=coached, memberships__user=archer).order_by("name").first()
+        return Response(
+            {
+                "id": archer.pk,
+                "name": archer.profile.name or ("" if archer.is_managed else archer.email),
+                "managed": archer.is_managed,
+                "team_id": team and team.pk,
+                "team_name": team and team.name,
+            }
+        )
 
 
 class MyMembershipView(APIView):

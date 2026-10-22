@@ -34,6 +34,7 @@ ion-textarea,
 ion-chip.chip {
   min-height: 36px;
 }
+ion-toggle::part(label) { white-space: normal; }
 ion-chip.chip.selected {
   --background: var(--ion-color-primary);
   --color: var(--ion-color-primary-contrast);
@@ -115,15 +116,25 @@ h2.h4,
 }
 
 /* Arrow chips and keypad keys. */
+:root {
+  --key-bg: #e9ecf0;
+  --key-fg: #1b1b1b;
+  --key-border: #b8bec6;
+}
+.ion-palette-dark {
+  --key-bg: #2a2d31;
+  --key-fg: #f2f2f2;
+  --key-border: #4a4f56;
+}
 .key {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   border-radius: 8px;
-  border: 1px solid var(--ion-color-step-300, #b3b3b3);
-  background: var(--ion-color-step-100, #e6e6e6);
-  color: var(--ion-text-color);
+  border: 1px solid var(--key-border);
+  background: var(--key-bg);
+  color: var(--key-fg);
   font-size: 1.25rem;
   font-weight: 600;
 }

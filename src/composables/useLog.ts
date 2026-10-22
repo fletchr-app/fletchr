@@ -113,13 +113,14 @@ async function refreshEquipment() {
   if (fetched) dispatch({ type: 'setEquipment', equipment: fetched });
 }
 
-function startSession(type: SessionType, environment: Environment, location: string, gear?: Gear): string {
+function startSession(type: SessionType, environment: Environment, location: string, gear?: Gear, archer?: { id: number; name: string }): string {
   const id = newId();
   dispatch({
     type: 'startSession',
     session: {
       id, started_at: new Date().toISOString(), ended_at: null, type, environment, location, ends: [], volume: [],
       ...(gear ? { gear } : {}),
+      ...(archer ? { owner: archer.id, owner_name: archer.name } : {}),
     },
   });
   return id;

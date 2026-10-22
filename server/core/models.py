@@ -1,5 +1,6 @@
 import secrets
 import string
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -23,6 +24,15 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def create_managed(self, name):
+        """A profile a coach keeps for an archer without an account: nobody can sign in as it."""
+        user = self.model(email=f"managed-{uuid.uuid4().hex}@managed.invalid", is_managed=True, is_active=False)
+        user.set_unusable_password()
+        user.save(using=self._db)
+        user.profile.name = name
+        user.profile.save()
+        return user
+
     def create_superuser(self, email, password=None, **extra):
         extra.setdefault("is_staff", True)
         extra.setdefault("is_superuser", True)
@@ -33,6 +43,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    # A profile that a coach keeps for an archer without an account. It has no password and an address
+    # that cannot receive mail; when the archer joins, they take it over (see core/claims.py).
+    is_managed = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = "email"
@@ -128,3 +141,21 @@ class Invite(models.Model):
 
     def __str__(self):
         return f"{self.code} -> {self.team} ({self.role})"
+
+
+class ClaimCode(models.Model):
+    """Single-use code with which an archer takes over a profile that a coach keeps for them."""
+
+    profile = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="claim_codes")
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="claim_codes")
+    code = models.CharField(max_length=20, unique=True, default=new_invite_code)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=default_invite_expiry)
+
+    @property
+    def is_usable(self):
+        return self.expires_at > timezone.now()
+
+    def __str__(self):
+        return f"{self.code} -> {self.profile} in {self.team}"
