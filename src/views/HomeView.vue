@@ -44,7 +44,7 @@ onMounted(() =>
     <RouterLink to="/equipment">My equipment</RouterLink>
     <RouterLink to="/join-team">Join another team</RouterLink>
     <RouterLink to="/privacy">Your data</RouterLink>
-    <RouterLink to="/settings">Server settings</RouterLink>
+    <RouterLink to="/settings">Settings</RouterLink>
     <AppButton secondary @click="signOut">Sign out</AppButton>
   </div>
 </template>
