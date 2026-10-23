@@ -1,0 +1,63 @@
+# Status
+
+Where the project stands against `docs/plan.md` (the plan describes what is wanted, this file what exists). Updated 2026-10-23, version 0.2.0. "Built" means it is in the app and tested; "server only" means the data field exists but the app has no screen for it.
+
+Order of work: **features first, the Google Play release last** (milestone 6). The app runs on your own phone as a debug build against the live server in the meantime.
+
+## Milestone 1: MVP (done)
+
+| Area | State |
+|---|---|
+| Accounts | built: sign in, register with an invite code, change name, email and password, forgot password (code by email), export and delete data or account |
+| Teams | built: create, leave, delete, invites (code and link), roles archer/coach/admin, role changes and admin handover in the app, "also shoots" per team |
+| Archers without an account | built: a coach keeps a profile, logs sessions and writes notes for it; the archer takes it over with a claim code |
+| Equipment | built: bows and arrow sets with revision history, a setup (bow + arrow set) chosen per session |
+| Logging | built: sessions of type scoring, competition, volume and technique, indoor/outdoor, location; ends with arrows placed on the face with a magnifier; number-pad entry; offline first, uploaded later; the server recomputes scores |
+| Target faces | built: WA 122, 80, 60, 40, compound and 6-ring variants, triple faces (vertical and triangle), field faces, blank |
+| Session view | built: arrows on the face, group centre and spread, ends, totals; a coach sees live sessions ("shooting now") |
+| Stats | built: arrows per week/month/total, average score per face and distance with a trend line, best-ring, X and miss rates |
+| Notes | built: coach notes on an archer, a session or an end, visibility private / coach-only / shared, "only me" notes stay out of the archer's export |
+| Home, Team, Settings | built: Home (this week's arrows, last session, your teams, the latest coach notes about you), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
+| Languages | built: English and German in the app, the server's messages and the mails |
+| Server and website | live: `app.fletchr.de` (Docker behind a web server, own SMTP for mail), `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
+
+Not in the app although the plan lists it:
+- profile picture (avatar; not even a field)
+- comments (replies) on notes (#25)
+
+The earlier gaps (Home with last session and week, session details, arrow numbers, profile fields and units) were closed in 0.2.0.
+
+Open in practice (not release dependent):
+- **Backups:** `deploy/backup.sh` exists, but a cron job and an off-server copy come next.
+- **Website:** `noindex` is on; remove it after the legal review of the privacy text and the data processing agreement with Host Europe.
+- **Before the repository goes public:** the git author email in the history (rewrite or accept), trademark and store-name checks for "Fletchr".
+
+## Milestone 2: media and evaluations (not started)
+
+- Evaluation forms and templates with trend charts, self-assessments, goals on Home.
+- Photos and videos: upload, server conversion (ffmpeg), gallery, frame-by-frame player, notes on frames, drawing tools.
+- **First:** the video prototype from the plan (frame-exact stepping on a real 240 fps clip in the Android WebView, overlay sync, background upload, memory). It decides whether the player stays in Capacitor or needs a native plugin.
+- Backups of media (restic, off-site) belong here, if not done earlier.
+
+## Milestone 3: deeper stats (partly)
+
+Built: volume, average score, best-ring/X/miss rates, group centre and spread per session.
+
+Not built: score histogram, heatmap of all arrows, group trend over time, per-arrow-number grouping (needs the arrow number in the app), comparison by setup, self-rating vs score, team comparison and leaderboard, "who has not trained this week".
+
+## Milestone 4: notifications and remaining polish (not started)
+
+- Push notifications (new coach note, new evaluation): Firebase and a server hook.
+- Comments on notes (#25), automatic weather (#67).
+- Reset-password link in the mail that opens the app (issue #19), after the website and the signing key exist; it uses the same link mechanism as the invite links.
+
+## Milestone 5: skeleton detection (not started)
+
+Server-side MediaPipe worker, form metrics, player overlay (plan section 6). Needs milestone 2.
+
+## Milestone 6: release (last)
+
+- Google Play: developer account and app entry, upload keystore, signing config, release bundle, store listing (screenshots from the website's demo data, feature graphic, data-safety form), first manual upload, then internal and closed testing; a closed test with at least 12 testers for 14 days is needed before production for a new personal account.
+- CI that builds and uploads on a version tag (GitHub Actions, upload key in a protected environment, `develop`/`main` flow in `docs/releasing.md`).
+- Fingerprint of the signing key in `site/.well-known/assetlinks.json` so invite links open the app directly; Play and source links on the website.
+- iOS (TestFlight, App Store) once an iPhone tester exists, built on a macOS runner.

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList } from '@ionic/vue'
+import { IonList } from '@ionic/vue'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 
 import ErrorText from '@/components/ErrorText.vue'
+import SessionListItem from '@/components/SessionListItem.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
@@ -32,14 +33,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), rem
       <AppButton router-link="/training/new">{{ $t('training.start') }}</AppButton>
       <ErrorText :message="remote.error.value" />
       <IonList v-if="rows.length > 0" inset>
-        <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
-          <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(`sessionType.${row.type}`) }}{{ row.finished ? '' : ` (${$t('training.inProgress')})` }}</h3>
-            <p>
-              {{ row.location ? `${row.location} · ` : '' }}{{ $t('count.ends', row.ends) }} · {{ $t('count.arrows', row.arrows) }}{{ row.ends > 0 ? ` · ${$t('count.points', row.points)}` : '' }}
-            </p>
-          </IonLabel>
-        </IonItem>
+        <SessionListItem v-for="row in rows" :key="row.id" :row="row" />
       </IonList>
     </div>
   </AppPage>

@@ -205,7 +205,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.1.0",
+    "VERSION": "0.2.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",

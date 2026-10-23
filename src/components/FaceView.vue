@@ -12,7 +12,7 @@ const MAX_HEIGHT_PX = 380
 
 // The face with the arrows that have a position, and for each spot the centre and spread of its group. Read-only.
 // With `fill` it is drawn as large as fits the height its parent gives it, instead of at most MAX_HEIGHT_PX.
-const props = defineProps<{ face: Face; shots: LogShot[]; fill?: boolean }>()
+const props = defineProps<{ face: Face; shots: LogShot[]; fill?: boolean; numbers?: boolean }>()
 
 const box = ref<HTMLElement | null>(null)
 const boxSize = useElementSize(box)
@@ -25,7 +25,9 @@ const at = (spot: number, x: number, y: number) => {
   return { cx: s.x + x * scene.value.radius, cy: -(s.y + y * scene.value.radius) }
 }
 const plotted = computed(() => props.shots.flatMap((s) => (s.x === undefined || s.y === undefined ? [] : [{ ...s, x: s.x, y: s.y }])))
-const markers = computed<Marker[]>(() => plotted.value.map((s) => ({ ...at(s.spot ?? 0, s.x, s.y), selected: false })))
+const markers = computed<Marker[]>(() =>
+  plotted.value.map((s) => ({ ...at(s.spot ?? 0, s.x, s.y), selected: false, ...(props.numbers && s.arrow_number != null ? { label: String(s.arrow_number) } : {}) })),
+)
 const groups = computed<GroupMark[]>(() =>
   props.face.spots.flatMap((_, spot) => {
     const group = groupOf(plotted.value.filter((s) => (s.spot ?? 0) === spot))

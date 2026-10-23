@@ -98,6 +98,7 @@ async function remove() {
     </div>
     <AppButton secondary @click="makeCode">{{ claim ? $t('archer.newCode') : $t('archer.link') }}</AppButton>
     <AppButton secondary @click="askName">{{ $t('archer.rename') }}</AppButton>
+    <AppButton secondary :router-link="`/archers/${archerId}/details`">{{ $t('archer.editDetails') }}</AppButton>
     <AppButton secondary @click="confirmDelete ? remove() : (confirmDelete = true)">
       {{ confirmDelete ? $t('archer.deleteConfirm') : $t('archer.deleteProfile') }}
     </AppButton>

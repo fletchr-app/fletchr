@@ -180,3 +180,10 @@ def test_what_an_archer_took_over_from_a_profile_is_in_their_export(client_for, 
     d = doc(client_for, newcomer)
     assert len(d["sessions"]) == 1 and d["sessions"][0]["ends"][0]["shots"]
     assert sorted(n["body"] for n in d["notes_about_me"]) == ["for coaches", "shared note"]  # not what a coach keeps only for themselves
+
+
+def test_the_notes_on_a_session_are_in_the_export(client_for, club):
+    session = fill(club["archer1"])
+    TrainingSession.objects.filter(pk=session.pk).update(weather="rain", physical_rating=2, mental_rating=5, goals="Relax", notes="Cold hands")
+    [exported] = doc(client_for, club["archer1"])["sessions"]
+    assert (exported["weather"], exported["physical_rating"], exported["mental_rating"], exported["goals"], exported["notes"]) == ("rain", 2, 5, "Relax", "Cold hands")

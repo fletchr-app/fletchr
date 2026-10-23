@@ -2,11 +2,14 @@
 import { IonItem, IonLabel, IonList } from '@ionic/vue'
 
 import { getFace } from '@/lib/faces'
+import { useUnits } from '@/composables/useUnits'
+import { withNumber } from '@/lib/arrow-numbers'
 import { endTotal, type LogEnd, shotLabel, sortedShots } from '@/lib/log-model'
 
 const props = defineProps<{ ends: LogEnd[]; clickable?: boolean }>()
 defineEmits<{ select: [end: LogEnd] }>()
 
+const { formatDistance } = useUnits()
 const newestFirst = () => [...props.ends].reverse()
 </script>
 
@@ -22,8 +25,8 @@ const newestFirst = () => [...props.ends].reverse()
       @click="clickable && $emit('select', end)"
     >
       <IonLabel>
-        <h3>End {{ end.index + 1 }} · {{ sortedShots(end.shots).map(shotLabel).join(' ') }} = {{ endTotal(end) }}</h3>
-        <p>{{ end.distance_m }} m · {{ getFace(end.face)?.name ?? end.face }}</p>
+        <h3>End {{ end.index + 1 }} · {{ sortedShots(end.shots).map((s) => withNumber(shotLabel(s), s)).join(' ') }} = {{ endTotal(end) }}</h3>
+        <p>{{ formatDistance(end.distance_m) }} · {{ getFace(end.face)?.name ?? end.face }}</p>
       </IonLabel>
     </IonItem>
   </IonList>

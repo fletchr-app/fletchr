@@ -11,29 +11,24 @@ import { useAuth } from '@/composables/useAuth'
 import { emailFormError, passwordFormError } from '@/lib/account'
 import { errorMessage } from '@/lib/errors'
 
-// Name, email address (the login) and password of the account. Email and password need the current password.
+// The sign-in of the account: email address and password. Both need the current password.
 const { t } = useI18n()
 const { api, replaceTokens } = useAuth()
 
 const email = ref('')
-const name = ref('')
-const savedName = ref('')
 
 onIonViewWillEnter(async () => {
   try {
     const { data } = await api.GET('/api/me/')
-    if (data) {
-      email.value = data.email
-      name.value = savedName.value = data.profile.name ?? ''
-    }
+    if (data) email.value = data.email
   } catch {
-    // Offline: the form stays empty.
+    // Offline: the address stays empty.
   }
 })
 
 // One state per section, so a message sits under the form it belongs to.
 type Section = { busy: boolean; error: string | null; done: string | null }
-const sections = { name: ref<Section>(blank()), email: ref<Section>(blank()), password: ref<Section>(blank()) }
+const sections = { email: ref<Section>(blank()), password: ref<Section>(blank()) }
 function blank(): Section {
   return { busy: false, error: null, done: null }
 }
@@ -47,15 +42,6 @@ async function run(section: keyof typeof sections, work: () => Promise<string | 
     state.value = { busy: false, error: t('common.serverNotReachable'), done: null }
   }
 }
-
-const saveName = () =>
-  run('name', async () => {
-    if (name.value.trim() === savedName.value) return null
-    const { data, error } = await api.PATCH('/api/me/', { body: { profile: { name: name.value.trim() } } })
-    if (!data) return errorMessage(error)
-    savedName.value = name.value = data.profile.name ?? ''
-    return null
-  }, t('account.saved'))
 
 const newEmail = ref('')
 const emailPassword = ref('')
@@ -90,13 +76,7 @@ const changePassword = () =>
 <template>
   <AppPage :title="$t('account.title')">
     <div class="screen">
-      <h2 class="h5 m-0">{{ $t('account.name') }}</h2>
-      <FormField v-model="name" :label="$t('account.name')" capitalize="words" autocomplete="name" @enter="saveName" />
-      <ErrorText :message="sections.name.value.error" />
-      <div v-if="sections.name.value.done" class="fw-semibold">{{ sections.name.value.done }}</div>
-      <AppButton :busy="sections.name.value.busy" @click="saveName">{{ $t('account.saveName') }}</AppButton>
-
-      <h2 class="h5 mt-3 mb-0">{{ $t('account.email') }}</h2>
+      <h2 class="h5 m-0">{{ $t('account.email') }}</h2>
       <div class="muted">{{ $t('account.signInWith', { email: email || '…' }) }}</div>
       <FormField v-model="newEmail" :label="$t('account.newEmail')" type="email" inputmode="email" autocomplete="email" />
       <FormField v-model="emailPassword" :label="$t('account.currentPassword')" type="password" autocomplete="current-password" @enter="changeEmail" />

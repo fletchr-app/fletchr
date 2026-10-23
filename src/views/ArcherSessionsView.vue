@@ -33,6 +33,14 @@ const { data, error, loading } = useRemote(async () => (await api.GET('/api/sess
 
 const title = computed(() => info.data.value?.name || name || t('archer.defaultTitle'))
 const shownName = computed(() => info.data.value?.name || name || '')
+const side = (v: string) => (v === 'right' ? t('account.right') : v === 'left' ? t('account.left') : '')
+const profileLine = computed(() => {
+  const a = info.data.value
+  if (!a) return ''
+  return [a.dominant_hand && t('archer.handIs', { side: side(a.dominant_hand) }), a.dominant_eye && t('archer.eyeIs', { side: side(a.dominant_eye) }), a.age !== null && a.age !== undefined && t('archer.ageIs', { n: a.age })]
+    .filter(Boolean)
+    .join(' · ')
+})
 // Sessions the coach logged on this device (editable), then those the server has.
 const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? []))
 </script>
@@ -40,6 +48,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
 <template>
   <AppPage :title="title">
     <div class="screen">
+      <div v-if="profileLine" class="muted">{{ profileLine }}</div>
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
       <NotesSection :archer-id="Number(id)" />

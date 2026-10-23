@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 10:47+0200\n"
+"POT-Creation-Date: 2026-10-23 17:56+0200\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,7 +26,7 @@ msgstr "Ungültiger oder abgelaufener Einladungscode"
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:121
+#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:123
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
@@ -73,36 +73,40 @@ msgstr ""
 "Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein neues Passwort "
 "(Anmelden, dann Passwort vergessen?) und prüfe, wer sonst dein E-Mail-Passwort kennt."
 
-#: core/serializers.py:40
+#: core/serializers.py:12
+msgid "Enter a date of birth in the past"
+msgstr "Gib ein Geburtsdatum in der Vergangenheit ein"
+
+#: core/serializers.py:50
 msgid "An account with this email already exists"
 msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
 
-#: core/serializers.py:73
+#: core/serializers.py:83
 msgid "A team needs a name"
 msgstr "Ein Team braucht einen Namen"
 
-#: core/serializers.py:116
+#: core/serializers.py:126 core/serializers.py:141
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:148 privacy/serializers.py:19 privacy/serializers.py:64
+#: core/serializers.py:180 privacy/serializers.py:19 privacy/serializers.py:64
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:158
+#: core/serializers.py:190
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:172
+#: core/serializers.py:204
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
-#: core/views.py:241
+#: core/views.py:243
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:287
+#: core/views.py:289
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
@@ -130,15 +134,15 @@ msgstr "Nur Team-Admins können Einladungen verwalten"
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:458
+#: core/views.py:466
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:470
+#: core/views.py:478
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:482
+#: core/views.py:490
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 

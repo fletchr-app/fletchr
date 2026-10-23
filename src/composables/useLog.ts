@@ -14,6 +14,7 @@ import {
   type LogAction,
   type LogEnd,
   type LogState,
+  type SessionDetails,
   type LogVolume,
   reduce,
   type SessionType,
@@ -130,6 +131,7 @@ function startSession(type: SessionType, environment: Environment, location: str
 const actions = {
   startSession,
   refreshEquipment,
+  setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
     dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),

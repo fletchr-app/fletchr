@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
+import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import VolumeLog from '@/components/VolumeLog.vue'
@@ -64,7 +65,10 @@ function newEnd() {
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
-      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</RouterLink>
+      <div class="d-flex justify-content-center gap-4">
+        <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</RouterLink>
+        <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
+      </div>
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
@@ -79,6 +83,8 @@ function newEnd() {
       </div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
+      <SessionDetailsText :details="session.details" />
+      <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
       <VolumeLog :session="session" />
       <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

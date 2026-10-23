@@ -1,15 +1,25 @@
 from django.utils.translation import gettext
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import ClaimCode, Invite, Profile, Role, Team, TeamMember, User
+
+
+def check_birth_date(value):
+    if value is not None and (value > timezone.localdate() or value.year < 1900):
+        raise serializers.ValidationError(gettext("Enter a date of birth in the past"))
+    return value
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units"]
+
+    def validate_date_of_birth(self, value):
+        return check_birth_date(value)
 
 
 class MeSerializer(serializers.ModelSerializer):
@@ -117,6 +127,24 @@ class ArcherNameSerializer(serializers.Serializer):
         return value
 
 
+class ManagedArcherSerializer(serializers.Serializer):
+    """What a coach may change on the profile of an archer without an account."""
+
+    name = serializers.CharField(max_length=150, required=False)
+    dominant_hand = serializers.ChoiceField(choices=Profile.Hand.choices, required=False, allow_blank=True)
+    dominant_eye = serializers.ChoiceField(choices=Profile.Hand.choices, required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError(gettext("An archer needs a name"))
+        return value
+
+    def validate_date_of_birth(self, value):
+        return check_birth_date(value)
+
+
 class ClaimCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClaimCode
@@ -130,6 +158,10 @@ class ArcherSerializer(serializers.Serializer):
     managed = serializers.BooleanField(help_text="A profile kept by a coach, without an account")
     team_id = serializers.IntegerField(allow_null=True, help_text="A team you coach that the archer is in")
     team_name = serializers.CharField(allow_null=True)
+    dominant_hand = serializers.CharField(allow_blank=True)
+    dominant_eye = serializers.CharField(allow_blank=True)
+    age = serializers.IntegerField(allow_null=True, help_text="Whole years; the date of birth itself is private")
+    date_of_birth = serializers.DateField(allow_null=True, help_text="Only for a profile without an account, which the coach keeps")
 
 
 class CodePreviewSerializer(serializers.Serializer):

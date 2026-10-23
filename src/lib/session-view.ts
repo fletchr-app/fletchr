@@ -1,7 +1,7 @@
 // A session as shown on screen, whether it comes from this device or from the server. No React.
 import type { components } from './api-types.ts';
 import { groupOf, type Group } from './group.ts';
-import type { Gear, LogEnd, LogSession, LogShot } from './log-model.ts';
+import type { Gear, LogEnd, LogSession, LogShot, SessionDetails } from './log-model.ts';
 
 export type ViewSession = LogSession & { owner_name?: string; updated_at?: string };
 
@@ -20,8 +20,16 @@ function gearOf(info: ServerSession['setup_info']): Gear | null {
   };
 }
 
+/** The notes of a session from the server; null when nothing was written. */
+function detailsOf(s: ServerSession): SessionDetails | undefined {
+  const details = { weather: s.weather ?? '', physical_rating: s.physical_rating ?? null, mental_rating: s.mental_rating ?? null, goals: s.goals ?? '', notes: s.notes ?? '' };
+  const empty = !details.weather && details.physical_rating === null && details.mental_rating === null && !details.goals && !details.notes;
+  return empty ? undefined : details;
+}
+
 export function fromServer(s: ServerSession): ViewSession {
   return {
+    details: detailsOf(s),
     gear: gearOf(s.setup_info),
     id: s.id,
     owner_name: s.owner_name,
@@ -43,6 +51,7 @@ export function fromServer(s: ServerSession): ViewSession {
           value: shot.value ?? null,
           is_x: shot.is_x ?? false,
           is_miss: shot.is_miss ?? false,
+          ...(shot.arrow_number != null ? { arrow_number: shot.arrow_number } : {}),
           ...(shot.x != null && shot.y != null ? { x: shot.x, y: shot.y, spot: shot.spot ?? 0 } : {}),
         }),
       ),

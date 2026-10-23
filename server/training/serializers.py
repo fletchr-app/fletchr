@@ -25,7 +25,7 @@ class ShotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shot
         fields = ["id", "spot", "x", "y", "value", "is_x", "is_miss", "is_manual", "arrow_number"]
-        extra_kwargs = {"is_manual": {"read_only": True}}
+        extra_kwargs = {"is_manual": {"read_only": True}, "arrow_number": {"min_value": 1, "max_value": 99}}
         validators = []
 
     def validate(self, attrs):

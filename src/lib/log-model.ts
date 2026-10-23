@@ -16,6 +16,8 @@ export type LogShot = {
   x?: number;
   y?: number;
   spot?: number;
+  /** Which of the numbered arrows it was, when the archer numbers them. */
+  arrow_number?: number;
 };
 export type LogEnd = { id: string; index: number; distance_m: string; face: string; arrows_per_end: number; shots: LogShot[] };
 export type LogVolume = { id: string; distance_m: string; arrow_count: number };
@@ -31,8 +33,11 @@ export type Gear = {
 
 /** A copy of your active equipment from the last time the app was online, so a session can start without a connection. */
 export type CachedBow = { id: number; name: string; type: string; revision: number; revision_number: number };
-export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number };
+export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number; count: number | null };
 export type Equipment = { bows: CachedBow[]; arrowSets: CachedArrowSet[] };
+
+/** What the archer notes about a session (weather as written by `encodeWeather`, ratings 1 to 5). */
+export type SessionDetails = { weather: string; physical_rating: number | null; mental_rating: number | null; goals: string; notes: string };
 
 export type LogSession = {
   id: string;
@@ -45,6 +50,8 @@ export type LogSession = {
   volume: LogVolume[];
   /** Left out when no choice was made, so uploading it does not clear what the server has. */
   gear?: Gear | null;
+  /** Left out until the archer fills it in, so uploading the session does not clear anything on the server. */
+  details?: SessionDetails;
   /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
   owner?: number;
   owner_name?: string;
@@ -71,7 +78,7 @@ export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equip
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details'>> }
   | { type: 'setEquipment'; equipment: Equipment }
   | { type: 'reset' }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }

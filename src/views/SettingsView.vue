@@ -10,6 +10,8 @@ import { useCreateTeam } from '@/composables/useCreateTeam'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useServer } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
+import { useUnits } from '@/composables/useUnits'
+import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
@@ -19,6 +21,8 @@ const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
 const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
+const { units, saveUnits } = useUnits()
+const UNITS: Units[] = ['metric', 'imperial']
 
 const THEMES: ThemeMode[] = ['system', 'light', 'dark']
 const LANGUAGES: { value: LanguageMode; key: string }[] = [
@@ -44,7 +48,8 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       <ErrorText :message="creating.error.value" />
       <IonList inset>
         <IonListHeader>{{ $t('settings.account') }}</IonListHeader>
-        <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.accountRow') }}</IonLabel></IonItem>
+        <IonItem router-link="/profile" detail lines="full"><IonLabel>{{ $t('settings.profileRow') }}</IonLabel></IonItem>
+        <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.signInRow') }}</IonLabel></IonItem>
         <IonItem router-link="/privacy" detail lines="none"><IonLabel>{{ $t('settings.yourData') }}</IonLabel></IonItem>
       </IonList>
 
@@ -58,6 +63,11 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         <IonItem lines="full">
           <IonSelect :value="language" :label="$t('settings.language')" interface="action-sheet" @ion-change="setLanguage($event.detail.value)">
             <IonSelectOption v-for="l in LANGUAGES" :key="l.value" :value="l.value">{{ $t(`settings.${l.key}`) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+        <IonItem lines="full">
+          <IonSelect :value="units" :label="$t('settings.units')" interface="action-sheet" @ion-change="saveUnits($event.detail.value)">
+            <IonSelectOption v-for="u in UNITS" :key="u" :value="u">{{ $t(`settings.units${u === 'metric' ? 'Metric' : 'Imperial'}`) }}</IonSelectOption>
           </IonSelect>
         </IonItem>
         <IonItem router-link="/settings/server" detail lines="full">
