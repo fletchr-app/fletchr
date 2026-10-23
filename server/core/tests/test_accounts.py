@@ -10,7 +10,14 @@ REGISTER = {"email": "New@Example.com", "password": "correct-horse-battery", "na
 
 
 def test_health_is_public(client_for):
-    assert client_for().get("/api/health/").status_code == 200
+    res = client_for().get("/api/health/")
+    assert res.status_code == 200 and res.data["status"] == "ok"
+
+
+def test_health_says_the_server_version(client_for):
+    from django.conf import settings
+
+    assert client_for().get("/api/health/").data["version"] == settings.SPECTACULAR_SETTINGS["VERSION"]
 
 
 def test_register_with_invite_joins_team_with_invite_role(client_for, club, invite):

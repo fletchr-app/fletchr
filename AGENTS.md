@@ -35,6 +35,6 @@ Run `type-check` and `test` before declaring a task done.
 
 ## Rules
 
-- Never commit or push unless asked.
+- Never commit or push unless asked. Work goes on the `develop` branch; `main` is for releases only (merge, tag `vX.Y.Z`). See `docs/releasing.md`, also for the version number (`package.json`, `server/pyproject.toml` and the API schema version must match).
 - Capacitor plugins are native: after `npm install @capacitor/...` run `npx cap sync android` and rebuild the APK.
 - The app on the phone is served from `https://localhost`: the server's `DJANGO_CORS_ORIGINS` must contain it (see README).

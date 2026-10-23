@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
@@ -41,11 +42,11 @@ from .serializers import (
 )
 
 
-@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField()}))
+@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField()}))
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
-    return Response({"status": "ok"})
+    return Response({"status": "ok", "version": settings.SPECTACULAR_SETTINGS["VERSION"]})
 
 
 class RegisterView(APIView):
