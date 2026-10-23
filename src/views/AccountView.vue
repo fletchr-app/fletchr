@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onIonViewWillEnter } from '@ionic/vue'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
@@ -11,6 +12,7 @@ import { emailFormError, passwordFormError } from '@/lib/account'
 import { errorMessage } from '@/lib/errors'
 
 // Name, email address (the login) and password of the account. Email and password need the current password.
+const { t } = useI18n()
 const { api, replaceTokens } = useAuth()
 
 const email = ref('')
@@ -42,7 +44,7 @@ async function run(section: keyof typeof sections, work: () => Promise<string | 
     const failure = await work()
     state.value = failure ? { busy: false, error: failure, done: null } : { busy: false, error: null, done }
   } catch {
-    state.value = { busy: false, error: 'Server not reachable', done: null }
+    state.value = { busy: false, error: t('common.serverNotReachable'), done: null }
   }
 }
 
@@ -53,20 +55,20 @@ const saveName = () =>
     if (!data) return errorMessage(error)
     savedName.value = name.value = data.profile.name ?? ''
     return null
-  }, 'Saved.')
+  }, t('account.saved'))
 
 const newEmail = ref('')
 const emailPassword = ref('')
 const changeEmail = () =>
   run('email', async () => {
     const problem = emailFormError(emailPassword.value, newEmail.value, email.value)
-    if (problem) return problem
+    if (problem) return t(problem.key, problem.params ?? {})
     const { data, error } = await api.POST('/api/me/email/', { body: { current_password: emailPassword.value, new_email: newEmail.value.trim() } })
     if (!data) return errorMessage(error)
     email.value = data.email
     newEmail.value = emailPassword.value = ''
     return null
-  }, 'Your sign-in address is changed.')
+  }, t('account.emailChanged'))
 
 const currentPassword = ref('')
 const newPassword = ref('')
@@ -74,7 +76,7 @@ const repeatPassword = ref('')
 const changePassword = () =>
   run('password', async () => {
     const problem = passwordFormError(currentPassword.value, newPassword.value, repeatPassword.value)
-    if (problem) return problem
+    if (problem) return t(problem.key, problem.params ?? {})
     const { data, error } = await api.POST('/api/me/password/', {
       body: { current_password: currentPassword.value, new_password: newPassword.value },
     })
@@ -82,33 +84,33 @@ const changePassword = () =>
     replaceTokens(data) // this device stays signed in; the others are signed out
     currentPassword.value = newPassword.value = repeatPassword.value = ''
     return null
-  }, 'Your password is changed. Other devices are signed out.')
+  }, t('account.passwordChanged'))
 </script>
 
 <template>
-  <AppPage title="Account">
+  <AppPage :title="$t('account.title')">
     <div class="screen">
-      <h2 class="h5 m-0">Name</h2>
-      <FormField v-model="name" label="Name" capitalize="words" autocomplete="name" @enter="saveName" />
+      <h2 class="h5 m-0">{{ $t('account.name') }}</h2>
+      <FormField v-model="name" :label="$t('account.name')" capitalize="words" autocomplete="name" @enter="saveName" />
       <ErrorText :message="sections.name.value.error" />
       <div v-if="sections.name.value.done" class="fw-semibold">{{ sections.name.value.done }}</div>
-      <AppButton :busy="sections.name.value.busy" @click="saveName">Save name</AppButton>
+      <AppButton :busy="sections.name.value.busy" @click="saveName">{{ $t('account.saveName') }}</AppButton>
 
-      <h2 class="h5 mt-3 mb-0">Email address</h2>
-      <div class="muted">You sign in with {{ email || '…' }}.</div>
-      <FormField v-model="newEmail" label="New email address" type="email" inputmode="email" autocomplete="email" />
-      <FormField v-model="emailPassword" label="Your current password" type="password" autocomplete="current-password" @enter="changeEmail" />
+      <h2 class="h5 mt-3 mb-0">{{ $t('account.email') }}</h2>
+      <div class="muted">{{ $t('account.signInWith', { email: email || '…' }) }}</div>
+      <FormField v-model="newEmail" :label="$t('account.newEmail')" type="email" inputmode="email" autocomplete="email" />
+      <FormField v-model="emailPassword" :label="$t('account.currentPassword')" type="password" autocomplete="current-password" @enter="changeEmail" />
       <ErrorText :message="sections.email.value.error" />
       <div v-if="sections.email.value.done" class="fw-semibold">{{ sections.email.value.done }}</div>
-      <AppButton :busy="sections.email.value.busy" @click="changeEmail">Change email address</AppButton>
+      <AppButton :busy="sections.email.value.busy" @click="changeEmail">{{ $t('account.changeEmail') }}</AppButton>
 
-      <h2 class="h5 mt-3 mb-0">Password</h2>
-      <FormField v-model="currentPassword" label="Current password" type="password" autocomplete="current-password" />
-      <FormField v-model="newPassword" label="New password" type="password" autocomplete="new-password" />
-      <FormField v-model="repeatPassword" label="New password again" type="password" autocomplete="new-password" @enter="changePassword" />
+      <h2 class="h5 mt-3 mb-0">{{ $t('account.password') }}</h2>
+      <FormField v-model="currentPassword" :label="$t('account.current')" type="password" autocomplete="current-password" />
+      <FormField v-model="newPassword" :label="$t('account.new')" type="password" autocomplete="new-password" />
+      <FormField v-model="repeatPassword" :label="$t('account.repeat')" type="password" autocomplete="new-password" @enter="changePassword" />
       <ErrorText :message="sections.password.value.error" />
       <div v-if="sections.password.value.done" class="fw-semibold">{{ sections.password.value.done }}</div>
-      <AppButton :busy="sections.password.value.busy" @click="changePassword">Change password</AppButton>
+      <AppButton :busy="sections.password.value.busy" @click="changePassword">{{ $t('account.changePassword') }}</AppButton>
     </div>
   </AppPage>
 </template>

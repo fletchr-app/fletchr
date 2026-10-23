@@ -1,5 +1,6 @@
 """Who may see what. Every endpoint that returns team or archer data goes through here."""
 
+from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -64,9 +65,9 @@ def redeem_invite(code, user):
     """Add `user` to the invite's team. The same error for every failure, so codes can't be probed."""
     invite = Invite.objects.select_for_update().filter(code=normalize_code(code)).first()
     if invite is None or not invite.is_usable:
-        raise InviteError("Invalid or expired invite code")
+        raise InviteError(gettext("Invalid or expired invite code"))
     if TeamMember.objects.filter(team=invite.team, user=user).exists():
-        raise InviteError("You are already a member of this team")
+        raise InviteError(gettext("You are already a member of this team"))
     TeamMember.objects.create(team=invite.team, user=user, role=invite.role)
     invite.used_by = user
     invite.used_at = timezone.now()

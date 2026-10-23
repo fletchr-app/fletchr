@@ -26,8 +26,8 @@ function done() {
 </script>
 
 <template>
-  <AppPage title="Arrows" fixed>
-    <div v-if="!session" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+  <AppPage :title="$t('session.arrows')" fixed>
+    <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <EndEditor
       v-else
       :session="session"

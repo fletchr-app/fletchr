@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IonButton } from '@ionic/vue'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -13,11 +14,12 @@ import { errorMessage } from '@/lib/errors'
 
 type Note = components['schemas']['Note']
 type Visibility = 'private' | 'coach_only' | 'shared'
-const VISIBILITY: { value: Visibility; label: string }[] = [
-  { value: 'private', label: 'Only me' },
-  { value: 'coach_only', label: 'Coach only' },
-  { value: 'shared', label: 'Shared with the archer' },
-]
+const { t } = useI18n()
+const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
+  { value: 'private', label: t('notes.private') },
+  { value: 'coach_only', label: t('notes.coachOnly') },
+  { value: 'shared', label: t('notes.shared') },
+])
 
 const props = defineProps<{ note: Note; ends: { id: string; index: number }[] }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -39,7 +41,7 @@ async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
       emit('changed')
     } else error.value = errorMessage(result.error)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 const save = () =>
@@ -57,21 +59,21 @@ const remove = () =>
 <template>
   <div class="d-flex flex-column gap-1 py-1">
     <div class="muted">
-      {{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }} · {{ note.visibility === 'shared' ? 'shared' : note.visibility === 'private' ? 'only me' : 'coach only'
-      }}{{ endIndex !== undefined ? ` · end ${endIndex + 1}` : '' }}
+      {{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }} · {{ note.visibility === 'shared' ? $t('notes.labelShared') : note.visibility === 'private' ? $t('notes.labelPrivate') : $t('notes.labelCoachOnly')
+      }}{{ endIndex !== undefined ? ` · ${$t('notes.labelEnd', { n: endIndex + 1 })}` : '' }}
     </div>
     <template v-if="editing">
-      <FormField v-model="body" label="Note" multiline capitalize="sentences" />
-      <ChipGroup v-model="visibility" label="Who can read it" :options="VISIBILITY" />
-      <AppButton @click="save">Save</AppButton>
-      <AppButton secondary @click="editing = false">Cancel</AppButton>
+      <FormField v-model="body" :label="$t('notes.note')" multiline capitalize="sentences" />
+      <ChipGroup v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
+      <AppButton @click="save">{{ $t('common.save') }}</AppButton>
+      <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>
     <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
-    <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">About a session</RouterLink>
+    <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
     <ErrorText :message="error" />
     <div v-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">
-      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="editing = true">Edit</IonButton>
-      <IonButton v-if="note.can_delete" fill="clear" size="small" class="m-0" @click="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? 'Tap again to delete' : 'Delete' }}</IonButton>
+      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="editing = true">{{ $t('notes.edit') }}</IonButton>
+      <IonButton v-if="note.can_delete" fill="clear" size="small" class="m-0" @click="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? $t('notes.deleteConfirm') : $t('common.delete') }}</IonButton>
     </div>
   </div>
 </template>

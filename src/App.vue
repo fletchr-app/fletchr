@@ -44,23 +44,23 @@ const showTabs = computed(() => route.meta.tab === true && status.value === 'sig
       <IonTabBar slot="bottom" :style="{ display: showTabs ? undefined : 'none' }">
         <IonTabButton tab="home" href="/">
           <IonIcon :icon="home" />
-          <IonLabel>Home</IonLabel>
+          <IonLabel>{{ $t('tabs.home') }}</IonLabel>
         </IonTabButton>
         <IonTabButton tab="training" href="/training">
           <IonIcon :icon="listCircle" />
-          <IonLabel>Training</IonLabel>
+          <IonLabel>{{ $t('tabs.training') }}</IonLabel>
         </IonTabButton>
         <IonTabButton tab="stats" href="/stats">
           <IonIcon :icon="statsChart" />
-          <IonLabel>Statistics</IonLabel>
+          <IonLabel>{{ $t('tabs.statistics') }}</IonLabel>
         </IonTabButton>
         <IonTabButton v-if="isCoach" tab="team" href="/team">
           <IonIcon :icon="people" />
-          <IonLabel>Team</IonLabel>
+          <IonLabel>{{ $t('tabs.team') }}</IonLabel>
         </IonTabButton>
         <IonTabButton tab="settings" href="/settings">
           <IonIcon :icon="settings" />
-          <IonLabel>Settings</IonLabel>
+          <IonLabel>{{ $t('tabs.settings') }}</IonLabel>
         </IonTabButton>
       </IonTabBar>
     </IonTabs>

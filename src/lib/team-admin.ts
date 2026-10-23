@@ -1,31 +1,18 @@
 // Wording and ordering for the team admin screens. No React, so it is tested with `npm test`.
 
-import { formatCode } from './codes.ts';
-
 export type TeamRole = 'archer' | 'coach' | 'admin';
-export const TEAM_ROLES: { value: TeamRole; label: string }[] = [
-  { value: 'archer', label: 'Archer' },
-  { value: 'coach', label: 'Coach' },
-  { value: 'admin', label: 'Admin' },
-];
-export const roleLabel = (role: string) => TEAM_ROLES.find((r) => r.value === role)?.label ?? role;
+export const TEAM_ROLES: TeamRole[] = ['archer', 'coach', 'admin'];
 
 /**
- * What a role change means for who can see whose training, to show before it is confirmed.
- * Coaches and admins read the training of archers; a coach's own training is private unless they opt in.
+ * What a role change means for who can see whose training, to show before it is confirmed: the key of the
+ * text (roleChange.*), or null when nothing changes. Coaches and admins read the training of archers; a
+ * coach's own training is private unless they opt in.
  */
 export function roleChangeWarning(from: TeamRole, to: TeamRole): string | null {
   if (from === to) return null;
-  if (to === 'archer') {
-    return 'As an archer their sessions, equipment and statistics become visible to the coaches of this team, and they can no longer see other archers.';
-  }
-  if (from === 'archer') {
-    return 'As a coach they can see the archers of this team. Their own sessions stop being visible to the other coaches, unless they turn on "also shoots" on the Team screen.' +
-      (to === 'admin' ? ' Admins can also manage members and invites.' : '');
-  }
-  return to === 'admin'
-    ? 'Admins can also change roles, remove members and manage invites.'
-    : 'They will no longer be able to change roles, remove members or manage invites.';
+  if (to === 'archer') return 'roleChange.toArcher';
+  if (from === 'archer') return to === 'admin' ? 'roleChange.archerToAdmin' : 'roleChange.archerToCoach';
+  return to === 'admin' ? 'roleChange.coachToAdmin' : 'roleChange.adminToCoach';
 }
 
 const rank: Record<string, number> = { admin: 0, coach: 1, archer: 2 };
@@ -39,14 +26,7 @@ export function sortMembers<T extends { role: string; name: string; email: strin
   );
 }
 
-/** The text to send someone an invite with. */
-export function inviteMessage(teamName: string, code: string, expiresAt: string, locale?: string): string {
-  const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  return `Join ${teamName} on Fletchr: open the app, tap "I have an invite code" and enter ${formatCode(code)}. The code works until ${until}.`;
-}
-
-/** The text to send an archer with, to take over the profile their coach keeps for them. */
-export function claimMessage(teamName: string, code: string, expiresAt: string, locale?: string): string {
-  const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  return `Your coach in ${teamName} keeps your training notes on Fletchr. To take them over, open the app, tap "I have an invite code" and enter ${formatCode(code)}. If you already have an account, use Settings, "Join a team". The code works until ${until}.`;
+/** The day a code stops working, as the reader's language writes it (for the share texts). */
+export function untilDate(expiresAt: string, locale?: string): string {
+  return new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 }

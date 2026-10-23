@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from rest_framework import serializers
 
 
@@ -10,12 +11,12 @@ class ConfirmedRequestSerializer(serializers.Serializer):
 
     def validate_confirm(self, value):
         if value.strip() != self.confirmation_word:
-            raise serializers.ValidationError(f'Type the words "{self.confirmation_word}" to confirm')
+            raise serializers.ValidationError(gettext('Type the words "%(word)s" to confirm') % {"word": self.confirmation_word})
         return value
 
     def validate_password(self, value):
         if not self.context["request"].user.check_password(value):
-            raise serializers.ValidationError("Wrong password")
+            raise serializers.ValidationError(gettext("Wrong password"))
         return value
 
 
@@ -60,5 +61,5 @@ class ExportRequestSerializer(serializers.Serializer):
 
     def validate_password(self, value):
         if not self.context["request"].user.check_password(value):
-            raise serializers.ValidationError("Wrong password")
+            raise serializers.ValidationError(gettext("Wrong password"))
         return value

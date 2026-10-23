@@ -8,16 +8,11 @@ const { waiting, failed, retryFailed, discardFailed } = useLog()
 <!-- Shows what has not reached the server yet. Nothing is lost while it waits: it is all saved on the device. -->
 <template>
   <div v-if="waiting > 0 || failed.length > 0" class="d-flex flex-column gap-2 p-3 rounded border">
-    <div v-if="waiting > 0">
-      {{ waiting }} {{ waiting === 1 ? 'item is' : 'items are' }} waiting to upload. Saved on this device, they go up when there is a
-      connection.
-    </div>
+    <div v-if="waiting > 0">{{ $t('sync.waiting', { n: waiting }, waiting) }}</div>
     <template v-if="failed.length > 0">
-      <div class="text-danger">
-        {{ failed.length }} {{ failed.length === 1 ? 'item was' : 'items were' }} refused by the server: {{ failed[0]!.error }}
-      </div>
-      <AppButton secondary @click="retryFailed">Try again</AppButton>
-      <AppButton secondary @click="discardFailed">Give up on these uploads</AppButton>
+      <div class="text-danger">{{ $t('sync.failed', { n: failed.length, error: failed[0]!.error }, failed.length) }}</div>
+      <AppButton secondary @click="retryFailed">{{ $t('common.tryAgain') }}</AppButton>
+      <AppButton secondary @click="discardFailed">{{ $t('sync.giveUp') }}</AppButton>
     </template>
   </div>
 </template>

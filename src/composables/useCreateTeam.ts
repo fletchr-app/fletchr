@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
+import { t } from '@/i18n'
 import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
@@ -23,18 +24,18 @@ export function useCreateTeam() {
       }
       else error.value = errorMessage(failure)
     } catch {
-      error.value = 'Server not reachable'
+      error.value = t('common.serverNotReachable')
     }
   }
 
   async function ask() {
     const alert = await alertController.create({
-      header: 'Create a team',
-      message: 'You become its admin. Then invite archers and coaches, or add archers who have no account yet.',
-      inputs: [{ name: 'name', type: 'text', placeholder: 'Team name', attributes: { autocapitalize: 'words' } }],
+      header: t('createTeam.header'),
+      message: t('createTeam.message'),
+      inputs: [{ name: 'name', type: 'text', placeholder: t('createTeam.placeholder'), attributes: { autocapitalize: 'words' } }],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Create', handler: (value: { name?: string }) => !!value.name?.trim() && void create(value.name.trim()) },
+        { text: t('common.cancel'), role: 'cancel' },
+        { text: t('createTeam.create'), handler: (value: { name?: string }) => !!value.name?.trim() && void create(value.name.trim()) },
       ],
     })
     await alert.present()

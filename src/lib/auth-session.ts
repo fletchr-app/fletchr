@@ -18,7 +18,10 @@ export class AuthSession {
   private listeners = new Set<() => void>();
   private refreshing: Promise<string | null> | null = null;
 
-  constructor(readonly url: string) {
+  constructor(
+    readonly url: string,
+    language: () => string = () => 'en',
+  ) {
     this.api = createClient<paths>({ baseUrl: url });
     const auth: Middleware = {
       onRequest: async ({ request, schemaPath }) => {
@@ -28,6 +31,14 @@ export class AuthSession {
         return request;
       },
     };
+    // The server answers in the app's language (error messages).
+    const lang: Middleware = {
+      onRequest: ({ request }) => {
+        request.headers.set('Accept-Language', language());
+        return request;
+      },
+    };
+    this.api.use(lang);
     this.api.use(auth);
     void loadTokens(url).then((tokens) => this.update({ loaded: true, tokens }, false));
   }

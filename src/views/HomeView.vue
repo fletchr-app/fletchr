@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList, IonListHeader, IonNote, onIonViewWillEnter } from '@ionic/vue'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -13,6 +14,7 @@ type Me = components['schemas']['Me']
 
 const { api } = useAuth()
 const me = ref<Me | null>(null)
+const { t } = useI18n()
 const { teams, loaded, load } = useTeams()
 const error = ref<string | null>(null)
 
@@ -23,24 +25,24 @@ onIonViewWillEnter(() => {
   return Promise.all([api.GET('/api/me/'), load()])
     .then(([meRes]) => {
       if (meRes.data) me.value = meRes.data
-      error.value = meRes.data ? null : 'Could not load your data'
+      error.value = meRes.data ? null : t('common.couldNotLoadData')
     })
-    .catch(() => (error.value = 'Server not reachable'))
+    .catch(() => (error.value = t('common.serverNotReachable')))
 })
 </script>
 
 <template>
   <AppPage title="Fletchr" :back="false">
     <div class="screen">
-      <h2 class="h4 m-0">{{ me ? `Hello ${me.profile.name || me.email}` : 'Fletchr' }}</h2>
+      <h2 class="h4 m-0">{{ me ? $t('home.hello', { name: me.profile.name || me.email }) : 'Fletchr' }}</h2>
       <ErrorText :message="error" />
       <LatestNotes v-if="me" :user-id="me.id" :refresh="shown" />
-      <div v-if="loaded && teams.length === 0">You are not in a team yet. Under Settings you can join one with an invite code, or create your own.</div>
+      <div v-if="loaded && teams.length === 0">{{ $t('home.noTeam') }}</div>
       <IonList v-if="teams.length > 0" inset>
-        <IonListHeader>Your teams</IonListHeader>
+        <IonListHeader>{{ $t('home.yourTeams') }}</IonListHeader>
         <IonItem v-for="team in teams" :key="team.id" :router-link="`/team/${team.id}`" detail lines="full">
           <IonLabel>{{ team.name }}</IonLabel>
-          <IonNote slot="end">{{ team.my_role }}</IonNote>
+          <IonNote slot="end">{{ $t(`roles.${team.my_role}`) }}</IonNote>
         </IonItem>
       </IonList>
     </div>

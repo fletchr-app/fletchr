@@ -6,7 +6,7 @@ import ExportData from '@/components/privacy/ExportData.vue'
 </script>
 
 <template>
-  <AppPage title="Your data">
+  <AppPage :title="$t('privacy.title')">
     <div class="screen">
       <ExportData />
       <DeleteData />

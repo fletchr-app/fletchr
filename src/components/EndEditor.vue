@@ -2,6 +2,7 @@
 import { IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue'
 import { backspaceOutline, trashOutline } from 'ionicons/icons'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -17,6 +18,7 @@ import { newId } from '@/lib/uuid'
 const props = defineProps<{ session: LogSession; editing: LogEnd | null; distance: string; face: string; arrows: number }>()
 const emit = defineEmits<{ done: [] }>()
 
+const { t } = useI18n()
 const { saveEnd, deleteEnd } = useLog()
 
 const start = props.editing ?? { index: nextEndDefaults(props.session).index, id: newId() }
@@ -32,7 +34,7 @@ const keypad = computed(() => keypadFor(face.value))
 const total = computed(() => endTotal({ ...start, distance_m: props.distance, face: face.value.slug, arrows_per_end: props.arrows, shots: shots.value }))
 
 function save() {
-  if (shots.value.length === 0) return (error.value = 'Enter at least one arrow')
+  if (shots.value.length === 0) return (error.value = t('end.enterOne'))
   saveEnd(props.session.id, {
     id: start.id,
     index: start.index,
@@ -59,12 +61,12 @@ function remove() {
   <div class="entry">
     <div class="d-flex align-items-center gap-2">
       <div class="flex-grow-1 text-truncate">
-        <span class="fw-semibold">End {{ start.index + 1 }}</span>
+        <span class="fw-semibold">{{ $t('end.number', { n: start.index + 1 }) }}</span>
         <span class="muted"> · {{ distance }} m · {{ face.name }}</span>
       </div>
-      <IonSegment v-model="mode" style="width: 160px; flex: none" aria-label="Enter arrows by">
-        <IonSegmentButton value="plot">Touch</IonSegmentButton>
-        <IonSegmentButton value="pad">Type</IonSegmentButton>
+      <IonSegment v-model="mode" style="width: 160px; flex: none" :aria-label="$t('end.enterBy')">
+        <IonSegmentButton value="plot">{{ $t('end.touch') }}</IonSegmentButton>
+        <IonSegmentButton value="pad">{{ $t('end.type') }}</IonSegmentButton>
       </IonSegment>
     </div>
 
@@ -87,7 +89,7 @@ function remove() {
         type="button"
         class="key outline ms-auto"
         style="width: 44px; height: 44px"
-        aria-label="Delete the selected arrow"
+        :aria-label="$t('end.deleteSelected')"
         @click="deleteSelected"
       >
         <IonIcon :icon="trashOutline" />
@@ -96,7 +98,7 @@ function remove() {
 
     <TargetPlot v-if="mode === 'plot'" :face="face" :shots="shots" :max="arrows" :selected-id="selectedId" @change="shots = $event" />
     <div v-else class="d-flex flex-wrap gap-2 align-content-start" style="flex: 1 1 0; min-height: 0">
-      <div v-if="keypad.length === 0" class="muted">This face has no scores to type. Place the arrows on it instead.</div>
+      <div v-if="keypad.length === 0" class="muted">{{ $t('end.noKeys') }}</div>
       <button
         v-for="key in keypad"
         :key="key.label"
@@ -108,7 +110,7 @@ function remove() {
       >
         {{ key.label }}
       </button>
-      <button type="button" class="key outline" style="width: 56px; height: 56px" aria-label="Remove the last arrow" @click="shots = shots.slice(0, -1)">
+      <button type="button" class="key outline" style="width: 56px; height: 56px" :aria-label="$t('end.removeLast')" @click="shots = shots.slice(0, -1)">
         <IonIcon :icon="backspaceOutline" />
       </button>
     </div>
@@ -116,10 +118,10 @@ function remove() {
     <ErrorText :message="error" />
     <div class="d-flex gap-2">
       <template v-if="editing">
-        <AppButton secondary @click="emit('done')">Cancel</AppButton>
-        <AppButton secondary @click="remove">Delete</AppButton>
+        <AppButton secondary @click="emit('done')">{{ $t('common.cancel') }}</AppButton>
+        <AppButton secondary @click="remove">{{ $t('common.delete') }}</AppButton>
       </template>
-      <AppButton @click="save">{{ editing ? 'Save end' : 'Confirm end' }}</AppButton>
+      <AppButton @click="save">{{ editing ? $t('end.saveEnd') : $t('end.confirm') }}</AppButton>
     </div>
   </div>
 </template>

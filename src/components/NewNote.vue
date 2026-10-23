@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
@@ -9,11 +10,12 @@ import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 
 type Visibility = 'private' | 'coach_only' | 'shared'
-const VISIBILITY: { value: Visibility; label: string }[] = [
-  { value: 'private', label: 'Only me' },
-  { value: 'coach_only', label: 'Coach only' },
-  { value: 'shared', label: 'Shared with the archer' },
-]
+const { t } = useI18n()
+const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
+  { value: 'private', label: t('notes.private') },
+  { value: 'coach_only', label: t('notes.coachOnly') },
+  { value: 'shared', label: t('notes.shared') },
+])
 
 const props = defineProps<{
   archerId: number
@@ -51,7 +53,7 @@ async function add() {
       emit('added')
     } else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
   busy.value = false
 }
@@ -59,16 +61,16 @@ async function add() {
 
 <template>
   <div class="d-flex flex-column gap-2">
-    <FormField v-model="body" label="New note" multiline capitalize="sentences" />
-    <ChipGroup v-model="visibility" label="Who can read it" :options="VISIBILITY" />
+    <FormField v-model="body" :label="$t('notes.newNote')" multiline capitalize="sentences" />
+    <ChipGroup v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
     <ChipGroup
       v-if="ends.length > 0"
       v-model="endId"
-      label="About"
-      :options="[{ value: '', label: 'Whole session' }, ...ends.map((e) => ({ value: e.id, label: `End ${e.index + 1}` }))]"
+      :label="$t('notes.about')"
+      :options="[{ value: '', label: $t('notes.wholeSession') }, ...ends.map((e) => ({ value: e.id, label: $t('notes.end', { n: e.index + 1 }) }))]"
     />
-    <ChipGroup v-if="teams.length > 1" v-model="teamId" label="Team" :options="teams.map((t) => ({ value: String(t.id), label: t.name }))" />
+    <ChipGroup v-if="teams.length > 1" v-model="teamId" :label="$t('notes.team')" :options="teams.map((x) => ({ value: String(x.id), label: x.name }))" />
     <ErrorText :message="error" />
-    <AppButton :busy="busy" @click="add">Add note</AppButton>
+    <AppButton :busy="busy" @click="add">{{ $t('notes.add') }}</AppButton>
   </div>
 </template>

@@ -22,7 +22,7 @@ const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params
 
 <template>
   <div v-if="notes.data.value?.length || teams.data.value?.length" class="d-flex flex-column gap-3">
-    <h2 class="h5 m-0">Coach notes</h2>
+    <h2 class="h5 m-0">{{ $t('notes.coachNotes') }}</h2>
     <ErrorText :message="notes.error.value" />
     <NewNote
       v-if="teams.data.value && teams.data.value.length > 0"

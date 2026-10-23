@@ -28,4 +28,7 @@ test('the sight hint says which way the centre is off, in cm of the real spot', 
   assert.equal(describeCentre(group(0.5, -0.25), 10), '5.0 cm right, 2.5 cm low');
   assert.equal(describeCentre(group(0, 0.1), 20), '2.0 cm high');
   assert.equal(describeCentre(group(0.001, -0.001), 20), 'in the middle');
+  const de = { left: 'links', right: 'rechts', low: 'tief', high: 'hoch', middle: 'in der Mitte' };
+  assert.equal(describeCentre(group(-0.105, 0.04), 20, de), '2.1 cm links, 0.8 cm hoch');
+  assert.equal(describeCentre(group(0, 0), 20, de), 'in der Mitte');
 });

@@ -23,19 +23,12 @@ async function erase() {
 
 <template>
   <div class="d-flex flex-column gap-3 mt-4">
-    <h2 class="h5 m-0">Delete my account</h2>
-    <p class="m-0">
-      This erases everything above and also your account: your login, your profile and your membership of every team. You are signed out
-      and cannot sign in again. The teams carry on without you, a team you are alone in is deleted, and notes you wrote about other
-      archers stay, shown as written by a former coach. Invites you made that nobody has used yet are cancelled.
-    </p>
-    <p class="m-0">
-      If you are the only admin of a team that others belong to, make someone else an admin first (for now in the server's admin
-      pages); then you can delete your account. It cannot be undone.
-    </p>
-    <FormField v-model="password" label="Your password" type="password" autocomplete="current-password" />
-    <FormField v-model="confirm" label="Type DELETE ACCOUNT to confirm" capitalize="characters" @enter="erase" />
+    <h2 class="h5 m-0">{{ $t('privacy.deleteAccountTitle') }}</h2>
+    <p class="m-0">{{ $t('privacy.deleteAccountText1') }}</p>
+    <p class="m-0">{{ $t('privacy.deleteAccountText2') }}</p>
+    <FormField v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" />
+    <FormField v-model="confirm" :label="$t('privacy.typeDeleteAccount')" capitalize="characters" @enter="erase" />
     <ErrorText :message="result?.error" />
-    <AppButton :busy="busy" @click="erase">Delete my account</AppButton>
+    <AppButton :busy="busy" @click="erase">{{ $t('privacy.deleteAccount') }}</AppButton>
   </div>
 </template>

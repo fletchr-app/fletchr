@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -50,34 +51,34 @@ class NoteSerializer(serializers.ModelSerializer):
     def validate_body(self, body):
         body = body.strip()
         if not body:
-            raise serializers.ValidationError("A note cannot be empty")
+            raise serializers.ValidationError(gettext("A note cannot be empty"))
         return body
 
     def validate(self, attrs):
         if self.instance is not None:
             for field in IMMUTABLE:
                 if field in attrs and attrs[field] != getattr(self.instance, field):
-                    raise serializers.ValidationError({field: "This cannot be changed after the note is written"})
+                    raise serializers.ValidationError({field: gettext("This cannot be changed after the note is written")})
             return attrs
 
         user = self.context["request"].user
         if not TeamMember.objects.filter(user=user, role__in=COACH_ROLES).exists():
-            raise PermissionDenied("Only coaches can write notes")
+            raise PermissionDenied(gettext("Only coaches can write notes"))
         archer, session, end = attrs["archer"], attrs.get("session"), attrs.get("end")
         allowed = list(note_teams(user, archer))
         team = attrs.get("team")
         if team is not None:
             if team not in allowed:
-                raise serializers.ValidationError({"team": "You cannot write notes about this archer in that team"})
+                raise serializers.ValidationError({"team": gettext("You cannot write notes about this archer in that team")})
         elif len(allowed) == 1:
             team = allowed[0]
         elif not allowed:
-            raise serializers.ValidationError({"archer": "You cannot write notes about this person"})
+            raise serializers.ValidationError({"archer": gettext("You cannot write notes about this person")})
         else:
-            raise serializers.ValidationError({"team": "You coach this archer in several teams: say which one"})
+            raise serializers.ValidationError({"team": gettext("You coach this archer in several teams: say which one")})
         if session is not None and session.owner_id != archer.id:
-            raise serializers.ValidationError({"session": "This is not a session of that archer"})
+            raise serializers.ValidationError({"session": gettext("This is not a session of that archer")})
         if end is not None and (session is None or end.session_id != session.id):
-            raise serializers.ValidationError({"end": "Give the session this end belongs to"})
+            raise serializers.ValidationError({"end": gettext("Give the session this end belongs to")})
         attrs["team"] = team
         return attrs

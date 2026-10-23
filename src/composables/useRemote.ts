@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { onScopeDispose, ref, watch, type Ref, type WatchSource } from 'vue';
 
 export type Remote<T> = { data: Ref<T | null>; error: Ref<string | null>; loading: Ref<boolean>; reload: () => void };
@@ -25,10 +26,10 @@ export function useRemote<T>(load: () => Promise<T | null>, options: Options<T> 
       if (mine !== generation) return;
       latest = result ?? latest;
       data.value = result ?? data.value;
-      error.value = result ? null : 'Could not load this';
+      error.value = result ? null : t('common.couldNotLoad');
     } catch {
       if (mine !== generation) return;
-      error.value = 'Server not reachable';
+      error.value = t('common.serverNotReachable');
     }
     loading.value = false;
   }

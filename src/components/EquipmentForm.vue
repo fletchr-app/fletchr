@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IonToggle } from '@ionic/vue'
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -23,8 +24,9 @@ export type EquipmentAdapter = {
   remove: (id: number) => Promise<string | null>
 }
 
-const props = defineProps<{ label: string; fields: FieldSpec[]; adapter: EquipmentAdapter }>()
+const props = defineProps<{ kind: 'bow' | 'arrowSet'; fields: FieldSpec[]; adapter: EquipmentAdapter }>()
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const param = route.params.id as string
@@ -73,7 +75,7 @@ async function run(action: () => Promise<string | null>) {
     if (message) error.value = message
     else router.back()
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
   busy.value = false
 }
@@ -86,42 +88,42 @@ const save = () =>
 
 // Newest first; each entry shows what changed compared with the revision before it.
 function changes(rev: Revision, prev: Revision | undefined) {
-  if (!prev) return ['created']
+  if (!prev) return [t('equipment.created')]
   return props.fields
     .filter((f) => toText(rev[f.key]) !== toText(prev[f.key]))
-    .map((f) => `${f.label}: ${toText(prev[f.key]) || '–'} → ${toText(rev[f.key]) || '–'}`)
+    .map((f) => `${t(`equipment.field.${f.key}`)}: ${toText(prev[f.key]) || '–'} → ${toText(rev[f.key]) || '–'}`)
 }
 </script>
 
 <template>
   <div class="screen">
-    <div v-if="state === 'loading'">Loading…</div>
-    <ErrorText v-else-if="state === 'failed'" :message="`Could not load this ${label}.`" />
+    <div v-if="state === 'loading'">{{ $t('common.loading') }}</div>
+    <ErrorText v-else-if="state === 'failed'" :message="kind === 'bow' ? $t('equipment.couldNotLoadBow') : $t('equipment.couldNotLoadArrowSet')" />
     <template v-else>
       <template v-for="f in fields" :key="f.key">
         <ChipGroup
           v-if="f.kind === 'choice'"
           v-model="values[f.key]"
-          :label="f.label"
-          :options="(f.options ?? []).map((o) => ({ value: o, label: o }))"
+          :label="$t(`equipment.field.${f.key}`)"
+          :options="(f.options ?? []).map((o) => ({ value: o, label: $t(`equipment.bowType.${o}`) }))"
         />
         <FormField
           v-else
           v-model="values[f.key]"
-          :label="f.unit ? `${f.label} (${f.unit})` : f.label"
+          :label="f.unit ? `${$t(`equipment.field.${f.key}`)} (${f.unit})` : $t(`equipment.field.${f.key}`)"
           :inputmode="f.kind === 'decimal' ? 'decimal' : f.kind === 'integer' ? 'numeric' : 'text'"
           :multiline="f.kind === 'multiline'"
           :capitalize="f.kind === 'text' || f.kind === 'multiline' ? 'sentences' : 'none'"
         />
       </template>
-      <IonToggle v-model="isActive" class="ion-text-wrap">Active (shown when logging sessions)</IonToggle>
+      <IonToggle v-model="isActive" class="ion-text-wrap">{{ $t('equipment.active') }}</IonToggle>
       <ErrorText :message="error" />
-      <AppButton :busy="busy" @click="save">{{ id === null ? `Add ${label}` : 'Save' }}</AppButton>
+      <AppButton :busy="busy" @click="save">{{ id === null ? (kind === 'bow' ? $t('equipment.addBowButton') : $t('equipment.addArrowSetButton')) : $t('common.save') }}</AppButton>
       <AppButton v-if="id !== null" secondary @click="confirmDelete ? run(() => adapter.remove(id!)) : (confirmDelete = true)">
-        {{ confirmDelete ? 'Tap again to delete' : 'Delete' }}
+        {{ confirmDelete ? $t('equipment.tapAgainDelete') : $t('common.delete') }}
       </AppButton>
       <div v-if="revisions.length > 0" class="d-flex flex-column gap-2 mt-3">
-        <h2 class="h6 m-0">History</h2>
+        <h2 class="h6 m-0">{{ $t('equipment.history') }}</h2>
         <div v-for="(rev, i) in revisions" :key="rev.id">
           <div class="fw-semibold">#{{ rev.number }} · {{ new Date(rev.created_at).toLocaleString() }}</div>
           <div v-for="c in changes(rev, revisions[i + 1])" :key="c" class="muted">{{ c }}</div>

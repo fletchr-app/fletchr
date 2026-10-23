@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 import django_filters
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -78,7 +79,7 @@ def writable_teams(request):
     try:
         archer = User.objects.filter(pk=int(request.query_params.get("archer", ""))).first()
     except ValueError:
-        raise ValidationError({"archer": "Give the id of the archer"})
+        raise ValidationError({"archer": gettext("Give the id of the archer")})
     if archer is None:
         return Response([])
     return Response(NoteTeamSerializer(note_teams(request.user, archer), many=True).data)

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { IonChip } from '@ionic/vue'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import FaceView from '@/components/FaceView.vue'
 import { getFace } from '@/lib/faces'
-import { describeCentre, spreadCm } from '@/lib/group'
+import { type CentreWords, describeCentre, spreadCm } from '@/lib/group'
 import type { LogSession } from '@/lib/log-model'
 import { blocksOf } from '@/lib/session-view'
 
@@ -22,6 +23,8 @@ const blocks = computed(() =>
       return [{ block, face, radius }]
     }),
 )
+const { t } = useI18n()
+const words = computed<CentreWords>(() => ({ left: t('plots.left'), right: t('plots.right'), low: t('plots.low'), high: t('plots.high'), middle: t('plots.middle') }))
 const shown = ref(0)
 const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.length - 1)])
 </script>
@@ -40,25 +43,24 @@ const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.l
         {{ Number(b.block.distance_m) }} m · {{ b.face.name }}
       </IonChip>
     </div>
-    <div class="fw-semibold">{{ Number(current.block.distance_m) }} m · {{ current.face.name }} · {{ current.block.plotted.length + current.block.typed }} arrows</div>
+    <div class="fw-semibold">{{ Number(current.block.distance_m) }} m · {{ current.face.name }} · {{ $t('count.arrows', current.block.plotted.length + current.block.typed) }}</div>
     <FaceView v-if="current.block.plotted.length > 0" fill :face="current.face" :shots="current.block.plotted" />
     <div v-else class="flex-grow-1"></div>
     <div v-for="{ spot, group } in current.block.groups" :key="spot" class="muted">
-      {{ current.face.spots.length > 1 ? `Spot ${spot + 1}: ` : 'Group: ' }}centre {{ describeCentre(group, current.radius) }} · spread
-      {{ spreadCm(group, current.radius).toFixed(1) }} cm
+      {{ $t('plots.summary', { label: current.face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, current.radius, words), spread: spreadCm(group, current.radius).toFixed(1) }) }}
     </div>
-    <div v-if="current.block.typed > 0" class="faint">{{ current.block.typed }} typed in, not drawn.</div>
+    <div v-if="current.block.typed > 0" class="faint">{{ $t('plots.typedShort', { n: current.block.typed }) }}</div>
   </div>
   <div v-else-if="blocks.length > 0" class="d-flex flex-column gap-3">
     <div v-for="{ block, face, radius } in blocks" :key="block.key" class="d-flex flex-column gap-1">
-      <div class="fw-semibold">{{ Number(block.distance_m) }} m · {{ face.name }} · {{ block.plotted.length + block.typed }} arrows</div>
+      <div class="fw-semibold">{{ Number(block.distance_m) }} m · {{ face.name }} · {{ $t('count.arrows', block.plotted.length + block.typed) }}</div>
       <FaceView v-if="block.plotted.length > 0" :face="face" :shots="block.plotted" />
       <div v-for="{ spot, group } in block.groups" :key="spot">
-        {{ face.spots.length > 1 ? `Spot ${spot + 1}: ` : 'Group: ' }}centre {{ describeCentre(group, radius) }} · spread
-        {{ spreadCm(group, radius).toFixed(1) }} cm ({{ group.n }} {{ group.n === 1 ? 'arrow' : 'arrows' }})
+        {{ $t('plots.summary', { label: face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, radius, words), spread: spreadCm(group, radius).toFixed(1) }) }}
+        ({{ $t('count.arrows', group.n) }})
       </div>
       <div v-if="block.typed > 0" class="faint">
-        {{ block.typed }} {{ block.typed === 1 ? 'arrow was' : 'arrows were' }} typed in and cannot be drawn.
+        {{ $t('plots.typed', { n: block.typed }, block.typed) }}
       </div>
     </div>
   </div>

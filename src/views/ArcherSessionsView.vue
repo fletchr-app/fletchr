@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList } from '@ionic/vue'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -21,6 +22,7 @@ const route = useRoute()
 const id = route.params.id as string
 const name = route.query.name as string | undefined
 
+const { t } = useI18n()
 const { api } = useAuth()
 const { sessions: local } = useLog()
 const info = useRemote(async () => (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: Number(id) } } })).data ?? null)
@@ -29,7 +31,7 @@ const { data, error, loading } = useRemote(async () => (await api.GET('/api/sess
   keepPolling: () => true,
 })
 
-const title = computed(() => info.data.value?.name || name || 'Archer')
+const title = computed(() => info.data.value?.name || name || t('archer.defaultTitle'))
 const shownName = computed(() => info.data.value?.name || name || '')
 // Sessions the coach logged on this device (editable), then those the server has.
 const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? []))
@@ -38,18 +40,18 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
 <template>
   <AppPage :title="title">
     <div class="screen">
-      <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">Start a session for {{ shownName }}</AppButton>
-      <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">Statistics</AppButton>
+      <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
+      <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
       <NotesSection :archer-id="Number(id)" />
       <ErrorText :message="error" />
-      <div v-if="loading">Loading…</div>
-      <div v-if="!loading && rows.length === 0">No sessions yet.</div>
+      <div v-if="loading">{{ $t('common.loading') }}</div>
+      <div v-if="!loading && rows.length === 0">{{ $t('archer.noSessions') }}</div>
       <IonList v-if="rows.length > 0" inset>
         <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
           <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ row.type }}{{ row.finished ? '' : '  ● in progress' }}</h3>
+            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(`sessionType.${row.type}`) }}{{ row.finished ? '' : `  ● ${$t('training.inProgress')}` }}</h3>
             <p>
-              {{ row.location ? `${row.location} · ` : '' }}{{ row.ends }} ends · {{ row.arrows }} arrows{{ row.ends > 0 ? ` · ${row.points} points` : '' }}
+              {{ row.location ? `${row.location} · ` : '' }}{{ $t('count.ends', row.ends) }} · {{ $t('count.arrows', row.arrows) }}{{ row.ends > 0 ? ` · ${$t('count.points', row.points)}` : '' }}
             </p>
           </IonLabel>
         </IonItem>

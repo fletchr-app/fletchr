@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { Share } from '@capacitor/share'
 import { alertController } from '@ionic/vue'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -11,12 +12,13 @@ import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 import { formatCode } from '@/lib/codes'
-import { claimMessage } from '@/lib/team-admin'
+import { untilDate } from '@/lib/team-admin'
 
 // What a coach can do with the profile of an archer without an account: link it to their account, rename, delete.
 const props = defineProps<{ archerId: number; name: string; teamId: number; teamName: string }>()
 const emit = defineEmits<{ renamed: [] }>()
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const { api } = useAuth()
 const native = Capacitor.isNativePlatform()
@@ -33,22 +35,22 @@ async function makeCode() {
     if (data) claim.value = data
     else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 
 // In the browser the text is copied; on a phone the share sheet opens.
 async function share() {
   if (!claim.value) return
-  const message = claimMessage(props.teamName, claim.value.code, claim.value.expires_at)
+  const message = t('teams.claimText', { team: props.teamName, code: formatCode(claim.value.code), until: untilDate(claim.value.expires_at, locale.value) })
   try {
     if (native) await Share.share({ text: message })
     else {
       await navigator.clipboard.writeText(message)
-      note.value = 'Copied. Paste it into a message.'
+      note.value = t('teams.copied')
     }
   } catch {
-    note.value = 'Could not copy: select the code above and copy it.'
+    note.value = t('teams.copyFailed')
   }
 }
 
@@ -58,17 +60,17 @@ async function rename(name: string) {
     if (data) emit('renamed')
     else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 
 async function askName() {
   const alert = await alertController.create({
-    header: 'Rename',
+    header: t('archer.rename'),
     inputs: [{ name: 'name', type: 'text', value: props.name, attributes: { autocapitalize: 'words' } }],
     buttons: [
-      { text: 'Cancel', role: 'cancel' },
-      { text: 'Save', handler: (value: { name?: string }) => !!value.name?.trim() && void rename(value.name.trim()) },
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('common.save'), handler: (value: { name?: string }) => !!value.name?.trim() && void rename(value.name.trim()) },
     ],
   })
   await alert.present()
@@ -80,24 +82,24 @@ async function remove() {
     if (response.ok) void router.replace('/team')
     else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 </script>
 
 <template>
   <div class="d-flex flex-column gap-2">
-    <div class="muted">{{ name }} has no account. When they join, they can take over this profile with a code.</div>
+    <div class="muted">{{ $t('archer.hasNoAccount', { name }) }}</div>
     <div v-if="claim" class="d-flex flex-column gap-1 p-3 rounded border">
       <div class="fs-5 fw-bold selectable" style="letter-spacing: 2px">{{ formatCode(claim.code) }}</div>
-      <div class="muted">Works once, until {{ new Date(claim.expires_at).toLocaleDateString() }}. They see who they link to before confirming.</div>
-      <IonButton fill="clear" size="small" class="m-0" @click="share">{{ native ? 'Share' : 'Copy message' }}</IonButton>
+      <div class="muted">{{ $t('archer.codeInfo', { date: new Date(claim.expires_at).toLocaleDateString() }) }}</div>
+      <IonButton fill="clear" size="small" class="m-0" @click="share">{{ native ? $t('teams.share') : $t('archer.copyMessage') }}</IonButton>
       <div v-if="note" class="muted">{{ note }}</div>
     </div>
-    <AppButton secondary @click="makeCode">{{ claim ? 'New code' : 'Link to an account' }}</AppButton>
-    <AppButton secondary @click="askName">Rename</AppButton>
+    <AppButton secondary @click="makeCode">{{ claim ? $t('archer.newCode') : $t('archer.link') }}</AppButton>
+    <AppButton secondary @click="askName">{{ $t('archer.rename') }}</AppButton>
     <AppButton secondary @click="confirmDelete ? remove() : (confirmDelete = true)">
-      {{ confirmDelete ? 'Tap again: delete profile, sessions and notes' : 'Delete profile' }}
+      {{ confirmDelete ? $t('archer.deleteConfirm') : $t('archer.deleteProfile') }}
     </AppButton>
     <ErrorText :message="error" />
   </div>

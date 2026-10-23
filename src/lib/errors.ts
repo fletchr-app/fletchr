@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+
 // DRF errors look like {detail: "..."} or {field: ["..."]}.
 export function errorMessage(error: unknown): string {
   if (error && typeof error === 'object') {
@@ -5,5 +7,5 @@ export function errorMessage(error: unknown): string {
     const text = parts.filter((p) => typeof p === 'string').join(' ');
     if (text) return text;
   }
-  return 'Something went wrong';
+  return t('errors.generic');
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -8,6 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 import { saveJson } from '@/lib/export-file'
 
+const { t } = useI18n()
 const { api } = useAuth()
 const password = ref('')
 const busy = ref(false)
@@ -27,7 +29,7 @@ async function download() {
       done.value = true
     }
   } catch (e) {
-    error.value = e instanceof Error && e.message.startsWith('Sharing') ? e.message : 'Could not get your data. Is the server reachable?'
+    error.value = e instanceof Error && e.message.startsWith('Sharing') ? t('privacy.sharingUnavailable') : t('privacy.exportFailed')
   }
   busy.value = false
 }
@@ -35,15 +37,11 @@ async function download() {
 
 <template>
   <div class="d-flex flex-column gap-3">
-    <h2 class="h5 m-0">Download my data</h2>
-    <p class="m-0">
-      One file (JSON) with everything the server has about you: your profile and teams, your equipment with its history, all your
-      sessions with every arrow, and the coach notes about you, including the ones that were not shared with you (but not what a coach keeps
-      only for themselves), and the notes you wrote yourself.
-    </p>
-    <FormField v-model="password" label="Your password" type="password" autocomplete="current-password" @enter="download" />
+    <h2 class="h5 m-0">{{ $t('privacy.exportTitle') }}</h2>
+    <p class="m-0">{{ $t('privacy.exportText') }}</p>
+    <FormField v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" @enter="download" />
     <ErrorText :message="error" />
-    <div v-if="done" class="fw-semibold">Your data was exported.</div>
-    <AppButton :busy="busy" @click="download">Download my data</AppButton>
+    <div v-if="done" class="fw-semibold">{{ $t('privacy.exported') }}</div>
+    <AppButton :busy="busy" @click="download">{{ $t('privacy.exportButton') }}</AppButton>
   </div>
 </template>

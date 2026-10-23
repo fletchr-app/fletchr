@@ -21,14 +21,17 @@ export function groupOf(points: { x: number; y: number }[]): Group | null {
 
 const cm = (value: number) => `${Math.abs(value).toFixed(1)} cm`;
 
+export type CentreWords = { left: string; right: string; low: string; high: string; middle: string };
+const ENGLISH: CentreWords = { left: 'left', right: 'right', low: 'low', high: 'high', middle: 'in the middle' };
+
 /** What a group says about the sight: which way and how far the centre is from the middle of the spot. */
-export function describeCentre(group: Group, spotRadiusCm: number): string {
+export function describeCentre(group: Group, spotRadiusCm: number, words: CentreWords = ENGLISH): string {
   const x = group.cx * spotRadiusCm;
   const y = group.cy * spotRadiusCm;
   const parts: string[] = [];
-  if (Math.abs(x) >= 0.05) parts.push(`${cm(x)} ${x < 0 ? 'left' : 'right'}`);
-  if (Math.abs(y) >= 0.05) parts.push(`${cm(y)} ${y < 0 ? 'low' : 'high'}`);
-  return parts.length > 0 ? parts.join(', ') : 'in the middle';
+  if (Math.abs(x) >= 0.05) parts.push(`${cm(x)} ${x < 0 ? words.left : words.right}`);
+  if (Math.abs(y) >= 0.05) parts.push(`${cm(y)} ${y < 0 ? words.low : words.high}`);
+  return parts.length > 0 ? parts.join(', ') : words.middle;
 }
 
 export const spreadCm = (group: Group, spotRadiusCm: number) => group.meanRadius * spotRadiusCm;

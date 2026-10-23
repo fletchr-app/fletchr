@@ -15,7 +15,7 @@ const { data } = useRemote(async () => (await api.GET('/api/notes/', { params: {
 
 <template>
   <div v-if="data?.length" class="d-flex flex-column gap-2">
-    <div class="fw-semibold">From your coaches</div>
+    <div class="fw-semibold">{{ $t('notes.fromCoaches') }}</div>
     <div v-for="note in data.slice(0, SHOWN)" :key="note.id">
       <div class="muted">{{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }}</div>
       <div>{{ note.body }}</div>

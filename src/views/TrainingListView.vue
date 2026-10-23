@@ -26,17 +26,17 @@ const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), rem
 </script>
 
 <template>
-  <AppPage title="Training" :back="false">
+  <AppPage :title="$t('training.title')" :back="false">
     <div class="screen">
       <SyncBanner />
-      <AppButton router-link="/training/new">Start a session</AppButton>
+      <AppButton router-link="/training/new">{{ $t('training.start') }}</AppButton>
       <ErrorText :message="remote.error.value" />
       <IonList v-if="rows.length > 0" inset>
         <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
           <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ row.type }}{{ row.finished ? '' : ' (in progress)' }}</h3>
+            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(`sessionType.${row.type}`) }}{{ row.finished ? '' : ` (${$t('training.inProgress')})` }}</h3>
             <p>
-              {{ row.location ? `${row.location} · ` : '' }}{{ row.ends }} ends · {{ row.arrows }} arrows{{ row.ends > 0 ? ` · ${row.points} points` : '' }}
+              {{ row.location ? `${row.location} · ` : '' }}{{ $t('count.ends', row.ends) }} · {{ $t('count.arrows', row.arrows) }}{{ row.ends > 0 ? ` · ${$t('count.points', row.points)}` : '' }}
             </p>
           </IonLabel>
         </IonItem>

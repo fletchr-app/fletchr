@@ -22,6 +22,7 @@ docs/      plan, decisions
 - **Teams and roles:** archer, coach, admin. Anyone signed in can create a team (Settings, Create a team) and becomes its admin; people join with invite codes, anyone can leave, admins can delete the team. Signing up itself is invite-only.
 - **Archers without an account:** a coach adds an archer by name, writes notes and logs sessions for them. The archer takes the profile over later with a claim code (confirmed in the app); sessions and notes move to their account.
 - **Coach notes:** about an archer, a session or an end. Three levels: only me (the author alone), coach only (the coaches of the team), shared with the archer.
+- **Languages:** English and German (Settings, Language; by default the phone's language). Texts: [docs/i18n.md](docs/i18n.md).
 - **Your data:** download everything the server has about you, delete your data, delete your account (Settings, Your data).
 
 ## Run locally

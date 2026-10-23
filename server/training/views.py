@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from datetime import timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -45,7 +46,7 @@ def get_session(request, session_id, write=False):
     if session is None:
         raise NotFound()
     if write and not can_write_sessions_of(request.user, session.owner):
-        raise PermissionDenied("Only the archer can change a session")
+        raise PermissionDenied(gettext("Only the archer can change a session"))
     return session
 
 
@@ -108,7 +109,7 @@ class SessionDetailView(APIView):
             try:
                 owner = User.objects.filter(pk=int(request.query_params["owner"])).first()
             except ValueError:
-                raise ValidationError({"owner": "Give the id of the archer"})
+                raise ValidationError({"owner": gettext("Give the id of the archer")})
             if owner is None or not can_write_sessions_of(request.user, owner):
                 raise NotFound()
         serializer = SessionWriteSerializer(existing, data=request.data, context={"request": request})
@@ -134,15 +135,15 @@ class EndView(APIView):
         session = get_session(request, session_id, write=True)
         existing = End.objects.filter(pk=end_id).first()
         if existing is not None and existing.session_id != session.pk:
-            raise ValidationError("This end id belongs to another session")
+            raise ValidationError(gettext("This end id belongs to another session"))
         serializer = EndSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         shots = data.pop("shots")
         if End.objects.filter(session=session, index=data["index"]).exclude(pk=end_id).exists():
-            raise ValidationError({"index": "Another end of this session has this index"})
+            raise ValidationError({"index": gettext("Another end of this session has this index")})
         if Shot.objects.filter(pk__in=[s["id"] for s in shots]).exclude(end_id=end_id).exists():
-            raise ValidationError({"shots": "A shot id is already used in another end"})
+            raise ValidationError({"shots": gettext("A shot id is already used in another end")})
         with transaction.atomic():
             end, created = End.objects.update_or_create(pk=end_id, defaults={"session": session, **data})
             end.shots.all().delete()
@@ -167,7 +168,7 @@ class VolumeEntryView(APIView):
         session = get_session(request, session_id, write=True)
         existing = VolumeEntry.objects.filter(pk=entry_id).first()
         if existing is not None and existing.session_id != session.pk:
-            raise ValidationError("This entry id belongs to another session")
+            raise ValidationError(gettext("This entry id belongs to another session"))
         serializer = VolumeEntrySerializer(existing, data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -195,7 +196,7 @@ class TeamOverviewView(APIView):
         if team is None:
             raise NotFound()
         if not is_coach_in(request.user, team):
-            raise PermissionDenied("Only coaches can see the team overview")
+            raise PermissionDenied(gettext("Only coaches can see the team overview"))
         now = timezone.now()
         since = now - timedelta(days=OVERVIEW_DAYS)
         shots = (
@@ -261,13 +262,13 @@ class StatsView(APIView):
             owner_id = int(params.get("owner", request.user.pk))
             weeks = int(params.get("weeks", 12))
         except ValueError:
-            raise ValidationError("owner and weeks must be numbers")
+            raise ValidationError(gettext("owner and weeks must be numbers"))
         if not 1 <= weeks <= 52:
-            raise ValidationError({"weeks": "Between 1 and 52"})
+            raise ValidationError({"weeks": gettext("Between 1 and 52")})
         try:
             tz = ZoneInfo(params.get("tz", "UTC"))
         except (ZoneInfoNotFoundError, ValueError):
-            raise ValidationError({"tz": "Unknown time zone"})
+            raise ValidationError({"tz": gettext("Unknown time zone")})
         if not archers_visible_to(request.user).filter(pk=owner_id).exists():
             raise NotFound()
 

@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.utils.translation import gettext
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
@@ -52,7 +53,7 @@ class DeleteMyAccountView(APIView):
             teams = [{"id": team.pk, "name": team.name, "members": others} for team, others in blocked.teams]
             names = ", ".join(t["name"] for t in teams)
             return Response(
-                {"detail": f"You are the only admin of {names}. Make someone else an admin there first.", "teams": teams},
+                {"detail": gettext("You are the only admin of %(teams)s. Make someone else an admin there first.") % {"teams": names}, "teams": teams},
                 status=status.HTTP_409_CONFLICT,
             )
 

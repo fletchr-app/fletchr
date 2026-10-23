@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 
 import { useElementWidth } from '@/composables/useElementWidth'
@@ -15,9 +16,10 @@ const RIGHT = 14
 const MAX_POINTS = 30
 const MARKERS_UP_TO = 12 // more points than this and only the touched and the latest one get a dot
 
+const { locale } = useI18n()
 const date = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y!, m! - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+  return new Date(y!, m! - 1, d).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 }
 const percent = (share: number) => `${Math.round(share * 100)}%`
 
@@ -47,17 +49,21 @@ const hitWidth = computed(() => Math.max(24, plotW.value / points.value.length))
 <template>
   <div class="chart-card">
     <div class="chart-title">{{ group.face_name }} · {{ Number(group.distance_m) }} m</div>
-    <div>{{ group.arrows }} arrows · average {{ group.average.toFixed(2) }} of {{ group.max_value }}</div>
+    <div>{{ $t('stats.averageOf', { n: group.arrows, avg: group.average.toFixed(2), max: group.max_value }, group.arrows) }}</div>
     <div>
-      Best ring {{ percent(group.top_rate) }}<template v-if="group.x_rate !== null && group.x_rate !== undefined"> · X {{ percent(group.x_rate) }}</template> ·
-      misses {{ percent(group.miss_rate) }}
+      {{
+        group.x_rate !== null && group.x_rate !== undefined
+          ? $t('stats.bestRingX', { top: percent(group.top_rate), x: percent(group.x_rate) })
+          : $t('stats.bestRing', { top: percent(group.top_rate) })
+      }}
+      · {{ $t('stats.misses', { rate: percent(group.miss_rate) }) }}
     </div>
     <div v-if="pick">
-      {{ date(pick.date) }}: average {{ pick.average.toFixed(2) }} · {{ pick.arrows }} arrows{{ pick.competition ? ' · competition' : '' }}
+      {{ $t('stats.pick', { date: date(pick.date), avg: pick.average.toFixed(2), n: pick.arrows }, pick.arrows) }}{{ pick.competition ? ` · ${$t('stats.competition')}` : '' }}
     </div>
     <div v-if="asTable">
       <div v-for="p in [...points].reverse()" :key="p.session" class="d-flex justify-content-between py-1">
-        <span>{{ date(p.date) }}{{ p.competition ? ' (competition)' : '' }} · {{ p.arrows }} arrows</span>
+        <span>{{ $t(p.competition ? 'stats.tableRowCompetition' : 'stats.tableRow', { date: date(p.date), n: p.arrows }, p.arrows) }}</span>
         <span class="tabular">{{ p.average.toFixed(2) }}</span>
       </div>
     </div>
@@ -85,14 +91,14 @@ const hitWidth = computed(() => Math.max(24, plotW.value / points.value.length))
           :key="p.session"
           type="button"
           class="chart-hit"
-          :aria-label="`${date(p.date)}: average ${p.average.toFixed(2)}`"
+          :aria-label="$t('stats.pointLabel', { date: date(p.date), avg: p.average.toFixed(2) })"
           :style="{ left: `${x(i) - hitWidth / 2}px`, width: `${hitWidth}px`, top: `${TOP}px`, height: `${plotH}px` }"
           @click="picked = i"
         ></button>
       </template>
     </div>
-    <div v-if="points.length === 1 && !asTable" style="color: var(--chart-muted)">One session so far: the line appears after the next one.</div>
-    <div style="color: var(--chart-muted)">One point per session. A ring is a competition. The scale starts at {{ domain.lo }}, not at 0.</div>
-    <button type="button" class="chart-link" @click="asTable = !asTable">{{ asTable ? 'Show as chart' : 'Show as table' }}</button>
+    <div v-if="points.length === 1 && !asTable" style="color: var(--chart-muted)">{{ $t('stats.oneSession') }}</div>
+    <div style="color: var(--chart-muted)">{{ $t('stats.note', { lo: domain.lo }) }}</div>
+    <button type="button" class="chart-link" @click="asTable = !asTable">{{ asTable ? $t('stats.showChart') : $t('stats.showTable') }}</button>
   </div>
 </template>

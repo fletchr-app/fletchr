@@ -1,0 +1,250 @@
+# Translations template for Fletchr.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Fletchr project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Fletchr VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-23 10:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: core/access.py:68
+msgid "Invalid or expired invite code"
+msgstr ""
+
+#: core/access.py:70
+msgid "You are already a member of this team"
+msgstr ""
+
+#: core/claims.py:46 core/claims.py:49 core/views.py:119
+msgid "Invalid or expired code"
+msgstr ""
+
+#: core/claims.py:54
+msgid ""
+"You are a coach in this team. A profile of an archer can only be taken "
+"over by an archer."
+msgstr ""
+
+#: core/serializers.py:40
+msgid "An account with this email already exists"
+msgstr ""
+
+#: core/serializers.py:73
+msgid "A team needs a name"
+msgstr ""
+
+#: core/serializers.py:116
+msgid "An archer needs a name"
+msgstr ""
+
+#: core/serializers.py:148 privacy/serializers.py:19 privacy/serializers.py:64
+msgid "Wrong password"
+msgstr ""
+
+#: core/serializers.py:158
+msgid "Choose a different password"
+msgstr ""
+
+#: core/serializers.py:172
+msgid "This address is not available"
+msgstr ""
+
+#: core/views.py:205
+#, python-format
+msgid "You already manage %(n)s teams"
+msgstr ""
+
+#: core/views.py:251
+msgid "Only team admins can delete the team"
+msgstr ""
+
+#: core/views.py:262
+msgid "Only team admins can rename the team"
+msgstr ""
+
+#: core/views.py:286
+msgid "Only team admins can change roles"
+msgstr ""
+
+#: core/views.py:292 core/views.py:306
+msgid "A team needs at least one admin"
+msgstr ""
+
+#: core/views.py:303
+msgid "Only team admins can remove members"
+msgstr ""
+
+#: core/views.py:317 core/views.py:334
+msgid "Only team admins can manage invites"
+msgstr ""
+
+#: core/views.py:342
+msgid "Only coaches can manage the archers of a team"
+msgstr ""
+
+#: core/views.py:422
+msgid ""
+"Only coaches can choose this: archers' sessions are always visible to "
+"their coaches"
+msgstr ""
+
+#: core/views.py:434
+msgid ""
+"You are the only admin. Make someone else an admin first, or delete the "
+"team."
+msgstr ""
+
+#: core/views.py:446
+msgid "This account no longer exists"
+msgstr ""
+
+#: equipment/serializers.py:51 training/serializers.py:124
+msgid "Not your bow"
+msgstr ""
+
+#: equipment/serializers.py:56 training/serializers.py:129
+msgid "Not your arrow set"
+msgstr ""
+
+#: equipment/views.py:58
+msgid "This has been used in a session. Deactivate it instead of deleting it."
+msgstr ""
+
+#: notes/serializers.py:54
+msgid "A note cannot be empty"
+msgstr ""
+
+#: notes/serializers.py:61
+msgid "This cannot be changed after the note is written"
+msgstr ""
+
+#: notes/serializers.py:66
+msgid "Only coaches can write notes"
+msgstr ""
+
+#: notes/serializers.py:72
+msgid "You cannot write notes about this archer in that team"
+msgstr ""
+
+#: notes/serializers.py:76
+msgid "You cannot write notes about this person"
+msgstr ""
+
+#: notes/serializers.py:78
+msgid "You coach this archer in several teams: say which one"
+msgstr ""
+
+#: notes/serializers.py:80
+msgid "This is not a session of that archer"
+msgstr ""
+
+#: notes/serializers.py:82
+msgid "Give the session this end belongs to"
+msgstr ""
+
+#: notes/views.py:82 training/views.py:112
+msgid "Give the id of the archer"
+msgstr ""
+
+#: privacy/serializers.py:14
+#, python-format
+msgid "Type the words \"%(word)s\" to confirm"
+msgstr ""
+
+#: privacy/views.py:56
+#, python-format
+msgid ""
+"You are the only admin of %(teams)s. Make someone else an admin there "
+"first."
+msgstr ""
+
+#: training/serializers.py:34
+msgid "Give both x and y, or neither"
+msgstr ""
+
+#: training/serializers.py:36
+msgid "Position is out of range"
+msgstr ""
+
+#: training/serializers.py:50
+msgid "Unknown target face"
+msgstr ""
+
+#: training/serializers.py:57
+msgid "More shots than arrows per end"
+msgstr ""
+
+#: training/serializers.py:60
+msgid "Duplicate shot id"
+msgstr ""
+
+#: training/serializers.py:69
+#, python-format
+msgid "Shot %(n)s: this face has no spot %(spot)s"
+msgstr ""
+
+#: training/serializers.py:85
+#, python-format
+msgid "Shot %(n)s: this face has no scores, place the arrow on it"
+msgstr ""
+
+#: training/serializers.py:90
+#, python-format
+msgid "Shot %(n)s: %(value)s is not a score on this face"
+msgstr ""
+
+#: training/serializers.py:92
+#, python-format
+msgid "Shot %(n)s: this face has no X ring"
+msgstr ""
+
+#: training/serializers.py:134
+msgid "Arrows go with a bow: choose the bow too"
+msgstr ""
+
+#: training/views.py:49
+msgid "Only the archer can change a session"
+msgstr ""
+
+#: training/views.py:138
+msgid "This end id belongs to another session"
+msgstr ""
+
+#: training/views.py:144
+msgid "Another end of this session has this index"
+msgstr ""
+
+#: training/views.py:146
+msgid "A shot id is already used in another end"
+msgstr ""
+
+#: training/views.py:171
+msgid "This entry id belongs to another session"
+msgstr ""
+
+#: training/views.py:199
+msgid "Only coaches can see the team overview"
+msgstr ""
+
+#: training/views.py:265
+msgid "owner and weeks must be numbers"
+msgstr ""
+
+#: training/views.py:267
+msgid "Between 1 and 52"
+msgstr ""
+
+#: training/views.py:271
+msgid "Unknown time zone"
+msgstr ""
+

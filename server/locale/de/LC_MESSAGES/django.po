@@ -1,0 +1,245 @@
+# German translations for Fletchr.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Fletchr project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Fletchr VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-23 10:28+0200\n"
+"PO-Revision-Date: 2026-10-23 10:29+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: core/access.py:68
+msgid "Invalid or expired invite code"
+msgstr "Ungültiger oder abgelaufener Einladungscode"
+
+#: core/access.py:70
+msgid "You are already a member of this team"
+msgstr "Du bist schon Mitglied dieses Teams"
+
+#: core/claims.py:46 core/claims.py:49 core/views.py:119
+msgid "Invalid or expired code"
+msgstr "Ungültiger oder abgelaufener Code"
+
+#: core/claims.py:54
+msgid "You are a coach in this team. A profile of an archer can only be taken over by an archer."
+msgstr ""
+"Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
+"werden."
+
+#: core/serializers.py:40
+msgid "An account with this email already exists"
+msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
+
+#: core/serializers.py:73
+msgid "A team needs a name"
+msgstr "Ein Team braucht einen Namen"
+
+#: core/serializers.py:116
+msgid "An archer needs a name"
+msgstr "Ein Schütze braucht einen Namen"
+
+#: core/serializers.py:148 privacy/serializers.py:19 privacy/serializers.py:64
+msgid "Wrong password"
+msgstr "Falsches Passwort"
+
+#: core/serializers.py:158
+msgid "Choose a different password"
+msgstr "Wähle ein anderes Passwort"
+
+#: core/serializers.py:172
+msgid "This address is not available"
+msgstr "Diese Adresse ist nicht verfügbar"
+
+#: core/views.py:205
+#, python-format
+msgid "You already manage %(n)s teams"
+msgstr "Du verwaltest schon %(n)s Teams"
+
+#: core/views.py:251
+msgid "Only team admins can delete the team"
+msgstr "Nur Team-Admins können das Team löschen"
+
+#: core/views.py:262
+msgid "Only team admins can rename the team"
+msgstr "Nur Team-Admins können das Team umbenennen"
+
+#: core/views.py:286
+msgid "Only team admins can change roles"
+msgstr "Nur Team-Admins können Rollen ändern"
+
+#: core/views.py:292 core/views.py:306
+msgid "A team needs at least one admin"
+msgstr "Ein Team braucht mindestens einen Admin"
+
+#: core/views.py:303
+msgid "Only team admins can remove members"
+msgstr "Nur Team-Admins können Mitglieder entfernen"
+
+#: core/views.py:317 core/views.py:334
+msgid "Only team admins can manage invites"
+msgstr "Nur Team-Admins können Einladungen verwalten"
+
+#: core/views.py:342
+msgid "Only coaches can manage the archers of a team"
+msgstr "Nur Trainer können die Schützen eines Teams verwalten"
+
+#: core/views.py:422
+msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
+msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
+
+#: core/views.py:434
+msgid "You are the only admin. Make someone else an admin first, or delete the team."
+msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
+
+#: core/views.py:446
+msgid "This account no longer exists"
+msgstr "Dieses Konto gibt es nicht mehr"
+
+#: equipment/serializers.py:51 training/serializers.py:124
+msgid "Not your bow"
+msgstr "Das ist nicht dein Bogen"
+
+#: equipment/serializers.py:56 training/serializers.py:129
+msgid "Not your arrow set"
+msgstr "Das ist nicht dein Pfeilsatz"
+
+#: equipment/views.py:58
+msgid "This has been used in a session. Deactivate it instead of deleting it."
+msgstr "Das wurde in einem Training benutzt. Deaktiviere es, statt es zu löschen."
+
+#: notes/serializers.py:54
+msgid "A note cannot be empty"
+msgstr "Eine Notiz darf nicht leer sein"
+
+#: notes/serializers.py:61
+msgid "This cannot be changed after the note is written"
+msgstr "Das lässt sich nach dem Schreiben der Notiz nicht mehr ändern"
+
+#: notes/serializers.py:66
+msgid "Only coaches can write notes"
+msgstr "Nur Trainer können Notizen schreiben"
+
+#: notes/serializers.py:72
+msgid "You cannot write notes about this archer in that team"
+msgstr "In diesem Team kannst du keine Notizen über diesen Schützen schreiben"
+
+#: notes/serializers.py:76
+msgid "You cannot write notes about this person"
+msgstr "Über diese Person kannst du keine Notizen schreiben"
+
+#: notes/serializers.py:78
+msgid "You coach this archer in several teams: say which one"
+msgstr "Du trainierst diesen Schützen in mehreren Teams: Gib an, in welchem"
+
+#: notes/serializers.py:80
+msgid "This is not a session of that archer"
+msgstr "Das ist kein Training dieses Schützen"
+
+#: notes/serializers.py:82
+msgid "Give the session this end belongs to"
+msgstr "Gib das Training an, zu dem diese Passe gehört"
+
+#: notes/views.py:82 training/views.py:112
+msgid "Give the id of the archer"
+msgstr "Gib die ID des Schützen an"
+
+#: privacy/serializers.py:14
+#, python-format
+msgid "Type the words \"%(word)s\" to confirm"
+msgstr "Tippe zur Bestätigung \"%(word)s\" ein"
+
+#: privacy/views.py:56
+#, python-format
+msgid "You are the only admin of %(teams)s. Make someone else an admin there first."
+msgstr "Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen zum Admin."
+
+#: training/serializers.py:34
+msgid "Give both x and y, or neither"
+msgstr "Gib x und y an, oder keines von beiden"
+
+#: training/serializers.py:36
+msgid "Position is out of range"
+msgstr "Die Position liegt außerhalb des Bereichs"
+
+#: training/serializers.py:50
+msgid "Unknown target face"
+msgstr "Unbekannte Scheibe"
+
+#: training/serializers.py:57
+msgid "More shots than arrows per end"
+msgstr "Mehr Schüsse als Pfeile pro Passe"
+
+#: training/serializers.py:60
+msgid "Duplicate shot id"
+msgstr "Doppelte Schuss-ID"
+
+#: training/serializers.py:69
+#, python-format
+msgid "Shot %(n)s: this face has no spot %(spot)s"
+msgstr "Schuss %(n)s: Diese Scheibe hat keinen Spot %(spot)s"
+
+#: training/serializers.py:85
+#, python-format
+msgid "Shot %(n)s: this face has no scores, place the arrow on it"
+msgstr "Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die Scheibe"
+
+#: training/serializers.py:90
+#, python-format
+msgid "Shot %(n)s: %(value)s is not a score on this face"
+msgstr "Schuss %(n)s: %(value)s ist kein Wert auf dieser Scheibe"
+
+#: training/serializers.py:92
+#, python-format
+msgid "Shot %(n)s: this face has no X ring"
+msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
+
+#: training/serializers.py:134
+msgid "Arrows go with a bow: choose the bow too"
+msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
+
+#: training/views.py:49
+msgid "Only the archer can change a session"
+msgstr "Nur der Schütze kann ein Training ändern"
+
+#: training/views.py:138
+msgid "This end id belongs to another session"
+msgstr "Diese Passen-ID gehört zu einem anderen Training"
+
+#: training/views.py:144
+msgid "Another end of this session has this index"
+msgstr "Eine andere Passe dieses Trainings hat diesen Index"
+
+#: training/views.py:146
+msgid "A shot id is already used in another end"
+msgstr "Eine Schuss-ID wird schon in einer anderen Passe verwendet"
+
+#: training/views.py:171
+msgid "This entry id belongs to another session"
+msgstr "Diese Eintrags-ID gehört zu einem anderen Training"
+
+#: training/views.py:199
+msgid "Only coaches can see the team overview"
+msgstr "Nur Trainer können die Teamübersicht sehen"
+
+#: training/views.py:265
+msgid "owner and weeks must be numbers"
+msgstr "owner und weeks müssen Zahlen sein"
+
+#: training/views.py:267
+msgid "Between 1 and 52"
+msgstr "Zwischen 1 und 52"
+
+#: training/views.py:271
+msgid "Unknown time zone"
+msgstr "Unbekannte Zeitzone"
+

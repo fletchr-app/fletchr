@@ -23,11 +23,11 @@ const { data, error, reload } = useRemote(
 <template>
   <div class="d-flex flex-column gap-2">
     <h2 class="h5 m-0">{{ team.name }}</h2>
-    <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? 'Manage team: members, invites, name' : 'Members' }}</AppButton>
+    <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? $t('teams.manage') : $t('teams.members') }}</AppButton>
     <ShareTraining :team="team" />
     <AddArcher :team-id="team.id" @added="reload" />
     <ErrorText :message="error" />
-    <div v-if="data?.length === 0">No archers in this team yet.</div>
+    <div v-if="data?.length === 0">{{ $t('teams.noArchers') }}</div>
     <IonList v-if="data?.length" inset>
       <IonItem
         v-for="archer in data"
@@ -37,10 +37,10 @@ const { data, error, reload } = useRemote(
         lines="full"
       >
         <IonLabel class="ion-text-wrap">
-          <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ' (coach)' : '' }}{{ archer.managed ? ' (no account)' : '' }}{{ archer.last_session?.live ? '  ● shooting now' : '' }}</h3>
+          <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ` (${$t('teams.coachSuffix')})` : '' }}{{ archer.managed ? ` (${$t('teams.noAccount')})` : '' }}{{ archer.last_session?.live ? `  ● ${$t('teams.shootingNow')}` : '' }}</h3>
           <p>
-            {{ archer.last_session ? `Last session ${new Date(archer.last_session.started_at).toLocaleDateString()} · ${archer.last_session.type}` : 'No sessions yet' }} ·
-            {{ archer.arrows_7d }} arrows in 7 days
+            {{ archer.last_session ? $t('teams.lastSession', { date: new Date(archer.last_session.started_at).toLocaleDateString(), type: $t(`sessionType.${archer.last_session.type}`) }) : $t('teams.noSessions') }} ·
+            {{ $t('teams.arrows7d', { n: archer.arrows_7d }, archer.arrows_7d) }}
           </p>
         </IonLabel>
       </IonItem>

@@ -2,6 +2,7 @@ import { ref } from 'vue'
 
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
+import { t } from '@/i18n'
 import { errorMessage } from '@/lib/errors'
 
 export type CodePreview = components['schemas']['CodePreview']
@@ -19,7 +20,7 @@ export function useCodePreview() {
       preview.value = data
       return { preview: data }
     } catch {
-      return { error: 'Server not reachable' }
+      return { error: t('common.serverNotReachable') }
     }
   }
 

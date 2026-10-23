@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { IonButton } from '@ionic/vue'
 import { ref } from 'vue'
 
@@ -11,6 +12,7 @@ import { newId } from '@/lib/uuid'
 
 const props = defineProps<{ session: LogSession }>()
 
+const { t } = useI18n()
 const { saveVolume, deleteVolume } = useLog()
 const last = props.session.volume[props.session.volume.length - 1]
 const distance = ref(last?.distance_m ?? '18')
@@ -20,8 +22,8 @@ const error = ref<string | null>(null)
 function add() {
   const metres = Number(distance.value.replace(',', '.'))
   const arrows = Number(count.value)
-  if (!(metres > 0)) return (error.value = 'Enter the distance in metres')
-  if (!(Number.isInteger(arrows) && arrows >= 1 && arrows <= 32767)) return (error.value = 'Enter how many arrows you shot')
+  if (!(metres > 0)) return (error.value = t('newSession.enterDistance'))
+  if (!(Number.isInteger(arrows) && arrows >= 1 && arrows <= 32767)) return (error.value = t('volume.enterHow'))
   error.value = null
   saveVolume(props.session.id, { id: newId(), distance_m: metres.toFixed(1), arrow_count: arrows })
   count.value = ''
@@ -30,13 +32,13 @@ function add() {
 
 <template>
   <div class="row g-3">
-    <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
-    <div class="col-6"><FormField v-model="count" label="Arrows" inputmode="numeric" @enter="add" /></div>
+    <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance')" inputmode="decimal" /></div>
+    <div class="col-6"><FormField v-model="count" :label="$t('volume.arrows')" inputmode="numeric" @enter="add" /></div>
   </div>
   <ErrorText :message="error" />
-  <AppButton @click="add">Add</AppButton>
+  <AppButton @click="add">{{ $t('volume.add') }}</AppButton>
   <div v-for="entry in session.volume" :key="entry.id" class="d-flex justify-content-between">
-    <span>{{ entry.arrow_count }} arrows at {{ entry.distance_m }} m</span>
-    <IonButton fill="clear" size="small" class="m-0" @click="deleteVolume(session.id, entry.id)">Remove</IonButton>
+    <span>{{ $t('volume.entry', { n: entry.arrow_count, d: entry.distance_m }, entry.arrow_count) }}</span>
+    <IonButton fill="clear" size="small" class="m-0" @click="deleteVolume(session.id, entry.id)">{{ $t('volume.remove') }}</IonButton>
   </div>
 </template>

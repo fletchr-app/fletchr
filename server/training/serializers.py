@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 import logging
 from math import hypot, isfinite
 
@@ -30,9 +31,9 @@ class ShotSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         x, y = attrs.get("x"), attrs.get("y")
         if (x is None) != (y is None):
-            raise serializers.ValidationError("Give both x and y, or neither")
+            raise serializers.ValidationError(gettext("Give both x and y, or neither"))
         if x is not None and not (isfinite(x) and isfinite(y) and hypot(x, y) <= MAX_DISTANCE_FROM_CENTRE):
-            raise serializers.ValidationError("Position is out of range")
+            raise serializers.ValidationError(gettext("Position is out of range"))
         return attrs
 
 
@@ -46,17 +47,17 @@ class EndSerializer(serializers.ModelSerializer):
 
     def validate_face(self, slug):
         if get_face(slug) is None:
-            raise serializers.ValidationError("Unknown target face")
+            raise serializers.ValidationError(gettext("Unknown target face"))
         return slug
 
     def validate(self, attrs):
         face = get_face(attrs["face"])
         shots = attrs["shots"]
         if len(shots) > attrs["arrows_per_end"]:
-            raise serializers.ValidationError({"shots": "More shots than arrows per end"})
+            raise serializers.ValidationError({"shots": gettext("More shots than arrows per end")})
         ids = [s["id"] for s in shots]
         if len(set(ids)) != len(ids):
-            raise serializers.ValidationError({"shots": "Duplicate shot id"})
+            raise serializers.ValidationError({"shots": gettext("Duplicate shot id")})
         attrs["shots"] = [self.resolve_shot(face, i, s) for i, s in enumerate(shots)]
         return attrs
 
@@ -65,7 +66,7 @@ class EndSerializer(serializers.ModelSerializer):
         """Fill in the score: computed from the position, or checked against the face when typed in."""
         spot = shot.get("spot", 0)
         if spot >= len(face["spots"]):
-            raise serializers.ValidationError({"shots": f"Shot {index + 1}: this face has no spot {spot}"})
+            raise serializers.ValidationError({"shots": gettext("Shot %(n)s: this face has no spot %(spot)s") % {"n": index + 1, "spot": spot}})
         resolved = {**shot, "index": index, "spot": spot, "arrow_number": shot.get("arrow_number")}
         x, y = shot.get("x"), shot.get("y")
         if x is not None:
@@ -81,14 +82,14 @@ class EndSerializer(serializers.ModelSerializer):
             return resolved
         # No position: a typed score.
         if not face["rings"]:
-            raise serializers.ValidationError({"shots": f"Shot {index + 1}: this face has no scores, place the arrow on it"})
+            raise serializers.ValidationError({"shots": gettext("Shot %(n)s: this face has no scores, place the arrow on it") % {"n": index + 1}})
         value, is_x, is_miss = shot.get("value"), shot.get("is_x", False), shot.get("is_miss", False)
         if is_miss:
             value, is_x = None, False
         elif value not in {r["value"] for r in face["rings"]}:
-            raise serializers.ValidationError({"shots": f"Shot {index + 1}: {value} is not a score on this face"})
+            raise serializers.ValidationError({"shots": gettext("Shot %(n)s: %(value)s is not a score on this face") % {"n": index + 1, "value": value}})
         elif is_x and not (value == 10 and face.get("x_diameter_cm")):
-            raise serializers.ValidationError({"shots": f"Shot {index + 1}: this face has no X ring"})
+            raise serializers.ValidationError({"shots": gettext("Shot %(n)s: this face has no X ring") % {"n": index + 1}})
         resolved.update(value=value, is_x=is_x, is_miss=is_miss, is_manual=True)
         return resolved
 
@@ -120,17 +121,17 @@ class SessionWriteSerializer(serializers.ModelSerializer):
 
     def validate_bow_revision(self, revision):
         if revision is not None and revision.bow.owner_id != self.context["request"].user.id:
-            raise serializers.ValidationError("Not your bow")
+            raise serializers.ValidationError(gettext("Not your bow"))
         return revision
 
     def validate_arrow_set_revision(self, revision):
         if revision is not None and revision.arrow_set.owner_id != self.context["request"].user.id:
-            raise serializers.ValidationError("Not your arrow set")
+            raise serializers.ValidationError(gettext("Not your arrow set"))
         return revision
 
     def validate(self, attrs):
         if attrs.get("arrow_set_revision") is not None and attrs.get("bow_revision") is None:
-            raise serializers.ValidationError({"arrow_set_revision": "Arrows go with a bow: choose the bow too"})
+            raise serializers.ValidationError({"arrow_set_revision": gettext("Arrows go with a bow: choose the bow too")})
         return attrs
 
     def _with_setup(self, validated_data):

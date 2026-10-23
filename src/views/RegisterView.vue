@@ -43,19 +43,19 @@ function change() {
 </script>
 
 <template>
-  <AppPage title="Join with invite code" back-href="/sign-in">
+  <AppPage :title="$t('auth.register.title')" back-href="/sign-in">
     <div class="screen">
-      <FormField v-model="form.invite_code" label="Invite code" capitalize="characters" @update:model-value="change" />
-      <div v-if="preview?.kind === 'claim'">
-        Your coach in <b>{{ preview.team_name }}</b> keeps a profile for <b>{{ preview.profile_name }}</b>. If that is you, create your
-        account and its sessions and notes become yours. Notes the coach marked as private stay hidden from you.
-      </div>
-      <FormField v-model="form.name" label="Name" capitalize="words" autocomplete="name" />
-      <FormField v-model="form.email" label="Email" type="email" inputmode="email" autocomplete="email" />
-      <FormField v-model="form.password" label="Password" type="password" autocomplete="new-password" @enter="submit" />
+      <FormField v-model="form.invite_code" :label="$t('auth.register.inviteCode')" capitalize="characters" @update:model-value="change" />
+      <i18n-t v-if="preview?.kind === 'claim'" keypath="auth.register.claimNote" tag="div">
+        <template #team><b>{{ preview.team_name }}</b></template>
+        <template #profile><b>{{ preview.profile_name }}</b></template>
+      </i18n-t>
+      <FormField v-model="form.name" :label="$t('auth.register.name')" capitalize="words" autocomplete="name" />
+      <FormField v-model="form.email" :label="$t('auth.signIn.email')" type="email" inputmode="email" autocomplete="email" />
+      <FormField v-model="form.password" :label="$t('auth.signIn.password')" type="password" autocomplete="new-password" @enter="submit" />
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="submit">
-        {{ preview?.kind === 'claim' ? `Create account and link ${preview.profile_name}` : 'Create account' }}
+        {{ preview?.kind === 'claim' ? $t('auth.register.createAndLink', { profile: preview.profile_name }) : $t('auth.register.createAccount') }}
       </AppButton>
     </div>
   </AppPage>

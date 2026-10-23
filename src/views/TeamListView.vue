@@ -13,9 +13,9 @@ onIonViewWillEnter(load)
 </script>
 
 <template>
-  <AppPage title="Team" :back="false">
+  <AppPage :title="$t('team.title')" :back="false">
     <div class="screen">
-      <div v-if="loaded && coached.length === 0">You are not a coach in any team.</div>
+      <div v-if="loaded && coached.length === 0">{{ $t('team.notCoach') }}</div>
       <TeamOverview v-for="team in coached" :key="team.id" :team="team" />
     </div>
   </AppPage>

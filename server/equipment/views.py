@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import ProtectedError
 from drf_spectacular.utils import extend_schema
@@ -54,7 +55,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
         except ProtectedError:
             return Response(
-                {"detail": "This has been used in a session. Deactivate it instead of deleting it."},
+                {"detail": gettext("This has been used in a session. Deactivate it instead of deleting it.")},
                 status=status.HTTP_409_CONFLICT,
             )
 

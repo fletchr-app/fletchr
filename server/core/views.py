@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
@@ -115,7 +116,7 @@ class CodePreviewView(APIView):
         claim = claims.find_claim(code)
         if claim is not None and claim.is_usable:
             return Response({"kind": "claim", "team_name": claim.team.name, "profile_name": claim.profile.profile.name})
-        raise ValidationError({"invite_code": "Invalid or expired code"})
+        raise ValidationError({"invite_code": gettext("Invalid or expired code")})
 
 
 class RedeemClaimView(APIView):
@@ -201,7 +202,7 @@ class TeamListView(generics.ListAPIView):
         serializer = TeamNameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if TeamMember.objects.filter(user=request.user, role=Role.ADMIN).count() >= MAX_TEAMS_PER_USER:
-            raise ValidationError(f"You already manage {MAX_TEAMS_PER_USER} teams")
+            raise ValidationError(gettext("You already manage %(n)s teams") % {"n": MAX_TEAMS_PER_USER})
         team = Team.objects.create(name=serializer.validated_data["name"])
         TeamMember.objects.create(team=team, user=request.user, role=Role.ADMIN)
         team.my_role = Role.ADMIN
@@ -247,7 +248,7 @@ class TeamDetailView(APIView):
         """
         team = self._team(request, team_id)
         if team.my_role != Role.ADMIN:
-            raise PermissionDenied("Only team admins can delete the team")
+            raise PermissionDenied(gettext("Only team admins can delete the team"))
         profiles = User.objects.filter(is_managed=True, memberships__team=team)
         profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()  # only those of this team alone
         Team.objects.filter(pk=team.pk).delete()
@@ -258,7 +259,7 @@ class TeamDetailView(APIView):
         """Rename the team. Only admins."""
         team = self._team(request, team_id)
         if team.my_role != Role.ADMIN:
-            raise PermissionDenied("Only team admins can rename the team")
+            raise PermissionDenied(gettext("Only team admins can rename the team"))
         serializer = TeamNameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team.name = serializer.validated_data["name"]
@@ -282,13 +283,13 @@ class MemberDetailView(APIView):
         """Change someone's role. Only admins; a team always keeps at least one admin."""
         team = get_my_team(request, team_id)
         if not access.is_admin_in(request.user, team):
-            raise PermissionDenied("Only team admins can change roles")
+            raise PermissionDenied(gettext("Only team admins can change roles"))
         member = get_object_or_404(TeamMember.objects.select_related("user__profile"), team=team, user_id=user_id)
         serializer = RoleChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         role = serializer.validated_data["role"]
         if member.role == Role.ADMIN and role != Role.ADMIN and not TeamMember.objects.filter(team=team, role=Role.ADMIN).exclude(pk=member.pk).exists():
-            raise ValidationError("A team needs at least one admin")
+            raise ValidationError(gettext("A team needs at least one admin"))
         member.role = role
         if role == Role.ARCHER:
             member.also_shoots = False  # an archer's sessions are visible to the coaches anyway
@@ -299,10 +300,10 @@ class MemberDetailView(APIView):
     def delete(self, request, team_id, user_id):
         team = get_my_team(request, team_id)
         if not access.is_admin_in(request.user, team):
-            raise PermissionDenied("Only team admins can remove members")
+            raise PermissionDenied(gettext("Only team admins can remove members"))
         member = get_object_or_404(TeamMember, team=team, user_id=user_id)
         if member.role == Role.ADMIN and not TeamMember.objects.filter(team=team, role=Role.ADMIN).exclude(pk=member.pk).exists():
-            raise ValidationError("A team needs at least one admin")
+            raise ValidationError(gettext("A team needs at least one admin"))
         member.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -313,7 +314,7 @@ class InviteListCreateView(generics.ListCreateAPIView):
     def get_team(self):
         team = get_my_team(self.request, self.kwargs["team_id"])
         if not access.is_admin_in(self.request.user, team):
-            raise PermissionDenied("Only team admins can manage invites")
+            raise PermissionDenied(gettext("Only team admins can manage invites"))
         return team
 
     def get_queryset(self):
@@ -330,7 +331,7 @@ class InviteDetailView(APIView):
     def delete(self, request, team_id, pk):
         team = get_my_team(request, team_id)
         if not access.is_admin_in(request.user, team):
-            raise PermissionDenied("Only team admins can manage invites")
+            raise PermissionDenied(gettext("Only team admins can manage invites"))
         get_object_or_404(Invite, team=team, pk=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -338,7 +339,7 @@ class InviteDetailView(APIView):
 def coached_team(request, team_id):
     team = get_my_team(request, team_id)
     if not access.is_coach_in(request.user, team):
-        raise PermissionDenied("Only coaches can manage the archers of a team")
+        raise PermissionDenied(gettext("Only coaches can manage the archers of a team"))
     return team
 
 
@@ -418,7 +419,7 @@ class MyMembershipView(APIView):
         team = get_my_team(request, team_id)
         membership = TeamMember.objects.get(team=team, user=request.user)
         if membership.role not in COACH_ROLES:
-            raise PermissionDenied("Only coaches can choose this: archers' sessions are always visible to their coaches")
+            raise PermissionDenied(gettext("Only coaches can choose this: archers' sessions are always visible to their coaches"))
         serializer = MembershipSettingsSerializer(membership, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -430,7 +431,7 @@ class MyMembershipView(APIView):
         team = get_my_team(request, team_id)
         membership = TeamMember.objects.get(team=team, user=request.user)
         if membership.role == Role.ADMIN and not TeamMember.objects.filter(team=team, role=Role.ADMIN).exclude(pk=membership.pk).exists():
-            raise ValidationError("You are the only admin. Make someone else an admin first, or delete the team.")
+            raise ValidationError(gettext("You are the only admin. Make someone else an admin first, or delete the team."))
         membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -442,4 +443,4 @@ class SafeTokenRefreshView(TokenRefreshView):
         try:
             return super().post(request, *args, **kwargs)
         except User.DoesNotExist:
-            raise InvalidToken("This account no longer exists")
+            raise InvalidToken(gettext("This account no longer exists"))

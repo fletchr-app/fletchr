@@ -2,6 +2,7 @@ import { computed, shallowRef, watch } from 'vue';
 
 import type { components } from '@/lib/api-types';
 import { type ApiClient, AuthSession } from '@/lib/auth-session';
+import { currentLanguage, t } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { userIdOf } from '@/lib/jwt';
 import { useServer } from '@/composables/useServer';
@@ -13,12 +14,12 @@ type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 const { url } = useServer();
 
 // A new session per server address, so switching servers signs out.
-const session = shallowRef(new AuthSession(url.value));
+const session = shallowRef(new AuthSession(url.value, currentLanguage));
 const state = shallowRef(session.value.getState());
 let unsubscribe = session.value.subscribe(() => (state.value = session.value.getState()));
 watch(url, (next) => {
   unsubscribe();
-  session.value = new AuthSession(next);
+  session.value = new AuthSession(next, currentLanguage);
   state.value = session.value.getState();
   unsubscribe = session.value.subscribe(() => (state.value = session.value.getState()));
 });
@@ -53,7 +54,7 @@ async function signIn(email: string, password: string): Promise<string | null> {
     session.value.setTokens({ access: data.access, refresh: data.refresh });
     return null;
   } catch {
-    return 'Server not reachable';
+    return t('common.serverNotReachable');
   }
 }
 
@@ -66,7 +67,7 @@ async function register(body: RegisterBody): Promise<string | null> {
     session.value.setTokens({ access: data.access, refresh: data.refresh });
     return null;
   } catch {
-    return 'Server not reachable';
+    return t('common.serverNotReachable');
   }
 }
 

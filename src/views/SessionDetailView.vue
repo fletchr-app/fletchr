@@ -28,23 +28,23 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
 </script>
 
 <template>
-  <AppPage title="Session">
+  <AppPage :title="$t('session.title')">
     <div v-if="!data || !session || !totals" class="screen">
-      <div v-if="loading">Loading…</div>
+      <div v-if="loading">{{ $t('common.loading') }}</div>
       <ErrorText :message="error" />
     </div>
     <div v-else class="screen">
-      <h2 class="h5 m-0">{{ session.owner_name }} · {{ session.type }}</h2>
+      <h2 class="h5 m-0">{{ session.owner_name }} · {{ $t(`sessionType.${session.type}`) }}</h2>
       <div class="muted">
-        {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ' · finished' : ' · in progress' }}
+        {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ` · ${$t('session.finished')}` : ` · ${$t('training.inProgress')}` }}
       </div>
-      <div>{{ totals.arrows }} arrows{{ usesEnds(session.type) ? ` · ${totals.score} points` : '' }}</div>
-      <div v-if="session.gear">Equipment: {{ gearLine(session.gear) }}</div>
+      <div>{{ $t('count.arrows', totals.arrows) }}{{ usesEnds(session.type) ? ` · ${$t('count.points', totals.score)}` : '' }}</div>
+      <div v-if="session.gear">{{ $t('session.equipment', { gear: gearLine(session.gear) }) }}</div>
       <ErrorText :message="error" />
       <SessionPlots :session="session" />
       <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
       <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
-      <div v-for="v in session.volume" :key="v.id">{{ v.arrow_count }} arrows at {{ Number(v.distance_m) }} m</div>
+      <div v-for="v in session.volume" :key="v.id">{{ $t('volume.entry', { n: v.arrow_count, d: Number(v.distance_m) }, v.arrow_count) }}</div>
     </div>
   </AppPage>
 </template>

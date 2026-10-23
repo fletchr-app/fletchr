@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 
 import { useElementWidth } from '@/composables/useElementWidth'
@@ -13,9 +14,10 @@ const MAX_BAR = 24
 
 type Week = { week_start: string; arrows: number }
 
+const { t, locale } = useI18n()
 const date = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y!, m! - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+  return new Date(y!, m! - 1, d).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 }
 
 // Arrows per week as columns. Touch a column to read its value; the table view has all of them.
@@ -43,11 +45,11 @@ const columns = computed(() =>
 
 <template>
   <div class="chart-card">
-    <div class="chart-title">Arrows per week</div>
-    <div>Week of {{ date(weeks[selected]!.week_start) }}: {{ weeks[selected]!.arrows }} arrows</div>
+    <div class="chart-title">{{ $t('stats.arrowsPerWeek') }}</div>
+    <div>{{ $t('stats.weekOfArrows', { date: date(weeks[selected]!.week_start), n: weeks[selected]!.arrows }, weeks[selected]!.arrows) }}</div>
     <div v-if="asTable">
       <div v-for="w in [...weeks].reverse()" :key="w.week_start" class="d-flex justify-content-between py-1">
-        <span>Week of {{ date(w.week_start) }}</span>
+        <span>{{ $t('stats.weekOf', { date: date(w.week_start) }) }}</span>
         <span class="tabular">{{ w.arrows }}</span>
       </div>
     </div>
@@ -73,12 +75,12 @@ const columns = computed(() =>
           :key="w.week_start"
           type="button"
           class="chart-hit"
-          :aria-label="`Week of ${date(w.week_start)}: ${w.arrows} arrows`"
+          :aria-label="$t('stats.weekLabel', { date: date(w.week_start), n: w.arrows }, w.arrows)"
           :style="{ left: `${LEFT + i * slot}px`, width: `${slot}px`, top: `${TOP}px`, height: `${plotH}px` }"
           @click="picked = i"
         ></button>
       </template>
     </div>
-    <button type="button" class="chart-link" @click="asTable = !asTable">{{ asTable ? 'Show as chart' : 'Show as table' }}</button>
+    <button type="button" class="chart-link" @click="asTable = !asTable">{{ asTable ? $t('stats.showChart') : $t('stats.showTable') }}</button>
   </div>
 </template>

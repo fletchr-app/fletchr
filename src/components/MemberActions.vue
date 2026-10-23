@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
@@ -7,14 +8,16 @@ import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
-import { roleChangeWarning, roleLabel, TEAM_ROLES, type TeamRole } from '@/lib/team-admin'
+import { roleChangeWarning, TEAM_ROLES, type TeamRole } from '@/lib/team-admin'
 
 type Member = components['schemas']['Member']
 
 const props = defineProps<{ teamId: number; member: Member; isMe: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
 
+const { t } = useI18n()
 const { api } = useAuth()
+const roleOptions = computed(() => TEAM_ROLES.map((value) => ({ value, label: t(`roles.${value}`) })))
 const role = ref<TeamRole>(props.member.role as TeamRole)
 const confirmRemove = ref(false)
 const error = ref<string | null>(null)
@@ -27,7 +30,7 @@ async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
     if (result.ok) emit('changed')
     else error.value = errorMessage(result.error)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 const changeRole = () =>
@@ -49,11 +52,11 @@ const remove = () =>
 
 <template>
   <div class="d-flex flex-column gap-2 ps-3 border-start border-2">
-    <ChipGroup v-model="role" label="Role" :options="TEAM_ROLES" />
-    <div v-if="warning" style="opacity: 0.8">{{ warning }}</div>
-    <AppButton v-if="warning" @click="changeRole">Make {{ member.name || member.email }} {{ roleLabel(role).toLowerCase() }}</AppButton>
+    <ChipGroup v-model="role" :label="$t('teams.role')" :options="roleOptions" />
+    <div v-if="warning" style="opacity: 0.8">{{ $t(warning) }}</div>
+    <AppButton v-if="warning" @click="changeRole">{{ $t('teams.changeTo', { name: member.name || member.email, role: $t(`roles.${role}`) }) }}</AppButton>
     <AppButton v-if="!isMe" secondary @click="confirmRemove ? remove() : (confirmRemove = true)">
-      {{ confirmRemove ? 'Tap again to remove from the team' : 'Remove from the team' }}
+      {{ confirmRemove ? $t('teams.removeConfirm') : $t('teams.remove') }}
     </AppButton>
     <ErrorText :message="error" />
   </div>

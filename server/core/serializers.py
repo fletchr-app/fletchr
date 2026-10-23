@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
@@ -36,7 +37,7 @@ class RegisterSerializer(serializers.Serializer):
     def validate_email(self, value):
         value = value.lower()
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("An account with this email already exists")
+            raise serializers.ValidationError(gettext("An account with this email already exists"))
         return value
 
     def validate(self, attrs):
@@ -69,7 +70,7 @@ class TeamNameSerializer(serializers.Serializer):
     def validate_name(self, value):
         value = value.strip()
         if not value:
-            raise serializers.ValidationError("A team needs a name")
+            raise serializers.ValidationError(gettext("A team needs a name"))
         return value
 
 
@@ -112,7 +113,7 @@ class ArcherNameSerializer(serializers.Serializer):
     def validate_name(self, value):
         value = value.strip()
         if not value:
-            raise serializers.ValidationError("An archer needs a name")
+            raise serializers.ValidationError(gettext("An archer needs a name"))
         return value
 
 
@@ -144,7 +145,7 @@ class CurrentPasswordMixin(serializers.Serializer):
 
     def validate_current_password(self, value):
         if not self.context["request"].user.check_password(value):
-            raise serializers.ValidationError("Wrong password")
+            raise serializers.ValidationError(gettext("Wrong password"))
         return value
 
 
@@ -154,7 +155,7 @@ class PasswordChangeSerializer(CurrentPasswordMixin):
     def validate_new_password(self, value):
         user = self.context["request"].user
         if user.check_password(value):
-            raise serializers.ValidationError("Choose a different password")
+            raise serializers.ValidationError(gettext("Choose a different password"))
         try:
             validate_password(value, user)
         except DjangoValidationError as e:
@@ -168,7 +169,7 @@ class EmailChangeSerializer(CurrentPasswordMixin):
     def validate_new_email(self, value):
         value = value.strip().lower()
         if User.objects.filter(email__iexact=value).exclude(pk=self.context["request"].user.pk).exists():
-            raise serializers.ValidationError("This address is not available")
+            raise serializers.ValidationError(gettext("This address is not available"))
         return value
 
 

@@ -3,6 +3,7 @@ import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
 import { useServer } from '@/composables/useServer';
+import { t } from '@/i18n';
 import type { components } from '@/lib/api-types';
 import { errorMessage } from '@/lib/errors';
 import { localStore } from '@/lib/local-store';
@@ -82,7 +83,7 @@ async function deleteMyData(password: string, confirm: string): Promise<{ delete
       dispatch({ type: 'reset' });
       return { deleted: data.deleted };
     } catch {
-      return { error: 'Server not reachable. Nothing was deleted.' };
+      return { error: t('common.nothingDeleted') };
     }
   });
 }
@@ -101,7 +102,7 @@ async function deleteMyAccount(password: string, confirm: string): Promise<{ err
       await signOut(); // the account is gone: back to the sign-in screen
       return { error: '', teams: [] };
     } catch {
-      return { error: 'Server not reachable. Nothing was deleted.', teams: [] };
+      return { error: t('common.nothingDeleted'), teams: [] };
     }
   });
 }

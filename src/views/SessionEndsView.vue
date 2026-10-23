@@ -31,12 +31,12 @@ function remove() {
 </script>
 
 <template>
-  <AppPage title="Ends">
-    <div v-if="!session" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+  <AppPage :title="$t('session.ends')">
+    <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <div v-else class="screen">
       <EndRows :ends="session.ends" clickable @select="edit" />
       <AppButton secondary @click="confirmDelete ? remove() : (confirmDelete = true)">
-        {{ confirmDelete ? 'Tap again to delete this session' : 'Delete session' }}
+        {{ confirmDelete ? $t('session.deleteConfirm') : $t('session.delete') }}
       </AppButton>
     </div>
   </AppPage>

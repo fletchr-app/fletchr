@@ -28,7 +28,7 @@ const adapter: EquipmentAdapter = {
 </script>
 
 <template>
-  <AppPage title="Arrow set">
-    <EquipmentForm label="arrow set" :fields="ARROW_SET_FIELDS" :adapter="adapter" />
+  <AppPage :title="$t('equipment.arrowSet')">
+    <EquipmentForm kind="arrowSet" :fields="ARROW_SET_FIELDS" :adapter="adapter" />
   </AppPage>
 </template>

@@ -47,42 +47,42 @@ function newEnd() {
 </script>
 
 <template>
-  <AppPage title="Session" :fixed="fixed">
-    <div v-if="!session || !totals" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+  <AppPage :title="$t('session.title')" :fixed="fixed">
+    <div v-if="!session || !totals" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <!-- Ends sessions: one screen without scrolling. The list of ends and delete are on the ends page. -->
     <div v-else-if="usesEnds(session.type)" class="entry">
       <!-- Uploads that wait show as an icon, so the screen does not jump when they finish; only refused ones need the full banner. -->
       <SyncBanner v-if="failed.length > 0" />
       <div class="d-flex align-items-center gap-2">
-        <h2 class="h5 m-0 flex-grow-1">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
-        <IonIcon v-if="waiting > 0" :icon="cloudUploadOutline" class="muted" :title="`${waiting} waiting to upload`" />
+        <h2 class="h5 m-0 flex-grow-1">{{ $t(`sessionType.${session.type}`) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+        <IonIcon v-if="waiting > 0" :icon="cloudUploadOutline" class="muted" :title="$t('session.waiting', { n: waiting }, waiting)" />
       </div>
       <div class="muted">
-        {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows · {{ totals.score }} points{{ session.ended_at ? ' · finished' : '' }}
+        {{ session.location ? `${session.location} · ` : '' }}{{ $t('count.arrows', totals.arrows) }} · {{ $t('count.points', totals.score) }}{{ session.ended_at ? ` · ${$t('session.finished')}` : '' }}
       </div>
-      <div v-if="session.owner_name" class="muted">For {{ session.owner_name }}</div>
-      <div v-else class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
+      <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
-      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">Change distance, face{{ session.owner ? '' : ' or equipment' }}</RouterLink>
-      <AppButton @click="newEnd">New end</AppButton>
+      <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`" class="text-center">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</RouterLink>
+      <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
-        <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">All ends</AppButton>
-        <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen' : 'Finish session' }}</AppButton>
+        <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
+        <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopen') : $t('session.finish') }}</AppButton>
       </div>
     </div>
     <div v-else class="screen">
       <SyncBanner />
-      <h2 class="h5 m-0">{{ session.type }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+      <h2 class="h5 m-0">{{ $t(`sessionType.${session.type}`) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
       <div class="muted">
-        {{ session.location ? `${session.location} · ` : '' }}{{ totals.arrows }} arrows{{ session.ended_at ? ' · finished' : '' }}
+        {{ session.location ? `${session.location} · ` : '' }}{{ $t('count.arrows', totals.arrows) }}{{ session.ended_at ? ` · ${$t('session.finished')}` : '' }}
       </div>
-      <div v-if="session.owner_name" class="muted">For {{ session.owner_name }}</div>
-      <div v-else class="muted">Equipment: {{ gearLine(session.gear) || 'none chosen' }}</div>
+      <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
+      <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <VolumeLog :session="session" />
-      <AppButton secondary @click="finish">{{ session.ended_at ? 'Reopen session' : 'Finish session' }}</AppButton>
+      <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
-        {{ confirmDelete ? 'Tap again to delete this session' : 'Delete session' }}
+        {{ confirmDelete ? $t('session.deleteConfirm') : $t('session.delete') }}
       </AppButton>
     </div>
   </AppPage>

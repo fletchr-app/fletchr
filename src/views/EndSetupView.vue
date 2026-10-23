@@ -2,6 +2,7 @@
 import { IonSelect, IonSelectOption } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -14,6 +15,7 @@ import { gearFor, nextEndDefaults } from '@/lib/log-model'
 
 // Before each end: distance, face, arrows per end and equipment. "Start" opens the arrow entry.
 // Shown before the first end of a session, and from the "change" link on the session page.
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { loaded, sessions, equipment, setGear } = useLog()
@@ -29,23 +31,23 @@ const error = ref<string | null>(null)
 
 function begin() {
   const metres = Number(distance.value.replace(',', '.'))
-  if (!(metres > 0)) return (error.value = 'Enter the distance in metres')
-  if (!(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = 'Arrows per end must be between 1 and 12')
+  if (!(metres > 0)) return (error.value = t('newSession.enterDistance'))
+  if (!(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = t('newSession.arrowsRange'))
   const query: Record<string, string> = { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) }
   void router.replace({ path: `/training/${sessionId}/end`, query })
 }
 </script>
 
 <template>
-  <AppPage title="New end">
-    <div v-if="!session" class="screen">{{ loaded ? 'This session is not on this device.' : 'Loading…' }}</div>
+  <AppPage :title="$t('end.title')">
+    <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <div v-else class="screen">
-      <h2 class="h5 m-0">{{ `End ${(start?.index ?? 0) + 1}` }}</h2>
+      <h2 class="h5 m-0">{{ $t('end.number', { n: (start?.index ?? 0) + 1 }) }}</h2>
       <div class="row g-3">
-        <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
-        <div class="col-6"><FormField v-model="arrows" label="Arrows per end" inputmode="numeric" /></div>
+        <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance')" inputmode="decimal" /></div>
+        <div class="col-6"><FormField v-model="arrows" :label="$t('newSession.arrowsPerEnd')" inputmode="numeric" /></div>
       </div>
-      <IonSelect v-model="faceSlug" label="Face" label-placement="stacked" fill="outline" interface="action-sheet">
+      <IonSelect v-model="faceSlug" :label="$t('newSession.face')" label-placement="stacked" fill="outline" interface="action-sheet">
         <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
       </IonSelect>
       <GearPicker
@@ -55,12 +57,9 @@ function begin() {
         :arrow-set-id="session.gear?.arrow_set_id ?? null"
         @change="(bowId, arrowSetId) => setGear(session!.id, gearFor(equipment, bowId, arrowSetId))"
       />
-      <div class="faint">
-        Next screen: touch the face and move to the exact spot, then lift to place the arrow. Touch an arrow to move it. An arrow touching a
-        line counts for the higher ring: move it over the line.
-      </div>
+      <div class="faint">{{ $t('end.hint') }}</div>
       <ErrorText :message="error" />
-      <AppButton @click="begin">Start entering arrows</AppButton>
+      <AppButton @click="begin">{{ $t('end.startEntering') }}</AppButton>
     </div>
   </AppPage>
 </template>

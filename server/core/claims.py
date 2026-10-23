@@ -1,5 +1,6 @@
 """Archers without an account: a coach keeps a profile for them, and the archer takes it over later."""
 
+from django.utils.translation import gettext
 from django.db import transaction
 
 from .models import COACH_ROLES, ClaimCode, Role, TeamMember, User, normalize_code
@@ -42,15 +43,15 @@ def claim_profile(code, user):
 
     claim = ClaimCode.objects.select_for_update().select_related("profile").filter(code=normalize_code(code)).first()
     if claim is None or not claim.is_usable:
-        raise ClaimError("Invalid or expired code")
+        raise ClaimError(gettext("Invalid or expired code"))
     profile = claim.profile
     if user.is_managed or profile.pk == user.pk:
-        raise ClaimError("Invalid or expired code")
+        raise ClaimError(gettext("Invalid or expired code"))
     memberships = list(TeamMember.objects.filter(user=profile))
     for m in memberships:
         mine = TeamMember.objects.filter(team=m.team, user=user).first()
         if mine is not None and mine.role != Role.ARCHER:
-            raise ClaimError("You are a coach in this team. A profile of an archer can only be taken over by an archer.")
+            raise ClaimError(gettext("You are a coach in this team. A profile of an archer can only be taken over by an archer."))
     for m in memberships:
         if TeamMember.objects.filter(team=m.team, user=user).exists():
             m.delete()  # already in the team: keep your own membership

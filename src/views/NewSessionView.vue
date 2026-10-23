@@ -2,6 +2,7 @@
 import { IonSelect, IonSelectOption } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -13,22 +14,20 @@ import { useLog } from '@/composables/useLog'
 import { FACES } from '@/lib/faces'
 import { defaultChoice, type Environment, firstEndDefaults, gearFor, type SessionType, usesEnds } from '@/lib/log-model'
 
-const TYPES: { value: SessionType; label: string }[] = [
-  { value: 'scoring', label: 'Scoring' },
-  { value: 'competition', label: 'Competition' },
-  { value: 'volume', label: 'Volume' },
-  { value: 'technique', label: 'Technique' },
-]
-const ENVIRONMENTS: { value: Environment; label: string }[] = [
-  { value: 'indoor', label: 'Indoor' },
-  { value: 'outdoor', label: 'Outdoor' },
-  { value: '', label: 'Not set' },
-]
+const { t } = useI18n()
+const TYPES = computed<{ value: SessionType; label: string }[]>(() =>
+  (['scoring', 'competition', 'volume', 'technique'] as const).map((value) => ({ value, label: t(`sessionType.${value}`) })),
+)
+const ENVIRONMENTS = computed<{ value: Environment; label: string }[]>(() => [
+  { value: 'indoor', label: t('newSession.indoor') },
+  { value: 'outdoor', label: t('newSession.outdoor') },
+  { value: '', label: t('newSession.notSet') },
+])
 
 const route = useRoute()
 const router = useRouter()
 // A coach logging for an archer without an account (?for=<id>&name=...): no equipment, it is the archer's.
-const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? 'the archer') } : undefined
+const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? t('newSession.theArcher')) } : undefined
 const { startSession, sessions, equipment, refreshEquipment } = useLog()
 const type = ref<SessionType>('scoring')
 const environment = ref<Environment>('indoor')
@@ -51,8 +50,8 @@ const error = ref<string | null>(null)
 function start() {
   const metres = Number(distance.value.replace(',', '.'))
   const ends = usesEnds(type.value)
-  if (ends && !(metres > 0)) return (error.value = 'Enter the distance in metres')
-  if (ends && !(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = 'Arrows per end must be between 1 and 12')
+  if (ends && !(metres > 0)) return (error.value = t('newSession.enterDistance'))
+  if (ends && !(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = t('newSession.arrowsRange'))
   const { bowId, arrowSetId } = choice.value
   const gear = archer || bowId === null ? undefined : gearFor(equipment.value, bowId, arrowSetId)
   const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear, archer)}`
@@ -63,23 +62,23 @@ function start() {
 </script>
 
 <template>
-  <AppPage :title="archer ? `New session for ${archer.name}` : 'New session'">
+  <AppPage :title="archer ? $t('newSession.forTitle', { name: archer.name }) : $t('newSession.title')">
     <div class="screen">
-      <ChipGroup v-model="type" label="Type" :options="TYPES" />
-      <ChipGroup v-model="environment" label="Where" :options="ENVIRONMENTS" />
-      <FormField v-model="location" label="Location (optional)" capitalize="sentences" />
+      <ChipGroup v-model="type" :label="$t('newSession.type')" :options="TYPES" />
+      <ChipGroup v-model="environment" :label="$t('newSession.where')" :options="ENVIRONMENTS" />
+      <FormField v-model="location" :label="$t('newSession.location')" capitalize="sentences" />
       <template v-if="usesEnds(type)">
         <div class="row g-3">
-          <div class="col-6"><FormField v-model="distance" label="Distance (m)" inputmode="decimal" /></div>
-          <div class="col-6"><FormField v-model="arrows" label="Arrows per end" inputmode="numeric" /></div>
+          <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance')" inputmode="decimal" /></div>
+          <div class="col-6"><FormField v-model="arrows" :label="$t('newSession.arrowsPerEnd')" inputmode="numeric" /></div>
         </div>
-        <IonSelect v-model="faceSlug" label="Face" label-placement="stacked" fill="outline" interface="action-sheet">
+        <IonSelect v-model="faceSlug" :label="$t('newSession.face')" label-placement="stacked" fill="outline" interface="action-sheet">
           <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
         </IonSelect>
       </template>
       <GearPicker v-if="!archer" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
       <ErrorText :message="error" />
-      <AppButton @click="start">Start</AppButton>
+      <AppButton @click="start">{{ $t('newSession.start') }}</AppButton>
     </div>
   </AppPage>
 </template>

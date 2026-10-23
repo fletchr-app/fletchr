@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
@@ -15,6 +16,7 @@ const REFRESH_MS = 15000
 const always = () => true
 
 // One team: its members, and for admins the invites and the team name.
+const { t } = useI18n()
 const route = useRoute()
 const teamId = Number(route.params.id)
 const { api, userId } = useAuth()
@@ -28,7 +30,7 @@ const invites = useRemote(async () => {
   return (await api.GET('/api/teams/{team_id}/invites/', { params: { path: { team_id: teamId } } })).data ?? null
 }, { ...poll, watch: [isAdmin] })
 
-const title = computed(() => team.data.value?.name ?? 'Team')
+const title = computed(() => team.data.value?.name ?? t('team.title'))
 
 // After a change, fetch everything again.
 function reload() {
@@ -42,7 +44,7 @@ function reload() {
   <AppPage :title="title">
     <div class="screen">
       <ErrorText :message="team.error.value ?? members.error.value" />
-      <div v-if="team.loading.value">Loading…</div>
+      <div v-if="team.loading.value">{{ $t('common.loading') }}</div>
       <template v-if="team.data.value">
         <TeamRename v-if="isAdmin" :key="team.data.value.name" :team-id="teamId" :name="team.data.value.name" @changed="reload" />
         <MembersSection

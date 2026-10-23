@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -7,7 +8,7 @@ export async function saveJson(filename: string, text: string): Promise<'saved' 
   if (Capacitor.isNativePlatform()) {
     const { uri } = await Filesystem.writeFile({ path: filename, data: text, directory: Directory.Cache, encoding: Encoding.UTF8 });
     if (!(await Share.canShare()).value) throw new Error('Sharing is not available on this device');
-    await Share.share({ title: 'Your data', files: [uri] });
+    await Share.share({ title: t('privacy.title'), files: [uri] });
     return 'shared';
   }
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));

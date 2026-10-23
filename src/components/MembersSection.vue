@@ -5,7 +5,7 @@ import { ref } from 'vue'
 
 import MemberActions from '@/components/MemberActions.vue'
 import type { components } from '@/lib/api-types'
-import { roleLabel, sortMembers } from '@/lib/team-admin'
+import { sortMembers } from '@/lib/team-admin'
 
 type Member = components['schemas']['Member']
 
@@ -18,12 +18,12 @@ const open = ref<number | null>(null)
 
 <template>
   <div class="d-flex flex-column gap-3">
-    <h2 class="h5 m-0">Members</h2>
+    <h2 class="h5 m-0">{{ $t('teams.members') }}</h2>
     <div v-for="m in sortMembers(members)" :key="m.user_id" class="d-flex flex-column gap-2">
       <IonItem :button="isAdmin" :detail="false" lines="full" @click="isAdmin && (open = open === m.user_id ? null : m.user_id)">
         <IonLabel class="ion-text-wrap">
-          <h3>{{ m.name || m.email }}{{ m.user_id === myId ? ' (you)' : '' }}</h3>
-          <p>{{ roleLabel(m.role) }} · {{ m.email }}{{ m.also_shoots ? ' · shares own training' : '' }}</p>
+          <h3>{{ m.name || m.email }}{{ m.user_id === myId ? ` (${$t('teams.you')})` : '' }}</h3>
+          <p>{{ $t(`roles.${m.role}`) }} · {{ m.email }}{{ m.also_shoots ? ` · ${$t('teams.sharesTraining')}` : '' }}</p>
         </IonLabel>
         <IonIcon v-if="isAdmin" slot="end" :icon="open === m.user_id ? chevronUp : chevronDown" />
       </IonItem>

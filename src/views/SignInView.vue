@@ -24,14 +24,14 @@ async function submit() {
 </script>
 
 <template>
-  <AppPage title="Sign in" :back="false">
+  <AppPage :title="$t('auth.signIn.title')" :back="false">
     <div class="screen">
-      <FormField v-model="email" label="Email" type="email" inputmode="email" autocomplete="email" />
-      <FormField v-model="password" label="Password" type="password" autocomplete="current-password" @enter="submit" />
+      <FormField v-model="email" :label="$t('auth.signIn.email')" type="email" inputmode="email" autocomplete="email" />
+      <FormField v-model="password" :label="$t('auth.signIn.password')" type="password" autocomplete="current-password" @enter="submit" />
       <ErrorText :message="error" />
-      <AppButton :busy="busy" @click="submit">Sign in</AppButton>
-      <RouterLink to="/register">I have an invite code</RouterLink>
-      <div class="muted">Server: {{ url }} <RouterLink to="/settings">change</RouterLink></div>
+      <AppButton :busy="busy" @click="submit">{{ $t('auth.signIn.button') }}</AppButton>
+      <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
+      <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings">{{ $t('auth.signIn.change') }}</RouterLink></div>
     </div>
   </AppPage>
 </template>

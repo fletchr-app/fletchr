@@ -28,6 +28,11 @@ Run `type-check` and `test` before declaring a task done.
 - Sessions are logged on the device first (`useLog`) and uploaded from a queue; see `src/lib/log-sync.ts`. Screens that show other people's data read from the server with `useRemote`.
 - The Android project in `android/` is committed; its build output is not. The app version comes from `package.json`.
 
+## Texts
+
+- All user-visible text goes through vue-i18n (`src/locales/en.ts` and `de.ts`, no literal English in templates). Server error messages go through `gettext` (`server/locale/`). Both are described in `docs/i18n.md`.
+- `src/lib` returns message keys or takes words as parameters, not sentences; `errors.ts` and `export-file.ts` import `t` from `@/i18n` as the exception.
+
 ## Rules
 
 - Never commit or push unless asked.

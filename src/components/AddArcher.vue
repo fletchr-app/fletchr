@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { alertController } from '@ionic/vue'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -11,6 +12,7 @@ import { errorMessage } from '@/lib/errors'
 const props = defineProps<{ teamId: number }>()
 const emit = defineEmits<{ added: [] }>()
 
+const { t } = useI18n()
 const { api } = useAuth()
 const error = ref<string | null>(null)
 
@@ -21,18 +23,18 @@ async function add(name: string) {
     if (data) emit('added')
     else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
 }
 
 async function ask() {
   const alert = await alertController.create({
-    header: 'Add an archer',
-    message: 'For someone without an account. You can write notes and log sessions for them, and link their account later.',
-    inputs: [{ name: 'name', type: 'text', placeholder: 'Name', attributes: { autocapitalize: 'words' } }],
+    header: t('teams.addArcherHeader'),
+    message: t('teams.addArcherMessage'),
+    inputs: [{ name: 'name', type: 'text', placeholder: t('teams.namePlaceholder'), attributes: { autocapitalize: 'words' } }],
     buttons: [
-      { text: 'Cancel', role: 'cancel' },
-      { text: 'Add', handler: (value: { name?: string }) => !!value.name?.trim() && void add(value.name.trim()) },
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('teams.add'), handler: (value: { name?: string }) => !!value.name?.trim() && void add(value.name.trim()) },
     ],
   })
   await alert.present()
@@ -41,7 +43,7 @@ async function ask() {
 
 <template>
   <div class="d-flex flex-column gap-2">
-    <AppButton secondary @click="ask">Add an archer without an account</AppButton>
+    <AppButton secondary @click="ask">{{ $t('teams.addArcher') }}</AppButton>
     <ErrorText :message="error" />
   </div>
 </template>

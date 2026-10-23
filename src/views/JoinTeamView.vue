@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -11,6 +12,7 @@ import { useCodePreview } from '@/composables/useCodePreview'
 import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { api } = useAuth()
@@ -42,7 +44,7 @@ async function redeem(path: '/api/invites/redeem/' | '/api/claims/redeem/') {
     }
     else error.value = errorMessage(failure)
   } catch {
-    error.value = 'Server not reachable'
+    error.value = t('common.serverNotReachable')
   }
   busy.value = false
 }
@@ -60,27 +62,29 @@ function change() {
 </script>
 
 <template>
-  <AppPage title="Join a team">
+  <AppPage :title="$t('auth.join.title')">
     <div class="screen">
-      <FormField v-model="code" label="Invite code" capitalize="characters" @update:model-value="change" @enter="submit" />
+      <FormField v-model="code" :label="$t('auth.join.inviteCode')" capitalize="characters" @update:model-value="change" @enter="submit" />
       <template v-if="preview?.kind === 'claim'">
-        <div>
-          Your coach in <b>{{ preview.team_name }}</b> keeps a profile for <b>{{ preview.profile_name }}</b>. If that is you, link it to your
-          account: its sessions and notes become yours. Notes the coach marked as private stay hidden from you.
-        </div>
+        <i18n-t keypath="auth.join.claimNote" tag="div">
+          <template #team><b>{{ preview.team_name }}</b></template>
+          <template #profile><b>{{ preview.profile_name }}</b></template>
+        </i18n-t>
         <ErrorText :message="error" />
-        <AppButton :busy="busy" @click="redeem('/api/claims/redeem/')">Link {{ preview.profile_name }} to my account</AppButton>
-        <AppButton secondary @click="change">Cancel</AppButton>
+        <AppButton :busy="busy" @click="redeem('/api/claims/redeem/')">{{ $t('auth.join.link', { profile: preview.profile_name }) }}</AppButton>
+        <AppButton secondary @click="change">{{ $t('common.cancel') }}</AppButton>
       </template>
       <template v-else-if="preview?.kind === 'invite'">
-        <div>You are invited to join <b>{{ preview.team_name }}</b>.</div>
+        <i18n-t keypath="auth.join.invited" tag="div">
+          <template #team><b>{{ preview.team_name }}</b></template>
+        </i18n-t>
         <ErrorText :message="error" />
-        <AppButton :busy="busy" @click="redeem('/api/invites/redeem/')">Join {{ preview.team_name }}</AppButton>
-        <AppButton secondary @click="change">Cancel</AppButton>
+        <AppButton :busy="busy" @click="redeem('/api/invites/redeem/')">{{ $t('auth.join.joinNamed', { team: preview.team_name }) }}</AppButton>
+        <AppButton secondary @click="change">{{ $t('common.cancel') }}</AppButton>
       </template>
       <template v-else>
         <ErrorText :message="error" />
-        <AppButton :busy="busy" @click="submit">Join team</AppButton>
+        <AppButton :busy="busy" @click="submit">{{ $t('auth.join.join') }}</AppButton>
       </template>
     </div>
   </AppPage>

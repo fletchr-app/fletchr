@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from rest_framework import serializers
 
 from .models import ARROW_SET_FIELDS, BOW_FIELDS, ArrowSet, ArrowSetRevision, Bow, BowRevision, Setup
@@ -47,10 +48,10 @@ class SetupSerializer(serializers.ModelSerializer):
 
     def validate_bow_revision(self, revision):
         if revision.bow.owner_id != self.context["request"].user.id:
-            raise serializers.ValidationError("Not your bow")
+            raise serializers.ValidationError(gettext("Not your bow"))
         return revision
 
     def validate_arrow_set_revision(self, revision):
         if revision is not None and revision.arrow_set.owner_id != self.context["request"].user.id:
-            raise serializers.ValidationError("Not your arrow set")
+            raise serializers.ValidationError(gettext("Not your arrow set"))
         return revision
