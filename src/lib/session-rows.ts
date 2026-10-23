@@ -31,3 +31,15 @@ export function sessionRows(local: LogSession[], remote: Summary[]): SessionRow[
       })),
   ].sort((a, b) => b.started_at.localeCompare(a.started_at));
 }
+
+/** Monday 00:00 of the week `now` is in, on this device's clock (the server's statistics count weeks from Monday too). */
+export function weekStart(now: Date): Date {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return start;
+}
+
+/** Arrows (scored or only counted) of the sessions that started on or after `from`. */
+export function arrowsSince(rows: SessionRow[], from: Date): number {
+  return rows.filter((r) => new Date(r.started_at) >= from).reduce((sum, r) => sum + r.arrows, 0);
+}

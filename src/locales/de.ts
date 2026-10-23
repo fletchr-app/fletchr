@@ -79,6 +79,10 @@ export default {
     hello: 'Hallo {name}',
     noTeam: 'Du bist noch in keinem Team. Unter Einstellungen kannst du mit einem Einladungscode eins beitreten oder ein eigenes anlegen.',
     yourTeams: 'Deine Teams',
+    thisWeek: 'Diese Woche',
+    arrowsShot: 'Geschossene Pfeile, gewertet oder nicht.',
+    lastSession: 'Letztes Training',
+    noSessions: 'Du hast noch kein Training eingetragen.',
   },
   team: {
     title: 'Team',
