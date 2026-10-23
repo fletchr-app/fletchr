@@ -6,6 +6,7 @@ import { ref } from 'vue'
 
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
+import { formatCode } from '@/lib/codes'
 import { inviteMessage, roleLabel } from '@/lib/team-admin'
 
 type Invite = components['schemas']['Invite']
@@ -47,7 +48,7 @@ async function cancel() {
 
 <template>
   <div class="d-flex flex-column gap-1 p-3 rounded border">
-    <div class="fs-5 fw-bold user-select-all" style="letter-spacing: 2px">{{ invite.code }}</div>
+    <div class="fs-5 fw-bold user-select-all" style="letter-spacing: 2px">{{ formatCode(invite.code) }}</div>
     <div class="muted">{{ roleLabel(invite.role ?? 'archer') }} · until {{ new Date(invite.expires_at).toLocaleDateString() }}</div>
     <div class="d-flex gap-3">
       <IonButton fill="clear" size="small" class="m-0" @click="share">{{ native ? 'Share' : 'Copy invite text' }}</IonButton>

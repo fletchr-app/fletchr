@@ -10,6 +10,7 @@ import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
+import { formatCode } from '@/lib/codes'
 import { claimMessage } from '@/lib/team-admin'
 
 // What a coach can do with the profile of an archer without an account: link it to their account, rename, delete.
@@ -88,7 +89,7 @@ async function remove() {
   <div class="d-flex flex-column gap-2">
     <div class="muted">{{ name }} has no account. When they join, they can take over this profile with a code.</div>
     <div v-if="claim" class="d-flex flex-column gap-1 p-3 rounded border">
-      <div class="fs-5 fw-bold selectable" style="letter-spacing: 2px">{{ claim.code }}</div>
+      <div class="fs-5 fw-bold selectable" style="letter-spacing: 2px">{{ formatCode(claim.code) }}</div>
       <div class="muted">Works once, until {{ new Date(claim.expires_at).toLocaleDateString() }}. They see who they link to before confirming.</div>
       <IonButton fill="clear" size="small" class="m-0" @click="share">{{ native ? 'Share' : 'Copy message' }}</IonButton>
       <div v-if="note" class="muted">{{ note }}</div>

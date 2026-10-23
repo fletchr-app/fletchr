@@ -1,5 +1,7 @@
 // Wording and ordering for the team admin screens. No React, so it is tested with `npm test`.
 
+import { formatCode } from './codes.ts';
+
 export type TeamRole = 'archer' | 'coach' | 'admin';
 export const TEAM_ROLES: { value: TeamRole; label: string }[] = [
   { value: 'archer', label: 'Archer' },
@@ -40,11 +42,11 @@ export function sortMembers<T extends { role: string; name: string; email: strin
 /** The text to send someone an invite with. */
 export function inviteMessage(teamName: string, code: string, expiresAt: string, locale?: string): string {
   const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  return `Join ${teamName} on Fletchr: open the app, tap "I have an invite code" and enter ${code}. The code works until ${until}.`;
+  return `Join ${teamName} on Fletchr: open the app, tap "I have an invite code" and enter ${formatCode(code)}. The code works until ${until}.`;
 }
 
 /** The text to send an archer with, to take over the profile their coach keeps for them. */
 export function claimMessage(teamName: string, code: string, expiresAt: string, locale?: string): string {
   const until = new Date(expiresAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  return `Your coach in ${teamName} keeps your training notes on Fletchr. To take them over, open the app, tap "I have an invite code" and enter ${code}. If you already have an account, use Settings, "Join a team". The code works until ${until}.`;
+  return `Your coach in ${teamName} keeps your training notes on Fletchr. To take them over, open the app, tap "I have an invite code" and enter ${formatCode(code)}. If you already have an account, use Settings, "Join a team". The code works until ${until}.`;
 }

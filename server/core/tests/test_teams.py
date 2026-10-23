@@ -41,7 +41,7 @@ def test_admin_creates_lists_and_revokes_invites(client_for, club):
     client = client_for(club["admin"])
     url = f"/api/teams/{club['a'].pk}/invites/"
     res = client.post(url, {"role": "coach"}, format="json")
-    assert res.status_code == 201 and res.data["role"] == "coach" and len(res.data["code"]) == 10
+    assert res.status_code == 201 and res.data["role"] == "coach" and len(res.data["code"]) == 12
     assert len(results(client.get(url))) == 1
     assert client.delete(f"{url}{res.data['id']}/").status_code == 204
     assert results(client.get(url)) == []

@@ -1,5 +1,4 @@
 import secrets
-import string
 import uuid
 from datetime import timedelta
 
@@ -12,7 +11,15 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 INVITE_LIFETIME = timedelta(days=14)
-INVITE_ALPHABET = string.ascii_uppercase + string.digits
+# Codes are read aloud, typed from a message and copied by hand, so no look-alikes: no 0 and O, no 1, I and L.
+# 31 symbols; 12 of them are about 59 bits, plenty for a code that is single-use, short-lived and rate-limited.
+INVITE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+CODE_LENGTH = 12
+
+
+def normalize_code(raw):
+    """What was typed, as a code is stored: upper case, without spaces, dashes or other separators."""
+    return "".join(c for c in raw.upper() if c.isalnum())
 
 
 class UserManager(BaseUserManager):
@@ -116,7 +123,7 @@ class TeamMember(models.Model):
 
 
 def new_invite_code():
-    return "".join(secrets.choice(INVITE_ALPHABET) for _ in range(10))
+    return "".join(secrets.choice(INVITE_ALPHABET) for _ in range(CODE_LENGTH))
 
 
 def default_invite_expiry():

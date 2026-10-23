@@ -40,7 +40,7 @@ test('members are sorted admins, coaches, archers, then by name', () => {
 test('the invite message has the team, the code and the date', () => {
   const text = inviteMessage('Archery Göttingen', 'AB12CD34EF', '2026-11-01T12:00:00Z', 'en-GB');
   assert.match(text, /Archery Göttingen/);
-  assert.match(text, /AB12CD34EF/);
+  assert.match(text, /AB12-CD34-EF/);
   assert.match(text, /1 November 2026/);
   assert.match(text, /I have an invite code/);
 });
@@ -52,7 +52,7 @@ test('role names for display', () => {
 test('the claim message has the team, the code, the date and both ways to enter it', () => {
   const text = claimMessage('Archery Göttingen', 'AB12CD34EF', '2026-11-01T12:00:00Z', 'en-GB');
   assert.match(text, /Archery Göttingen/);
-  assert.match(text, /AB12CD34EF/);
+  assert.match(text, /AB12-CD34-EF/);
   assert.match(text, /1 November 2026/);
   assert.match(text, /I have an invite code/);
   assert.match(text, /Join a team/);

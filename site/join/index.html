@@ -39,7 +39,7 @@
     if (!code) {
       what.textContent = 'Dieser Link enthält keinen Code.';
     } else {
-      document.getElementById('code').textContent = code;
+      document.getElementById('code').textContent = code.replace(/(.{4})(?=.)/g, '$1-');
       document.getElementById('codebox').hidden = false;
       document.getElementById('open').href = 'de.fletchr.app://join/' + code;
       document.getElementById('actions').hidden = false;

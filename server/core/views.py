@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from . import access, claims
-from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User
+from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
 from .serializers import (
     ArcherNameSerializer,
     ArcherSerializer,
@@ -108,7 +108,7 @@ class CodePreviewView(APIView):
     def post(self, request):
         serializer = RedeemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        code = serializer.validated_data["invite_code"].strip().upper()
+        code = normalize_code(serializer.validated_data["invite_code"])
         invite = Invite.objects.select_related("team").filter(code=code).first()
         if invite is not None and invite.is_usable:
             return Response({"kind": "invite", "team_name": invite.team.name, "profile_name": None})

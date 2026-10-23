@@ -2,7 +2,7 @@
 
 from django.db import transaction
 
-from .models import COACH_ROLES, ClaimCode, Role, TeamMember, User
+from .models import COACH_ROLES, ClaimCode, Role, TeamMember, User, normalize_code
 
 
 class ClaimError(Exception):
@@ -10,7 +10,7 @@ class ClaimError(Exception):
 
 
 def find_claim(code):
-    return ClaimCode.objects.select_related("profile__profile", "team").filter(code=code.strip().upper()).first()
+    return ClaimCode.objects.select_related("profile__profile", "team").filter(code=normalize_code(code)).first()
 
 
 def managed_archer(coach, team, user_id):
@@ -40,7 +40,7 @@ def claim_profile(code, user):
     from notes.models import Note
     from training.models import TrainingSession
 
-    claim = ClaimCode.objects.select_for_update().select_related("profile").filter(code=code.strip().upper()).first()
+    claim = ClaimCode.objects.select_for_update().select_related("profile").filter(code=normalize_code(code)).first()
     if claim is None or not claim.is_usable:
         raise ClaimError("Invalid or expired code")
     profile = claim.profile

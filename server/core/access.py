@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User
+from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User, normalize_code
 
 
 class InviteError(Exception):
@@ -62,7 +62,7 @@ def note_teams(coach, archer):
 @transaction.atomic
 def redeem_invite(code, user):
     """Add `user` to the invite's team. The same error for every failure, so codes can't be probed."""
-    invite = Invite.objects.select_for_update().filter(code=code.strip().upper()).first()
+    invite = Invite.objects.select_for_update().filter(code=normalize_code(code)).first()
     if invite is None or not invite.is_usable:
         raise InviteError("Invalid or expired invite code")
     if TeamMember.objects.filter(team=invite.team, user=user).exists():
