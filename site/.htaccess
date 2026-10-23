@@ -5,6 +5,14 @@ RewriteCond %{REQUEST_URI} !^/join/index\.html$
 RewriteRule ^join/.+$ /join/index.html [L]
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
+  # Pages and the style sheet: the browser asks the server each time (a short "not modified" when nothing changed),
+  # so a deploy shows at once. Images may be kept for a day.
+  <FilesMatch "\.(html|css)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(jpg|png|svg)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
 </IfModule>
 ErrorDocument 404 /404.html
 <Files "assetlinks.json">
