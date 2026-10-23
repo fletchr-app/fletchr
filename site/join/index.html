@@ -2,67 +2,77 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
   <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Einladung zu Fletchr</title>
+  <meta name="description" content="Einladung zu Fletchr">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header><a class="brand" href="/">Fletchr</a></header>
+  <header><a class="brand" href="/"><img src="/favicon.svg" alt="" width="36" height="36">Fletchr</a></header>
   <main>
-    <h1>Einladung zu Fletchr</h1>
+    <h1 id="title">Einladung zu Fletchr</h1>
     <p id="what" class="muted">Einen Moment, die Einladung wird geprüft.</p>
 
     <div class="card" id="codebox" hidden>
-      <div class="muted">Dein Code</div>
+      <div class="muted" id="codelabel">Dein Code</div>
       <div class="code" id="code"></div>
     </div>
 
     <p id="actions" hidden>
       <a class="button" id="open" href="#">In der App öffnen</a>
     </p>
-    <p id="help" class="muted" hidden>
-      Falls die App sich nicht öffnet: Installiere Fletchr, öffne sie und tippe auf "Ich habe einen Einladungscode".
-      Wenn du schon ein Konto hast, geh auf "Mehr" und "Einem Verein beitreten". Gib dort den Code ein.
-    </p>
+    <p id="help" class="muted" hidden></p>
+    <script>
+      // German or English, by the browser's language. The code is the last part of the address: /join/<code>.
+      const TEXT = {"de": {"h": "Einladung zu Fletchr", "checking": "Einen Moment, die Einladung wird geprüft.", "code": "Dein Code", "open": "In der App öffnen", "help": "Falls die App sich nicht öffnet: Installiere Fletchr, öffne sie und tippe auf \"Ich habe einen Einladungscode\". Wenn du schon ein Konto hast, geh auf \"Einstellungen\" und \"Team beitreten\". Gib dort den Code ein.", "none": "Dieser Link enthält keinen Code.", "claim": "Dein Trainer im Team \"{team}\" führt ein Profil für dich: \"{profile}\". Mit dem Code übernimmst du es in dein Konto.", "invite": "Du wirst in das Team \"{team}\" eingeladen.", "bad": "Der Code ist ungültig oder abgelaufen. Frag den, der dich eingeladen hat, nach einem neuen."}, "en": {"h": "Invitation to Fletchr", "checking": "One moment, the invitation is being checked.", "code": "Your code", "open": "Open in the app", "help": "If the app does not open: install Fletchr, open it and tap \"I have an invite code\". If you already have an account, go to \"Settings\" and \"Join a team\". Enter the code there.", "none": "This link has no code.", "claim": "Your coach in the team \"{team}\" keeps a profile for you: \"{profile}\". With the code you take it over into your account.", "invite": "You are invited to the team \"{team}\".", "bad": "The code is invalid or has expired. Ask whoever invited you for a new one."}};
+      const lang = (navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en';
+      const T = TEXT[lang];
+      document.documentElement.lang = lang;
+      document.title = T.h + ' · Fletchr';
+      document.getElementById('title').textContent = T.h;
+      document.getElementById('codelabel').textContent = T.code;
+      document.getElementById('open').textContent = T.open;
+      document.getElementById('help').textContent = T.help;
+
+      const code = decodeURIComponent(location.pathname.replace(/^\/join\/?/, ''))
+        .replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20);
+      const what = document.getElementById('what');
+
+      if (!code) {
+        what.textContent = T.none;
+      } else {
+        what.textContent = T.checking;
+        document.getElementById('code').textContent = code.replace(/(.{4})(?=.)/g, '$1-');
+        document.getElementById('codebox').hidden = false;
+        document.getElementById('open').href = 'de.fletchr.app://join/' + code;
+        document.getElementById('actions').hidden = false;
+        document.getElementById('help').hidden = false;
+
+        // What the code is for, from the server (the code is the secret; nothing is used up by looking).
+        fetch('https://app.fletchr.de/api/codes/preview/', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ invite_code: code }),
+        })
+          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+          .then((p) => {
+            // textContent, never innerHTML: names come from other people.
+            what.textContent = (p.kind === 'claim' ? T.claim : T.invite).replace('{team}', p.team_name).replace('{profile}', p.profile_name || '');
+          })
+          .catch(() => {
+            what.textContent = T.bad;
+            document.getElementById('actions').hidden = true;
+          });
+      }
+    </script>
   </main>
   <footer>
-    <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/konto-loeschen">Konto löschen</a>
+    <a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a><a href="/konto-loeschen/">Konto löschen</a>
   </footer>
-  <script>
-    // The code is the last part of the address: /join/<code>. Letters and digits only.
-    const code = decodeURIComponent(location.pathname.replace(/^\/join\/?/, ''))
-      .replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20);
-    const what = document.getElementById('what');
-
-    if (!code) {
-      what.textContent = 'Dieser Link enthält keinen Code.';
-    } else {
-      document.getElementById('code').textContent = code.replace(/(.{4})(?=.)/g, '$1-');
-      document.getElementById('codebox').hidden = false;
-      document.getElementById('open').href = 'de.fletchr.app://join/' + code;
-      document.getElementById('actions').hidden = false;
-      document.getElementById('help').hidden = false;
-
-      // What the code is for, from the server (the code is the secret; nothing is used up by looking).
-      fetch('https://app.fletchr.de/api/codes/preview/', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ invite_code: code }),
-      })
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((p) => {
-          // textContent, never innerHTML: names come from other people.
-          what.textContent = p.kind === 'claim'
-            ? 'Dein Trainer im Verein "' + p.team_name + '" führt ein Profil für dich: "' + p.profile_name + '". Mit dem Code übernimmst du es in dein Konto.'
-            : 'Du wirst in den Verein "' + p.team_name + '" eingeladen.';
-        })
-        .catch(() => {
-          what.textContent = 'Der Code ist ungültig oder abgelaufen. Frag den, der dich eingeladen hat, nach einem neuen.';
-          document.getElementById('actions').hidden = true;
-        });
-    }
-  </script>
 </body>
 </html>

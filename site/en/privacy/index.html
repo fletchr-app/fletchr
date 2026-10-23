@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy · Fletchr</title>
+  <meta name="description" content="Privacy policy of the Fletchr app and website">
+  <link rel="canonical" href="https://fletchr.de/en/privacy/">
+  <link rel="alternate" hreflang="de" href="https://fletchr.de/datenschutz/">
+  <link rel="alternate" hreflang="en" href="https://fletchr.de/en/privacy/">
+  <link rel="alternate" hreflang="x-default" href="https://fletchr.de/datenschutz/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><a class="brand" href="/en/"><img src="/favicon.svg" alt="" width="36" height="36">Fletchr</a></header>
+  <main>
+    <h1>Privacy policy</h1>
+    <p class="muted">The German version of this page is the binding one. This is a translation for convenience.</p>
+    <p><span class="todo">TODO: draft: this text must be checked legally (for example by a data protection officer) before the page is published.</span></p>
+    <h2>Controller</h2>
+    <p><span class="todo">TODO: name and postal address (as in the imprint), email: kontakt@fletchr.de</span></p>
+    <h2>What data the app processes</h2>
+    <ul>
+      <li>Account: email address, name, password (stored only as a hash).</li>
+      <li>Training: sessions, ends, arrows, equipment.</li>
+      <li>Teams: memberships and roles, invites.</li>
+      <li>Coach notes about archers, with their visibility. Notes marked "only me" cannot be read by anybody but the author and are not part of the archer's data export.</li>
+      <li>Profiles for archers without an account: a name, notes and sessions kept by a coach. The profile belongs to the team, not to the coach: it stays until a coach of the team deletes it or the team is deleted. When a coach deletes their account, the profiles stay with the team; if nobody is left in the team except profiles without an account, the team is deleted together with those profiles. The archer can ask a coach of the team to delete the profile, or create an account and take the profile over with a code (the sessions and notes then become theirs, except notes that the coach keeps only for themselves).</li>
+      <li>Password reset: the email address receives a code by mail. Only a hash of the code is stored; it is valid for one hour and allows at most five wrong tries. Afterwards the server sends a mail saying the password was changed. The server sends these mails itself from fletchr.de, without a mail service provider.</li>
+      <li>Server logs: IP address and time of requests. <span class="todo">TODO: decide how long they are kept and say so here</span></li>
+      <li>On your device: a local copy of your sessions, so you can enter arrows without a connection, and your sign-in. Both are removed when you sign out or delete your data.</li>
+    </ul>
+    <h2>What does not happen</h2>
+    <p>The app contains no advertising, no analytics or tracking services, and no third-party libraries that send data. Data goes only to the Fletchr server.</p>
+    <h2>Invite page</h2>
+    <p>Whoever opens an invite link (fletchr.de/join/...) loads the page from this server. The page asks the app server what the code is for (the name of the team and, for a profile, its name). The server sees the visitor's IP address when that happens. The code is not used up by looking.</p>
+    <h2>Hosting</h2>
+    <p>The server is hosted by HostEurope. <span class="todo">TODO: location of the data centre and data processing agreement to be checked</span></p>
+    <h2>Retention</h2>
+    <p>Your data stays until you delete it or your account. A copy can remain in server backups for up to 14 days.</p>
+    <h2>Your rights</h2>
+    <p>Access and export, deletion of your data and your account: in the app under "Settings", "Your data". On request also by email to <a href="mailto:kontakt@fletchr.de">kontakt@fletchr.de</a>. You can also complain to a data protection authority. See also <a href="/en/delete-account/">Delete your account and data</a>.</p>
+  </main>
+  <footer>
+    <a href="/en/imprint/">Imprint</a><a href="/en/privacy/">Privacy</a><a href="/en/delete-account/">Delete account</a><a class="lang" href="/datenschutz/" hreflang="de" lang="de">Deutsch</a>
+  </footer>
+</body>
+</html>

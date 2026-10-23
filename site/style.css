@@ -25,7 +25,8 @@ body {
 }
 main, header, footer { max-width: 680px; margin: 0 auto; padding: 0 20px; }
 header { padding-top: 28px; padding-bottom: 8px; }
-.brand { font-size: 1.5rem; font-weight: 700; color: var(--brand); text-decoration: none; letter-spacing: 0.5px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 700; color: var(--brand); text-decoration: none; letter-spacing: 0.5px; }
+.brand img { border-radius: 9px; }
 h1 { font-size: 1.9rem; line-height: 1.2; margin: 32px 0 12px; }
 h2 { font-size: 1.25rem; margin: 32px 0 8px; }
 p, li { margin: 8px 0; }
@@ -47,3 +48,18 @@ a { color: var(--brand); }
 footer { padding-top: 40px; padding-bottom: 40px; color: var(--muted); font-size: 0.9rem; }
 footer a { color: var(--muted); margin-right: 16px; }
 .todo { background: #fff3cd; color: #5b4300; padding: 1px 6px; border-radius: 4px; }
+
+.hero { text-align: center; padding-top: 24px; }
+.hero > img { border-radius: 20px; }
+.hero h1 { margin-top: 20px; }
+.lead { font-size: 1.15rem; color: var(--muted); }
+.hero .card { text-align: left; }
+.shots { display: flex; gap: 14px; overflow-x: auto; padding: 8px 2px 16px; margin: 8px -20px 0; padding-inline: 20px; scroll-snap-type: x mandatory; }
+.shots img { flex: 0 0 auto; width: 240px; height: auto; border: 1px solid var(--line); border-radius: 18px; scroll-snap-align: center; }
+@media (min-width: 760px) {
+  main, header, footer { max-width: 760px; }
+  .shots { justify-content: center; overflow: visible; margin-inline: 0; padding-inline: 0; }
+  .shots img { width: 31%; }
+}
+.lang { margin-left: auto; }
+footer { display: flex; flex-wrap: wrap; gap: 4px 0; }

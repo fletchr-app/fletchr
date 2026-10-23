@@ -3,38 +3,66 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fletchr</title>
-  <meta name="description" content="Trainingstagebuch, Trainernotizen und Auswertung für Bogenschützen und Trainer.">
+  <title>Fletchr: Training, Notizen und Auswertung für Bogenschützen</title>
+  <meta name="description" content="Fletchr ist eine App für Bogenschützen und Trainer: Pfeile direkt auf der Scheibe eintragen, Gruppierung und Entwicklung sehen, Trainernotizen im Verein.">
+  <link rel="canonical" href="https://fletchr.de/">
+  <link rel="alternate" hreflang="de" href="https://fletchr.de/">
+  <link rel="alternate" hreflang="en" href="https://fletchr.de/en/">
+  <link rel="alternate" hreflang="x-default" href="https://fletchr.de/">
+  <meta property="og:title" content="Fletchr: Training, Notizen und Auswertung für Bogenschützen">
+  <meta property="og:description" content="Fletchr ist eine App für Bogenschützen und Trainer: Pfeile direkt auf der Scheibe eintragen, Gruppierung und Entwicklung sehen, Trainernotizen im Verein.">
+  <meta property="og:image" content="https://fletchr.de/img/og.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header><a class="brand" href="/">Fletchr</a></header>
+  <header><a class="brand" href="/"><img src="/favicon.svg" alt="" width="36" height="36">Fletchr</a></header>
   <main>
-    <h1>Training, Notizen und Auswertung für Bogenschützen und Trainer</h1>
-    <p>Fletchr ist eine App für das Training im Bogensport. Du trägst deine Pfeile auf der Scheibe ein, siehst deine Gruppierung und Entwicklung, und dein Trainer kann dich dabei begleiten.</p>
+    <section class="hero">
+      <img src="/favicon.svg" alt="" width="88" height="88">
+      <h1>Training, Notizen und Auswertung für Bogenschützen und Trainer</h1>
+      <p class="lead">Fletchr ist eine App für das Training im Bogensport. Du trägst deine Pfeile auf der Scheibe ein, siehst deine Gruppierung und Entwicklung, und dein Trainer kann dich dabei begleiten.</p>
+      <div class="card">
+        <strong>Die App für Android</strong>
+        <p class="muted">Der Eintrag im Play Store folgt. <span class="todo">TODO: Link einfügen, sobald veröffentlicht</span></p>
+      </div>
+    </section>
 
-    <h2>Was die App kann</h2>
+    <div class="shots">
+      <img src="/img/de-session.jpg" alt="Ein Training mit der Verteilung der Pfeile auf der Scheibe" width="300" height="624" loading="lazy">
+      <img src="/img/de-stats.jpg" alt="Statistik: Pfeile pro Woche und durchschnittliche Ringzahl" width="300" height="624" loading="lazy">
+      <img src="/img/de-team.jpg" alt="Das Team mit den Schützen und ihrem letzten Training" width="300" height="624" loading="lazy">
+    </div>
+
+    <h2>Für Schützen</h2>
     <ul>
       <li>Passen und Pfeile direkt auf der Scheibe eintragen, auch ohne Netz. Die Daten werden später hochgeladen.</li>
       <li>Gruppierung, Streukreis und Verlauf pro Entfernung und Scheibe.</li>
-      <li>Vereine und Rollen: Schütze, Trainer, Admin. Einladung per Code oder Link.</li>
-      <li>Trainer führen Schützen auch ohne eigenes Konto, schreiben Notizen und erfassen Trainings. Der Schütze übernimmt sein Profil später mit einem Code.</li>
-      <li>Notizen nur für dich, für alle Trainer des Vereins oder mit dem Schützen geteilt.</li>
-      <li>Deine Daten gehören dir: Export und Löschung direkt in der App.</li>
+      <li>Pfeile pro Woche und durchschnittliche Ringzahl über die Zeit.</li>
+      <li>Deine Ausrüstung mit Verlauf: Bögen, Pfeilsätze, und welches Setup du in welchem Training hattest.</li>
     </ul>
 
-    <div class="card">
-      <strong>Die App</strong>
-      <p class="muted">Android. Der Eintrag im Play Store folgt. <span class="todo">TODO: Link einfügen, sobald veröffentlicht</span></p>
-    </div>
+    <h2>Für Trainer und Vereine</h2>
+    <ul>
+      <li>Teams mit Rollen: Schütze, Trainer, Admin. Einladung per Code oder Link.</li>
+      <li>Trainer führen Schützen auch ohne eigenes Konto, schreiben Notizen und erfassen Trainings. Der Schütze übernimmt sein Profil später mit einem Code.</li>
+      <li>Notizen nur für dich, für alle Trainer des Teams oder mit dem Schützen geteilt.</li>
+      <li>Übersicht über das Team: wer wann zuletzt trainiert hat und wie viele Pfeile.</li>
+    </ul>
+
+    <h2>Deine Daten</h2>
+    <p>Keine Werbung, kein Tracking, keine Auswertung durch Dritte. Export und Löschung deiner Daten und deines Kontos gibt es direkt in der App. Mehr dazu in der <a href="/datenschutz/">Datenschutzerklärung</a>.</p>
 
     <h2>Kontakt</h2>
-    <p><span class="todo">TODO: E-Mail-Adresse</span></p>
+    <p><a href="mailto:kontakt@fletchr.de">kontakt@fletchr.de</a> <span class="todo">TODO: Postfach in Plesk anlegen, dann diesen Hinweis entfernen</span></p>
 
-    <p class="muted">Fletchr ist freie Software (AGPL-3.0-or-later). <span class="todo">TODO: Link zum Quelltext</span></p>
+    <p class="muted">Fletchr ist freie Software (AGPL-3.0-or-later). <span class="todo">TODO: Link zum Quelltext, sobald das Repository öffentlich ist</span></p>
   </main>
   <footer>
-    <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/konto-loeschen">Konto löschen</a>
+    <a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a><a href="/konto-loeschen/">Konto löschen</a><a class="lang" href="/en/" hreflang="en" lang="en">English</a>
   </footer>
 </body>
 </html>
