@@ -21,10 +21,16 @@ watch(status, (s) => {
 })
 
 // An invite link opens the app on the right screen with the code filled in: signed in, you join; otherwise you register.
-const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
-  const code = codeFromUrl(url)
-  if (code) void router.push({ path: status.value === 'signedIn' ? '/join-team' : '/register', query: { code } })
-})
+// While the app runs the link arrives as an event; when the link started the app, it has to be asked for.
+let lastLink = ''
+function openInvite(url: string | undefined) {
+  const code = url ? codeFromUrl(url) : null
+  if (!code || url === lastLink) return
+  lastLink = url!
+  void router.isReady().then(() => router.push({ path: status.value === 'signedIn' ? '/join-team' : '/register', query: { code } }))
+}
+const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => openInvite(url))
+void CapacitorApp.getLaunchUrl().then((launch) => openInvite(launch?.url))
 onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
 
 const showTabs = computed(() => route.meta.tab === true)

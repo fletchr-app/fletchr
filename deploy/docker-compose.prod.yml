@@ -16,12 +16,19 @@ services:
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
       DJANGO_BEHIND_PROXY: "1"
       # Three workers for two CPUs; a slow request does not block the others.
-      GUNICORN_CMD_ARGS: "--workers 3 --timeout 60 --access-logfile -"
+      # The access log shows the client's address (nginx passes it in X-Real-IP), not Docker's gateway.
+      GUNICORN_CMD_ARGS: "--workers 3 --timeout 60 --access-logfile - --access-logformat '%({x-real-ip}i)s %(t)s \"%(r)s\" %(s)s %(b)s'"
     # Only the web server on the same machine may reach it (Docker would otherwise open the port to everybody).
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./data/django:/data
+    # Logs rotate: the disk is not endless.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/health/', timeout=3)"]
       interval: 30s

@@ -170,6 +170,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour"},
+    # Behind nginx every request comes from the proxy's address, so the limits would be shared by everybody:
+    # with one proxy, the client is the last address in X-Forwarded-For (the one nginx adds, never the one the client sends).
+    # Without a proxy, 0 makes Django ignore X-Forwarded-For (unset, DRF would trust any value a client sends).
+    "NUM_PROXIES": 1 if os.environ.get("DJANGO_BEHIND_PROXY") == "1" else 0,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
