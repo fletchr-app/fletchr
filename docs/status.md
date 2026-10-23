@@ -1,6 +1,6 @@
 # Status
 
-Where the project stands against `docs/plan.md` (the plan describes what is wanted, this file what exists). Updated 2026-10-23, version 0.1.0. "Built" means it is in the app and tested; "server only" means the data field exists but the app has no screen for it.
+Where the project stands against `docs/plan.md` (the plan describes what is wanted, this file what exists). Updated 2026-10-23, version 0.2.0. "Built" means it is in the app and tested; "server only" means the data field exists but the app has no screen for it.
 
 Order of work: **features first, the Google Play release last** (milestone 6). The app runs on your own phone as a debug build against the live server in the meantime.
 
@@ -17,15 +17,15 @@ Order of work: **features first, the Google Play release last** (milestone 6). T
 | Session view | built: arrows on the face, group centre and spread, ends, totals; a coach sees live sessions ("shooting now") |
 | Stats | built: arrows per week/month/total, average score per face and distance with a trend line, best-ring, X and miss rates |
 | Notes | built: coach notes on an archer, a session or an end, visibility private / coach-only / shared, "only me" notes stay out of the archer's export |
-| Home, Team, Settings | built: Home (greeting, your teams, the latest coach notes about you; no weekly arrow count or last-session card yet), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
+| Home, Team, Settings | built: Home (this week's arrows, last session, your teams, the latest coach notes about you), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
 | Languages | built: English and German in the app, the server's messages and the mails |
 | Server and website | live: `app.fletchr.de` (Docker behind a web server, own SMTP for mail), `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
 
-Not in the app although the plan lists it (the server has most of the fields):
-- session details: weather, physical and mental rating, goals, session notes (server only)
-- arrow number per shot (server only)
-- profile: dominant hand and eye, date of birth, units (server only), avatar (not even a field)
-- comments (replies) on notes
+Not in the app although the plan lists it:
+- profile picture (avatar; not even a field)
+- comments (replies) on notes (#25)
+
+The earlier gaps (Home with last session and week, session details, arrow numbers, profile fields and units) were closed in 0.2.0.
 
 Open in practice (not release dependent):
 - **Backups:** `deploy/backup.sh` exists, but a cron job and an off-server copy come next.
@@ -48,7 +48,7 @@ Not built: score histogram, heatmap of all arrows, group trend over time, per-ar
 ## Milestone 4: notifications and remaining polish (not started)
 
 - Push notifications (new coach note, new evaluation): Firebase and a server hook.
-- The gaps listed under milestone 1 (session details, arrow number, profile fields).
+- Comments on notes (#25), automatic weather (#67).
 - Reset-password link in the mail that opens the app (issue #19), after the website and the signing key exist; it uses the same link mechanism as the invite links.
 
 ## Milestone 5: skeleton detection (not started)

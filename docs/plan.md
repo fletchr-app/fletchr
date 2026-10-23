@@ -198,6 +198,6 @@ Order: features first, the release last. The state of each is in [status.md](sta
 1. **MVP** (done): auth, teams/invites, equipment, session logging by tapping arrows on the target face (works offline), session plot with group centre, coach notes, basic stats (volume, average score), account and data deletion (GDPR and store requirement), Docker setup for local and server. Android app only (the web build is for development; a public web app/PWA and iOS come later)
 2. **Media and evaluations**: the video prototype first (it decides Capacitor vs. a native player); then evaluation forms with trend charts, photo/video upload with server conversion, gallery, frame-by-frame player, notes on video frames, off-site backups; then drawing tools on frames
 3. **Deeper stats** (partly built): heatmaps, group trend, per-arrow analysis, setup comparison, team dashboard
-4. **Notifications and polish**: push notifications, the gaps left in the MVP (session details, arrow number, profile fields), the reset-password link that opens the app
+4. **Notifications and polish**: push notifications, comments on notes, automatic weather, the reset-password link that opens the app (the MVP gaps are closed since 0.2.0)
 5. **Advanced**: automatic skeleton detection and form metrics on videos
 6. **Release (last)**: Google Play (account, signing, bundle, store listing, internal and closed testing, CI upload on a version tag), iOS App Store once an iPhone tester is available (section 6b), the fingerprint for app links on the website
