@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 10:28+0200\n"
+"POT-Creation-Date: 2026-10-23 10:47+0200\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,7 +26,7 @@ msgstr "Ungültiger oder abgelaufener Einladungscode"
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/claims.py:46 core/claims.py:49 core/views.py:119
+#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:121
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
@@ -35,6 +35,43 @@ msgid "You are a coach in this team. A profile of an archer can only be taken ov
 msgstr ""
 "Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
 "werden."
+
+#: core/mail.py:31
+msgid "Fletchr: reset your password"
+msgstr "Fletchr: Passwort zurücksetzen"
+
+#: core/mail.py:33
+#, python-format
+msgid ""
+"Someone asked to reset the password of your Fletchr account.\n"
+"\n"
+"Your code: %(code)s\n"
+"\n"
+"Type it in the app. It works for one hour. If this was not you, ignore this mail: your password "
+"stays as it is."
+msgstr ""
+"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n"
+"\n"
+"Dein Code: %(code)s\n"
+"\n"
+"Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein "
+"Passwort bleibt, wie es ist."
+
+#: core/mail.py:45
+msgid "Fletchr: your password was changed"
+msgstr "Fletchr: Dein Passwort wurde geändert"
+
+#: core/mail.py:47
+msgid ""
+"The password of your Fletchr account was changed just now.\n"
+"\n"
+"If this was you, there is nothing to do. If not, set a new password in the app (Sign in, then "
+"Forgot password?) and check who else knows your email password."
+msgstr ""
+"Das Passwort deines Fletchr-Kontos wurde gerade geändert.\n"
+"\n"
+"Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein neues Passwort "
+"(Anmelden, dann Passwort vergessen?) und prüfe, wer sonst dein E-Mail-Passwort kennt."
 
 #: core/serializers.py:40
 msgid "An account with this email already exists"
@@ -60,48 +97,48 @@ msgstr "Wähle ein anderes Passwort"
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
-#: core/views.py:205
+#: core/views.py:241
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:251
+#: core/views.py:287
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
-#: core/views.py:262
+#: core/views.py:298
 msgid "Only team admins can rename the team"
 msgstr "Nur Team-Admins können das Team umbenennen"
 
-#: core/views.py:286
+#: core/views.py:322
 msgid "Only team admins can change roles"
 msgstr "Nur Team-Admins können Rollen ändern"
 
-#: core/views.py:292 core/views.py:306
+#: core/views.py:328 core/views.py:342
 msgid "A team needs at least one admin"
 msgstr "Ein Team braucht mindestens einen Admin"
 
-#: core/views.py:303
+#: core/views.py:339
 msgid "Only team admins can remove members"
 msgstr "Nur Team-Admins können Mitglieder entfernen"
 
-#: core/views.py:317 core/views.py:334
+#: core/views.py:353 core/views.py:370
 msgid "Only team admins can manage invites"
 msgstr "Nur Team-Admins können Einladungen verwalten"
 
-#: core/views.py:342
+#: core/views.py:378
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:422
+#: core/views.py:458
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:434
+#: core/views.py:470
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:446
+#: core/views.py:482
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 

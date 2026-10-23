@@ -15,6 +15,11 @@ def fast_password_hashing(settings):
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
+@pytest.fixture(autouse=True)
+def mail_without_threads(monkeypatch):
+    monkeypatch.setattr("core.mail.run_in_background", lambda function, *args: function(*args))
+
+
 @pytest.fixture
 def make_user(db):
     def make(email, name=""):

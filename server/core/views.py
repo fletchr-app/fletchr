@@ -16,7 +16,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from . import access, claims
+from . import access, claims, mail, resets
 from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
 from .serializers import (
     ArcherNameSerializer,
@@ -25,6 +25,8 @@ from .serializers import (
     CodePreviewSerializer,
     EmailChangeSerializer,
     PasswordChangeSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     TokenPairSerializer,
     InviteSerializer,
     MemberSerializer,
@@ -165,8 +167,42 @@ class ChangePasswordView(APIView):
         user.save(update_fields=["password"])
         for token in OutstandingToken.objects.filter(user=user):
             BlacklistedToken.objects.get_or_create(token=token)
+        mail.send_password_changed(user)
         refresh = RefreshToken.for_user(user)
         return Response({"access": str(refresh.access_token), "refresh": str(refresh)})
+
+
+class PasswordResetRequestView(APIView):
+    """Mail a code to an email address. The answer is the same whether the address has an account or not."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "reset_request"
+
+    @extend_schema(request=PasswordResetRequestSerializer, responses={204: None})
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        resets.request_reset(serializer.validated_data["email"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PasswordResetConfirmView(APIView):
+    """Set a new password with the code from the mail. All sessions of the account are signed out."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "reset_confirm"
+
+    @extend_schema(request=PasswordResetConfirmSerializer, responses={204: None})
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            resets.confirm_reset(**serializer.validated_data)
+        except resets.ResetError as e:
+            raise ValidationError({e.field: e.messages})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ChangeEmailView(APIView):

@@ -9,6 +9,17 @@ export default {
       haveInvite: 'I have an invite code',
       server: 'Server: {url}',
       change: 'change',
+      forgot: 'Forgot password?',
+    },
+    reset: {
+      title: 'Reset password',
+      intro: 'Enter your email address. If there is an account with it, we send you a code.',
+      sendCode: 'Send code',
+      backToSignIn: 'Back to sign in',
+      sent: 'If there is an account for {email}, a code is on its way. It works for one hour.',
+      code: 'Code from the mail',
+      setPassword: 'Set new password',
+      newCode: 'Send a new code',
     },
     register: {
       title: 'Join with invite code',

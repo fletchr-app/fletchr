@@ -14,6 +14,13 @@ export function passwordFormError(current: string, next: string, repeat: string)
   return null;
 }
 
+/** What is wrong with a new password typed twice (reset by email: there is no current password), or null. */
+export function newPasswordError(next: string, repeat: string): Problem | null {
+  if (next.length < MIN_PASSWORD_LENGTH) return { key: 'account.errors.passwordShort', params: { n: MIN_PASSWORD_LENGTH } };
+  if (next !== repeat) return { key: 'account.errors.notSame' };
+  return null;
+}
+
 /** What is wrong with an email change form, or null when it can be sent. */
 export function emailFormError(current: string, next: string, currentEmail: string): Problem | null {
   if (!current) return { key: 'account.errors.currentRequired' };

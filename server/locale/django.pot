@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 10:28+0200\n"
+"POT-Creation-Date: 2026-10-23 10:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/claims.py:46 core/claims.py:49 core/views.py:119
+#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:121
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -33,6 +33,34 @@ msgstr ""
 msgid ""
 "You are a coach in this team. A profile of an archer can only be taken "
 "over by an archer."
+msgstr ""
+
+#: core/mail.py:31
+msgid "Fletchr: reset your password"
+msgstr ""
+
+#: core/mail.py:33
+#, python-format
+msgid ""
+"Someone asked to reset the password of your Fletchr account.\n"
+"\n"
+"Your code: %(code)s\n"
+"\n"
+"Type it in the app. It works for one hour. If this was not you, ignore "
+"this mail: your password stays as it is."
+msgstr ""
+
+#: core/mail.py:45
+msgid "Fletchr: your password was changed"
+msgstr ""
+
+#: core/mail.py:47
+msgid ""
+"The password of your Fletchr account was changed just now.\n"
+"\n"
+"If this was you, there is nothing to do. If not, set a new password in "
+"the app (Sign in, then Forgot password?) and check who else knows your "
+"email password."
 msgstr ""
 
 #: core/serializers.py:40
@@ -59,52 +87,52 @@ msgstr ""
 msgid "This address is not available"
 msgstr ""
 
-#: core/views.py:205
+#: core/views.py:241
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:251
+#: core/views.py:287
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:262
+#: core/views.py:298
 msgid "Only team admins can rename the team"
 msgstr ""
 
-#: core/views.py:286
+#: core/views.py:322
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:292 core/views.py:306
+#: core/views.py:328 core/views.py:342
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:303
+#: core/views.py:339
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:317 core/views.py:334
+#: core/views.py:353 core/views.py:370
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:342
+#: core/views.py:378
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:422
+#: core/views.py:458
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:434
+#: core/views.py:470
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:446
+#: core/views.py:482
 msgid "This account no longer exists"
 msgstr ""
 

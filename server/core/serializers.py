@@ -176,3 +176,13 @@ class EmailChangeSerializer(CurrentPasswordMixin):
 class TokenPairSerializer(serializers.Serializer):
     access = serializers.CharField()
     refresh = serializers.CharField()
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(help_text="The code from the mail, with or without the dash")
+    new_password = serializers.CharField(write_only=True)

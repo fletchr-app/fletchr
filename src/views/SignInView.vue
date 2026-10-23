@@ -30,6 +30,7 @@ async function submit() {
       <FormField v-model="password" :label="$t('auth.signIn.password')" type="password" autocomplete="current-password" @enter="submit" />
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="submit">{{ $t('auth.signIn.button') }}</AppButton>
+      <RouterLink to="/reset-password">{{ $t('auth.signIn.forgot') }}</RouterLink>
       <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
       <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings/server">{{ $t('auth.signIn.change') }}</RouterLink></div>
     </div>

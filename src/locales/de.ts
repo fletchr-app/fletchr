@@ -13,6 +13,17 @@ export default {
       haveInvite: 'Ich habe einen Einladungscode',
       server: 'Server: {url}',
       change: 'ändern',
+      forgot: 'Passwort vergessen?',
+    },
+    reset: {
+      title: 'Passwort zurücksetzen',
+      intro: 'Gib deine E-Mail-Adresse ein. Wenn es dazu ein Konto gibt, schicken wir dir einen Code.',
+      sendCode: 'Code senden',
+      backToSignIn: 'Zurück zur Anmeldung',
+      sent: 'Wenn es ein Konto für {email} gibt, ist ein Code unterwegs. Er gilt eine Stunde.',
+      code: 'Code aus der Mail',
+      setPassword: 'Neues Passwort setzen',
+      newCode: 'Neuen Code senden',
     },
     register: {
       title: 'Mit Einladungscode beitreten',

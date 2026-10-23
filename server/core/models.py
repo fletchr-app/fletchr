@@ -166,3 +166,15 @@ class ClaimCode(models.Model):
 
     def __str__(self):
         return f"{self.code} -> {self.profile} in {self.team}"
+
+
+class PasswordReset(models.Model):
+    """A code mailed to someone who forgot their password. Only a hash of the code is kept."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="password_resets")
+    code_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    attempts = models.PositiveSmallIntegerField(default=0, help_text="Wrong codes typed for this account since it was created")
+
+    def __str__(self):
+        return f"reset for {self.user} ({self.created_at:%Y-%m-%d %H:%M})"

@@ -161,11 +161,27 @@ MEDIA_ROOT = DATA_DIR / "media"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# Without DJANGO_EMAIL_HOST the mails are printed to the log instead of sent (development).
+# DJANGO_EMAIL_SECURITY: "starttls" (port 587, the default) or "ssl" (port 465).
+EMAIL_SECURITY = os.environ.get("DJANGO_EMAIL_SECURITY", "starttls")
+if os.environ.get("DJANGO_EMAIL_HOST"):
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": os.environ["DJANGO_EMAIL_HOST"],
+                "port": int(os.environ.get("DJANGO_EMAIL_PORT", "465" if EMAIL_SECURITY == "ssl" else "587")),
+                "username": os.environ.get("DJANGO_EMAIL_USER", ""),
+                "password": os.environ.get("DJANGO_EMAIL_PASSWORD", ""),
+                "use_tls": EMAIL_SECURITY == "starttls",
+                "use_ssl": EMAIL_SECURITY == "ssl",
+                "timeout": 10,
+            },
+        },
+    }
+else:
+    MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_EMAIL_FROM", "Fletchr <noreply@fletchr.de>")
 
 
 REST_FRAMEWORK = {
@@ -175,7 +191,7 @@ REST_FRAMEWORK = {
     # Deny by default; endpoints that should be public opt out explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour"},
+    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour", "reset_request": "5/hour", "reset_confirm": "10/hour"},
     # Behind nginx every request comes from the proxy's address, so the limits would be shared by everybody:
     # with one proxy, the client is the last address in X-Forwarded-For (the one nginx adds, never the one the client sends).
     # Without a proxy, 0 makes Django ignore X-Forwarded-For (unset, DRF would trust any value a client sends).
@@ -207,3 +223,4 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+

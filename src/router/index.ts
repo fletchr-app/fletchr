@@ -36,6 +36,7 @@ const router = createRouter({
     { path: '/equipment/arrow-sets/:id', component: () => import('@/views/ArrowSetView.vue'), meta: { title: 'Arrow set', auth: 'in' } },
     { path: '/sign-in', component: () => import('@/views/SignInView.vue'), meta: { title: 'Sign in', auth: 'out' } },
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { title: 'Join with invite code', auth: 'out' } },
+    { path: '/reset-password', component: () => import('@/views/ResetPasswordView.vue'), meta: { title: 'Reset password', auth: 'out' } },
     { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', tab: true } },
     { path: '/settings/server', component: () => import('@/views/SettingsServerView.vue'), meta: { title: 'Server address' } },
     { path: '/:rest(.*)*', redirect: '/' },
