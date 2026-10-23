@@ -1,6 +1,6 @@
 # Fletchr: product and tech plan
 
-Draft v5, 2026-10-18 (v4 reviewed end to end after adding self-hosting, arrow plotting, video analysis, skeleton detection, evaluations and iOS without a Mac; v5 replaces Expo/React Native with Vue 3 and Capacitor, so the stack matches pyobs-web-client; the last Expo version is the git tag `expo-final`). Defaults are marked **(default)**; any of them can be changed before code is written.
+Draft v6, 2026-10-23: the stack, hosting and milestones now match what was built, and the Google Play release moved to the end (milestone 6). What exists today is in [status.md](status.md). Draft v5, 2026-10-18 (v4 reviewed end to end after adding self-hosting, arrow plotting, video analysis, skeleton detection, evaluations and iOS without a Mac; v5 replaces Expo/React Native with Vue 3 and Capacitor, so the stack matches pyobs-web-client; the last Expo version is the git tag `expo-final`). Defaults are marked **(default)**; any of them can be changed before code is written.
 
 ## 1. Roles
 
@@ -8,9 +8,9 @@ Draft v5, 2026-10-18 (v4 reviewed end to end after adding self-hosting, arrow pl
 |---|---|
 | **Archer** | Manage own equipment, log sessions and scores, upload photos/videos, see own stats, read coach notes and evaluations shared with them, fill in self-assessments |
 | **Coach** | Everything an archer can see, for every archer in their team; write notes on archers, sessions and video frames; fill in evaluations; team-wide stats |
-| **Admin** (default: the coach who creates the team) | Invite/remove archers and coaches |
+| **Admin** (default: the person who creates the team) | Invite/remove archers and coaches, change roles, rename or delete the team |
 
-Archers join a **team** by invite link or code. One archer can be in several teams (e.g. club + squad); a team can have several coaches. Anyone can download everything the server holds about them as one JSON file (password required; it includes the coach notes about them, the coach-only ones too), and can delete their data (sessions, equipment and the coach notes about them) or their whole account, after typing their password and a confirmation word. The account cannot be deleted while its owner is the only admin of a team others belong to: someone else has to become admin first (for now in the server's admin pages). A team the person is alone in is deleted with them, notes they wrote stay as "former coach", and invites they made that nobody used are cancelled. A coach or admin who also trains can turn on "also shoots" for their membership in a team (off by default, only they can change it): the other coaches of that team then see their sessions and equipment, read-only, like an archer's. The setting is per team. Coach notes and evaluations are either **shared** with the archer or **coach-only** (default for notes: coach-only, so nothing reaches the archer by accident; evaluations: shared). A coach sees all training data of the archers in their team; coach-only notes and evaluations are visible only to the coaches of the team they were written in.
+Archers join a **team** by invite link or code. A coach can also keep a profile for an archer **without an account** (name, sessions the coach logs, notes); the archer takes it over later with a claim code, and the profile belongs to the team, not to the coach. One archer can be in several teams (e.g. club + squad); a team can have several coaches. Anyone can download everything the server holds about them as one JSON file (password required; it includes the coach notes about them, the coach-only ones too), and can delete their data (sessions, equipment and the coach notes about them) or their whole account, after typing their password and a confirmation word. The account cannot be deleted while its owner is the only admin of a team others belong to: someone else has to become admin first (in the app: Team, Manage team, Members). A team the person is alone in is deleted with them, notes they wrote stay as "former coach", and invites they made that nobody used are cancelled. A coach or admin who also trains can turn on "also shoots" for their membership in a team (off by default, only they can change it): the other coaches of that team then see their sessions and equipment, read-only, like an archer's. The setting is per team. Coach notes and evaluations are either **shared** with the archer or **coach-only** (default for notes: coach-only, so nothing reaches the archer by accident; evaluations: shared). A coach sees all training data of the archers in their team; coach-only notes and evaluations are visible only to the coaches of the team they were written in.
 
 ## 2. Data model (Django models, SQLite)
 
@@ -90,8 +90,8 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 ## 5. Stack (default)
 
 - **App: Vue 3 + TypeScript + Vite + Vue Router, wrapped for phones with Capacitor**, one codebase, **mobile app only in the beginning (Android first, iOS later)**; the web build is the dev shell and the base of the phone apps, not a released product yet. The phone apps are the web app in a WebView plus Capacitor plugins (secure storage, preferences, share, app lifecycle). Same stack as pyobs-web-client, so one person can maintain both
-- **UI**: Bootstrap 5 (light and dark follow the system), charts as plain inline SVG in Vue components, so they render the same on web and in the phone apps
-- **Backend: Django + Django REST Framework + SQLite, self-hosted**. Chosen because the maintainer knows Python and Django, and the permission logic (coach/archer/team rules) is the riskiest part and is easiest to unit test as plain Python. Auth uses JWT (`djangorestframework-simplejwt`), the OpenAPI schema (`drf-spectacular`) generates the TypeScript types for the app, and the Django admin gives an admin UI. File storage, invites and sign-in providers are built by us. gunicorn runs behind Caddy. If the club grows far beyond a few hundred archers, switch the database to Postgres (a settings change). Considered and rejected: PocketBase (less to build, but its Go core and restricted JS hooks are not maintainable by us, and rules are filter strings), self-hosted Supabase (about ten containers, 4 GB+ RAM) and a Node API.
+- **UI**: Ionic Vue (app bar, tab bar, page transitions, lists as cards) with Bootstrap's utility classes for layout only; light and dark follow the system or a setting; charts as plain inline SVG in Vue components, so they render the same on web and in the phone apps
+- **Backend: Django + Django REST Framework + SQLite, self-hosted**. Chosen because the maintainer knows Python and Django, and the permission logic (coach/archer/team rules) is the riskiest part and is easiest to unit test as plain Python. Auth uses JWT (`djangorestframework-simplejwt`), the OpenAPI schema (`drf-spectacular`) generates the TypeScript types for the app, and the Django admin gives an admin UI. File storage, invites and sign-in providers are built by us. gunicorn runs behind nginx on the server (Plesk) and behind Caddy locally. If the club grows far beyond a few hundred archers, switch the database to Postgres (a settings change). Considered and rejected: PocketBase (less to build, but its Go core and restricted JS hooks are not maintainable by us, and rules are filter strings), self-hosted Supabase (about ten containers, 4 GB+ RAM) and a Node API.
 - **Offline**: session logging works without signal from the start (saved on the device, uploaded when online), since ranges often have poor reception; video uploads are queued the same way
 - **Upload of sessions**: the app creates the ids (UUIDs) for sessions, ends, shots and volume entries, and uploads with idempotent `PUT`s: the session once, then each end with all its shots as soon as it is shot (so a coach sees results live, or as soon as the phone has signal again), so a retry never duplicates anything. The last write wins. The server recomputes every score from the position and returns its own values, which the app then shows. Coaches read sessions, they cannot change them. A coach's live view polls the session list (`/api/sessions/?updated_after=...`); push updates are not planned
 - **Builds and hosting**: Android Studio or Gradle (`npx cap sync`, then build) for the Android app, a macOS machine or CI runner with Xcode for the iOS app; the web build is served by your own server (section 6a) for development and testing, a public web app/PWA is postponed
@@ -132,12 +132,12 @@ Stats are computed on the server (Django ORM aggregates or SQL views) so web and
 
 ## 6a. Self-hosted deployment, backups and cost
 
-- **Server (default)**: one small VPS in Germany, e.g. Hetzner (2 vCPU, 4 GB RAM, 40 GB disk). Any Linux box or a home server with Docker works too.
+- **Server (actual)**: a Linux virtual server. `app.fletchr.de` is Django in Docker behind the web server; `fletchr.de` is the static website in `site/` (`docs/deploy.md`). Any Linux box with Docker works too.
 - **Setup**: Docker Compose with two services: Django (gunicorn; ffmpeg is added to the image in milestone 2 for video conversion) and Caddy. Caddy gets HTTPS certificates automatically and also serves the web app's static files. Milestone 5 adds a third service, the Python pose worker. Updating means pulling new images and restarting.
-- **Domain**: e.g. `archery.example.de`, needed for HTTPS and for the mobile apps to reach the server.
-- **Backups**: nightly, encrypted, off-site with restic to a storage box: first a consistent snapshot of the database, then the data folder. restic is incremental, so each video is copied only once (PocketBase's built-in backup zips all files every time, which would not scale with videos). 30 daily and 12 monthly copies kept. Data an archer has deleted stays in older backups until they rotate out (at most about a year); the privacy text for the stores has to say so. A restore is tested once during setup.
+- **Domain**: `fletchr.de` (DNS at the DNS provider); `app.fletchr.de` is what the app talks to.
+- **Backups** (planned; today `deploy/backup.sh` writes 14 daily SQLite copies and a cron job and an off-server copy come with the setup): nightly, encrypted, off-site with restic to a storage box: first a consistent snapshot of the database, then the data folder. restic is incremental, so each video is copied only once (PocketBase's built-in backup zips all files every time, which would not scale with videos). 30 daily and 12 monthly copies kept. Data an archer has deleted stays in older backups until they rotate out (at most about a year); the privacy text for the stores has to say so. A restore is tested once during setup.
 - **Monitoring**: a free uptime check (e.g. Uptime Kuma or a hosted pinger) and unattended security updates on the server.
-- **Email**: sign-in and invite emails go through any SMTP account you already have.
+- **Email**: the password-reset code and the "password was changed" notice are sent by the server itself through a mailbox of the domain. Sign-in uses password and email only.
 - **Push notifications**: Firebase Cloud Messaging (Android) and Apple's push service (iOS) through `@capacitor/push-notifications`, and standard Web Push for the web app and iPhone home-screen app, all sent by a server hook, for "new coach note" and "new evaluation" alerts. Needs a Firebase project and an Apple key; not set up yet.
 
 **Same setup locally and on the server.** The repository has one `deploy/docker-compose.yml`; only a `.env` file differs:
@@ -182,7 +182,8 @@ fletchr/
   src/            Vue app: views (screens), components, composables, lib (logic and API client), router
   android/        Capacitor Android project
   public/         static files for the web build
-  resources/      source icon and splash image for the phone apps
+  resources/      source icon and splash image for the phone apps (`generate.py` draws them)
+  site/           the static website for fletchr.de (German and English, legal pages, invite-link page)
   shared/         files used by server and app (target faces, scoring test cases)
   server/         Django project (models, migrations, DRF permissions, seed command, tests), Dockerfile
   worker/         pose detection worker (milestone 5)
@@ -192,8 +193,11 @@ fletchr/
 
 ## 8. Milestones
 
-1. **MVP**: auth, teams/invites, equipment, session logging by tapping arrows on the target face (works offline), session plot with group centre, coach notes, basic stats (volume, average score), account and data deletion (GDPR and store requirement), Docker setup for local and server. Ships as Android app only (the web build is for development; a public web app/PWA and iOS come later)
-2. **Media and evaluations**: evaluation forms with trend charts, photo/video upload with server conversion, gallery, frame-by-frame player, notes on video frames, off-site backups; then drawing tools on frames
-3. **Deeper stats**: heatmaps, group trend, per-arrow analysis, setup comparison, team dashboard
-4. **Polish and release**: push notifications, Google Play release, iOS App Store release once an iPhone tester is available (section 6b)
+Order: features first, the release last. The state of each is in [status.md](status.md).
+
+1. **MVP** (done): auth, teams/invites, equipment, session logging by tapping arrows on the target face (works offline), session plot with group centre, coach notes, basic stats (volume, average score), account and data deletion (GDPR and store requirement), Docker setup for local and server. Android app only (the web build is for development; a public web app/PWA and iOS come later)
+2. **Media and evaluations**: the video prototype first (it decides Capacitor vs. a native player); then evaluation forms with trend charts, photo/video upload with server conversion, gallery, frame-by-frame player, notes on video frames, off-site backups; then drawing tools on frames
+3. **Deeper stats** (partly built): heatmaps, group trend, per-arrow analysis, setup comparison, team dashboard
+4. **Notifications and polish**: push notifications, the gaps left in the MVP (session details, arrow number, profile fields), the reset-password link that opens the app
 5. **Advanced**: automatic skeleton detection and form metrics on videos
+6. **Release (last)**: Google Play (account, signing, bundle, store listing, internal and closed testing, CI upload on a version tag), iOS App Store once an iPhone tester is available (section 6b), the fingerprint for app links on the website
