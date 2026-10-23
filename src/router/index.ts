@@ -43,6 +43,8 @@ const router = createRouter({
     { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', auth: 'in', tab: true } },
     { path: '/settings/about', component: () => import('@/views/SettingsAboutView.vue'), meta: { title: 'About', auth: 'in' } },
     { path: '/settings/server', component: () => import('@/views/SettingsServerView.vue'), meta: { title: 'Server address' } },
+    // The throwaway page for the video prototype (#35): only in a build made with VITE_PROTOTYPE=1.
+    ...(import.meta.env.VITE_PROTOTYPE ? [{ path: '/dev/video', component: () => import('@/prototype/VideoTestView.vue'), meta: { title: 'Video prototype', auth: 'in' as const } }] : []),
     { path: '/:rest(.*)*', redirect: '/' },
   ],
 })
