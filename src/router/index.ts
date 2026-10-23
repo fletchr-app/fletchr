@@ -31,6 +31,7 @@ const router = createRouter({
     { path: '/sessions/:id', component: () => import('@/views/SessionDetailView.vue'), meta: { title: 'Session', auth: 'in' } },
     { path: '/team', component: () => import('@/views/TeamListView.vue'), meta: { title: 'Team', auth: 'in', tab: true } },
     { path: '/team/:id', component: () => import('@/views/TeamManageView.vue'), meta: { title: 'Team', auth: 'in' } },
+    { path: '/archers/:id/details', component: () => import('@/views/ArcherDetailsView.vue'), meta: { title: 'Archer details', auth: 'in' } },
     { path: '/archers/:id', component: () => import('@/views/ArcherSessionsView.vue'), meta: { title: 'Archer', auth: 'in' } },
     { path: '/equipment', component: () => import('@/views/EquipmentListView.vue'), meta: { title: 'Equipment', auth: 'in' } },
     { path: '/equipment/bows/:id', component: () => import('@/views/BowView.vue'), meta: { title: 'Bow', auth: 'in' } },

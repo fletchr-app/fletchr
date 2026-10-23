@@ -92,7 +92,10 @@ def test_only_profiles_of_my_own_team_can_be_changed(client_for, club, managed):
 
 def test_archer_info_for_the_screen(client_for, club, managed):
     res = client_for(club["coach"]).get(f"/api/archers/{managed.pk}/")
-    assert res.data == {"id": managed.pk, "name": "Max Muster", "managed": True, "team_id": club["a"].pk, "team_name": "Team A"}
+    assert res.data == {
+        "id": managed.pk, "name": "Max Muster", "managed": True, "team_id": club["a"].pk, "team_name": "Team A",
+        "dominant_hand": "", "dominant_eye": "", "age": None, "date_of_birth": None,
+    }
     assert client_for(club["b_admin"]).get(f"/api/archers/{managed.pk}/").status_code == 404
     assert client_for(club["archer1"]).get(f"/api/archers/{managed.pk}/").status_code == 404
 

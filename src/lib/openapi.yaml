@@ -1512,6 +1512,8 @@ paths:
   /api/teams/{team_id}/archers/{user_id}/:
     patch:
       operationId: teams_archers_partial_update
+      description: Rename the profile, or set its dominant hand and eye and date of
+        birth.
       parameters:
       - in: path
         name: team_id
@@ -1529,13 +1531,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedArcherNameRequest'
+              $ref: '#/components/schemas/PatchedManagedArcherRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedArcherNameRequest'
+              $ref: '#/components/schemas/PatchedManagedArcherRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedArcherNameRequest'
+              $ref: '#/components/schemas/PatchedManagedArcherRequest'
       security:
       - jwtAuth: []
       responses:
@@ -1928,7 +1930,24 @@ components:
         team_name:
           type: string
           nullable: true
+        dominant_hand:
+          type: string
+        dominant_eye:
+          type: string
+        age:
+          type: integer
+          nullable: true
+          description: Whole years; the date of birth itself is private
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: Only for a profile without an account, which the coach keeps
       required:
+      - age
+      - date_of_birth
+      - dominant_eye
+      - dominant_hand
       - id
       - managed
       - name
@@ -3020,13 +3039,6 @@ components:
           minLength: 1
       required:
       - email
-    PatchedArcherNameRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 150
     PatchedArrowSetRequest:
       type: object
       properties:
@@ -3124,6 +3136,27 @@ components:
           maxLength: 150
         notes:
           type: string
+    PatchedManagedArcherRequest:
+      type: object
+      description: What a coach may change on the profile of an archer without an
+        account.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        dominant_hand:
+          oneOf:
+          - $ref: '#/components/schemas/HandEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        dominant_eye:
+          oneOf:
+          - $ref: '#/components/schemas/HandEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
     PatchedMeRequest:
       type: object
       properties:
@@ -3652,9 +3685,8 @@ components:
           readOnly: true
         arrow_number:
           type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
+          maximum: 99
+          minimum: 1
           nullable: true
       required:
       - id
@@ -3692,9 +3724,8 @@ components:
           type: boolean
         arrow_number:
           type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
+          maximum: 99
+          minimum: 1
           nullable: true
       required:
       - id

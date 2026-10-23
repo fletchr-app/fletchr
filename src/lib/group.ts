@@ -19,13 +19,14 @@ export function groupOf(points: { x: number; y: number }[]): Group | null {
   return { n, cx, cy, meanRadius };
 }
 
-const cm = (value: number) => `${Math.abs(value).toFixed(1)} cm`;
+import { formatLength, type Units } from './units.ts';
 
 export type CentreWords = { left: string; right: string; low: string; high: string; middle: string };
 const ENGLISH: CentreWords = { left: 'left', right: 'right', low: 'low', high: 'high', middle: 'in the middle' };
 
 /** What a group says about the sight: which way and how far the centre is from the middle of the spot. */
-export function describeCentre(group: Group, spotRadiusCm: number, words: CentreWords = ENGLISH): string {
+export function describeCentre(group: Group, spotRadiusCm: number, words: CentreWords = ENGLISH, units: Units = 'metric'): string {
+  const cm = (value: number) => formatLength(Math.abs(value), units);
   const x = group.cx * spotRadiusCm;
   const y = group.cy * spotRadiusCm;
   const parts: string[] = [];

@@ -56,6 +56,7 @@ DE = {
     "owner and weeks must be numbers": "owner und weeks müssen Zahlen sein",
     "Between 1 and 52": "Zwischen 1 und 52",
     "Unknown time zone": "Unbekannte Zeitzone",
+    "Enter a date of birth in the past": "Gib ein Geburtsdatum in der Vergangenheit ein",
     "Fletchr: reset your password": "Fletchr: Passwort zurücksetzen",
     "Someone asked to reset the password of your Fletchr account.\n\nYour code: %(code)s\n\nType it in the app. It works for one hour. If this was not you, ignore this mail: your password stays as it is.": "Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n\nDein Code: %(code)s\n\nGib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein Passwort bleibt, wie es ist.",
     "Fletchr: your password was changed": "Fletchr: Dein Passwort wurde geändert",

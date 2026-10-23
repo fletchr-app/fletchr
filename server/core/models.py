@@ -62,6 +62,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+def age_in_years(born, today=None):
+    """Whole years since `born`, or None when it is not known."""
+    if born is None:
+        return None
+    today = today or timezone.localdate()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+
 class Profile(models.Model):
     class Hand(models.TextChoices):
         RIGHT = "right"
@@ -80,6 +88,10 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.name or self.user.email
+
+    @property
+    def age(self):
+        return age_in_years(self.date_of_birth)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

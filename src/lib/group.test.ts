@@ -32,3 +32,8 @@ test('the sight hint says which way the centre is off, in cm of the real spot', 
   assert.equal(describeCentre(group(-0.105, 0.04), 20, de), '2.1 cm links, 0.8 cm hoch');
   assert.equal(describeCentre(group(0, 0), 20, de), 'in der Mitte');
 });
+
+test('the centre in inches for imperial units', () => {
+  const group = (cx: number, cy: number) => ({ n: 3, cx, cy, meanRadius: 0.1 });
+  assert.equal(describeCentre(group(-0.127, 0.0635), 20, undefined, 'imperial'), '1.0 in left, 0.5 in high');
+});

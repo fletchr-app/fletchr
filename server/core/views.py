@@ -21,6 +21,7 @@ from . import access, claims, mail, resets
 from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
 from .serializers import (
     ArcherNameSerializer,
+    ManagedArcherSerializer,
     ArcherSerializer,
     ClaimCodeSerializer,
     CodePreviewSerializer,
@@ -400,13 +401,16 @@ class ManagedArcherDetailView(APIView):
             raise NotFound()
         return team, profile
 
-    @extend_schema(request=ArcherNameSerializer, responses=MemberSerializer)
+    @extend_schema(request=ManagedArcherSerializer, responses=MemberSerializer)
     def patch(self, request, team_id, user_id):
+        """Rename the profile, or set its dominant hand and eye and date of birth."""
         team, profile = self._profile(request, team_id, user_id)
-        serializer = ArcherNameSerializer(data=request.data)
+        serializer = ManagedArcherSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        profile.profile.name = serializer.validated_data["name"]
-        profile.profile.save(update_fields=["name"])
+        changes = serializer.validated_data
+        for field, value in changes.items():
+            setattr(profile.profile, field, value)
+        profile.profile.save(update_fields=list(changes))
         return Response(MemberSerializer(TeamMember.objects.get(team=team, user=profile)).data)
 
     @extend_schema(responses={204: None})
@@ -442,6 +446,11 @@ class ArcherView(APIView):
                 "managed": archer.is_managed,
                 "team_id": team and team.pk,
                 "team_name": team and team.name,
+                "dominant_hand": archer.profile.dominant_hand,
+                "dominant_eye": archer.profile.dominant_eye,
+                "age": archer.profile.age,
+                # Coaches see the age; the date itself only where they keep the profile themselves.
+                "date_of_birth": archer.profile.date_of_birth if archer.is_managed else None,
             }
         )
 

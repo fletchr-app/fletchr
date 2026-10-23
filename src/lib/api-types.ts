@@ -611,6 +611,7 @@ export interface paths {
         delete: operations["teams_archers_destroy"];
         options?: never;
         head?: never;
+        /** @description Rename the profile, or set its dominant hand and eye and date of birth. */
         patch: operations["teams_archers_partial_update"];
         trace?: never;
     };
@@ -807,6 +808,15 @@ export interface components {
             /** @description A team you coach that the archer is in */
             team_id: number | null;
             team_name: string | null;
+            dominant_hand: string;
+            dominant_eye: string;
+            /** @description Whole years; the date of birth itself is private */
+            age: number | null;
+            /**
+             * Format: date
+             * @description Only for a profile without an account, which the coach keeps
+             */
+            date_of_birth: string | null;
         };
         ArcherNameRequest: {
             name: string;
@@ -1292,9 +1302,6 @@ export interface components {
             /** Format: email */
             email: string;
         };
-        PatchedArcherNameRequest: {
-            name?: string;
-        };
         PatchedArrowSetRequest: {
             is_active?: boolean;
             name?: string;
@@ -1347,6 +1354,14 @@ export interface components {
             stabilisers?: string;
             release_tab?: string;
             notes?: string;
+        };
+        /** @description What a coach may change on the profile of an archer without an account. */
+        PatchedManagedArcherRequest: {
+            name?: string;
+            dominant_hand?: components["schemas"]["HandEnum"] | components["schemas"]["BlankEnum"];
+            dominant_eye?: components["schemas"]["HandEnum"] | components["schemas"]["BlankEnum"];
+            /** Format: date */
+            date_of_birth?: string | null;
         };
         PatchedMeRequest: {
             profile?: components["schemas"]["ProfileRequest"];
@@ -1572,7 +1587,6 @@ export interface components {
             is_x?: boolean;
             is_miss?: boolean;
             readonly is_manual: boolean;
-            /** Format: int64 */
             arrow_number?: number | null;
         };
         /** @description What the app sends for a shot. The score fields are advisory: the server works out its own. */
@@ -1589,7 +1603,6 @@ export interface components {
             value?: number | null;
             is_x?: boolean;
             is_miss?: boolean;
-            /** Format: int64 */
             arrow_number?: number | null;
         };
         Spot: {
@@ -3096,9 +3109,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedArcherNameRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedArcherNameRequest"];
-                "multipart/form-data": components["schemas"]["PatchedArcherNameRequest"];
+                "application/json": components["schemas"]["PatchedManagedArcherRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedManagedArcherRequest"];
+                "multipart/form-data": components["schemas"]["PatchedManagedArcherRequest"];
             };
         };
         responses: {

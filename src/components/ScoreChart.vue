@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 
 import { useElementWidth } from '@/composables/useElementWidth'
+import { useUnits } from '@/composables/useUnits'
 import type { components } from '@/lib/api-types'
 import { scoreDomain } from '@/lib/chart'
 
@@ -17,6 +18,7 @@ const MAX_POINTS = 30
 const MARKERS_UP_TO = 12 // more points than this and only the touched and the latest one get a dot
 
 const { locale } = useI18n()
+const { formatDistance } = useUnits()
 const date = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y!, m! - 1, d).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
@@ -48,7 +50,7 @@ const hitWidth = computed(() => Math.max(24, plotW.value / points.value.length))
 
 <template>
   <div class="chart-card">
-    <div class="chart-title">{{ group.face_name }} · {{ Number(group.distance_m) }} m</div>
+    <div class="chart-title">{{ group.face_name }} · {{ formatDistance(group.distance_m) }}</div>
     <div>{{ $t('stats.averageOf', { n: group.arrows, avg: group.average.toFixed(2), max: group.max_value }, group.arrows) }}</div>
     <div>
       {{

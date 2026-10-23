@@ -10,6 +10,7 @@ import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
+import { useUnits } from '@/composables/useUnits'
 import { gearLine, sessionTotals, usesEnds } from '@/lib/log-model'
 import { fromServer } from '@/lib/session-view'
 
@@ -17,6 +18,7 @@ const REFRESH_MS = 5000
 
 // A session as the server has it, read-only. Used for sessions from other devices and by coaches.
 const route = useRoute()
+const { formatDistance } = useUnits()
 const { api } = useAuth()
 const id = route.params.id as string
 // An unfinished session is still being shot: keep fetching it, so a coach watches it fill up.
@@ -46,7 +48,7 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
       <SessionPlots :session="session" />
       <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
       <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
-      <div v-for="v in session.volume" :key="v.id">{{ $t('volume.entry', { n: v.arrow_count, d: Number(v.distance_m) }, v.arrow_count) }}</div>
+      <div v-for="v in session.volume" :key="v.id">{{ $t('volume.entry', { n: v.arrow_count, d: formatDistance(v.distance_m) }, v.arrow_count) }}</div>
     </div>
   </AppPage>
 </template>

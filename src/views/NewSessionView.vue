@@ -12,6 +12,7 @@ import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
 import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
+import { useUnits } from '@/composables/useUnits'
 import { FACES } from '@/lib/faces'
 import { defaultChoice, type Environment, firstEndDefaults, gearFor, type SessionType, usesEnds } from '@/lib/log-model'
 
@@ -31,6 +32,7 @@ const router = useRouter()
 const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? t('newSession.theArcher')) } : undefined
 const { startSession, sessions, equipment, refreshEquipment } = useLog()
 const { numbering, setNumbering } = useNumberArrows()
+const { distanceField, distanceUnit, parseDistance } = useUnits()
 const type = ref<SessionType>('scoring')
 const environment = ref<Environment>('indoor')
 const location = ref('')
@@ -44,15 +46,15 @@ onMounted(() => void refreshEquipment())
 // Settings of the first end. Until you change one, it follows indoor/outdoor.
 const typed = ref<{ distance?: string; face?: string; arrows?: string }>({})
 const defaults = computed(() => firstEndDefaults(environment.value))
-const distance = computed({ get: () => typed.value.distance ?? defaults.value.distance_m, set: (v) => (typed.value.distance = v) })
+const distance = computed({ get: () => typed.value.distance ?? distanceField(defaults.value.distance_m), set: (v) => (typed.value.distance = v) })
 const faceSlug = computed({ get: () => typed.value.face ?? defaults.value.face, set: (v) => (typed.value.face = v) })
 const arrows = computed({ get: () => typed.value.arrows ?? String(defaults.value.arrows_per_end), set: (v) => (typed.value.arrows = v) })
 const error = ref<string | null>(null)
 
 function start() {
-  const metres = Number(distance.value.replace(',', '.'))
+  const metres = parseDistance(distance.value)
   const ends = usesEnds(type.value)
-  if (ends && !(metres > 0)) return (error.value = t('newSession.enterDistance'))
+  if (ends && metres === null) return (error.value = t('newSession.enterDistance'))
   if (ends && !(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = t('newSession.arrowsRange'))
   const { bowId, arrowSetId } = choice.value
   const gear = archer || bowId === null ? undefined : gearFor(equipment.value, bowId, arrowSetId)
@@ -71,7 +73,7 @@ function start() {
       <FormField v-model="location" :label="$t('newSession.location')" capitalize="sentences" />
       <template v-if="usesEnds(type)">
         <div class="row g-3">
-          <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance')" inputmode="decimal" /></div>
+          <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance', { unit: distanceUnit() })" inputmode="decimal" /></div>
           <div class="col-6"><FormField v-model="arrows" :label="$t('newSession.arrowsPerEnd')" inputmode="numeric" /></div>
         </div>
         <IonSelect v-model="faceSlug" :label="$t('newSession.face')" label-placement="stacked" fill="outline" interface="action-sheet">

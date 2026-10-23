@@ -9,6 +9,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import TargetPlot from '@/components/TargetPlot.vue'
 import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
+import { useUnits } from '@/composables/useUnits'
 import { lastNumberBefore, nextNumber, setSize } from '@/lib/arrow-numbers'
 import { FACES, getFace } from '@/lib/faces'
 import { endTotal, keypadFor, type LogEnd, type LogSession, type LogShot, nextEndDefaults, shotLabel } from '@/lib/log-model'
@@ -23,6 +24,7 @@ const emit = defineEmits<{ done: [] }>()
 const { t } = useI18n()
 const { saveEnd, deleteEnd, equipment } = useLog()
 const { numbering } = useNumberArrows()
+const { formatDistance } = useUnits()
 
 const start = props.editing ?? { index: nextEndDefaults(props.session).index, id: newId() }
 // Arrows from another face do not carry over.
@@ -97,7 +99,7 @@ function remove() {
     <div class="d-flex align-items-center gap-2">
       <div class="flex-grow-1 text-truncate">
         <span class="fw-semibold">{{ $t('end.number', { n: start.index + 1 }) }}</span>
-        <span class="muted"> · {{ distance }} m · {{ face.name }}</span>
+        <span class="muted"> · {{ formatDistance(distance) }} · {{ face.name }}</span>
       </div>
       <IonSegment v-model="mode" style="width: 160px; flex: none" :aria-label="$t('end.enterBy')">
         <IonSegmentButton value="plot">{{ $t('end.touch') }}</IonSegmentButton>

@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { onIonViewWillEnter } from '@ionic/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
+import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useUnits } from '@/composables/useUnits'
 import { emailFormError, passwordFormError } from '@/lib/account'
 import { errorMessage } from '@/lib/errors'
+import { isUnits, type Units } from '@/lib/units'
 
 // Name, email address (the login) and password of the account. Email and password need the current password.
 const { t } = useI18n()
@@ -17,14 +20,24 @@ const { api, replaceTokens } = useAuth()
 
 const email = ref('')
 const name = ref('')
-const savedName = ref('')
+const hand = ref('')
+const eye = ref('')
+const birth = ref('')
+const unitsChoice = ref<Units>('metric')
+const { setUnits } = useUnits()
+const HANDS = computed(() => [{ value: '', label: t('account.notSet') }, { value: 'right', label: t('account.right') }, { value: 'left', label: t('account.left') }])
+const UNITS = computed<{ value: Units; label: string }[]>(() => [{ value: 'metric', label: t('account.metric') }, { value: 'imperial', label: t('account.imperial') }])
 
 onIonViewWillEnter(async () => {
   try {
     const { data } = await api.GET('/api/me/')
     if (data) {
       email.value = data.email
-      name.value = savedName.value = data.profile.name ?? ''
+      name.value = data.profile.name ?? ''
+      hand.value = data.profile.dominant_hand ?? ''
+      eye.value = data.profile.dominant_eye ?? ''
+      birth.value = data.profile.date_of_birth ?? ''
+      unitsChoice.value = isUnits(data.profile.units) ? data.profile.units : 'metric'
     }
   } catch {
     // Offline: the form stays empty.
@@ -48,12 +61,22 @@ async function run(section: keyof typeof sections, work: () => Promise<string | 
   }
 }
 
-const saveName = () =>
+const saveProfile = () =>
   run('name', async () => {
-    if (name.value.trim() === savedName.value) return null
-    const { data, error } = await api.PATCH('/api/me/', { body: { profile: { name: name.value.trim() } } })
+    const { data, error } = await api.PATCH('/api/me/', {
+      body: {
+        profile: {
+          name: name.value.trim(),
+          dominant_hand: hand.value as '' | 'right' | 'left',
+          dominant_eye: eye.value as '' | 'right' | 'left',
+          date_of_birth: birth.value || null,
+          units: unitsChoice.value,
+        },
+      },
+    })
     if (!data) return errorMessage(error)
-    savedName.value = name.value = data.profile.name ?? ''
+    name.value = data.profile.name ?? ''
+    setUnits(unitsChoice.value)
     return null
   }, t('account.saved'))
 
@@ -90,11 +113,16 @@ const changePassword = () =>
 <template>
   <AppPage :title="$t('account.title')">
     <div class="screen">
-      <h2 class="h5 m-0">{{ $t('account.name') }}</h2>
-      <FormField v-model="name" :label="$t('account.name')" capitalize="words" autocomplete="name" @enter="saveName" />
+      <h2 class="h5 m-0">{{ $t('account.profile') }}</h2>
+      <FormField v-model="name" :label="$t('account.name')" capitalize="words" autocomplete="name" />
+      <ChipGroup v-model="hand" :label="$t('account.hand')" :options="HANDS" />
+      <ChipGroup v-model="eye" :label="$t('account.eye')" :options="HANDS" />
+      <FormField v-model="birth" :label="$t('account.birth')" type="date" />
+      <div class="faint">{{ $t('account.birthHint') }}</div>
+      <ChipGroup v-model="unitsChoice" :label="$t('account.units')" :options="UNITS" />
       <ErrorText :message="sections.name.value.error" />
       <div v-if="sections.name.value.done" class="fw-semibold">{{ sections.name.value.done }}</div>
-      <AppButton :busy="sections.name.value.busy" @click="saveName">{{ $t('account.saveName') }}</AppButton>
+      <AppButton :busy="sections.name.value.busy" @click="saveProfile">{{ $t('account.saveProfile') }}</AppButton>
 
       <h2 class="h5 mt-3 mb-0">{{ $t('account.email') }}</h2>
       <div class="muted">{{ $t('account.signInWith', { email: email || '…' }) }}</div>
