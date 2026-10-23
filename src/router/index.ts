@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/training', component: () => import('@/views/TrainingListView.vue'), meta: { title: 'Training', auth: 'in', tab: true } },
     { path: '/training/new', component: () => import('@/views/NewSessionView.vue'), meta: { title: 'New session', auth: 'in' } },
     { path: '/training/:id', component: () => import('@/views/TrainingSessionView.vue'), meta: { title: 'Session', auth: 'in' } },
+    { path: '/training/:id/details', component: () => import('@/views/SessionDetailsView.vue'), meta: { title: 'Session notes', auth: 'in' } },
     { path: '/training/:id/setup', component: () => import('@/views/EndSetupView.vue'), meta: { title: 'New end', auth: 'in' } },
     { path: '/training/:id/end', component: () => import('@/views/EndEntryView.vue'), meta: { title: 'Arrows', auth: 'in' } },
     { path: '/training/:id/ends', component: () => import('@/views/SessionEndsView.vue'), meta: { title: 'Ends', auth: 'in' } },

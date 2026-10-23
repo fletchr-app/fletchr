@@ -23,6 +23,7 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           type: session.type,
           environment: session.environment,
           location: session.location,
+          ...(session.details ?? {}),
           // Left out when nothing was chosen, so the server keeps what it has; null clears it.
           ...(session.gear
             ? { bow_revision: session.gear.bow_revision, arrow_set_revision: session.gear.arrow_set_revision }

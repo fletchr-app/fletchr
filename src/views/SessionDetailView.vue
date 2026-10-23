@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import EndRows from '@/components/EndRows.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import NotesSection from '@/components/NotesSection.vue'
+import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
@@ -41,6 +42,7 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
       <div>{{ $t('count.arrows', totals.arrows) }}{{ usesEnds(session.type) ? ` · ${$t('count.points', totals.score)}` : '' }}</div>
       <div v-if="session.gear">{{ $t('session.equipment', { gear: gearLine(session.gear) }) }}</div>
       <ErrorText :message="error" />
+      <SessionDetailsText :details="session.details" />
       <SessionPlots :session="session" />
       <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
       <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
