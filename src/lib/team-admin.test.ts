@@ -55,5 +55,5 @@ test('the claim message has the team, the code, the date and both ways to enter 
   assert.match(text, /AB12CD34EF/);
   assert.match(text, /1 November 2026/);
   assert.match(text, /I have an invite code/);
-  assert.match(text, /Join another team/);
+  assert.match(text, /Join a team/);
 });

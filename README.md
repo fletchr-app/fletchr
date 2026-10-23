@@ -19,10 +19,10 @@ docs/      plan, decisions
 ## What it does
 
 - **Training log:** sessions with ends, arrows placed on the target face (works offline, uploaded when there is a connection), group plots, statistics.
-- **Teams and roles:** archer, coach, admin. Anyone signed in can create a team (More, Create a team) and becomes its admin; people join with invite codes, anyone can leave, admins can delete the team. Signing up itself is invite-only.
+- **Teams and roles:** archer, coach, admin. Anyone signed in can create a team (Settings, Create a team) and becomes its admin; people join with invite codes, anyone can leave, admins can delete the team. Signing up itself is invite-only.
 - **Archers without an account:** a coach adds an archer by name, writes notes and logs sessions for them. The archer takes the profile over later with a claim code (confirmed in the app); sessions and notes move to their account.
 - **Coach notes:** about an archer, a session or an end. Three levels: only me (the author alone), coach only (the coaches of the team), shared with the archer.
-- **Your data:** download everything the server has about you, delete your data, delete your account (More, Your data).
+- **Your data:** download everything the server has about you, delete your data, delete your account (Settings, Your data).
 
 ## Run locally
 
@@ -38,7 +38,7 @@ cd deploy && docker compose up --build
 
 - Web app and API: http://localhost:8080
 - Django admin: http://localhost:8080/admin/ (create a superuser with `docker compose exec django uv run --no-dev python manage.py createsuperuser`)
-- First account (signup is invite-only, so seed one): `docker compose exec django uv run --no-dev python manage.py seed --email you@example.com --password ... --name "Your Name"`. It creates a team with you as admin and prints an archer invite code. Further teams are created in the app (More, Create a team); invites come from the team screen (admins), `POST /api/teams/<id>/invites/` or the Django admin
+- First account (signup is invite-only, so seed one): `docker compose exec django uv run --no-dev python manage.py seed --email you@example.com --password ... --name "Your Name"`. It creates a team with you as admin and prints an archer invite code. Further teams are created in the app (Settings, Create a team); invites come from the team screen (admins), `POST /api/teams/<id>/invites/` or the Django admin
 - Health check: http://localhost:8080/api/health/
 - Data (database, uploads) lives in `deploy/data/django/`
 

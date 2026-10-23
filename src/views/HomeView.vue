@@ -33,7 +33,7 @@ onIonViewWillEnter(() =>
       <h2 class="h4 m-0">{{ me ? `Hello ${me.profile.name || me.email}` : 'Fletchr' }}</h2>
       <ErrorText :message="error" />
       <LatestNotes v-if="me" :user-id="me.id" />
-      <div v-if="loaded && teams.length === 0">You are not in a team yet. Under More you can join one with an invite code, or create your own.</div>
+      <div v-if="loaded && teams.length === 0">You are not in a team yet. Under Settings you can join one with an invite code, or create your own.</div>
       <IonList v-if="teams.length > 0" inset>
         <IonListHeader>Your teams</IonListHeader>
         <IonItem v-for="team in teams" :key="team.id" :router-link="`/team/${team.id}`" detail lines="full">

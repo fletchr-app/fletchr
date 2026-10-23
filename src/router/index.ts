@@ -16,7 +16,6 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { title: 'Fletchr', auth: 'in', tab: true } },
-    { path: '/more', component: () => import('@/views/MoreView.vue'), meta: { title: 'More', auth: 'in', tab: true } },
     { path: '/join-team', component: () => import('@/views/JoinTeamView.vue'), meta: { title: 'Join a team', auth: 'in' } },
     { path: '/training', component: () => import('@/views/TrainingListView.vue'), meta: { title: 'Training', auth: 'in', tab: true } },
     { path: '/training/new', component: () => import('@/views/NewSessionView.vue'), meta: { title: 'New session', auth: 'in' } },
@@ -37,7 +36,7 @@ const router = createRouter({
     { path: '/equipment/arrow-sets/:id', component: () => import('@/views/ArrowSetView.vue'), meta: { title: 'Arrow set', auth: 'in' } },
     { path: '/sign-in', component: () => import('@/views/SignInView.vue'), meta: { title: 'Sign in', auth: 'out' } },
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { title: 'Join with invite code', auth: 'out' } },
-    { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings' } },
+    { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', tab: true } },
     { path: '/:rest(.*)*', redirect: '/' },
   ],
 })

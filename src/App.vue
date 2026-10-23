@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue'
-import { ellipsisHorizontal, home, listCircle, people, statsChart } from 'ionicons/icons'
+import { home, listCircle, people, settings, statsChart } from 'ionicons/icons'
 import { App as CapacitorApp } from '@capacitor/app'
 import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -33,7 +33,8 @@ const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => openInv
 void CapacitorApp.getLaunchUrl().then((launch) => openInvite(launch?.url))
 onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
 
-const showTabs = computed(() => route.meta.tab === true)
+// The tab bar is for signed-in users (the Settings screen is also reachable from the sign-in screen).
+const showTabs = computed(() => route.meta.tab === true && status.value === 'signedIn')
 </script>
 
 <template>
@@ -57,9 +58,9 @@ const showTabs = computed(() => route.meta.tab === true)
           <IonIcon :icon="people" />
           <IonLabel>Team</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="more" href="/more">
-          <IonIcon :icon="ellipsisHorizontal" />
-          <IonLabel>More</IonLabel>
+        <IonTabButton tab="settings" href="/settings">
+          <IonIcon :icon="settings" />
+          <IonLabel>Settings</IonLabel>
         </IonTabButton>
       </IonTabBar>
     </IonTabs>
