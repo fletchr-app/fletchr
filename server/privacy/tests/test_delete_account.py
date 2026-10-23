@@ -164,3 +164,50 @@ def test_it_is_all_or_nothing(client_for, club):
     assert res.status_code == 500
     assert exists(club["archer1"]) and TrainingSession.objects.filter(owner=club["archer1"]).exists()
     assert Bow.objects.filter(owner=club["archer1"]).exists(), "the data was not erased either"
+
+
+# --- profiles of archers without an account ---------------------------------------------------------
+
+
+from training.tests.test_overview import make_session  # noqa: E402
+
+
+def keep_profile(club, name="Max Muster"):
+    from core.claims import managed_archer  # noqa: F401  (the same profile a coach creates in the app)
+    from core.models import User
+
+    profile = User.objects.create_managed(name)
+    TeamMember.objects.create(team=club["a"], user=profile, role=Role.ARCHER)
+    return profile
+
+
+def test_profiles_a_coach_kept_stay_with_the_team(client_for, club):
+    profile = keep_profile(club)
+    session = make_session(profile, arrows=6, volume=30)
+    note = Note.objects.create(team=club["a"], author=club["coach"], archer=profile, body="elbow", visibility="shared")
+    assert delete(client_for, club["coach"]).status_code == 200
+    assert TeamMember.objects.filter(team=club["a"], user=profile).exists()
+    assert TrainingSession.objects.filter(pk=session.pk).exists()
+    assert Note.objects.filter(pk=note.pk).exists()  # shown as written by a former coach
+
+
+def test_a_coach_with_only_profiles_left_is_not_blocked_and_the_team_goes(client_for, club):
+    from core.models import User
+
+    TeamMember.objects.filter(team=club["a"]).exclude(user=club["admin"]).delete()
+    profile = keep_profile(club)
+    make_session(profile, arrows=6, volume=30)
+    res = delete(client_for, club["admin"])
+    assert res.status_code == 200 and res.data["teams_deleted"] == 1
+    assert not Team.objects.filter(pk=club["a"].pk).exists()
+    assert not User.objects.filter(pk=profile.pk).exists() and not TrainingSession.objects.filter(owner=profile).exists()
+
+
+def test_a_profile_in_two_teams_survives_the_deletion_of_one_of_them(client_for, club):
+    from core.models import User
+
+    TeamMember.objects.filter(team=club["a"]).exclude(user=club["admin"]).delete()
+    profile = keep_profile(club)
+    TeamMember.objects.create(team=club["b"], user=profile, role=Role.ARCHER)
+    assert delete(client_for, club["admin"]).status_code == 200
+    assert User.objects.filter(pk=profile.pk).exists() and TeamMember.objects.filter(team=club["b"], user=profile).exists()

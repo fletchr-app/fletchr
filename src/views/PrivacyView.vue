@@ -8,6 +8,11 @@ import ExportData from '@/components/privacy/ExportData.vue'
 <template>
   <AppPage :title="$t('privacy.title')">
     <div class="screen">
+      <section class="d-flex flex-column gap-2">
+        <h2 class="h5 m-0">{{ $t('privacy.profilesTitle') }}</h2>
+        <div>{{ $t('privacy.profilesText1') }}</div>
+        <div>{{ $t('privacy.profilesText2') }}</div>
+      </section>
       <ExportData />
       <DeleteData />
       <DeleteAccount />

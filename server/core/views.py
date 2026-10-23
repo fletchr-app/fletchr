@@ -285,9 +285,7 @@ class TeamDetailView(APIView):
         team = self._team(request, team_id)
         if team.my_role != Role.ADMIN:
             raise PermissionDenied(gettext("Only team admins can delete the team"))
-        profiles = User.objects.filter(is_managed=True, memberships__team=team)
-        profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()  # only those of this team alone
-        Team.objects.filter(pk=team.pk).delete()
+        claims.delete_team(Team.objects.get(pk=team.pk))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(request=TeamNameSerializer, responses=TeamSerializer)

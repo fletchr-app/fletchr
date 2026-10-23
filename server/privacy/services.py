@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction
 
+from core import claims
 from core.models import Invite, Role, TeamMember
 from equipment.models import ArrowSet, Bow, Setup
 from notes.models import Note
@@ -52,10 +53,15 @@ class AccountBlocked(Exception):
         self.teams = teams  # [(team, number of other members)]
 
 
+def _others(team, user):
+    """The other people of a team who can act in it: profiles of archers without an account do not count."""
+    return TeamMember.objects.filter(team=team).exclude(user=user).exclude(user__is_managed=True)
+
+
 def _teams_to_hand_over(user):
     blocked = []
     for membership in TeamMember.objects.filter(user=user, role=Role.ADMIN).select_related("team"):
-        others = TeamMember.objects.filter(team=membership.team).exclude(user=user)
+        others = _others(membership.team, user)
         if others.exists() and not others.filter(role=Role.ADMIN).exists():
             blocked.append((membership.team, others.count()))
     return blocked
@@ -65,17 +71,18 @@ def _teams_to_hand_over(user):
 def delete_account(user) -> dict:
     """
     Erase the user and everything of theirs. Refused (nothing changes) while they are the only admin of a
-    team others belong to. Teams they were the only member of go with them; other teams carry on.
-    Notes they wrote about others stay, shown as written by a former coach.
+    team others belong to. Teams they were the only member of go with them, with the profiles of archers without
+    an account; in other teams those profiles stay with the team. Notes they wrote about others stay, shown as
+    written by a former coach.
     """
     blocked = _teams_to_hand_over(user)
     if blocked:
         raise AccountBlocked(blocked)
     counts = delete_my_data(user)  # first, in the right order: setups are protected while sessions use them
-    alone = [m.team for m in TeamMember.objects.filter(user=user).select_related("team") if not TeamMember.objects.filter(team=m.team).exclude(user=user).exists()]
+    alone = [m.team for m in TeamMember.objects.filter(user=user).select_related("team") if not _others(m.team, user).exists()]
     teams_left = TeamMember.objects.filter(user=user).count() - len(alone)
     for team in alone:
-        team.delete()
+        claims.delete_team(team)
     # An invite nobody used yet should not outlive the person who made it.
     Invite.objects.filter(created_by=user, used_at__isnull=True).delete()
     pk = user.pk

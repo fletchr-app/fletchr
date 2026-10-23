@@ -7,6 +7,7 @@ from equipment.models import Bow, BowRevision
 from notes.models import Note
 from privacy.tests.test_delete_data import PASSWORD, counts, fill
 from training.models import Shot, TrainingSession, VolumeEntry
+from training.tests.test_overview import make_session
 
 URL = "/api/me/export/"
 
@@ -160,3 +161,22 @@ def test_private_notes_are_in_the_authors_export_not_in_the_archers(client_for, 
     assert [n["body"] for n in about.data["notes_about_me"]] == ["for the coaches"]
     wrote = client_for(club["coach"]).post("/api/me/export/", {"password": "correct-horse-battery"}, format="json")
     assert {n["body"] for n in wrote.data["notes_i_wrote"]} == {"mine alone", "for the coaches"}
+
+
+def test_what_an_archer_took_over_from_a_profile_is_in_their_export(client_for, club):
+    from core import claims
+    from core.models import ClaimCode, User
+
+    profile = User.objects.create_managed("Max Muster")
+    TeamMember.objects.create(team=club["a"], user=profile, role=Role.ARCHER)
+    make_session(profile, arrows=6, volume=30)
+    Note.objects.create(team=club["a"], author=club["coach"], archer=profile, body="shared note", visibility="shared")
+    Note.objects.create(team=club["a"], author=club["coach"], archer=profile, body="for coaches", visibility="coach_only")
+    Note.objects.create(team=club["a"], author=club["coach"], archer=profile, body="only the coach", visibility="private")
+    code = ClaimCode.objects.create(profile=profile, team=club["a"], created_by=club["coach"]).code
+    newcomer = club["archer1"]
+    TeamMember.objects.filter(user=newcomer).delete()
+    claims.claim_profile(code, newcomer)
+    d = doc(client_for, newcomer)
+    assert len(d["sessions"]) == 1 and d["sessions"][0]["ends"][0]["shots"]
+    assert sorted(n["body"] for n in d["notes_about_me"]) == ["for coaches", "shared note"]  # not what a coach keeps only for themselves

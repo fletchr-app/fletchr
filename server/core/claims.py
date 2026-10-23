@@ -3,7 +3,7 @@
 from django.utils.translation import gettext
 from django.db import transaction
 
-from .models import COACH_ROLES, ClaimCode, Role, TeamMember, User, normalize_code
+from .models import COACH_ROLES, ClaimCode, Role, Team, TeamMember, User, normalize_code
 
 
 class ClaimError(Exception):
@@ -63,3 +63,10 @@ def claim_profile(code, user):
     team = claim.team
     profile.delete()  # its claim codes go with it
     return team
+
+
+def delete_team(team):
+    """Delete the team with what belongs to it, among it the profiles of archers without an account (only those of this team)."""
+    profiles = User.objects.filter(is_managed=True, memberships__team=team)
+    profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()
+    team.delete()
