@@ -1,29 +1,31 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/vue'
+import { IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption } from '@ionic/vue'
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
-import { useLocale } from '@/composables/useLocale'
+import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useServer } from '@/composables/useServer'
-import { useTheme } from '@/composables/useTheme'
+import { type ThemeMode, useTheme } from '@/composables/useTheme'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
-// where it connects. Each app setting is a row that shows its value and opens its own page.
+// where it connects. Theme and language are picked in a sheet; the server address has its own page.
 const { status, signOut } = useAuth()
 const signedIn = computed(() => status.value === 'signedIn')
 const creating = useCreateTeam()
-const { t } = useI18n()
-const { mode: theme } = useTheme()
-const { mode: language } = useLocale()
+const { mode: theme, setMode: setTheme } = useTheme()
+const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
 
-const themeName = computed(() => t(`settings.theme${theme.value[0]!.toUpperCase()}${theme.value.slice(1)}`))
-const languageName = computed(() => t(`settings.lang${language.value === 'system' ? 'System' : language.value === 'en' ? 'En' : 'De'}`))
+const THEMES: ThemeMode[] = ['system', 'light', 'dark']
+const LANGUAGES: { value: LanguageMode; key: string }[] = [
+  { value: 'system', key: 'langSystem' },
+  { value: 'en', key: 'langEn' },
+  { value: 'de', key: 'langDe' },
+]
 const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
 </script>
 
@@ -50,13 +52,15 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
 
       <IonList inset>
         <IonListHeader>{{ $t('settings.app') }}</IonListHeader>
-        <IonItem router-link="/settings/theme" detail lines="full">
-          <IonLabel>{{ $t('settings.theme') }}</IonLabel>
-          <IonNote slot="end">{{ themeName }}</IonNote>
+        <IonItem lines="full">
+          <IonSelect :value="theme" :label="$t('settings.theme')" interface="action-sheet" @ion-change="setTheme($event.detail.value)">
+            <IonSelectOption v-for="m in THEMES" :key="m" :value="m">{{ $t(`settings.theme${m[0]!.toUpperCase()}${m.slice(1)}`) }}</IonSelectOption>
+          </IonSelect>
         </IonItem>
-        <IonItem router-link="/settings/language" detail lines="full">
-          <IonLabel>{{ $t('settings.language') }}</IonLabel>
-          <IonNote slot="end">{{ languageName }}</IonNote>
+        <IonItem lines="full">
+          <IonSelect :value="language" :label="$t('settings.language')" interface="action-sheet" @ion-change="setLanguage($event.detail.value)">
+            <IonSelectOption v-for="l in LANGUAGES" :key="l.value" :value="l.value">{{ $t(`settings.${l.key}`) }}</IonSelectOption>
+          </IonSelect>
         </IonItem>
         <IonItem router-link="/settings/server" detail lines="none">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
