@@ -14,6 +14,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -164,6 +166,8 @@ MEDIA_ROOT = DATA_DIR / "media"
 # Without DJANGO_EMAIL_HOST the mails are printed to the log instead of sent (development).
 # DJANGO_EMAIL_SECURITY: "starttls" (port 587, the default) or "ssl" (port 465).
 EMAIL_SECURITY = os.environ.get("DJANGO_EMAIL_SECURITY", "starttls")
+if EMAIL_SECURITY not in ("starttls", "ssl"):  # anything else would send the password unencrypted
+    raise ImproperlyConfigured(f'DJANGO_EMAIL_SECURITY must be "starttls" or "ssl", not "{EMAIL_SECURITY}"')
 if os.environ.get("DJANGO_EMAIL_HOST"):
     MAILERS = {
         "default": {
