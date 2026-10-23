@@ -16,15 +16,17 @@ const me = ref<Me | null>(null)
 const { teams, loaded, load } = useTeams()
 const error = ref<string | null>(null)
 
-// Each time the screen is shown: it stays alive between visits, so a new team would not appear otherwise.
-onIonViewWillEnter(() =>
-  Promise.all([api.GET('/api/me/'), load()])
+// Each time the screen is shown: it stays alive between visits, so a new team or note would not appear otherwise.
+const shown = ref(0)
+onIonViewWillEnter(() => {
+  shown.value++
+  return Promise.all([api.GET('/api/me/'), load()])
     .then(([meRes]) => {
       if (meRes.data) me.value = meRes.data
       error.value = meRes.data ? null : 'Could not load your data'
     })
-    .catch(() => (error.value = 'Server not reachable')),
-)
+    .catch(() => (error.value = 'Server not reachable'))
+})
 </script>
 
 <template>
@@ -32,7 +34,7 @@ onIonViewWillEnter(() =>
     <div class="screen">
       <h2 class="h4 m-0">{{ me ? `Hello ${me.profile.name || me.email}` : 'Fletchr' }}</h2>
       <ErrorText :message="error" />
-      <LatestNotes v-if="me" :user-id="me.id" />
+      <LatestNotes v-if="me" :user-id="me.id" :refresh="shown" />
       <div v-if="loaded && teams.length === 0">You are not in a team yet. Under Settings you can join one with an invite code, or create your own.</div>
       <IonList v-if="teams.length > 0" inset>
         <IonListHeader>Your teams</IonListHeader>

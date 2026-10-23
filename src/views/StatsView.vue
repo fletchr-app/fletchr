@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onIonViewWillEnter } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -27,10 +28,17 @@ const title = name ? `${name}: statistics` : 'Statistics'
 const hasBack = owner !== undefined // opened from an archer's page, not from the tab bar
 
 const { api } = useAuth()
-const { data, error, loading } = useRemote(
+const { data, error, loading, reload } = useRemote(
   async () =>
     (await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })).data ?? null,
 )
+
+// The tab stays alive between visits: show fresh numbers each time it is opened again (the first time it has just loaded).
+let firstVisit = true
+onIonViewWillEnter(() => {
+  if (firstVisit) firstVisit = false
+  else reload()
+})
 </script>
 
 <template>
