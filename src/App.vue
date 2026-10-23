@@ -33,7 +33,7 @@ const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => openInv
 void CapacitorApp.getLaunchUrl().then((launch) => openInvite(launch?.url))
 onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
 
-// The tab bar is for signed-in users (the Settings screen is also reachable from the sign-in screen).
+// The tab bar is for signed-in users.
 const showTabs = computed(() => route.meta.tab === true && status.value === 'signedIn')
 </script>
 

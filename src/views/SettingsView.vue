@@ -13,8 +13,7 @@ import { type ThemeMode, useTheme } from '@/composables/useTheme'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
-const { status, signOut } = useAuth()
-const signedIn = computed(() => status.value === 'signedIn')
+const { signOut } = useAuth()
 const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
 const { mode: language, setMode: setLanguage } = useLocale()
@@ -32,23 +31,21 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
 <template>
   <AppPage :title="$t('settings.title')" :back="false">
     <div class="screen">
-      <template v-if="signedIn">
-        <IonList inset>
-          <IonListHeader>{{ $t('settings.training') }}</IonListHeader>
-          <IonItem router-link="/equipment" detail lines="none"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
-        </IonList>
-        <IonList inset>
-          <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
-          <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
-          <IonItem button detail lines="none" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
-        </IonList>
-        <ErrorText :message="creating.error.value" />
-        <IonList inset>
-          <IonListHeader>{{ $t('settings.account') }}</IonListHeader>
-          <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.accountRow') }}</IonLabel></IonItem>
-          <IonItem router-link="/privacy" detail lines="none"><IonLabel>{{ $t('settings.yourData') }}</IonLabel></IonItem>
-        </IonList>
-      </template>
+      <IonList inset>
+        <IonListHeader>{{ $t('settings.training') }}</IonListHeader>
+        <IonItem router-link="/equipment" detail lines="none"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
+      </IonList>
+      <IonList inset>
+        <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
+        <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
+        <IonItem button detail lines="none" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+      </IonList>
+      <ErrorText :message="creating.error.value" />
+      <IonList inset>
+        <IonListHeader>{{ $t('settings.account') }}</IonListHeader>
+        <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.accountRow') }}</IonLabel></IonItem>
+        <IonItem router-link="/privacy" detail lines="none"><IonLabel>{{ $t('settings.yourData') }}</IonLabel></IonItem>
+      </IonList>
 
       <IonList inset>
         <IonListHeader>{{ $t('settings.app') }}</IonListHeader>
@@ -68,7 +65,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         </IonItem>
       </IonList>
 
-      <AppButton v-if="signedIn" class="mt-3" secondary @click="signOut">{{ $t('settings.signOut') }}</AppButton>
+      <AppButton class="mt-3" secondary @click="signOut">{{ $t('settings.signOut') }}</AppButton>
     </div>
   </AppPage>
 </template>

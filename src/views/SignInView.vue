@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
+import BrandMark from '@/components/BrandMark.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -24,8 +25,9 @@ async function submit() {
 </script>
 
 <template>
-  <AppPage :title="$t('auth.signIn.title')" :back="false">
+  <AppPage :title="$t('auth.signIn.title')" :back="false" :mark="false">
     <div class="screen">
+      <BrandMark :size="88" class="align-self-center mt-3" />
       <FormField v-model="email" :label="$t('auth.signIn.email')" type="email" inputmode="email" autocomplete="email" />
       <FormField v-model="password" :label="$t('auth.signIn.password')" type="password" autocomplete="current-password" @enter="submit" />
       <ErrorText :message="error" />

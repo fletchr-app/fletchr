@@ -428,6 +428,7 @@ export default {
     generic: 'Etwas ist schiefgelaufen',
   },
   tabs: {
+    brand: 'Fletchr',
     home: 'Start',
     training: 'Training',
     statistics: 'Statistik',

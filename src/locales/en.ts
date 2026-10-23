@@ -424,6 +424,7 @@ export default {
     generic: 'Something went wrong',
   },
   tabs: {
+    brand: 'Fletchr',
     home: 'Home',
     training: 'Training',
     statistics: 'Statistics',
