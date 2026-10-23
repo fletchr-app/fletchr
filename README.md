@@ -8,7 +8,7 @@ Training log, coaching notes and evaluations for archers and coaches. One Vue 3 
 src/       Vue app: views/ (screens), components/, composables/ (auth, log, teams, theme, ...), lib/ (logic, API client), router/
 android/   Capacitor Android project
 public/    static files of the web build
-resources/ source icon and splash image for the phone apps
+resources/ source icon and splash image for the phone apps (`uv run resources/generate.py` draws the icon and writes every size)
 server/    Django project (DRF, SQLite), Dockerfile
 deploy/    docker-compose.yml, Caddyfile, .env.example
 shared/    files used by both server and app (target faces, scoring test cases)
