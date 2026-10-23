@@ -7,6 +7,7 @@
 # It shows what would change, then asks. Files in the web root that are not in site/ are deleted.
 #   --yes   do not ask (the changes are still printed)
 set -euo pipefail
+trap 'echo "site.sh: stopped unexpectedly at line $LINENO" >&2' ERR   # never end without a word
 
 SUDO="${SUDO-sudo}"                        # empty in tests
 PREFIX="${SITE_PREFIX:-/var/www/vhosts}"   # the web root must be inside this, and at least two folders below it
@@ -35,7 +36,7 @@ owner="$($SUDO stat -c %U "$root")"
 group="$($SUDO stat -c %G "$root")"
 [ "$owner" != root ] || fail "$root belongs to root: that is not a Plesk web root"
 
-todo="$(grep -rIl 'class="todo"' "$repo/site" | wc -l)"
+todo="$({ grep -rIl 'class="todo"' "$repo/site" || true; } | wc -l)"   # grep finds nothing: fine, not an error
 echo "From:  $repo/site/"
 echo "To:    $root/   (owner $owner:$group)"
 [ "$todo" -eq 0 ] || echo "Note:  $todo page(s) still have yellow TODO marks."
