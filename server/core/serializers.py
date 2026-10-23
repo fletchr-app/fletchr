@@ -1,4 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import ClaimCode, Invite, Profile, Role, Team, TeamMember, User
@@ -134,3 +135,43 @@ class CodePreviewSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=["invite", "claim"])
     team_name = serializers.CharField()
     profile_name = serializers.CharField(allow_null=True, help_text="For a claim code: the profile you would take over")
+
+
+class CurrentPasswordMixin(serializers.Serializer):
+    """Changing the login needs the current password, even when signed in: a stolen phone must not be enough."""
+
+    current_password = serializers.CharField(write_only=True)
+
+    def validate_current_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Wrong password")
+        return value
+
+
+class PasswordChangeSerializer(CurrentPasswordMixin):
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        user = self.context["request"].user
+        if user.check_password(value):
+            raise serializers.ValidationError("Choose a different password")
+        try:
+            validate_password(value, user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
+        return value
+
+
+class EmailChangeSerializer(CurrentPasswordMixin):
+    new_email = serializers.EmailField()
+
+    def validate_new_email(self, value):
+        value = value.strip().lower()
+        if User.objects.filter(email__iexact=value).exclude(pk=self.context["request"].user.pk).exists():
+            raise serializers.ValidationError("This address is not available")
+        return value
+
+
+class TokenPairSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()

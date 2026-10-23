@@ -10,6 +10,8 @@ urlpatterns = [
     path("claims/redeem/", views.RedeemClaimView.as_view()),
     path("archers/<int:user_id>/", views.ArcherView.as_view()),
     path("me/", views.MeView.as_view()),
+    path("me/password/", views.ChangePasswordView.as_view()),
+    path("me/email/", views.ChangeEmailView.as_view()),
     path("teams/", views.TeamListView.as_view()),
     path("teams/<int:team_id>/", views.TeamDetailView.as_view()),
     path("teams/<int:team_id>/membership/", views.MyMembershipView.as_view()),

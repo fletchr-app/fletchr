@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -21,6 +22,9 @@ from .serializers import (
     ArcherSerializer,
     ClaimCodeSerializer,
     CodePreviewSerializer,
+    EmailChangeSerializer,
+    PasswordChangeSerializer,
+    TokenPairSerializer,
     InviteSerializer,
     MemberSerializer,
     MembershipSettingsSerializer,
@@ -142,6 +146,42 @@ class MeView(generics.RetrieveUpdateAPIView):
 
 
 MAX_TEAMS_PER_USER = 5  # teams one person may administer
+
+
+class ChangePasswordView(APIView):
+    """Set a new password. Every other session of the account is signed out; this one gets new tokens."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sensitive"
+
+    @extend_schema(request=PasswordChangeSerializer, responses=TokenPairSerializer)
+    @transaction.atomic
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        for token in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token)
+        refresh = RefreshToken.for_user(user)
+        return Response({"access": str(refresh.access_token), "refresh": str(refresh)})
+
+
+class ChangeEmailView(APIView):
+    """Set a new email address (it is the login name). Takes effect at once: the server cannot send mail yet."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sensitive"
+
+    @extend_schema(request=EmailChangeSerializer, responses=MeSerializer)
+    def post(self, request):
+        serializer = EmailChangeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.email = serializer.validated_data["new_email"]
+        user.save(update_fields=["email"])
+        return Response(MeSerializer(user).data)
 
 
 class TeamListView(generics.ListAPIView):

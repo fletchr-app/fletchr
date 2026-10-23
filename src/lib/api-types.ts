@@ -250,6 +250,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/email/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Set a new email address (it is the login name). Takes effect at once: the server cannot send mail yet. */
+        post: operations["me_email_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/export/": {
         parameters: {
             query?: never;
@@ -261,6 +278,23 @@ export interface paths {
         put?: never;
         /** @description Everything the server has about me, as one JSON document. Needs my password. */
         post: operations["me_export_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/password/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Set a new password. Every other session of the account is signed out; this one gets new tokens. */
+        post: operations["me_password_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1055,6 +1089,12 @@ export interface components {
             arrow_sets: number;
             notes_about_me: number;
         };
+        /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
+        EmailChangeRequest: {
+            current_password: string;
+            /** Format: email */
+            new_email: string;
+        };
         End: {
             /** Format: uuid */
             readonly id: string;
@@ -1200,6 +1240,11 @@ export interface components {
         NoteTeam: {
             id: number;
             name: string;
+        };
+        /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
+        PasswordChangeRequest: {
+            current_password: string;
+            new_password: string;
         };
         PatchedArcherNameRequest: {
             name?: string;
@@ -1539,6 +1584,10 @@ export interface components {
         TokenObtainPairRequest: {
             email: string;
             password: string;
+        };
+        TokenPair: {
+            access: string;
+            refresh: string;
         };
         TokenRefresh: {
             readonly access: string;
@@ -2176,6 +2225,31 @@ export interface operations {
             };
         };
     };
+    me_email_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmailChangeRequest"];
+                "multipart/form-data": components["schemas"]["EmailChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
     me_export_create: {
         parameters: {
             query?: never;
@@ -2199,6 +2273,31 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    me_password_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PasswordChangeRequest"];
+                "multipart/form-data": components["schemas"]["PasswordChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
                 };
             };
         };

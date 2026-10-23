@@ -79,6 +79,11 @@ async function signOut(): Promise<void> {
   }
 }
 
+/** After a password change the server hands out new tokens (every other session is signed out): keep these. */
+function replaceTokens(tokens: { access: string; refresh: string }) {
+  session.value.setTokens(tokens);
+}
+
 export function useAuth() {
-  return { status, api, userId, signIn, register, signOut };
+  return { status, api, userId, signIn, register, signOut, replaceTokens };
 }

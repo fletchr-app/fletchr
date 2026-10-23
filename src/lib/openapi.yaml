@@ -600,6 +600,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeleteDataResponse'
           description: ''
+  /api/me/email/:
+    post:
+      operationId: me_email_create
+      description: 'Set a new email address (it is the login name). Takes effect at
+        once: the server cannot send mail yet.'
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
   /api/me/export/:
     post:
       operationId: me_export_create
@@ -628,6 +656,34 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+          description: ''
+  /api/me/password/:
+    post:
+      operationId: me_password_create
+      description: Set a new password. Every other session of the account is signed
+        out; this one gets new tokens.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
           description: ''
   /api/notes/:
     get:
@@ -2596,6 +2652,22 @@ components:
       - notes_about_me
       - sessions
       - shots
+    EmailChangeRequest:
+      type: object
+      description: 'Changing the login needs the current password, even when signed
+        in: a stolen phone must not be enough.'
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - current_password
+      - new_email
     End:
       type: object
       properties:
@@ -2949,6 +3021,22 @@ components:
       required:
       - id
       - name
+    PasswordChangeRequest:
+      type: object
+      description: 'Changing the login needs the current password, even when signed
+        in: a stolen phone must not be enough.'
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - current_password
+      - new_password
     PatchedArcherNameRequest:
       type: object
       properties:
@@ -3724,6 +3812,16 @@ components:
       required:
       - email
       - password
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
     TokenRefresh:
       type: object
       properties:

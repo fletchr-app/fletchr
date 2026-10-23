@@ -18,6 +18,7 @@ const creating = useCreateTeam()
         <IonItem router-link="/equipment" detail lines="full"><IonLabel>My equipment</IonLabel></IonItem>
         <IonItem router-link="/join-team" detail lines="full"><IonLabel>Join another team</IonLabel></IonItem>
         <IonItem button detail lines="full" @click="creating.ask"><IonLabel>Create a team</IonLabel></IonItem>
+        <IonItem router-link="/account" detail lines="full"><IonLabel>Account</IonLabel></IonItem>
         <IonItem router-link="/privacy" detail lines="full"><IonLabel>Your data</IonLabel></IonItem>
         <IonItem router-link="/settings" detail lines="none"><IonLabel>Settings</IonLabel></IonItem>
       </IonList>
