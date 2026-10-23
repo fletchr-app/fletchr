@@ -16,6 +16,8 @@ export type LogShot = {
   x?: number;
   y?: number;
   spot?: number;
+  /** Which of the numbered arrows it was, when the archer numbers them. */
+  arrow_number?: number;
 };
 export type LogEnd = { id: string; index: number; distance_m: string; face: string; arrows_per_end: number; shots: LogShot[] };
 export type LogVolume = { id: string; distance_m: string; arrow_count: number };
@@ -31,7 +33,7 @@ export type Gear = {
 
 /** A copy of your active equipment from the last time the app was online, so a session can start without a connection. */
 export type CachedBow = { id: number; name: string; type: string; revision: number; revision_number: number };
-export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number };
+export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number; count: number | null };
 export type Equipment = { bows: CachedBow[]; arrowSets: CachedArrowSet[] };
 
 /** What the archer notes about a session (weather as written by `encodeWeather`, ratings 1 to 5). */

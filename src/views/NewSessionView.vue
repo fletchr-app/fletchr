@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonSelect, IonSelectOption } from '@ionic/vue'
+import { IonSelect, IonSelectOption, IonToggle } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -11,6 +11,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
 import { useLog } from '@/composables/useLog'
+import { useNumberArrows } from '@/composables/useNumberArrows'
 import { FACES } from '@/lib/faces'
 import { defaultChoice, type Environment, firstEndDefaults, gearFor, type SessionType, usesEnds } from '@/lib/log-model'
 
@@ -29,6 +30,7 @@ const router = useRouter()
 // A coach logging for an archer without an account (?for=<id>&name=...): no equipment, it is the archer's.
 const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? t('newSession.theArcher')) } : undefined
 const { startSession, sessions, equipment, refreshEquipment } = useLog()
+const { numbering, setNumbering } = useNumberArrows()
 const type = ref<SessionType>('scoring')
 const environment = ref<Environment>('indoor')
 const location = ref('')
@@ -75,6 +77,7 @@ function start() {
         <IonSelect v-model="faceSlug" :label="$t('newSession.face')" label-placement="stacked" fill="outline" interface="action-sheet">
           <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
         </IonSelect>
+        <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       </template>
       <GearPicker v-if="!archer" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
       <ErrorText :message="error" />

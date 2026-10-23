@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonSelect, IonSelectOption } from '@ionic/vue'
+import { IonSelect, IonSelectOption, IonToggle } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -10,6 +10,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
 import { useLog } from '@/composables/useLog'
+import { useNumberArrows } from '@/composables/useNumberArrows'
 import { FACES } from '@/lib/faces'
 import { gearFor, nextEndDefaults } from '@/lib/log-model'
 
@@ -19,6 +20,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { loaded, sessions, equipment, setGear } = useLog()
+const { numbering, setNumbering } = useNumberArrows()
 
 const sessionId = route.params.id as string
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
@@ -50,6 +52,7 @@ function begin() {
       <IonSelect v-model="faceSlug" :label="$t('newSession.face')" label-placement="stacked" fill="outline" interface="action-sheet">
         <IonSelectOption v-for="f in FACES" :key="f.slug" :value="f.slug">{{ f.name }}</IonSelectOption>
       </IonSelect>
+      <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       <GearPicker
       v-if="!session.owner"
         :equipment="equipment"

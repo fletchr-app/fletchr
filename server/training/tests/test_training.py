@@ -327,3 +327,27 @@ def test_the_coach_of_the_archer_reads_the_notes_too(api, client_for, club):
     api["client"].put(api["url"], {**SESSION, **DETAILS}, format="json")
     got = client_for(club["coach"]).get(api["url"]).data
     assert got["notes"] == "Felt steady" and got["weather"] == "sunny,wind;15 °C"
+
+
+# --- numbered arrows -------------------------------------------------------------------------------------------------
+
+
+def test_the_arrow_number_of_a_shot_is_kept(api):
+    body = end_body([shot(0.0, 0.0, arrow_number=4), shot(0.1, 0.0, arrow_number=5), shot(0.2, 0.0)])
+    _, res = put_end(api, body)
+    assert res.status_code in (200, 201)
+    got = api["client"].get(api["url"]).data["ends"][0]["shots"]
+    assert [s["arrow_number"] for s in got] == [4, 5, None]
+
+
+@pytest.mark.parametrize("number", [0, 100, -3])
+def test_an_arrow_number_must_be_from_1_to_99(api, number):
+    _, res = put_end(api, end_body([shot(arrow_number=number)]))
+    assert res.status_code == 400
+
+
+def test_the_number_can_be_taken_away_again(api):
+    end_id = new_id()
+    put_end(api, end_body([{"id": "11111111-1111-1111-1111-111111111111", "x": 0.0, "y": 0.0, "arrow_number": 3}]), end_id=end_id)
+    put_end(api, end_body([{"id": "11111111-1111-1111-1111-111111111111", "x": 0.0, "y": 0.0, "arrow_number": None}]), end_id=end_id)
+    assert api["client"].get(api["url"]).data["ends"][0]["shots"][0]["arrow_number"] is None

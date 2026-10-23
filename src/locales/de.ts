@@ -159,12 +159,14 @@ export default {
     start: 'Starten',
     enterDistance: 'Gib die Entfernung in Metern ein',
     arrowsRange: 'Pfeile pro Passe: zwischen 1 und 12',
+    numberArrows: 'Pfeile nummerieren',
   },
   end: {
     title: 'Neue Passe',
     number: 'Passe {n}',
     hint: 'Nächster Bildschirm: Tippe auf die Scheibe und bewege den Finger an die genaue Stelle, dann hebe ihn, um den Pfeil zu setzen. Tippe einen Pfeil an, um ihn zu verschieben. Ein Pfeil auf der Linie zählt für den höheren Ring: Schiebe ihn über die Linie.',
     startEntering: 'Pfeile eintragen',
+    arrowNumber: 'Pfeil {n}',
     enterOne: 'Trag mindestens einen Pfeil ein',
     touch: 'Scheibe',
     type: 'Zahlen',
@@ -189,6 +191,7 @@ export default {
     arrowSet: 'Pfeilsatz',
   },
   plots: {
+    numbers: 'Pfeilnummern',
     left: 'links',
     right: 'rechts',
     low: 'tief',

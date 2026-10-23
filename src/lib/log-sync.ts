@@ -49,8 +49,8 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           // A plotted shot is sent with its position, and the server works out the score; a typed one with its score.
           shots: end.shots.map((s) =>
             s.x === undefined || s.y === undefined
-              ? { id: s.id, value: s.value, is_x: s.is_x, is_miss: s.is_miss }
-              : { id: s.id, x: s.x, y: s.y, spot: s.spot ?? 0, value: s.value, is_x: s.is_x, is_miss: s.is_miss },
+              ? { id: s.id, value: s.value, is_x: s.is_x, is_miss: s.is_miss, arrow_number: s.arrow_number ?? null }
+              : { id: s.id, x: s.x, y: s.y, spot: s.spot ?? 0, value: s.value, is_x: s.is_x, is_miss: s.is_miss, arrow_number: s.arrow_number ?? null },
           ),
         },
       });
@@ -112,7 +112,7 @@ export async function fetchEquipment(api: ApiClient, userId: number): Promise<Eq
     if (!bows.data || !arrowSets.data) return null;
     return {
       bows: bows.data.map((b) => ({ id: b.id, name: b.name, type: b.type, revision: b.revision, revision_number: b.revision_number })),
-      arrowSets: arrowSets.data.map((a) => ({ id: a.id, name: a.name, revision: a.revision, revision_number: a.revision_number })),
+      arrowSets: arrowSets.data.map((a) => ({ id: a.id, name: a.name, revision: a.revision, revision_number: a.revision_number, count: a.count ?? null })),
     };
   } catch {
     return null;

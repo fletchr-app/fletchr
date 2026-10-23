@@ -17,7 +17,7 @@ const GAP_PX = 36
 // Touch the face to place an arrow: while the finger is down a magnifier above it shows the exact
 // spot, and lifting places the arrow. Touching an existing arrow moves it instead. The face is
 // drawn as large as fits the space the parent gives this component (it fills the parent's height).
-const props = defineProps<{ face: Face; shots: LogShot[]; max: number; selectedId: string | null }>()
+const props = defineProps<{ face: Face; shots: LogShot[]; max: number; selectedId: string | null; numberNext?: number | null }>()
 const emit = defineEmits<{ change: [shots: LogShot[]] }>()
 
 const box = ref<HTMLElement | null>(null)
@@ -85,7 +85,7 @@ function finish(commit: boolean) {
   if (commit && !full()) {
     const point = pickAt(props.face, scene.value, scale.value, x, y)
     if (drag >= 0) emit('change', props.shots.map((s, i) => (i === drag ? shotAt(point, s.id, s) : s)))
-    else emit('change', [...props.shots, shotAt(point, newId())])
+    else emit('change', [...props.shots, { ...shotAt(point, newId()), ...(props.numberNext != null ? { arrow_number: props.numberNext } : {}) }])
   }
   touch.value = null
   dragIndex.value = -1

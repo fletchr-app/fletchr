@@ -51,6 +51,7 @@ export function fromServer(s: ServerSession): ViewSession {
           value: shot.value ?? null,
           is_x: shot.is_x ?? false,
           is_miss: shot.is_miss ?? false,
+          ...(shot.arrow_number != null ? { arrow_number: shot.arrow_number } : {}),
           ...(shot.x != null && shot.y != null ? { x: shot.x, y: shot.y, spot: shot.spot ?? 0 } : {}),
         }),
       ),

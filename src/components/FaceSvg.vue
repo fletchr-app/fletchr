@@ -2,7 +2,7 @@
 export const MARKER_PX = 5
 
 export type View4 = { x: number; y: number; w: number; h: number }
-export type Marker = { cx: number; cy: number; selected: boolean }
+export type Marker = { cx: number; cy: number; selected: boolean; label?: string }
 /** A group of arrows: its centre and mean radius, in cm in the drawing's orientation (y down). */
 export type GroupMark = { cx: number; cy: number; r: number }
 </script>
@@ -55,6 +55,17 @@ const rings = computed(() =>
     <g v-for="(m, i) in markers" :key="i">
       <circle v-if="m.selected" :cx="m.cx" :cy="m.cy" :r="markerR * 2" fill="none" stroke="#ff00ff" :stroke-width="line * 2" />
       <circle :cx="m.cx" :cy="m.cy" :r="markerR" fill="#00e676" stroke="#000" :stroke-width="line * 1.5" />
+      <text
+        v-if="m.label"
+        :x="m.cx + markerR * 1.3"
+        :y="m.cy - markerR * 1.1"
+        :font-size="markerR * 2.6"
+        font-weight="700"
+        fill="#000"
+        stroke="#fff"
+        :stroke-width="line * 2.5"
+        paint-order="stroke"
+      >{{ m.label }}</text>
     </g>
     <g v-for="(g, i) in groups" :key="`group-${i}`">
       <circle

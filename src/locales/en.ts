@@ -155,12 +155,14 @@ export default {
     start: 'Start',
     enterDistance: 'Enter the distance in metres',
     arrowsRange: 'Arrows per end must be between 1 and 12',
+    numberArrows: 'Number the arrows',
   },
   end: {
     title: 'New end',
     number: 'End {n}',
     hint: 'Next screen: touch the face and move to the exact spot, then lift to place the arrow. Touch an arrow to move it. An arrow touching a line counts for the higher ring: move it over the line.',
     startEntering: 'Start entering arrows',
+    arrowNumber: 'Arrow {n}',
     enterOne: 'Enter at least one arrow',
     touch: 'Face',
     type: 'Digits',
@@ -185,6 +187,7 @@ export default {
     arrowSet: 'Arrow set',
   },
   plots: {
+    numbers: 'Arrow numbers',
     left: 'left',
     right: 'right',
     low: 'low',

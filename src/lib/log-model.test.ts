@@ -150,7 +150,7 @@ test('arrows sort best first: X before 10, misses last', () => {
 
 const equipment: Equipment = {
   bows: [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2 }, { id: 2, name: 'Mathews', type: 'compound', revision: 12, revision_number: 1 }],
-  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }],
+  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3, count: 12 }],
 };
 
 test('gear takes the current revisions and labels from the stored equipment', () => {

@@ -64,7 +64,7 @@ test('uploads in order with the right requests', async () => {
   assert.deepEqual(h.calls[0].body, { started_at: '2026-10-18T09:00:00Z', ended_at: null, type: 'scoring', environment: 'indoor', location: 'Hall' });
   assert.deepEqual(h.calls[1].body, {
     index: 0, distance_m: '18.0', face: 'wa-40', arrows_per_end: 3,
-    shots: [{ id: 'a', value: 10, is_x: false, is_miss: false }, { id: 'b', value: 9, is_x: false, is_miss: false }],
+    shots: [{ id: 'a', value: 10, is_x: false, is_miss: false, arrow_number: null }, { id: 'b', value: 9, is_x: false, is_miss: false, arrow_number: null }],
   });
   assert.deepEqual(h.calls[2].body, { distance_m: '30.0', arrow_count: 12 });
   assert.deepEqual(h.queued(), []);
@@ -168,14 +168,22 @@ test('plotted shots go up with their position, typed ones with their score', asy
   h.dispatch({ type: 'saveEnd', sessionId: 's1', end: { ...end([]), shots: [plotted, typed] } });
   await h.run();
   assert.deepEqual((h.calls[1].body as { shots: unknown[] }).shots, [
-    { id: 'p', x: 0.05, y: -0.1, spot: 2, value: 10, is_x: false, is_miss: false },
-    { id: 't', value: 9, is_x: false, is_miss: false },
+    { id: 'p', x: 0.05, y: -0.1, spot: 2, value: 10, is_x: false, is_miss: false, arrow_number: null },
+    { id: 't', value: 9, is_x: false, is_miss: false, arrow_number: null },
   ]);
+});
+
+test('the number of an arrow goes up with it', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: { ...end([]), shots: [{ id: 'n', value: 9, is_x: false, is_miss: false, arrow_number: 4 }] } });
+  await h.run();
+  assert.equal((h.calls[1].body as { shots: { arrow_number: number | null }[] }).shots[0]!.arrow_number, 4);
 });
 
 const equipment = {
   bows: [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2 }],
-  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }],
+  arrowSets: [{ id: 5, name: 'X10', revision: 21, revision_number: 3, count: 12 }],
 };
 
 test('the session is uploaded with the revisions of its equipment', async () => {
@@ -221,7 +229,7 @@ test('the stored equipment is fetched for active items of the user only', async 
       urls.push(request.url);
       return request.url.includes('/bows/')
         ? json(200, [{ id: 1, name: 'Hoyt', type: 'recurve', revision: 11, revision_number: 2, notes: 'not kept' }])
-        : json(200, [{ id: 5, name: 'X10', revision: 21, revision_number: 3 }]);
+        : json(200, [{ id: 5, name: 'X10', revision: 21, revision_number: 3, count: 12 }]);
     },
   });
   assert.deepEqual(await fetchEquipment(api, 7), equipment);

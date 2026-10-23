@@ -26,12 +26,14 @@ const blocks = computed(() =>
 const { t } = useI18n()
 const words = computed<CentreWords>(() => ({ left: t('plots.left'), right: t('plots.right'), low: t('plots.low'), high: t('plots.high'), middle: t('plots.middle') }))
 const shown = ref(0)
+const showNumbers = ref(false)
 const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.length - 1)])
+const hasNumbers = (plotted: { arrow_number?: number }[]) => plotted.some((s) => s.arrow_number != null)
 </script>
 
 <template>
   <div v-if="fill && current" class="d-flex flex-column gap-1" style="flex: 1 1 0; min-height: 0">
-    <div v-if="blocks.length > 1" class="d-flex flex-wrap gap-2">
+    <div v-if="blocks.length > 1 || hasNumbers(current.block.plotted)" class="d-flex flex-wrap gap-2">
       <IonChip
         v-for="(b, i) in blocks"
         :key="b.block.key"
@@ -42,9 +44,12 @@ const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.l
       >
         {{ Number(b.block.distance_m) }} m · {{ b.face.name }}
       </IonChip>
+      <IonChip v-if="hasNumbers(current.block.plotted)" class="m-0 chip" :outline="!showNumbers" :class="{ selected: showNumbers }" @click="showNumbers = !showNumbers">
+        {{ $t('plots.numbers') }}
+      </IonChip>
     </div>
     <div class="fw-semibold">{{ Number(current.block.distance_m) }} m · {{ current.face.name }} · {{ $t('count.arrows', current.block.plotted.length + current.block.typed) }}</div>
-    <FaceView v-if="current.block.plotted.length > 0" fill :face="current.face" :shots="current.block.plotted" />
+    <FaceView v-if="current.block.plotted.length > 0" fill :face="current.face" :shots="current.block.plotted" :numbers="showNumbers" />
     <div v-else class="flex-grow-1"></div>
     <div v-for="{ spot, group } in current.block.groups" :key="spot" class="muted">
       {{ $t('plots.summary', { label: current.face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, current.radius, words), spread: spreadCm(group, current.radius).toFixed(1) }) }}
@@ -54,7 +59,10 @@ const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.l
   <div v-else-if="blocks.length > 0" class="d-flex flex-column gap-3">
     <div v-for="{ block, face, radius } in blocks" :key="block.key" class="d-flex flex-column gap-1">
       <div class="fw-semibold">{{ Number(block.distance_m) }} m · {{ face.name }} · {{ $t('count.arrows', block.plotted.length + block.typed) }}</div>
-      <FaceView v-if="block.plotted.length > 0" :face="face" :shots="block.plotted" />
+      <IonChip v-if="hasNumbers(block.plotted)" class="m-0 chip align-self-start" :outline="!showNumbers" :class="{ selected: showNumbers }" @click="showNumbers = !showNumbers">
+        {{ $t('plots.numbers') }}
+      </IonChip>
+      <FaceView v-if="block.plotted.length > 0" :face="face" :shots="block.plotted" :numbers="showNumbers" />
       <div v-for="{ spot, group } in block.groups" :key="spot">
         {{ $t('plots.summary', { label: face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, radius, words), spread: spreadCm(group, radius).toFixed(1) }) }}
         ({{ $t('count.arrows', group.n) }})

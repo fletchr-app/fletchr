@@ -8,6 +8,8 @@ import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import TargetPlot from '@/components/TargetPlot.vue'
 import { useLog } from '@/composables/useLog'
+import { useNumberArrows } from '@/composables/useNumberArrows'
+import { lastNumberBefore, nextNumber, setSize } from '@/lib/arrow-numbers'
 import { FACES, getFace } from '@/lib/faces'
 import { endTotal, keypadFor, type LogEnd, type LogSession, type LogShot, nextEndDefaults, shotLabel } from '@/lib/log-model'
 import { newId } from '@/lib/uuid'
@@ -19,7 +21,8 @@ const props = defineProps<{ session: LogSession; editing: LogEnd | null; distanc
 const emit = defineEmits<{ done: [] }>()
 
 const { t } = useI18n()
-const { saveEnd, deleteEnd } = useLog()
+const { saveEnd, deleteEnd, equipment } = useLog()
+const { numbering } = useNumberArrows()
 
 const start = props.editing ?? { index: nextEndDefaults(props.session).index, id: newId() }
 // Arrows from another face do not carry over.
@@ -30,6 +33,38 @@ const error = ref<string | null>(null)
 
 const face = computed(() => getFace(props.face) ?? FACES[0]!)
 const full = computed(() => shots.value.length >= props.arrows)
+
+// Numbered arrows: the next number is suggested (carrying on from the earlier ends, skipping the ones used in this end).
+// Tapping a number picks it for the next arrow; with an arrow selected it sets that arrow's number instead.
+const size = computed(() => setSize(props.session, equipment.value))
+const numberBefore = lastNumberBefore(props.session, start.index)
+const chosen = ref<number | null>(null)
+const usedNumbers = computed(() => shots.value.flatMap((s) => s.arrow_number ?? []))
+const lastInEnd = computed(() => [...shots.value].reverse().find((s) => s.arrow_number != null)?.arrow_number ?? null)
+const nextArrowNumber = computed(() => (numbering.value ? (chosen.value ?? nextNumber(size.value, usedNumbers.value, lastInEnd.value ?? numberBefore)) : null))
+const selectedShot = computed(() => shots.value.find((s) => s.id === selectedId.value))
+const highlighted = computed(() => (selectedShot.value ? (selectedShot.value.arrow_number ?? null) : nextArrowNumber.value))
+
+function withNumber(shot: LogShot, n: number | undefined): LogShot {
+  const { arrow_number: _old, ...rest } = shot
+  return n === undefined ? rest : { ...rest, arrow_number: n }
+}
+function pickNumber(n: number) {
+  const target = selectedShot.value
+  if (!target) return void (chosen.value = chosen.value === n ? null : n)
+  const same = target.arrow_number === n
+  // An end cannot hold the same arrow twice: the number moves to this arrow.
+  shots.value = shots.value.map((s) => (s.id === target.id ? withNumber(s, same ? undefined : n) : !same && s.arrow_number === n ? withNumber(s, undefined) : s))
+}
+function plotted(next: LogShot[]) {
+  if (next.length > shots.value.length) chosen.value = null
+  shots.value = next
+}
+function typed(key: { value: number | null; is_x: boolean; is_miss: boolean }) {
+  const number = nextArrowNumber.value
+  shots.value = [...shots.value, { id: newId(), value: key.value, is_x: key.is_x, is_miss: key.is_miss, ...(number != null ? { arrow_number: number } : {}) }]
+  chosen.value = null
+}
 const keypad = computed(() => keypadFor(face.value))
 const total = computed(() => endTotal({ ...start, distance_m: props.distance, face: face.value.slug, arrows_per_end: props.arrows, shots: shots.value }))
 
@@ -77,11 +112,12 @@ function remove() {
         type="button"
         class="key"
         :class="{ selected: shots[i - 1] && shots[i - 1]!.id === selectedId }"
-        style="width: 44px; height: 44px"
+        style="width: 44px; height: 44px; position: relative"
         :disabled="!shots[i - 1]"
         @click="selectedId = shots[i - 1]!.id === selectedId ? null : shots[i - 1]!.id"
       >
         {{ shots[i - 1] ? shotLabel(shots[i - 1]!) : '' }}
+        <span v-if="numbering && shots[i - 1]?.arrow_number != null" class="arrow-no">{{ shots[i - 1]!.arrow_number }}</span>
       </button>
       <span class="fs-5 ms-1">= {{ total }}</span>
       <button
@@ -96,7 +132,21 @@ function remove() {
       </button>
     </div>
 
-    <TargetPlot v-if="mode === 'plot'" :face="face" :shots="shots" :max="arrows" :selected-id="selectedId" @change="shots = $event" />
+    <div v-if="numbering" class="d-flex flex-wrap gap-1">
+      <button
+        v-for="n in size"
+        :key="n"
+        type="button"
+        class="key number-key"
+        :class="{ selected: n === highlighted, used: usedNumbers.includes(n) && n !== highlighted }"
+        :aria-label="$t('end.arrowNumber', { n })"
+        @click="pickNumber(n)"
+      >
+        {{ n }}
+      </button>
+    </div>
+
+    <TargetPlot v-if="mode === 'plot'" :face="face" :shots="shots" :max="arrows" :selected-id="selectedId" :number-next="nextArrowNumber" @change="plotted" />
     <div v-else class="d-flex flex-wrap gap-2 align-content-start" style="flex: 1 1 0; min-height: 0">
       <div v-if="keypad.length === 0" class="muted">{{ $t('end.noKeys') }}</div>
       <button
@@ -106,7 +156,7 @@ function remove() {
         class="key"
         style="width: 56px; height: 56px"
         :disabled="full"
-        @click="shots = [...shots, { id: newId(), value: key.value, is_x: key.is_x, is_miss: key.is_miss }]"
+        @click="typed(key)"
       >
         {{ key.label }}
       </button>
@@ -125,3 +175,22 @@ function remove() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.arrow-no {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+.number-key {
+  width: 30px;
+  height: 30px;
+  font-size: 0.9rem;
+}
+.number-key.used {
+  opacity: 0.4;
+}
+</style>
