@@ -33,3 +33,8 @@ export const ARROW_SET_FIELDS: FieldSpec[] = [
   { key: 'count', label: 'Number of arrows', kind: 'integer' },
   { key: 'notes', label: 'Notes', kind: 'multiline' },
 ];
+
+/** The values of a new item: empty, except a choice (the bow's type), which always needs one: the first is selected. */
+export function emptyValues(fields: FieldSpec[]): Record<string, string> {
+  return Object.fromEntries(fields.map((f) => [f.key, f.kind === 'choice' ? (f.options?.[0] ?? '') : '']));
+}

@@ -8,7 +8,7 @@ import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
-import type { FieldSpec } from '@/lib/equipment-fields'
+import { emptyValues, type FieldSpec } from '@/lib/equipment-fields'
 
 type Item = { id: number; is_active?: boolean; revision_number: number } & Record<string, unknown>
 type Revision = { id: number; number: number; created_at: string } & Record<string, unknown>
@@ -47,7 +47,7 @@ function toPayload(values: Values, active: boolean) {
 
 const state = ref<'loading' | 'failed' | 'ready'>(id === null ? 'ready' : 'loading')
 const revisions = ref<Revision[]>([])
-const values = ref<Values>(Object.fromEntries(props.fields.map((f) => [f.key, ''])))
+const values = ref<Values>(emptyValues(props.fields))
 const isActive = ref(true)
 const error = ref<string | null>(null)
 const busy = ref(false)

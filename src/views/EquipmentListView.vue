@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList, IonListHeader } from '@ionic/vue'
+import { IonItem, IonLabel, IonList, IonListHeader, onIonViewWillEnter } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import type { components } from '@/lib/api-types'
 
 type Bow = components['schemas']['Bow']
 type ArrowSet = components['schemas']['ArrowSet']
 
 const { api } = useAuth()
+const { refreshEquipment } = useLog()
 const { t } = useI18n()
 const bows = ref<Bow[]>([])
 const arrowSets = ref<ArrowSet[]>([])
 const error = ref<string | null>(null)
 
-onMounted(() =>
+// The list stays alive underneath the bow and arrow set forms, so it reloads each time it is shown again.
+onIonViewWillEnter(() =>
   (async () => {
     // The list also contains the equipment of archers you coach, so ask for your own.
     const me = (await api.GET('/api/me/')).data
@@ -27,6 +30,7 @@ onMounted(() =>
     bows.value = b.data ?? []
     arrowSets.value = a.data ?? []
     error.value = b.data && a.data ? null : t('equipment.couldNotLoadEquipment')
+    void refreshEquipment() // the copy on the device, which the session screens offer
   })().catch(() => (error.value = t('common.serverNotReachable'))),
 )
 </script>
