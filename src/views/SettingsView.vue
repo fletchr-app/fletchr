@@ -1,50 +1,34 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList, IonListHeader } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
-import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
-import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
-import { type LanguageMode, useLocale } from '@/composables/useLocale'
-import { DEFAULT_SERVER_URL, useServer, useServerHealth } from '@/composables/useServer'
-import { type ThemeMode, useTheme } from '@/composables/useTheme'
+import { useLocale } from '@/composables/useLocale'
+import { useServer } from '@/composables/useServer'
+import { useTheme } from '@/composables/useTheme'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
-// where it connects. Signed out (from the sign-in screen's "change" link) only the app part is shown.
+// where it connects. Each app setting is a row that shows its value and opens its own page.
 const { status, signOut } = useAuth()
 const signedIn = computed(() => status.value === 'signedIn')
 const creating = useCreateTeam()
-
-const { url, isOverride, setUrl } = useServer()
-const health = useServerHealth()
-const draft = ref(url.value)
 const { t } = useI18n()
-const { mode, setMode } = useTheme()
-const THEMES = computed<{ value: ThemeMode; label: string }[]>(() => [
-  { value: 'system', label: t('settings.themeSystem') },
-  { value: 'light', label: t('settings.themeLight') },
-  { value: 'dark', label: t('settings.themeDark') },
-])
-const { mode: languageMode, setMode: setLanguage } = useLocale()
-const LANGUAGES = computed<{ value: LanguageMode; label: string }[]>(() => [
-  { value: 'system', label: t('settings.langSystem') },
-  { value: 'en', label: t('settings.langEn') },
-  { value: 'de', label: t('settings.langDe') },
-])
+const { mode: theme } = useTheme()
+const { mode: language } = useLocale()
+const { url } = useServer()
 
-function reset() {
-  setUrl(null)
-  draft.value = DEFAULT_SERVER_URL
-}
+const themeName = computed(() => t(`settings.theme${theme.value[0]!.toUpperCase()}${theme.value.slice(1)}`))
+const languageName = computed(() => t(`settings.lang${language.value === 'system' ? 'System' : language.value === 'en' ? 'En' : 'De'}`))
+const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
 </script>
 
 <template>
-  <AppPage :title="$t('settings.title')" :back="!signedIn" back-href="/sign-in">
+  <AppPage :title="$t('settings.title')" :back="false">
     <div class="screen">
       <template v-if="signedIn">
         <IonList inset>
@@ -64,18 +48,32 @@ function reset() {
         </IonList>
       </template>
 
-      <h2 class="h5 mt-2 mb-0">{{ $t('settings.app') }}</h2>
-      <ChipGroup :model-value="mode" :label="$t('settings.theme')" :options="THEMES" @update:model-value="setMode" />
-      <ChipGroup :model-value="languageMode" :label="$t('settings.language')" :options="LANGUAGES" @update:model-value="setLanguage" />
-      <FormField v-model="draft" :label="$t('settings.server')" inputmode="url" :placeholder="DEFAULT_SERVER_URL" />
-      <div class="muted">{{ $t('settings.defaultFromBuild', { url: DEFAULT_SERVER_URL }) }}{{ isOverride ? ` ${$t('settings.overridden')}` : '' }}</div>
-      <div>{{ $t('settings.status', { state: $t(`settings.${health}`) }) }}</div>
-      <div class="d-flex gap-3">
-        <AppButton @click="setUrl(draft)">{{ $t('settings.save') }}</AppButton>
-        <AppButton secondary @click="reset">{{ $t('settings.reset') }}</AppButton>
-      </div>
+      <IonList inset>
+        <IonListHeader>{{ $t('settings.app') }}</IonListHeader>
+        <IonItem router-link="/settings/theme" detail lines="full">
+          <IonLabel>{{ $t('settings.theme') }}</IonLabel>
+          <IonNote slot="end">{{ themeName }}</IonNote>
+        </IonItem>
+        <IonItem router-link="/settings/language" detail lines="full">
+          <IonLabel>{{ $t('settings.language') }}</IonLabel>
+          <IonNote slot="end">{{ languageName }}</IonNote>
+        </IonItem>
+        <IonItem router-link="/settings/server" detail lines="none">
+          <IonLabel>{{ $t('settings.server') }}</IonLabel>
+          <IonNote slot="end" class="server-note">{{ serverName }}</IonNote>
+        </IonItem>
+      </IonList>
 
       <AppButton v-if="signedIn" class="mt-3" secondary @click="signOut">{{ $t('settings.signOut') }}</AppButton>
     </div>
   </AppPage>
 </template>
+
+<style scoped>
+.server-note {
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

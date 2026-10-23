@@ -31,7 +31,7 @@ async function submit() {
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="submit">{{ $t('auth.signIn.button') }}</AppButton>
       <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
-      <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings">{{ $t('auth.signIn.change') }}</RouterLink></div>
+      <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings/server">{{ $t('auth.signIn.change') }}</RouterLink></div>
     </div>
   </AppPage>
 </template>

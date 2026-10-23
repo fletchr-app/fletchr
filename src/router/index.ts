@@ -37,6 +37,9 @@ const router = createRouter({
     { path: '/sign-in', component: () => import('@/views/SignInView.vue'), meta: { title: 'Sign in', auth: 'out' } },
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { title: 'Join with invite code', auth: 'out' } },
     { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', tab: true } },
+    { path: '/settings/theme', component: () => import('@/views/SettingsThemeView.vue'), meta: { title: 'Theme' } },
+    { path: '/settings/language', component: () => import('@/views/SettingsLanguageView.vue'), meta: { title: 'Language' } },
+    { path: '/settings/server', component: () => import('@/views/SettingsServerView.vue'), meta: { title: 'Server address' } },
     { path: '/:rest(.*)*', redirect: '/' },
   ],
 })
