@@ -1188,6 +1188,7 @@ export interface components {
         HandEnum: "right" | "left";
         Health: {
             status: string;
+            version: string;
         };
         Invite: {
             readonly id: number;

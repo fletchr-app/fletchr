@@ -38,6 +38,24 @@ export function useServer() {
 
 export type HealthState = 'checking' | 'ok' | 'unreachable';
 
+/** The version the server reports (null while unknown or when it cannot be reached). */
+export function useServerVersion() {
+  const version = ref<string | null>(null);
+  watchEffect((onCleanup) => {
+    const address = url.value;
+    const controller = new AbortController();
+    version.value = null;
+    fetch(`${address}/api/health/`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { version?: string } | null) => {
+        if (!controller.signal.aborted) version.value = body?.version ?? null;
+      })
+      .catch(() => {});
+    onCleanup(() => controller.abort());
+  });
+  return version;
+}
+
 export function useServerHealth() {
   const health = ref<HealthState>('checking');
   watchEffect((onCleanup) => {

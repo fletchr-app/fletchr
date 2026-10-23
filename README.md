@@ -2,6 +2,10 @@
 
 Training log, coaching notes and evaluations for archers and coaches. One Vue 3 + TypeScript app (Ionic Vue), shipped as a mobile app first (Android now, iOS later) and wrapped with [Capacitor](https://capacitorjs.com). The web build is the dev shell and the base of the phone apps, not a product of its own for now. It talks to a self-hosted Django REST Framework server. See [docs/plan.md](docs/plan.md) for the full plan. The previous React Native (Expo) version is the git tag `expo-final`.
 
+## Branches and releases
+
+Work happens on `develop`; `main` only holds releases, tagged `vX.Y.Z`. The version number and the release steps are in [docs/releasing.md](docs/releasing.md).
+
 ## Layout
 
 ```

@@ -2759,8 +2759,11 @@ components:
       properties:
         status:
           type: string
+        version:
+          type: string
       required:
       - status
+      - version
     Invite:
       type: object
       properties:

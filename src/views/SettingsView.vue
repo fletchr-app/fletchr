@@ -14,6 +14,7 @@ import { type ThemeMode, useTheme } from '@/composables/useTheme'
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
 const { signOut } = useAuth()
+const APP_VERSION = __APP_VERSION__
 const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
 const { mode: language, setMode: setLanguage } = useLocale()
@@ -59,9 +60,13 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
             <IonSelectOption v-for="l in LANGUAGES" :key="l.value" :value="l.value">{{ $t(`settings.${l.key}`) }}</IonSelectOption>
           </IonSelect>
         </IonItem>
-        <IonItem router-link="/settings/server" detail lines="none">
+        <IonItem router-link="/settings/server" detail lines="full">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
           <IonNote slot="end" class="server-note">{{ serverName }}</IonNote>
+        </IonItem>
+        <IonItem router-link="/settings/about" detail lines="none">
+          <IonLabel>{{ $t('settings.about') }}</IonLabel>
+          <IonNote slot="end">{{ APP_VERSION }}</IonNote>
         </IonItem>
       </IonList>
 

@@ -38,6 +38,7 @@ const router = createRouter({
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { title: 'Join with invite code', auth: 'out' } },
     { path: '/reset-password', component: () => import('@/views/ResetPasswordView.vue'), meta: { title: 'Reset password', auth: 'out' } },
     { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', auth: 'in', tab: true } },
+    { path: '/settings/about', component: () => import('@/views/SettingsAboutView.vue'), meta: { title: 'About', auth: 'in' } },
     { path: '/settings/server', component: () => import('@/views/SettingsServerView.vue'), meta: { title: 'Server address' } },
     { path: '/:rest(.*)*', redirect: '/' },
   ],
