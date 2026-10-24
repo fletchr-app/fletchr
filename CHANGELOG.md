@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.6.1, 2026-10-24
+
+- **Deploy from CI:** `deploy/update.sh` could not take its lock as the deploy user and could be changed under itself when the checkout moved to the new tag. Both fixed. No migrations, no app changes.
+
 ## 0.6.0, 2026-10-24
 
 Evaluations, notes on frames, and deploying from CI. This also covers 0.4.0 and 0.5.0, which were not written up here.

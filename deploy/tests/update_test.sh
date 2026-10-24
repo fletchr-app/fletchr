@@ -95,7 +95,7 @@ check "nothing was moved or built" '[ "$(git -C $work/server rev-parse HEAD)" = 
 
 echo "-- two at once"
 new_server; release 0.2.0 0.2.0
-( exec 9>"$work/server/deploy/data/update.lock"; flock 9; sleep 3 ) & sleep 0.5
+( exec 9<"$work/server/deploy"; flock 9; sleep 3 ) & sleep 0.5
 check "the second is refused" '! update v0.2.0 && grep -q "another update" $work/out'
 wait
 
