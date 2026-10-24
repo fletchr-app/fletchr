@@ -9,6 +9,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
+import { FrameDecoder } from '@/lib/frame-decoder'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
 // One uploaded clip, to look at frame by frame: the video above, a tape below it that is dragged sideways (one
@@ -42,7 +43,7 @@ const index = computed(() => siblings.value.indexOf(currentId.value))
 const hasPrevious = computed(() => index.value > 0)
 const hasNext = computed(() => index.value >= 0 && index.value < siblings.value.length - 1)
 function goTo(delta: number) {
-  video.value?.pause()
+  halt()
   currentId.value = siblings.value[index.value + delta]!
   pos.value = 0
 }
@@ -50,7 +51,8 @@ function goTo(delta: number) {
 const video = ref<HTMLVideoElement | null>(null)
 const duration = ref(0)
 const fps = computed(() => (clip.value ? frameRate(clip.value) : 30))
-const total = computed(() => totalFrames(duration.value || (clip.value?.duration_ms ?? 0) / 1000, fps.value))
+const decodedFrames = ref(0) // the number of frames in the file, once the decoder has read it
+const total = computed(() => decodedFrames.value || totalFrames(duration.value || (clip.value?.duration_ms ?? 0) / 1000, fps.value))
 const pos = ref(0) // in frames; a fraction while the tape is being dragged
 const frame = computed(() => Math.round(pos.value))
 const playing = ref(false)
@@ -61,9 +63,104 @@ function loaded() {
   video.value!.playbackRate = speed.value
 }
 
+// One seek at a time: a seek to a frame between two keyframes decodes from the keyframe before it, so a fast drag that
+// asked for every frame piled up work and the picture stalled. While one is under way only the latest wish is kept.
+let wanted: number | null = null
+function seekTo(f: number) {
+  wanted = f
+  if (!video.value?.seeking) seekNow()
+}
+function seekNow() {
+  const el = video.value
+  if (!el || wanted === null) return
+  el.currentTime = seekTime(wanted, fps.value, duration.value)
+  wanted = null
+}
 function show(f: number) {
   pos.value = f
-  video.value!.currentTime = seekTime(f, fps.value, duration.value)
+  if (decoder) decoder.show(f)
+  else seekTo(f)
+}
+
+// The clip is fetched once into memory: the <video> plays it from there, and the decoder takes single frames out of it
+// while the tape is dragged. The canvas covers the video as soon as the first frame is ready.
+const videoUrl = ref<string | null>(null)
+const canvas = ref<HTMLCanvasElement | null>(null)
+const canvasOn = ref(false)
+const loadError = ref<string | null>(null)
+let decoder: FrameDecoder | null = null
+let loadNumber = 0
+
+function release() {
+  loadNumber++
+  decoder?.close()
+  decoder = null
+  decodedFrames.value = 0
+  canvasOn.value = false
+  if (videoUrl.value) URL.revokeObjectURL(videoUrl.value)
+  videoUrl.value = null
+}
+
+function draw(_frame: number, picture: ImageBitmap) {
+  const c = canvas.value
+  if (!c || !decoder) return
+  if (c.width !== decoder.width || c.height !== decoder.height) {
+    c.width = decoder.width
+    c.height = decoder.height
+  }
+  const context = c.getContext('2d')!
+  context.setTransform(...decoder.transform)
+  context.drawImage(picture, 0, 0)
+  canvasOn.value = true
+}
+
+async function load(url: string) {
+  const mine = ++loadNumber
+  try {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(String(response.status))
+    const data = await response.arrayBuffer()
+    if (mine !== loadNumber) return
+    videoUrl.value = URL.createObjectURL(new Blob([data], { type: 'video/mp4' }))
+    const opened = await FrameDecoder.open(data, draw, dropDecoder)
+    if (mine !== loadNumber) return opened?.close()
+    decoder = opened
+    decodedFrames.value = opened?.frames ?? 0
+  } catch {
+    if (mine === loadNumber) failed()
+  }
+}
+
+// If the decoder gives up, the video element does the scrubbing, as it does where there is no decoder at all.
+function dropDecoder() {
+  decoder?.close()
+  decoder = null
+  decodedFrames.value = 0
+  canvasOn.value = false
+  if (video.value) show(frame.value)
+}
+
+watch(
+  () => (clip.value?.kind === 'video' ? clip.value.file_url : null),
+  (url) => {
+    release()
+    if (url) void load(url)
+  },
+  { immediate: true },
+)
+onBeforeUnmount(release)
+
+/** Brings the video to the frame the canvas shows, so that it plays on from there. */
+function syncVideo(f: number): Promise<void> {
+  const el = video.value
+  const to = seekTime(f, fps.value, duration.value)
+  if (!el || Math.abs(el.currentTime - to) < 1e-4) return Promise.resolve()
+  return new Promise((resolve) => {
+    const done = () => (clearTimeout(timer), resolve())
+    const timer = setTimeout(done, 500)
+    el.addEventListener('seeked', done, { once: true })
+    el.currentTime = to
+  })
 }
 
 // While it plays, the tape follows the picture.
@@ -81,7 +178,14 @@ function started() {
 function stopped() {
   playing.value = false
   cancelAnimationFrame(raf)
-  if (video.value) pos.value = frameAt(video.value.currentTime, fps.value, total.value)
+}
+/** Pauses and takes the position from the video, before something else (a step, a drag) moves it. */
+function halt() {
+  const el = video.value
+  if (!el || el.paused) return
+  el.pause()
+  stopped()
+  pos.value = frameAt(el.currentTime, fps.value, total.value)
 }
 function ended() {
   stopped()
@@ -89,15 +193,19 @@ function ended() {
 }
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 
-function toggle() {
+async function toggle() {
   const el = video.value
   if (!el) return
-  if (playing.value) return el.pause()
-  if (frame.value >= total.value - 1) show(0)
+  if (playing.value) return halt()
+  if (frame.value >= total.value - 1) pos.value = 0
+  if (canvasOn.value) {
+    await syncVideo(frame.value)
+    canvasOn.value = false
+  } else if (frame.value === 0) await syncVideo(0)
   void el.play().catch(() => undefined)
 }
 function step(delta: number) {
-  video.value?.pause()
+  halt()
   show(stepped(pos.value, delta, total.value))
 }
 function cycleSpeed() {
@@ -125,7 +233,7 @@ const ticksStyle = computed(() => ({
 
 let drag: { x: number; pos: number } | null = null
 function down(e: PointerEvent) {
-  video.value?.pause()
+  halt()
   ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   drag = { x: e.clientX, pos: pos.value }
 }
@@ -134,7 +242,7 @@ function move(e: PointerEvent) {
   const to = scrubbed(drag.pos, e.clientX - drag.x, PX_PER_FRAME, total.value)
   const changed = Math.round(to) !== frame.value
   pos.value = to
-  if (changed) video.value!.currentTime = seekTime(Math.round(to), fps.value, duration.value)
+  if (changed) show(Math.round(to))
 }
 function up() {
   if (!drag) return
@@ -142,18 +250,21 @@ function up() {
   pos.value = frame.value
 }
 function slide(e: Event) {
-  video.value?.pause()
+  halt()
   show(Number((e.target as HTMLInputElement).value))
 }
 
 // The link to the file stops working after an hour: ask for a new one once if the clip does not load.
 let renewed = false
 function failed() {
-  if (renewed) return
+  if (renewed) return (loadError.value = t('common.couldNotLoad'))
   renewed = true
   reload()
 }
-watch(currentId, () => (renewed = false))
+watch(currentId, () => {
+  renewed = false
+  loadError.value = null
+})
 
 const title = computed(() => (clip.value ? new Date(clip.value.taken_at).toLocaleString() : ''))
 const confirmDelete = ref(false)
@@ -171,24 +282,31 @@ watch(currentId, () => (confirmDelete.value = false))
   <AppPage :title="title" fixed back-href="/media">
     <div class="player">
       <ErrorText v-if="error && !clip" :message="error" class="px-3 pt-3" />
+      <ErrorText :message="loadError" class="px-3 pt-3" />
       <div class="stage">
-        <video
-          v-if="clip?.kind === 'video'"
-          ref="video"
-          :src="clip.file_url"
-          :poster="clip.thumbnail_url"
-          muted
-          playsinline
-          preload="auto"
-          @loadedmetadata="loaded"
-          @play="started"
-          @pause="stopped"
-          @ended="ended"
-          @error="failed"
-        ></video>
+        <template v-if="clip?.kind === 'video'">
+          <video
+            v-if="videoUrl"
+            v-show="!canvasOn"
+            ref="video"
+            :src="videoUrl"
+            :poster="clip.thumbnail_url"
+            muted
+            playsinline
+            preload="auto"
+            @loadedmetadata="loaded"
+            @play="started"
+            @pause="stopped"
+            @seeked="seekNow"
+            @ended="ended"
+            @error="failed"
+          ></video>
+          <img v-else :src="clip.thumbnail_url" alt="" />
+          <canvas v-show="canvasOn" ref="canvas"></canvas>
+        </template>
         <img v-else-if="clip" :src="clip.file_url" alt="" />
       </div>
-      <template v-if="clip?.kind === 'video'">
+      <template v-if="clip?.kind === 'video' && videoUrl">
         <div class="readout">
           <span class="clock">{{ clock(frame / fps) }} s</span>
           <span class="faint">{{ $t('media.frame', { n: frame + 1, total }) }}</span>
@@ -206,6 +324,7 @@ watch(currentId, () => (confirmDelete.value = false))
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
         </div>
       </template>
+      <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.owner_name }) }}</div>
       <ErrorText :message="deleteError" class="px-3" />
       <button v-if="clip?.can_edit" type="button" class="remove" @click="remove">
@@ -232,7 +351,8 @@ watch(currentId, () => (confirmDelete.value = false))
   background: #000;
 }
 .stage video,
-.stage img {
+.stage img,
+.stage canvas {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -257,7 +377,8 @@ watch(currentId, () => (confirmDelete.value = false))
   height: 56px;
   overflow: hidden;
   touch-action: none;
-  background: var(--ion-color-step-100, #eee);
+  color: var(--ion-text-color);
+  background: color-mix(in srgb, currentcolor 10%, transparent);
 }
 .tape::after {
   content: '';
@@ -272,10 +393,11 @@ watch(currentId, () => (confirmDelete.value = false))
   position: absolute;
   inset-block: 0;
   left: 0;
-  background-image: linear-gradient(to right, var(--ion-color-step-550, #888) 0 1px, transparent 1px), linear-gradient(to right, var(--ion-color-step-750, #444) 0 2px, transparent 2px);
+  background-image: linear-gradient(to right, color-mix(in srgb, currentcolor 55%, transparent) 0 1px, transparent 1px), linear-gradient(to right, color-mix(in srgb, currentcolor 85%, transparent) 0 2px, transparent 2px);
   background-size: 12px 40%, 120px 75%;
   background-repeat: repeat-x;
   background-position: left bottom;
+  color: inherit;
   will-change: transform;
 }
 .controls {

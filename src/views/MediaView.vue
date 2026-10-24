@@ -323,7 +323,7 @@ const taken = (item: Shown | null) => {
   position: relative;
   padding: 0;
   border: 0;
-  background: var(--ion-color-step-100, #eee);
+  background: color-mix(in srgb, var(--ion-text-color, #000) 10%, transparent);
   aspect-ratio: 1;
   overflow: hidden;
 }
