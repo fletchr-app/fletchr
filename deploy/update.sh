@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Updates the server to a release tag: deploy/update.sh v0.6.0
-# CI runs it over SSH with a key that can do nothing else (docs/deploy.md, step 9): in authorized_keys the key has
+# CI runs it over SSH with a key that can do nothing else (docs/self-hosting.md, section 5): in authorized_keys the key has
 #   command="/home/<you>/fletchr/deploy/update.sh",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding
 # and the tag arrives as the command CI asked for (SSH_ORIGINAL_COMMAND).
 #
@@ -64,7 +64,7 @@ else
     echo "update: $tag did not start as version $version (within ${wait_seconds} s): going back" >&2
     compose stop django || true
     # The newest database copy is the one from step 2. It is restored inside the container: the files belong to its user.
-    compose run --rm --no-deps -T django sh -c 'f=$(ls -1 /data/backups/db-*.sqlite3 | sort | tail -n 1) && cp "$f" /data/db.sqlite3 && rm -f /data/db.sqlite3-wal /data/db.sqlite3-shm && echo "database restored from $f"' || echo "update: the database could not be restored: do it by hand (docs/deploy.md, step 6)" >&2
+    compose run --rm --no-deps -T django sh -c 'f=$(ls -1 /data/backups/db-*.sqlite3 | sort | tail -n 1) && cp "$f" /data/db.sqlite3 && rm -f /data/db.sqlite3-wal /data/db.sqlite3-shm && echo "database restored from $f"' || echo "update: the database could not be restored: do it by hand (docs/self-hosting.md, section 4)" >&2
     git_ reset --hard --quiet "$previous"
     compose up -d --build
     echo "update: the version from before is started again; anything written since the backup is gone" >&2

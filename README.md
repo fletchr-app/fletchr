@@ -80,7 +80,7 @@ On a phone, `localhost` is the phone itself. Use your PC's LAN IP instead, e.g. 
 
 ## Run on a server
 
-On a server that already has nginx or Apache in front, only Django runs in Docker (`deploy/docker-compose.prod.yml`), next to a static site for the domain (`site/`). The step-by-step guide, with DNS, HTTPS, backups and invite links, is in [docs/deploy.md](docs/deploy.md).
+On a server that already has nginx or Apache in front, only Django runs in Docker (`deploy/docker-compose.prod.yml`), next to a static site for the domain (`site/`). The step-by-step guide, with DNS, HTTPS, backups, updates and invite links, is in [docs/self-hosting.md](docs/self-hosting.md).
 
 The `docker-compose.yml` with Caddy is for local use, or for a server with nothing else on ports 80 and 443: set `SITE_ADDRESS` in `deploy/.env` to the domain and Caddy fetches the certificate itself.
 

@@ -20,8 +20,8 @@ Order of work: **features first, the Google Play release last** (milestone 6). T
 | Home, Team, Settings | built: Home (this week's arrows, last session, your teams, the latest coach notes about you), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
 | Languages | built: English and German in the app, the server's messages and the mails |
 | App and server versions | `/api/health/` returns `version` and `min_app_version`; the app shows a banner on Home when it is below the minimum or the server is a minor version behind (`src/lib/version.ts`, `VersionBanner.vue`) |
-| Deploy | `deploy/update.sh vX.Y.Z` (backup, update, health check, rollback) and `.github/workflows/deploy.yml` (on a release tag, over a restricted SSH key); written and tried against a fake server, not yet set up or run on the real one (#73) |
-| Server and website | live: `app.fletchr.de` (Docker behind a web server, own SMTP for mail), `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
+| Deploy | `deploy/update.sh vX.Y.Z` (backup, update, health check, rollback) and `.github/workflows/deploy.yml` (on a release tag, over a restricted SSH key); written and tried against a fake server, not yet run on a real one |
+| Server and website | `app.fletchr.de` runs the server in Docker behind a web server, with its own SMTP for mail; `fletchr.de` serves `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
 
 Not in the app although the plan lists it:
 - profile picture (avatar; not even a field)
@@ -30,9 +30,8 @@ Not in the app although the plan lists it:
 The earlier gaps (Home with last session and week, session details, arrow numbers, profile fields and units) were closed in 0.2.0.
 
 Open in practice (not release dependent):
-- **Backups:** `deploy/backup.sh` makes the database copy and, with `deploy/.env.backup`, an encrypted restic backup of copies and uploads off the server (30 daily, 12 monthly kept); tested here against a local repository, including a restore. Not set up on the server yet: storage, `.env.backup` and the cron line are the user's (docs/deploy.md, step 6, #49 and #58). The privacy texts now say up to about 12 months in backups (30 daily and 12 monthly), as the retention does.
-- **Website:** `noindex` is on; remove it after the legal review of the privacy text and the data processing agreement with Host Europe.
-- **Before the repository goes public:** the git author email in the history (rewrite or accept), trademark and store-name checks for "Fletchr".
+- **Backups:** `deploy/backup.sh` makes the database copy and, with `deploy/.env.backup`, an encrypted restic backup of copies and uploads off the server (30 daily, 12 monthly kept); tested against a local repository, including a restore. Setup and restore are in `docs/self-hosting.md`, section 4. The privacy texts say up to about 12 months in backups, as the retention does.
+- **Website:** `noindex` is on until the privacy text has had a legal review.
 
 ## Milestone 2: media and evaluations (started)
 

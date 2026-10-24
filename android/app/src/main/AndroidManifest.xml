@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Invite links: https://fletchr.de/join/<code> (needs /.well-known/assetlinks.json on that domain, see docs/deploy.md) ... -->
+            <!-- Invite links: https://fletchr.de/join/<code> (needs /.well-known/assetlinks.json on that domain, see docs/self-hosting.md) ... -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

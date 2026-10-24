@@ -1,7 +1,7 @@
 name: Deploy
 
 # A release tag (vX.Y.Z on main, docs/releasing.md) updates the server: the checks first, then one SSH command.
-# The key can only run deploy/update.sh on the server (docs/deploy.md, step 9), which backs up, updates, checks
+# The key can only run deploy/update.sh on the server (docs/self-hosting.md, section 5), which backs up, updates, checks
 # that the new version answers, and puts the old one back if it does not. Nothing else deploys: not develop, not main.
 on:
   push:

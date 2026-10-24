@@ -1,5 +1,5 @@
 # Production on a server that already has nginx (or Apache) in front: only Django runs in Docker, on
-# 127.0.0.1:8000, and the web server passes requests to it and ends HTTPS. See docs/deploy.md.
+# 127.0.0.1:8000, and the web server passes requests to it and ends HTTPS. See docs/self-hosting.md.
 # Use:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 services:
   django:

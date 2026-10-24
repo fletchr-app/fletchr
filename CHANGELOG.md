@@ -12,7 +12,7 @@ Photos and videos.
 - **Server:** the `media` app with `/api/media/` (files served only through permission checks, signed links for the player, Range requests), limits of 60 s and 50 MB per video, 5 MB per photo and 2 GB per archer.
 - **Not yet:** the gallery of all media (#40), the frame-by-frame player (#41), the export and deletion of media under "Your data" (#47): until then "Delete my data" leaves photos and videos on the server (deleting the account removes them). Videos were tested with synthetic clips and one phone; battery, heat and other phones are untested.
 
-Update the server with `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **one new migration** (`media`), new optional setting `DJANGO_MEDIA_QUOTA_MB` (2048). The web server must allow request bodies of about 60 MB (plain nginx: `deploy/nginx/02-fletchr-https.conf` has it; Plesk: check the limit of the `app.fletchr.de` site, `docs/deploy.md`). The privacy pages and the website are unchanged.
+Update the server with `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **one new migration** (`media`), new optional setting `DJANGO_MEDIA_QUOTA_MB` (2048). The web server must allow request bodies of about 60 MB (plain nginx: `deploy/nginx/02-fletchr-https.conf` has it; with a panel such as Plesk, check the limit of the site: `docs/self-hosting.md`). The privacy pages and the website are unchanged.
 
 ## 0.2.0, 2026-10-23
 

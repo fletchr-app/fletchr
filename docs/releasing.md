@@ -32,7 +32,7 @@ git push origin main vX.Y.Z
 git switch develop && git merge main      # keeps develop level with the merge commit
 ```
 
-4. Build the release bundle from `main` (docs/deploy.md, "The app"), upload it to Google Play, and update the server: pushing the tag does it (`deploy.yml`, docs/deploy.md step 9), or by hand with `deploy/update.sh vX.Y.Z` on the server.
+4. Build the release bundle from `main` (docs/self-hosting.md, "The app"), upload it to Google Play, and update the server: pushing the tag does it (`deploy.yml`, docs/self-hosting.md, section 5), or by hand with `deploy/update.sh vX.Y.Z` on the server.
 
 A fix to a released version that cannot wait for the work on `develop`: branch from `main` (`hotfix/…`), fix, bump PATCH, merge into `main`, tag, then merge `main` into `develop`.
 
