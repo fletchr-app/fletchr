@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { IonIcon } from '@ionic/vue'
-import { chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, trashOutline } from 'ionicons/icons'
+import { IonIcon, IonModal } from '@ionic/vue'
+import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, trashOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import NewNote from '@/components/NewNote.vue'
+import NoteRow from '@/components/NoteRow.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { FrameDecoder } from '@/lib/frame-decoder'
@@ -46,6 +48,26 @@ function goTo(delta: number) {
   halt()
   currentId.value = siblings.value[index.value + delta]!
   pos.value = 0
+}
+
+// Coach notes on single frames: the tape shows where they are, a tap on a note jumps to its frame.
+const notes = useRemote(
+  async () => (await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null,
+  { watch: [currentId] },
+)
+const teams = useRemote(
+  async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
+  { watch: [clip] },
+)
+const frameNotes = computed(() =>
+  (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
+)
+const noteHere = computed(() => frameNotes.value.find((n) => n.frame === frame.value))
+const notesOpen = ref(false)
+function jump(f: number) {
+  notesOpen.value = false
+  halt()
+  show(Math.min(f, total.value - 1))
 }
 
 const video = ref<HTMLVideoElement | null>(null)
@@ -311,9 +333,12 @@ watch(currentId, () => (confirmDelete.value = false))
           <span class="clock">{{ clock(frame / fps) }} s</span>
           <span class="faint">{{ $t('media.frame', { n: frame + 1, total }) }}</span>
         </div>
+        <button v-if="noteHere" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body }}</button>
         <input type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
         <div ref="tape" class="tape" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
-          <div class="ticks" :style="ticksStyle"></div>
+          <div class="ticks" :style="ticksStyle">
+            <span v-for="n in frameNotes" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
+          </div>
         </div>
         <div class="controls">
           <button type="button" class="speed" :aria-label="$t('media.speed')" @click="cycleSpeed">{{ speedLabel(speed) }}</button>
@@ -322,15 +347,34 @@ watch(currentId, () => (confirmDelete.value = false))
           <button type="button" class="main" :aria-label="playing ? $t('media.pause') : $t('media.play')" @click="toggle"><IonIcon :icon="playing ? pause : play" /></button>
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
+          <button v-if="frameNotes.length > 0 || teams.data.value?.length" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
+            <IonIcon :icon="chatbubbleOutline" /><span v-if="frameNotes.length > 0" class="count">{{ frameNotes.length }}</span>
+          </button>
         </div>
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
-      <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.owner_name }) }}</div>
+      <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
       <ErrorText :message="deleteError" class="px-3" />
       <button v-if="clip?.can_edit" type="button" class="remove" @click="remove">
         <IonIcon :icon="trashOutline" /> {{ confirmDelete ? $t('media.deleteConfirm') : $t('media.delete') }}
       </button>
     </div>
+    <IonModal :is-open="notesOpen" :initial-breakpoint="0.7" :breakpoints="[0, 0.7, 1]" @did-dismiss="notesOpen = false">
+      <div class="screen sheet">
+        <h2 class="h5 m-0">{{ $t('media.notes') }}</h2>
+        <ErrorText :message="notes.error.value" />
+        <NewNote
+          v-if="clip && teams.data.value && teams.data.value.length > 0"
+          :archer-id="clip.owner"
+          :ends="[]"
+          :teams="teams.data.value"
+          :frame="{ mediaId: clip.id, frame, timeMs: Math.round((frame / fps) * 1000) }"
+          @added="notes.reload"
+        />
+        <div v-if="frameNotes.length === 0" class="muted">{{ $t('media.noNotes') }}</div>
+        <NoteRow v-for="n in frameNotes" :key="n.id" :note="n" :ends="[]" @changed="notes.reload" @jump="jump" />
+      </div>
+    </IonModal>
   </AppPage>
 </template>
 
@@ -430,6 +474,45 @@ watch(currentId, () => (confirmDelete.value = false))
   height: 64px;
   border-radius: 32px;
   font-size: 32px;
+}
+.controls .notes {
+  position: relative;
+}
+.count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  padding-inline: 4px;
+  border-radius: 9px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 0.75rem;
+  line-height: 18px;
+}
+.mark {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--ion-color-primary);
+}
+.here {
+  margin-inline: 16px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentcolor 10%, transparent);
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet {
+  overflow-y: auto;
+  height: 100%;
 }
 .remove {
   align-self: center;

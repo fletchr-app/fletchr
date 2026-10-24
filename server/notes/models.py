@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Note(models.Model):
-    """A coach's note about an archer, optionally about one session or one end of it.
+    """A coach's note about an archer, optionally about one session or one end of it, or one frame of a clip.
 
     Written in a team. Private notes are for the author alone (not even team admins read them),
     coach-only ones for the coaches of that team, shared ones also for the archer. The note stays
@@ -20,6 +20,10 @@ class Note(models.Model):
     archer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notes_about")
     session = models.ForeignKey("training.TrainingSession", null=True, blank=True, on_delete=models.SET_NULL, related_name="coach_notes")
     end = models.ForeignKey("training.End", null=True, blank=True, on_delete=models.SET_NULL, related_name="coach_notes")
+    # A note on one frame of a clip: the frame (counted from 0) and the time in the clip. The note stays if the clip is deleted.
+    media = models.ForeignKey("media.Media", null=True, blank=True, on_delete=models.SET_NULL, related_name="coach_notes")
+    frame = models.PositiveIntegerField(null=True, blank=True)
+    time_ms = models.PositiveIntegerField(null=True, blank=True)
     body = models.TextField()
     visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.COACH_ONLY)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 15:33+0200\n"
+"POT-Creation-Date: 2026-10-24 15:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -201,36 +201,56 @@ msgid ""
 "coach can record it on the archer's page."
 msgstr ""
 
-#: notes/serializers.py:54
+#: notes/serializers.py:58
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:61
+#: notes/serializers.py:65
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:66
+#: notes/serializers.py:70
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:72
+#: notes/serializers.py:76
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:76
+#: notes/serializers.py:80
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:78
+#: notes/serializers.py:82
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:80
+#: notes/serializers.py:84
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:82
+#: notes/serializers.py:86
 msgid "Give the session this end belongs to"
+msgstr ""
+
+#: notes/serializers.py:90
+msgid "This is not a photo or video of that archer"
+msgstr ""
+
+#: notes/serializers.py:92
+msgid "Say which frame the note is about"
+msgstr ""
+
+#: notes/serializers.py:94
+msgid "The clip has no such frame"
+msgstr ""
+
+#: notes/serializers.py:98
+msgid "This clip is from another session"
+msgstr ""
+
+#: notes/serializers.py:100
+msgid "Give the clip the frame is in"
 msgstr ""
 
 #: privacy/serializers.py:14

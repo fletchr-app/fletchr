@@ -29,7 +29,7 @@ class NotePermission(BasePermission):
 class NoteFilter(django_filters.FilterSet):
     class Meta:
         model = Note
-        fields = ["archer", "session", "end", "team", "author", "visibility"]
+        fields = ["archer", "session", "end", "media", "team", "author", "visibility"]
 
 
 class NoteViewSet(viewsets.ModelViewSet):

@@ -15,6 +15,7 @@ REQUIRED = serializers.Field.default_error_messages["required"]  # the framework
 
 class MediaSerializer(serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
+    uploaded_by_name = serializers.SerializerMethodField(help_text="Empty if that account is gone")
     file_url = serializers.SerializerMethodField(help_text="Opens for an hour; fetch the clip again for a new link")
     thumbnail_url = serializers.SerializerMethodField(help_text="Opens for an hour; fetch the clip again for a new link")
     can_edit = serializers.SerializerMethodField()
@@ -22,12 +23,16 @@ class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
         fields = [
-            "id", "owner", "owner_name", "uploaded_by", "session", "kind", "taken_at", "width", "height", "size",
+            "id", "owner", "owner_name", "uploaded_by", "uploaded_by_name", "session", "kind", "taken_at", "width", "height", "size",
             "duration_ms", "capture_fps", "frame_count", "note", "created_at", "file_url", "thumbnail_url", "can_edit",
         ]
 
     def get_owner_name(self, media) -> str:
         return media.owner.profile.name or media.owner.email
+
+    def get_uploaded_by_name(self, media) -> str:
+        who = media.uploaded_by
+        return (who.profile.name or who.email) if who else ""
 
     def _link(self, media, part) -> str:
         request = self.context["request"]

@@ -983,6 +983,11 @@ paths:
           type: string
           format: uuid
       - in: query
+        name: media
+        schema:
+          type: string
+          format: uuid
+      - in: query
         name: session
         schema:
           type: string
@@ -3181,6 +3186,10 @@ components:
         uploaded_by:
           type: integer
           nullable: true
+        uploaded_by_name:
+          type: string
+          readOnly: true
+          description: Empty if that account is gone
         session:
           type: string
           format: uuid
@@ -3252,6 +3261,7 @@ components:
       - size
       - taken_at
       - thumbnail_url
+      - uploaded_by_name
       - width
     MediaExportLink:
       type: object
@@ -3388,6 +3398,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
         body:
           type: string
         visibility:
@@ -3433,6 +3458,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
         body:
           type: string
           minLength: 1
@@ -3639,6 +3679,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
         body:
           type: string
           minLength: 1

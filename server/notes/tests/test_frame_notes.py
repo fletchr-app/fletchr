@@ -1,0 +1,94 @@
+import pytest
+
+from media.models import Media
+from notes.models import Note
+from privacy.tests.test_media import give
+from training.tests.test_overview import make_session
+
+
+@pytest.fixture
+def api(client_for, club):
+    return lambda who: client_for(club[who])
+
+
+def frame_note(api, club, clip, who="coach", about="archer1", **extra):
+    body = {"archer": club[about].pk, "body": "Elbow drops here", "media": str(clip.pk), "frame": 143, "time_ms": 1192, **extra}
+    return api(who).post("/api/notes/", body, format="json")
+
+
+def clip_of(owner, **extra):
+    clip = give(owner, "video")
+    Media.objects.filter(pk=clip.pk).update(frame_count=240, **extra)
+    clip.refresh_from_db()
+    return clip
+
+
+def test_a_note_keeps_the_clip_the_frame_and_the_time(api, club):
+    clip = clip_of(club["archer1"])
+    res = frame_note(api, club, clip)
+    assert res.status_code == 201, res.data
+    assert (str(res.data["media"]), res.data["frame"], res.data["time_ms"]) == (str(clip.pk), 143, 1192)
+
+
+def test_the_notes_of_a_clip_can_be_listed_and_the_visibility_rules_stay(api, club):
+    clip = clip_of(club["archer1"])
+    shared = frame_note(api, club, clip, visibility="shared").data["id"]
+    private = frame_note(api, club, clip, visibility="coach_only").data["id"]
+    other = clip_of(club["archer1"])
+    frame_note(api, club, other, visibility="shared")
+    url = f"/api/notes/?media={clip.pk}"
+    assert {n["id"] for n in api("coach").get(url).data} == {shared, private}
+    assert {n["id"] for n in api("archer1").get(url).data} == {shared}  # what the coach keeps from the archer stays hidden
+    assert api("archer2").get(url).data == []
+
+
+def test_the_note_takes_the_session_of_the_clip(api, club):
+    session = make_session(club["archer1"])
+    clip = clip_of(club["archer1"], session=session)
+    assert str(frame_note(api, club, clip).data["session"]) == str(session.pk)
+
+
+def test_a_clip_of_another_session_does_not_fit(api, club):
+    one, two = make_session(club["archer1"]), make_session(club["archer1"])
+    clip = clip_of(club["archer1"], session=one)
+    assert frame_note(api, club, clip, session=str(two.pk)).status_code == 400
+
+
+def test_the_clip_must_be_the_archers(api, club):
+    clip = clip_of(club["archer2"])
+    assert frame_note(api, club, clip, about="archer1").status_code == 400
+
+
+@pytest.mark.parametrize("extra", [{"frame": None}, {"frame": 240}, {"frame": -1}])
+def test_the_frame_must_exist(api, club, extra):
+    clip = clip_of(club["archer1"])
+    assert frame_note(api, club, clip, **extra).status_code == 400
+
+
+def test_a_frame_needs_a_clip(api, club):
+    res = api("coach").post("/api/notes/", {"archer": club["archer1"].pk, "body": "x", "frame": 3}, format="json")
+    assert res.status_code == 400 and "media" in res.data
+
+
+def test_the_clip_and_the_frame_cannot_change_but_the_text_can(api, club):
+    clip = clip_of(club["archer1"])
+    note = frame_note(api, club, clip).data["id"]
+    assert api("coach").patch(f"/api/notes/{note}/", {"frame": 5}, format="json").status_code == 400
+    assert api("coach").patch(f"/api/notes/{note}/", {"body": "Better"}, format="json").status_code == 200
+
+
+def test_the_note_stays_when_the_clip_is_deleted(api, club):
+    clip = clip_of(club["archer1"])
+    note = frame_note(api, club, clip).data["id"]
+    clip.delete()
+    kept = Note.objects.get(pk=note)
+    assert kept.media is None and kept.frame == 143
+
+
+def test_the_export_has_the_frame(client_for, club):
+    from privacy.tests.test_delete_data import PASSWORD
+
+    clip = clip_of(club["archer1"])
+    frame_note(lambda w: client_for(club[w]), club, clip, visibility="shared")
+    d = client_for(club["archer1"]).post("/api/me/export/", {"password": PASSWORD}, format="json").json()
+    assert [(n["media"], n["frame"], n["time_ms"]) for n in d["notes_about_me"]] == [(str(clip.pk), 143, 1192)]

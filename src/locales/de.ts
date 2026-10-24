@@ -67,6 +67,8 @@ export default {
     withdraw: 'Einwilligung zurücknehmen',
   },
   media: {
+    noNotes: 'Noch keine Notizen zu diesem Video.',
+    notes: 'Notizen zu diesem Video',
     needsConsent: 'Für Video braucht es zuerst die Einwilligung der Eltern, weil dieser Schütze unter 18 ist. Ein Trainer trägt sie auf der Seite des Schützen ein.',
     title: 'Fotos und Videos',
     titleFor: 'Fotos und Videos von {name}',
@@ -398,6 +400,8 @@ export default {
   notes: {
     coachNotes: 'Trainernotizen',
     fromCoaches: 'Von deinen Trainern',
+    newNoteOnFrame: 'Neue Notiz zu Bild {n}',
+    frameLink: 'Bild {n} · {time} s',
     newNote: 'Neue Notiz',
     note: 'Notiz',
     whoCanRead: 'Wer es lesen kann',

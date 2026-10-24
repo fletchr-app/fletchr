@@ -11,6 +11,7 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
+import { clock } from '@/lib/player'
 
 type Note = components['schemas']['Note']
 type Visibility = 'private' | 'coach_only' | 'shared'
@@ -22,7 +23,7 @@ const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
 ])
 
 const props = defineProps<{ note: Note; ends: { id: string; index: number }[] }>()
-const emit = defineEmits<{ changed: [] }>()
+const emit = defineEmits<{ changed: []; jump: [frame: number] }>()
 
 const { api } = useAuth()
 const editing = ref(false)
@@ -69,6 +70,9 @@ const remove = () =>
       <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>
     <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
+    <IonButton v-if="note.frame !== null && note.frame !== undefined && !editing" fill="outline" size="small" class="m-0 align-self-start" @click="emit('jump', note.frame)">
+      {{ $t('notes.frameLink', { n: note.frame + 1, time: clock((note.time_ms ?? 0) / 1000) }) }}
+    </IonButton>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
     <ErrorText :message="error" />
     <div v-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">

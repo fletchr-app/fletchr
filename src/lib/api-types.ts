@@ -1378,6 +1378,8 @@ export interface components {
             owner: number;
             readonly owner_name: string;
             uploaded_by?: number | null;
+            /** @description Empty if that account is gone */
+            readonly uploaded_by_name: string;
             /** Format: uuid */
             session?: string | null;
             kind: components["schemas"]["MediaKindEnum"];
@@ -1471,6 +1473,15 @@ export interface components {
             session?: string | null;
             /** Format: uuid */
             end?: string | null;
+            /**
+             * Format: uuid
+             * @description A note on a frame of this clip; needs `frame`
+             */
+            media?: string | null;
+            /** @description The frame, counted from 0 */
+            frame?: number | null;
+            /** @description Where that frame is in the clip */
+            time_ms?: number | null;
             body: string;
             visibility?: components["schemas"]["VisibilityEnum"];
             readonly can_edit: boolean;
@@ -1488,6 +1499,15 @@ export interface components {
             session?: string | null;
             /** Format: uuid */
             end?: string | null;
+            /**
+             * Format: uuid
+             * @description A note on a frame of this clip; needs `frame`
+             */
+            media?: string | null;
+            /** @description The frame, counted from 0 */
+            frame?: number | null;
+            /** @description Where that frame is in the clip */
+            time_ms?: number | null;
             body: string;
             visibility?: components["schemas"]["VisibilityEnum"];
         };
@@ -1586,6 +1606,15 @@ export interface components {
             session?: string | null;
             /** Format: uuid */
             end?: string | null;
+            /**
+             * Format: uuid
+             * @description A note on a frame of this clip; needs `frame`
+             */
+            media?: string | null;
+            /** @description The frame, counted from 0 */
+            frame?: number | null;
+            /** @description Where that frame is in the clip */
+            time_ms?: number | null;
             body?: string;
             visibility?: components["schemas"]["VisibilityEnum"];
         };
@@ -2840,6 +2869,7 @@ export interface operations {
                 archer?: number;
                 author?: number;
                 end?: string;
+                media?: string;
                 session?: string;
                 team?: number;
                 /**

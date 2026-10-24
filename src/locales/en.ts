@@ -63,6 +63,8 @@ export default {
     withdraw: 'Withdraw consent',
   },
   media: {
+    noNotes: 'No notes on this clip yet.',
+    notes: 'Notes on this clip',
     needsConsent: 'Video needs the consent of the parents first, because this archer is under 18. A coach records it on the archer\'s page.',
     title: 'Photos and videos',
     titleFor: 'Photos and videos of {name}',
@@ -394,6 +396,8 @@ export default {
   notes: {
     coachNotes: 'Coach notes',
     fromCoaches: 'From your coaches',
+    newNoteOnFrame: 'New note on frame {n}',
+    frameLink: 'Frame {n} · {time} s',
     newNote: 'New note',
     note: 'Note',
     whoCanRead: 'Who can read it',
