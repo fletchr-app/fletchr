@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonModal, IonTitle, IonToolbar, onIonViewWillEnter } from '@ionic/vue'
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonModal, IonSpinner, IonTitle, IonToolbar, onIonViewWillEnter } from '@ionic/vue'
 import { cloudUploadOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -19,7 +19,8 @@ import type { QueuedMedia } from '@/lib/media-queue'
 import { pickPhoto } from '@/lib/pick-photo'
 
 type Remote = components['schemas']['Media']
-type Shown = { key: string; src: string; queued?: QueuedMedia; remote?: Remote }
+type Preparing = { key: string; src: string; error?: string }
+type Shown = { key: string; src: string; queued?: QueuedMedia; remote?: Remote; preparing?: Preparing }
 
 // The photos (and later videos) of one session, or of one archer. Everyone can add to their own sessions, and a
 // coach to those of their archers: that shows as ?owner=. What is added waits on the phone until it is uploaded.
@@ -62,28 +63,47 @@ watch(
   },
   { immediate: true },
 )
-onBeforeUnmount(() => Object.values(previews.value).forEach((u) => URL.revokeObjectURL(u)))
+onBeforeUnmount(() => {
+  Object.values(previews.value).forEach((u) => URL.revokeObjectURL(u))
+  preparing.value.forEach((p) => URL.revokeObjectURL(p.src))
+})
 
+// Photos being prepared (shrunk and saved on the phone) show at once, where they will be in the list. One that fails stays, with its error.
+const preparing = ref<Preparing[]>([])
 const shown = computed<Shown[]>(() => [
   ...queued.value.map((q) => ({ key: q.id, src: previews.value[q.id] ?? '', queued: q })),
+  ...preparing.value.map((p) => ({ key: p.key, src: p.src, preparing: p })),
   ...(data.value ?? []).filter((r) => !queued.value.some((q) => q.id === r.id)).map((r) => ({ key: r.id, src: r.thumbnail_url, remote: r })),
 ])
 
 const adding = ref(false)
 const addError = ref<string | null>(null)
+function stopPreparing(key: string) {
+  const tile = preparing.value.find((p) => p.key === key)
+  if (tile) URL.revokeObjectURL(tile.src)
+  preparing.value = preparing.value.filter((p) => p.key !== key)
+}
 async function add() {
   adding.value = true
   addError.value = null
+  let key: string | null = null
   try {
     const picked = await pickPhoto()
     if (!picked) return
+    key = `preparing-${Date.now()}`
+    preparing.value = [...preparing.value, { key, src: URL.createObjectURL(picked) }]
+    adding.value = false // the next photo can be picked while this one is prepared
     const { file, thumbnail, width, height } = await prepareImage(picked)
-    await media.enqueue(
+    const id = await media.enqueue(
       { kind: 'photo', owner: owner.value === me.value ? null : owner.value, session: sessionId, taken_at: new Date().toISOString(), width, height },
       { file, thumbnail },
     )
+    previews.value = { ...previews.value, [id]: URL.createObjectURL(thumbnail) } // so the tile does not blink when it changes
+    stopPreparing(key)
   } catch {
-    addError.value = t('media.couldNotAdd')
+    const tile = preparing.value.find((p) => p.key === key)
+    if (tile) tile.error = t('media.couldNotAdd')
+    else addError.value = t('media.couldNotAdd')
   } finally {
     adding.value = false
   }
@@ -96,6 +116,7 @@ const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
 let bigUrl: string | null = null
 async function open(item: Shown) {
+  if (item.preparing && !item.preparing.error) return // still working
   viewing.value = item
   confirmDelete.value = false
   deleteError.value = null
@@ -114,11 +135,15 @@ function close() {
   if (bigUrl) URL.revokeObjectURL(bigUrl)
   bigUrl = null
 }
-const canDelete = computed(() => !!viewing.value && (!!viewing.value.queued || viewing.value.remote?.can_edit === true))
+const canDelete = computed(() => !!viewing.value && (!!viewing.value.queued || !!viewing.value.preparing || viewing.value.remote?.can_edit === true))
 async function remove() {
   const item = viewing.value!
   if (!confirmDelete.value) return (confirmDelete.value = true)
-  if (item.queued) media.remove(item.queued.id)
+  if (item.preparing) {
+    const keep = item.preparing.src
+    preparing.value = preparing.value.filter((p) => p.key !== item.preparing!.key)
+    setTimeout(() => URL.revokeObjectURL(keep), 500) // the modal still shows it while it closes
+  } else if (item.queued) media.remove(item.queued.id)
   else {
     const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: item.remote!.id } } }).catch(() => ({ response: null }))
     if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
@@ -131,7 +156,7 @@ async function remove() {
 <template>
   <AppPage :title="title">
     <div class="screen">
-      <AppButton :disabled="adding" @click="add">{{ $t('media.add') }}</AppButton>
+      <AppButton :busy="adding" @click="add">{{ $t('media.add') }}</AppButton>
       <ErrorText :message="addError" />
       <SyncBanner />
       <ErrorText :message="error" />
@@ -141,7 +166,8 @@ async function remove() {
         <button v-for="item in shown" :key="item.key" type="button" class="cell" @click="open(item)">
           <img :src="item.src" alt="" />
           <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
-          <span v-if="item.queued?.error" class="badge text-danger">!</span>
+          <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
+          <span v-if="item.preparing && !item.preparing.error" class="veil" :title="$t('media.preparing')"><IonSpinner name="crescent" /></span>
         </button>
       </div>
     </div>
@@ -156,7 +182,7 @@ async function remove() {
         <div class="screen">
           <img :src="bigSrc" alt="" class="big" />
           <div v-if="viewing?.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.owner_name }) }}</div>
-          <div v-if="viewing?.queued?.error" class="text-danger">{{ viewing.queued.error }}</div>
+          <div v-if="viewing?.queued?.error || viewing?.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
           <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? $t('media.deleteConfirm') : $t('media.delete') }}</AppButton>
         </div>
@@ -184,6 +210,15 @@ async function remove() {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 40%);
+  color: #fff;
 }
 .badge {
   position: absolute;

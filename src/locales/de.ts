@@ -68,6 +68,7 @@ export default {
     fromGallery: 'Aus der Galerie wählen',
     takePhoto: 'Foto aufnehmen',
     empty: 'Noch keine Fotos.',
+    preparing: 'Foto wird vorbereitet',
     couldNotAdd: 'Das Foto konnte nicht hinzugefügt werden.',
     fileLost: 'Das Foto ist nicht mehr auf diesem Gerät.',
     waiting: 'Wartet auf den Upload',
