@@ -15,7 +15,7 @@ import {
 import { closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
@@ -43,6 +43,7 @@ type Shown = { key: string; src: string; kind: 'photo' | 'video'; queued?: Queue
 // those of their archers: that shows as ?owner=. What is added waits on the phone until it is uploaded.
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const sessionId = (route.query.session as string | undefined) ?? null
 const ownerParam = route.query.owner ? Number(route.query.owner) : null
 const name = route.query.name as string | undefined
@@ -216,6 +217,11 @@ const deleteError = ref<string | null>(null)
 let bigUrl: string | null = null
 async function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
+  if (item.remote?.kind === 'video') {
+    // The player page knows which clips are next to this one by the same query as this page.
+    const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
+    return void router.push({ path: `/media/${item.remote.id}`, query })
+  }
   viewing.value = item
   confirmDelete.value = false
   deleteError.value = null
@@ -296,8 +302,7 @@ const taken = (item: Shown | null) => {
       </IonHeader>
       <IonContent>
         <div class="screen">
-          <video v-if="viewing?.remote?.kind === 'video'" :src="bigSrc" :poster="viewing.src" class="big" controls playsinline></video>
-          <img v-else :src="bigSrc" alt="" class="big" />
+          <img :src="bigSrc" alt="" class="big" />
           <div v-if="viewing?.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.owner_name }) }}</div>
           <div v-if="viewing?.queued?.error || viewing?.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
