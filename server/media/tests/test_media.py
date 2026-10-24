@@ -202,6 +202,7 @@ def test_a_coach_adds_a_clip_for_an_archer_they_coach(api, club):
     res = put(api("coach"), video(session=str(session.pk)), owner=club["archer1"])
     assert res.status_code == 201, res.data
     assert res.data["owner"] == club["archer1"].pk and res.data["uploaded_by"] == club["coach"].pk and res.data["session"] == session.pk
+    assert res.data["uploaded_by_name"] == "coach"
     assert res.data["can_edit"] is True
     clip = res.data["id"]
     assert [m["id"] for m in api("archer1").get("/api/media/").data] == [clip]

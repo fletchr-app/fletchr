@@ -353,7 +353,7 @@ const taken = (item: Shown | null) => {
       </IonContent>
       <IonFooter v-if="viewing">
         <div class="screen">
-          <div v-if="viewing.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.owner_name }) }}</div>
+          <div v-if="viewing.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.uploaded_by_name }) }}</div>
           <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
           <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? $t('media.deleteConfirm') : $t('media.delete') }}</AppButton>

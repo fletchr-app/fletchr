@@ -4,11 +4,13 @@ from rest_framework.exceptions import PermissionDenied
 
 from core.access import note_teams
 from core.models import COACH_ROLES, Team, TeamMember, User
+from media.models import Media
 from training.models import End, TrainingSession
 
+from .drawing import check_drawing
 from .models import Note
 
-IMMUTABLE = ("team", "archer", "session", "end")
+IMMUTABLE = ("team", "archer", "session", "end", "media", "frame", "time_ms")  # the drawing can change
 
 
 class NoteTeamSerializer(serializers.Serializer):
@@ -23,6 +25,10 @@ class NoteSerializer(serializers.ModelSerializer):
     archer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     session = serializers.PrimaryKeyRelatedField(queryset=TrainingSession.objects.all(), required=False, allow_null=True)
     end = serializers.PrimaryKeyRelatedField(queryset=End.objects.all(), required=False, allow_null=True)
+    media = serializers.PrimaryKeyRelatedField(queryset=Media.objects.all(), required=False, allow_null=True, help_text="A note on a frame of this clip; needs `frame`")
+    frame = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="The frame, counted from 0")
+    time_ms = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="Where that frame is in the clip")
+    drawing = serializers.JSONField(required=False, allow_null=True, help_text="Lines, angles and circles on the frame; see notes/drawing.py for the format")
     author_name = serializers.SerializerMethodField()
     archer_name = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
@@ -31,7 +37,7 @@ class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
         fields = [
-            "id", "team", "author", "author_name", "archer", "archer_name", "session", "end", "body",
+            "id", "team", "author", "author_name", "archer", "archer_name", "session", "end", "media", "frame", "time_ms", "drawing", "body",
             "visibility", "can_edit", "can_delete", "created_at", "updated_at",
         ]
         read_only_fields = ["author", "created_at", "updated_at"]
@@ -54,7 +60,17 @@ class NoteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(gettext("A note cannot be empty"))
         return body
 
+    def validate_drawing(self, value):
+        try:
+            return check_drawing(value)
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
+
     def validate(self, attrs):
+        if attrs.get("drawing") is not None:
+            frame_note = self.instance.frame is not None if self.instance is not None else attrs.get("frame") is not None
+            if not frame_note:
+                raise serializers.ValidationError({"drawing": gettext("A drawing belongs to a frame of a clip")})
         if self.instance is not None:
             for field in IMMUTABLE:
                 if field in attrs and attrs[field] != getattr(self.instance, field):
@@ -80,5 +96,19 @@ class NoteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"session": gettext("This is not a session of that archer")})
         if end is not None and (session is None or end.session_id != session.id):
             raise serializers.ValidationError({"end": gettext("Give the session this end belongs to")})
+        media, frame = attrs.get("media"), attrs.get("frame")
+        if media is not None:
+            if media.owner_id != archer.id:
+                raise serializers.ValidationError({"media": gettext("This is not a photo or video of that archer")})
+            if frame is None:
+                raise serializers.ValidationError({"frame": gettext("Say which frame the note is about")})
+            if media.frame_count and frame >= media.frame_count:
+                raise serializers.ValidationError({"frame": gettext("The clip has no such frame")})
+            if session is None and media.session_id:
+                attrs["session"] = media.session  # the note belongs to the session the clip was taken in
+            elif session is not None and media.session_id not in (None, session.id):
+                raise serializers.ValidationError({"media": gettext("This clip is from another session")})
+        elif frame is not None or attrs.get("time_ms") is not None:
+            raise serializers.ValidationError({"media": gettext("Give the clip the frame is in")})
         attrs["team"] = team
         return attrs

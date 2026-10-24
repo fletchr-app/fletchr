@@ -7,6 +7,7 @@ import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
+import type { Shape } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 
 type Visibility = 'private' | 'coach_only' | 'shared'
@@ -22,6 +23,8 @@ const props = defineProps<{
   sessionId?: string
   ends: { id: string; index: number }[]
   teams: { id: number; name: string }[]
+  /** A note on one frame of a clip: the clip, the frame (from 0) and where it is in the clip. */
+  frame?: { mediaId: string; frame: number; timeMs: number; drawing?: { v: 1; shapes: Shape[] } | null }
 }>()
 const emit = defineEmits<{ added: [] }>()
 
@@ -45,6 +48,10 @@ async function add() {
         visibility: visibility.value,
         session: props.sessionId ?? null,
         end: endId.value || null,
+        media: props.frame?.mediaId ?? null,
+        frame: props.frame?.frame ?? null,
+        time_ms: props.frame?.timeMs ?? null,
+        drawing: props.frame?.drawing ?? null,
       },
     })
     if (data) {
@@ -61,7 +68,7 @@ async function add() {
 
 <template>
   <div class="d-flex flex-column gap-2">
-    <FormField v-model="body" :label="$t('notes.newNote')" multiline capitalize="sentences" />
+    <FormField v-model="body" :label="frame ? $t('notes.newNoteOnFrame', { n: frame.frame + 1 }) : $t('notes.newNote')" multiline capitalize="sentences" />
     <ChipGroup v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
     <ChipGroup
       v-if="ends.length > 0"

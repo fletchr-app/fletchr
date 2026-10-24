@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.4.0
+  version: 0.5.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -979,6 +979,11 @@ paths:
           type: integer
       - in: query
         name: end
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: media
         schema:
           type: string
           format: uuid
@@ -3181,6 +3186,10 @@ components:
         uploaded_by:
           type: integer
           nullable: true
+        uploaded_by_name:
+          type: string
+          readOnly: true
+          description: Empty if that account is gone
         session:
           type: string
           format: uuid
@@ -3252,6 +3261,7 @@ components:
       - size
       - taken_at
       - thumbnail_url
+      - uploaded_by_name
       - width
     MediaExportLink:
       type: object
@@ -3388,6 +3398,25 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
         visibility:
@@ -3433,6 +3462,25 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
           minLength: 1
@@ -3639,6 +3687,25 @@ components:
           type: string
           format: uuid
           nullable: true
+        media:
+          type: string
+          format: uuid
+          nullable: true
+          description: A note on a frame of this clip; needs `frame`
+        frame:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The frame, counted from 0
+        time_ms:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
           minLength: 1
