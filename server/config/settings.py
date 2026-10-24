@@ -223,6 +223,7 @@ SPECTACULAR_SETTINGS = {
         "HandEnum": "core.models.Profile.Hand",
         "BowTypeEnum": "equipment.models.BowFields.Type",
         "SessionTypeEnum": "training.models.TrainingSession.Type",
+        "MediaKindEnum": "media.models.Media.Kind",
     },
 }
 

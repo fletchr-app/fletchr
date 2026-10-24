@@ -3,9 +3,9 @@ from django.db.models import Sum
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from core.claims import can_write_sessions_of
 from training.models import TrainingSession
 
+from .access import can_change
 from .files import is_jpeg, is_mp4, sign_link
 from .models import Media
 
@@ -40,7 +40,7 @@ class MediaSerializer(serializers.ModelSerializer):
         return self._link(media, "thumbnail")
 
     def get_can_edit(self, media) -> bool:
-        return can_write_sessions_of(self.context["request"].user, media.owner)
+        return can_change(self.context["request"].user, media)
 
 
 class MediaWriteSerializer(serializers.Serializer):

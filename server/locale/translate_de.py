@@ -69,7 +69,7 @@ DE = {
     "The photo is larger than %(n)s MB": "Das Foto ist größer als %(n)s MB",
     "The preview must be a small JPEG file": "Die Vorschau muss eine kleine JPEG-Datei sein",
     "There is no room left for this archer's photos and videos": "Für die Fotos und Videos dieses Schützen ist kein Platz mehr",
-    "Only the archer can change their photos and videos": "Nur der Schütze kann seine Fotos und Videos ändern",
+    "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
 }
 
 PATH = "locale/de/LC_MESSAGES/django.po"

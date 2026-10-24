@@ -188,12 +188,43 @@ def test_the_list_can_be_filtered(api, club):
     assert len(api("coach").get("/api/media/").data) == 4
 
 
-def test_a_coach_cannot_change_or_delete_an_archers_clip_or_upload_for_them(api, club):
+def test_a_coach_cannot_change_or_delete_an_archers_own_clip(api, club):
     clip = upload(api)["id"]
+    res = api("coach").get(f"/api/media/{clip}/")
+    assert res.data["can_edit"] is False
     assert put(api("coach"), {"note": "x"}, clip).status_code == 403
     assert api("coach").delete(f"/api/media/{clip}/").status_code == 403
-    assert put(api("coach"), video(), owner=club["archer1"]).status_code == 404
     assert Media.objects.count() == 1 and Media.objects.get().note == ""
+
+
+def test_a_coach_adds_a_clip_for_an_archer_they_coach(api, club):
+    session = make_session(club["archer1"])
+    res = put(api("coach"), video(session=str(session.pk)), owner=club["archer1"])
+    assert res.status_code == 201, res.data
+    assert res.data["owner"] == club["archer1"].pk and res.data["uploaded_by"] == club["coach"].pk and res.data["session"] == session.pk
+    assert res.data["can_edit"] is True
+    clip = res.data["id"]
+    assert [m["id"] for m in api("archer1").get("/api/media/").data] == [clip]
+    assert api("archer1").get(f"/api/media/{clip}/").data["can_edit"] is True, "the archer may delete what is about them"
+    assert put(api("coach"), {"note": "Elbow"}, clip).status_code == 200
+    assert put(api("admin"), {"note": "x"}, clip).status_code == 403, "another coach did not add it"
+    assert api("coach").delete(f"/api/media/{clip}/").status_code == 204
+
+
+def test_the_archer_can_delete_what_a_coach_added(api, club):
+    clip = put(api("coach"), video(), owner=club["archer1"]).data["id"]
+    assert api("archer1").delete(f"/api/media/{clip}/").status_code == 204
+
+
+def test_only_for_archers_you_coach(api, club):
+    for who, owner in [("archer2", "archer1"), ("archer1", "archer2"), ("b_admin", "archer1"), ("coach", "b_archer"), ("coach", "admin")]:
+        assert put(api(who), video(), owner=club[owner]).status_code == 404, f"{who} for {owner}"
+    assert not Media.objects.exists()
+
+
+def test_a_coach_who_shoots_too_can_be_added_for(api, club):
+    TeamMember.objects.filter(user=club["coach"]).update(also_shoots=True)
+    assert put(api("admin"), video(), owner=club["coach"]).status_code == 201
 
 
 def test_a_coach_keeps_the_media_of_a_profile_without_an_account(api, club, join):

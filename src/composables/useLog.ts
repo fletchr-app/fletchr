@@ -128,8 +128,14 @@ function startSession(type: SessionType, environment: Environment, location: str
   return id;
 }
 
+/** The session is still waiting to be created on the server, so nothing can be attached to it yet. */
+function sessionWaiting(id: string): boolean {
+  return state.value.outbox.some((o) => o.sessionId === id && o.kind === 'session' && !o.error);
+}
+
 const actions = {
   startSession,
+  sessionWaiting,
   refreshEquipment,
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),

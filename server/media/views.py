@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to
-from core.claims import can_write_sessions_of
 from core.models import User
 
+from .access import can_add_for, can_change
 from .files import read_link, serve
 from .models import Media
 from .serializers import MediaSerializer, MediaWriteSerializer
@@ -28,8 +28,8 @@ def get_media(request, media_id, write=False):
     media = visible_media(request.user).filter(pk=media_id).first()
     if media is None:
         raise NotFound()
-    if write and not can_write_sessions_of(request.user, media.owner):
-        raise PermissionDenied(gettext("Only the archer can change their photos and videos"))
+    if write and not can_change(request.user, media):
+        raise PermissionDenied(gettext("Only the archer or whoever added it can change a photo or video"))
     return media
 
 
@@ -60,7 +60,7 @@ class MediaDetailView(APIView):
 
     @extend_schema(
         request={"multipart/form-data": MediaWriteSerializer},
-        parameters=[OpenApiParameter("owner", int, description="Upload for an archer without an account that you coach; default: yourself")],
+        parameters=[OpenApiParameter("owner", int, description="Upload for an archer you coach; default: yourself")],
         responses={200: MediaSerializer, 201: MediaSerializer},
     )
     def put(self, request, media_id):
@@ -74,7 +74,7 @@ class MediaDetailView(APIView):
                 owner = User.objects.filter(pk=int(request.query_params["owner"])).first()
             except ValueError:
                 raise ValidationError({"owner": gettext("Give the id of the archer")})
-            if owner is None or not can_write_sessions_of(request.user, owner):
+            if owner is None or not can_add_for(request.user, owner):
                 raise NotFound()
         serializer = MediaWriteSerializer(existing, data=request.data, context={"owner": owner})
         serializer.is_valid(raise_exception=True)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 11:20+0200\n"
+"POT-Creation-Date: 2026-10-24 11:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -188,7 +188,7 @@ msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
 #: media/views.py:32
-msgid "Only the archer can change their photos and videos"
+msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
 #: media/views.py:76 notes/views.py:82 training/views.py:112

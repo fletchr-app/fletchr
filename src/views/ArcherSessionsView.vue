@@ -51,6 +51,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <div v-if="profileLine" class="muted">{{ profileLine }}</div>
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
+      <AppButton secondary :router-link="`/media?owner=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('media.title') }}</AppButton>
       <NotesSection :archer-id="Number(id)" />
       <ErrorText :message="error" />
       <div v-if="loading">{{ $t('common.loading') }}</div>

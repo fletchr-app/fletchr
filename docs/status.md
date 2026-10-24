@@ -35,7 +35,7 @@ Open in practice (not release dependent):
 ## Milestone 2: media and evaluations (started)
 
 - Evaluation forms and templates with trend charts, self-assessments, goals on Home.
-- Photos and videos: the phone converts them (Media3, `docs/video-prototype.md`), the server only stores and serves them. Done: the prototypes (#35, #70) and the server side (#36: `media` app, `/api/media/`, permission-checked files with Range support, limits, quota). Open: the app side (photos #37, the conversion plugin #39, upload #38, gallery #40, player #41), notes on frames, drawing tools. Export and deletion of media through "Your data" is #47: until then "Delete my data" leaves photos and videos (deleting the account removes them).
+- Photos and videos: the phone converts them (Media3, `docs/video-prototype.md`), the server only stores and serves them. Done: the prototypes (#35, #70) and the server side (#36: `media` app, `/api/media/`, permission-checked files with Range support, limits, quota). Photos (#37) are in the app: the Camera plugin picks or takes the photo, the phone shrinks it to 2048 px and strips the metadata, the upload queue (`useMedia`, files in the app's data folder) works offline and is generic for photos and videos. Added on `/media` from a session (everyone, and coaches for their archers) or from an archer's page (coach). Open: the conversion plugin (#39), video upload (#38), gallery (#40), player (#41), notes on frames, drawing tools. Export and deletion of media through "Your data" is #47: until then "Delete my data" leaves photos and videos (deleting the account removes them).
 - Backups of media (restic, off-site) belong here, if not done earlier.
 
 ## Milestone 3: deeper stats (partly)

@@ -6,6 +6,7 @@ import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { type DeletedCounts, useLog } from '@/composables/useLog'
+import { useMedia } from '@/composables/useMedia'
 
 const { t } = useI18n()
 
@@ -19,6 +20,7 @@ function summary(d: DeletedCounts) {
 }
 
 const { deleteMyData } = useLog()
+const { discardAll } = useMedia()
 const password = ref('')
 const confirm = ref('')
 const busy = ref(false)
@@ -32,6 +34,7 @@ async function erase() {
   if ('error' in result) error.value = result.error
   else {
     done.value = result.deleted
+    discardAll() // photos still waiting to go up would bring the data back
     password.value = ''
     confirm.value = ''
   }

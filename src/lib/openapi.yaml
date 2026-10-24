@@ -759,8 +759,7 @@ paths:
         name: owner
         schema:
           type: integer
-        description: 'Upload for an archer without an account that you coach; default:
-          yourself'
+        description: 'Upload for an archer you coach; default: yourself'
       tags:
       - media
       requestBody:
@@ -3012,14 +3011,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
           default: archer
-    Kind018Enum:
-      enum:
-      - photo
-      - video
-      type: string
-      description: |-
-        * `photo` - Photo
-        * `video` - Video
     LastSession:
       type: object
       properties:
@@ -3084,7 +3075,7 @@ components:
           format: uuid
           nullable: true
         kind:
-          $ref: '#/components/schemas/Kind018Enum'
+          $ref: '#/components/schemas/MediaKindEnum'
         taken_at:
           type: string
           format: date-time
@@ -3151,13 +3142,21 @@ components:
       - taken_at
       - thumbnail_url
       - width
+    MediaKindEnum:
+      enum:
+      - photo
+      - video
+      type: string
+      description: |-
+        * `photo` - Photo
+        * `video` - Video
     MediaWriteRequest:
       type: object
       description: A new clip needs everything but `note` and `session`. Repeating
         the request for a clip that exists changes only those two.
       properties:
         kind:
-          $ref: '#/components/schemas/Kind018Enum'
+          $ref: '#/components/schemas/MediaKindEnum'
         file:
           type: string
           format: binary

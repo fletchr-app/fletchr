@@ -19,14 +19,20 @@ const { loaded, sessions, waiting, failed, finishSession, deleteSession } = useL
 const confirmDelete = ref(false)
 
 const sessionId = route.params.id as string
+// Photos of this session; for an archer without an account, the coach adds them for that archer.
+const mediaLink = computed(() => ({
+  path: '/media',
+  query: { session: sessionId, ...(session.value?.owner ? { owner: session.value.owner, name: session.value.owner_name } : {}) },
+}))
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
 const fixed = computed(() => !!session.value && usesEnds(session.value.type))
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
 
-// A session left before anything was entered would only clutter the list.
+// A session left before anything was entered would only clutter the list. Its photos page belongs to it.
 onBeforeRouteLeave((to) => {
   const s = session.value
-  if (s && !to.path.startsWith(`/training/${s.id}`) && s.ends.length === 0 && s.volume.length === 0) deleteSession(s.id)
+  const staying = to.path.startsWith(`/training/${s?.id}`) || (to.path === '/media' && to.query.session === s?.id)
+  if (s && !staying && s.ends.length === 0 && s.volume.length === 0) deleteSession(s.id)
 })
 
 // The settings are asked once, before the first end; later ends start from the previous one (changeable via the link).
@@ -68,6 +74,7 @@ function newEnd() {
       <div class="d-flex justify-content-center gap-4">
         <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</RouterLink>
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
+        <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       </div>
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
@@ -84,7 +91,10 @@ function newEnd() {
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <SessionDetailsText :details="session.details" />
-      <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
+      <div class="d-flex gap-4">
+        <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
+        <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+      </div>
       <VolumeLog :session="session" />
       <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

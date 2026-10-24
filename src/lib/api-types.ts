@@ -1290,12 +1290,6 @@ export interface components {
             /** @default archer */
             role: components["schemas"]["RoleEnum"];
         };
-        /**
-         * @description * `photo` - Photo
-         *     * `video` - Video
-         * @enum {string}
-         */
-        Kind018Enum: "photo" | "video";
         LastSession: {
             /** Format: uuid */
             id: string;
@@ -1323,7 +1317,7 @@ export interface components {
             uploaded_by?: number | null;
             /** Format: uuid */
             session?: string | null;
-            kind: components["schemas"]["Kind018Enum"];
+            kind: components["schemas"]["MediaKindEnum"];
             /** Format: date-time */
             taken_at: string;
             /** Format: int64 */
@@ -1350,9 +1344,15 @@ export interface components {
             readonly thumbnail_url: string;
             readonly can_edit: boolean;
         };
+        /**
+         * @description * `photo` - Photo
+         *     * `video` - Video
+         * @enum {string}
+         */
+        MediaKindEnum: "photo" | "video";
         /** @description A new clip needs everything but `note` and `session`. Repeating the request for a clip that exists changes only those two. */
         MediaWriteRequest: {
-            kind?: components["schemas"]["Kind018Enum"];
+            kind?: components["schemas"]["MediaKindEnum"];
             /**
              * Format: binary
              * @description A JPEG photo or an MP4 video, converted by the phone
@@ -2552,7 +2552,7 @@ export interface operations {
     media_update: {
         parameters: {
             query?: {
-                /** @description Upload for an archer without an account that you coach; default: yourself */
+                /** @description Upload for an archer you coach; default: yourself */
                 owner?: number;
             };
             header?: never;
