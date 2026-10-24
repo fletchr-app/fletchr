@@ -15,7 +15,13 @@
 set -euo pipefail
 trap 'echo "update: stopped unexpectedly at line $LINENO" >&2' ERR
 
-repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo="${FLETCHR_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# Moving the checkout to the new tag replaces this file while bash is still reading it. So it runs from a copy.
+if [ -z "${UPDATE_FROM_COPY:-}" ]; then
+    copy="$(mktemp)"
+    cp "${BASH_SOURCE[0]}" "$copy"
+    UPDATE_FROM_COPY=1 FLETCHR_REPO="$repo" exec bash -c 'copy=$1; shift; trap "rm -f $copy" EXIT; bash "$copy" "$@"' _ "$copy" "$@"
+fi
 tag="${1:-${SSH_ORIGINAL_COMMAND:-}}"
 health_url="${HEALTH_URL:-http://127.0.0.1:8000/api/health/}"
 wait_seconds="${WAIT_SECONDS:-90}"
@@ -29,8 +35,8 @@ git_() { git -C "$repo" "$@"; }
 [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "give a release tag like v0.6.0, not '${tag:0:40}'"
 version="${tag#v}"
 
-mkdir -p "$repo/deploy/data"
-exec 9>"$repo/deploy/data/update.lock"
+# The lock is on the folder: deploy/data belongs to the container's user, the person running this cannot write there.
+exec 9<"$repo/deploy"
 flock -n 9 || fail "another update is running"
 
 healthy() { # the server answers with this version
