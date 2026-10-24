@@ -38,6 +38,7 @@ def claim_profile(code, user):
     the profile. The same error for every failure, so codes cannot be probed. Refused for a coach of the
     profile's team: they would not be an archer there, and the coaches would lose sight of the sessions.
     """
+    from media.models import Media
     from notes.models import Note
     from training.models import TrainingSession
 
@@ -59,6 +60,7 @@ def claim_profile(code, user):
             m.user = user
             m.save(update_fields=["user"])
     TrainingSession.objects.filter(owner=profile).update(owner=user)
+    Media.objects.filter(owner=profile).update(owner=user)  # the files keep their names, which hold the old id
     Note.objects.filter(archer=profile).update(archer=user)
     team = claim.team
     profile.delete()  # its claim codes go with it

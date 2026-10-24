@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import EndRows from '@/components/EndRows.vue'
 import ErrorText from '@/components/ErrorText.vue'
@@ -19,7 +19,7 @@ const REFRESH_MS = 5000
 // A session as the server has it, read-only. Used for sessions from other devices and by coaches.
 const route = useRoute()
 const { formatDistance } = useUnits()
-const { api } = useAuth()
+const { api, userId } = useAuth()
 const id = route.params.id as string
 // An unfinished session is still being shot: keep fetching it, so a coach watches it fill up.
 const { data, error, loading } = useRemote(
@@ -28,6 +28,11 @@ const { data, error, loading } = useRemote(
 )
 const session = computed(() => (data.value ? fromServer(data.value) : null))
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
+// Photos of this session; a coach adds them for the archer.
+const mediaLink = computed(() => ({
+  path: '/media',
+  query: { session: id, ...(data.value && data.value.owner !== Number(userId.value) ? { owner: data.value.owner, name: session.value?.owner_name } : {}) },
+}))
 </script>
 
 <template>
@@ -45,6 +50,7 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
       <div v-if="session.gear">{{ $t('session.equipment', { gear: gearLine(session.gear) }) }}</div>
       <ErrorText :message="error" />
       <SessionDetailsText :details="session.details" />
+      <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       <SessionPlots :session="session" />
       <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
       <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />

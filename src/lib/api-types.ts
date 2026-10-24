@@ -301,6 +301,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/media/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Photos and videos you may see: your own and those of the archers you coach, newest first. */
+        get: operations["media_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/media/{media_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["media_retrieve"];
+        /** @description Upload the clip with this id, or change its note and session. Safe to repeat: the files of a clip that exists are not replaced. */
+        put: operations["media_update"];
+        post?: never;
+        delete: operations["media_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/media/{media_id}/file/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The file itself. The <video> and <img> elements cannot send the sign-in header, so the link from the clip
+         *     carries a token (one user, one clip, an hour); the sign-in header works too.
+         */
+        get: operations["media_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/media/{media_id}/thumbnail/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The file itself. The <video> and <img> elements cannot send the sign-in header, so the link from the clip
+         *     carries a token (one user, one clip, an hour); the sign-in header works too.
+         */
+        get: operations["media_thumbnail_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notes/": {
         parameters: {
             query?: never;
@@ -1234,6 +1308,72 @@ export interface components {
             /** Format: email */
             readonly email: string;
             profile: components["schemas"]["Profile"];
+        };
+        Media: {
+            /** Format: uuid */
+            readonly id: string;
+            owner: number;
+            readonly owner_name: string;
+            uploaded_by?: number | null;
+            /** Format: uuid */
+            session?: string | null;
+            kind: components["schemas"]["MediaKindEnum"];
+            /** Format: date-time */
+            taken_at: string;
+            /** Format: int64 */
+            width: number;
+            /** Format: int64 */
+            height: number;
+            /**
+             * Format: int64
+             * @description Bytes of the file and the thumbnail together
+             */
+            size: number;
+            /** Format: int64 */
+            duration_ms?: number | null;
+            /** Format: double */
+            capture_fps?: number | null;
+            /** Format: int64 */
+            frame_count?: number | null;
+            note?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** @description Opens for an hour; fetch the clip again for a new link */
+            readonly file_url: string;
+            /** @description Opens for an hour; fetch the clip again for a new link */
+            readonly thumbnail_url: string;
+            readonly can_edit: boolean;
+        };
+        /**
+         * @description * `photo` - Photo
+         *     * `video` - Video
+         * @enum {string}
+         */
+        MediaKindEnum: "photo" | "video";
+        /** @description A new clip needs everything but `note` and `session`. Repeating the request for a clip that exists changes only those two. */
+        MediaWriteRequest: {
+            kind?: components["schemas"]["MediaKindEnum"];
+            /**
+             * Format: binary
+             * @description A JPEG photo or an MP4 video, converted by the phone
+             */
+            file?: string;
+            /**
+             * Format: binary
+             * @description A small JPEG
+             */
+            thumbnail?: string;
+            /** Format: date-time */
+            taken_at?: string;
+            width?: number;
+            height?: number;
+            duration_ms?: number | null;
+            /** Format: double */
+            capture_fps?: number | null;
+            frame_count?: number | null;
+            note?: string;
+            /** Format: uuid */
+            session?: string | null;
         };
         Member: {
             readonly user_id: number;
@@ -2357,6 +2497,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+        };
+    };
+    media_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `photo` - Photo
+                 *     * `video` - Video
+                 */
+                kind?: "photo" | "video";
+                owner?: number;
+                session?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"][];
+                };
+            };
+        };
+    };
+    media_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+        };
+    };
+    media_update: {
+        parameters: {
+            query?: {
+                /** @description Upload for an archer you coach; default: yourself */
+                owner?: number;
+            };
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["MediaWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+        };
+    };
+    media_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    media_file_retrieve: {
+        parameters: {
+            query?: {
+                /** @description From `file_url`; not needed with the sign-in header */
+                token?: string;
+            };
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
+    media_thumbnail_retrieve: {
+        parameters: {
+            query?: {
+                /** @description From `file_url`; not needed with the sign-in header */
+                token?: string;
+            };
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
                 };
             };
         };

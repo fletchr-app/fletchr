@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:56+0200\n"
+"POT-Creation-Date: 2026-10-24 11:24+0200\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,11 +26,11 @@ msgstr "Ungültiger oder abgelaufener Einladungscode"
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:123
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:123
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
-#: core/claims.py:54
+#: core/claims.py:55
 msgid "You are a coach in this team. A profile of an archer can only be taken over by an archer."
 msgstr ""
 "Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
@@ -158,6 +158,49 @@ msgstr "Das ist nicht dein Pfeilsatz"
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr "Das wurde in einem Training benutzt. Deaktiviere es, statt es zu löschen."
 
+#: media/serializers.py:65
+msgid "This session belongs to another archer"
+msgstr "Dieses Training gehört einem anderen Schützen"
+
+#: media/serializers.py:77
+msgid "A video must be an MP4 file"
+msgstr "Ein Video muss eine MP4-Datei sein"
+
+#: media/serializers.py:79
+#, python-format
+msgid "The video is larger than %(n)s MB"
+msgstr "Das Video ist größer als %(n)s MB"
+
+#: media/serializers.py:83
+#, python-format
+msgid "The video is longer than %(n)s seconds"
+msgstr "Das Video ist länger als %(n)s Sekunden"
+
+#: media/serializers.py:86
+msgid "A photo must be a JPEG file"
+msgstr "Ein Foto muss eine JPEG-Datei sein"
+
+#: media/serializers.py:88
+#, python-format
+msgid "The photo is larger than %(n)s MB"
+msgstr "Das Foto ist größer als %(n)s MB"
+
+#: media/serializers.py:92
+msgid "The preview must be a small JPEG file"
+msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
+
+#: media/serializers.py:95
+msgid "There is no room left for this archer's photos and videos"
+msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
+
+#: media/views.py:32
+msgid "Only the archer or whoever added it can change a photo or video"
+msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
+
+#: media/views.py:76 notes/views.py:82 training/views.py:112
+msgid "Give the id of the archer"
+msgstr "Gib die ID des Schützen an"
+
 #: notes/serializers.py:54
 msgid "A note cannot be empty"
 msgstr "Eine Notiz darf nicht leer sein"
@@ -189,10 +232,6 @@ msgstr "Das ist kein Training dieses Schützen"
 #: notes/serializers.py:82
 msgid "Give the session this end belongs to"
 msgstr "Gib das Training an, zu dem diese Passe gehört"
-
-#: notes/views.py:82 training/views.py:112
-msgid "Give the id of the archer"
-msgstr "Gib die ID des Schützen an"
 
 #: privacy/serializers.py:14
 #, python-format
@@ -283,4 +322,7 @@ msgstr "Zwischen 1 und 52"
 #: training/views.py:271
 msgid "Unknown time zone"
 msgstr "Unbekannte Zeitzone"
+
+#~ msgid "This field is required."
+#~ msgstr "Dieses Feld ist erforderlich."
 

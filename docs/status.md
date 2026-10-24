@@ -32,11 +32,10 @@ Open in practice (not release dependent):
 - **Website:** `noindex` is on; remove it after the legal review of the privacy text and the data processing agreement with Host Europe.
 - **Before the repository goes public:** the git author email in the history (rewrite or accept), trademark and store-name checks for "Fletchr".
 
-## Milestone 2: media and evaluations (not started)
+## Milestone 2: media and evaluations (started)
 
 - Evaluation forms and templates with trend charts, self-assessments, goals on Home.
-- Photos and videos: upload, server conversion (ffmpeg), gallery, frame-by-frame player, notes on frames, drawing tools.
-- **First:** the video prototype from the plan (frame-exact stepping on a real 240 fps clip in the Android WebView, overlay sync, background upload, memory). It decides whether the player stays in Capacitor or needs a native plugin.
+- Photos and videos: the phone converts them (Media3, `docs/video-prototype.md`), the server only stores and serves them. Done: the prototypes (#35, #70) and the server side (#36: `media` app, `/api/media/`, permission-checked files with Range support, limits, quota). Photos (#37) are in the app: the Camera plugin picks or takes the photo, the phone shrinks it to 2048 px and strips the metadata, the upload queue (`useMedia`, files in the app's data folder) works offline and is generic for photos and videos. Added on `/media` from a session (everyone, and coaches for their archers) or from an archer's page (coach). Videos (#39): one Add sheet (take photo, record video, choose from gallery); a native plugin (Media3, `VideoConverterPlugin.java`) converts a chosen clip on the phone with the rules of `src/lib/video-plan.ts` (720p short side, real timeline, keyframe every 10 frames, size-capped bitrate, refuses clips over 60 s of real time), shows the first frame and the progress on the tile, and the small file goes into the same queue. Videos wait for Wi-Fi unless Settings says otherwise. Verified on the phone with synthetic clips (normal, rotated, speed 4, cut-off, garbage, cancel); not yet with a real clip through the picker, on a second phone, or for battery and heat. Open: gallery (#40), player (#41), notes on frames, drawing tools. Export and deletion of media through "Your data" is #47: until then "Delete my data" leaves photos and videos (deleting the account removes them).
 - Backups of media (restic, off-site) belong here, if not done earlier.
 
 ## Milestone 3: deeper stats (partly)

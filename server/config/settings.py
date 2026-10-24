@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "training",
     "notes",
     "privacy",
+    "media",
 ]
 
 MIDDLEWARE = [
@@ -159,6 +160,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_ROOT = DATA_DIR / "media"
 
+# Photos and videos (docs/plan.md, section 6). The phone converts them before the upload, so these limits only
+# keep out what a converted file cannot be: a clip longer than a minute, a file of hundreds of MB.
+MEDIA_MAX_VIDEO_SECONDS = 60
+MEDIA_MAX_VIDEO_BYTES = 50 * 1024 * 1024
+MEDIA_MAX_PHOTO_BYTES = 5 * 1024 * 1024
+MEDIA_MAX_THUMBNAIL_BYTES = 300 * 1024
+# What one archer may keep on the server (the disk is finite); DJANGO_MEDIA_QUOTA_MB changes it.
+MEDIA_QUOTA_BYTES = int(os.environ.get("DJANGO_MEDIA_QUOTA_MB", "2048")) * 1024 * 1024
+# The links the app gets for its <video> and <img> elements stop working after this time.
+MEDIA_LINK_SECONDS = 60 * 60
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -205,12 +217,13 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.2.0",
+    "VERSION": "0.3.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",
         "BowTypeEnum": "equipment.models.BowFields.Type",
         "SessionTypeEnum": "training.models.TrainingSession.Type",
+        "MediaKindEnum": "media.models.Media.Kind",
     },
 }
 

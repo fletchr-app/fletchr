@@ -1,9 +1,18 @@
 name: CI
 
+# Every push to develop (where the work happens) and to main (releases), and every pull request.
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
   pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   app:
@@ -31,4 +40,24 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
 
-      - run: uv run pytest -q
+      # --frozen: the tests run with exactly the versions in uv.lock
+      - run: uv run --frozen pytest -q
+
+  # The TypeScript types of the API are generated from the server's schema. A serializer change without
+  # `npm run types:api` would leave the app with types that no longer match the server.
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: astral-sh/setup-uv@v6
+
+      - run: npm ci
+      - run: npm run types:api
+      - name: The generated files are up to date
+        run: git diff --exit-code src/lib/openapi.yaml src/lib/api-types.ts

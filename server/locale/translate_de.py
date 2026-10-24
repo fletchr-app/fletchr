@@ -61,6 +61,15 @@ DE = {
     "Someone asked to reset the password of your Fletchr account.\n\nYour code: %(code)s\n\nType it in the app. It works for one hour. If this was not you, ignore this mail: your password stays as it is.": "Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n\nDein Code: %(code)s\n\nGib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein Passwort bleibt, wie es ist.",
     "Fletchr: your password was changed": "Fletchr: Dein Passwort wurde geändert",
     "The password of your Fletchr account was changed just now.\n\nIf this was you, there is nothing to do. If not, set a new password in the app (Sign in, then Forgot password?) and check who else knows your email password.": "Das Passwort deines Fletchr-Kontos wurde gerade geändert.\n\nWenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein neues Passwort (Anmelden, dann Passwort vergessen?) und prüfe, wer sonst dein E-Mail-Passwort kennt.",
+    "This session belongs to another archer": "Dieses Training gehört einem anderen Schützen",
+    "A video must be an MP4 file": "Ein Video muss eine MP4-Datei sein",
+    "The video is larger than %(n)s MB": "Das Video ist größer als %(n)s MB",
+    "The video is longer than %(n)s seconds": "Das Video ist länger als %(n)s Sekunden",
+    "A photo must be a JPEG file": "Ein Foto muss eine JPEG-Datei sein",
+    "The photo is larger than %(n)s MB": "Das Foto ist größer als %(n)s MB",
+    "The preview must be a small JPEG file": "Die Vorschau muss eine kleine JPEG-Datei sein",
+    "There is no room left for this archer's photos and videos": "Für die Fotos und Videos dieses Schützen ist kein Platz mehr",
+    "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
 }
 
 PATH = "locale/de/LC_MESSAGES/django.po"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:56+0200\n"
+"POT-Creation-Date: 2026-10-24 11:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/claims.py:46 core/claims.py:49 core/resets.py:57 core/views.py:123
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:123
 msgid "Invalid or expired code"
 msgstr ""
 
-#: core/claims.py:54
+#: core/claims.py:55
 msgid ""
 "You are a coach in this team. A profile of an archer can only be taken "
 "over by an archer."
@@ -152,6 +152,49 @@ msgstr ""
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr ""
 
+#: media/serializers.py:65
+msgid "This session belongs to another archer"
+msgstr ""
+
+#: media/serializers.py:77
+msgid "A video must be an MP4 file"
+msgstr ""
+
+#: media/serializers.py:79
+#, python-format
+msgid "The video is larger than %(n)s MB"
+msgstr ""
+
+#: media/serializers.py:83
+#, python-format
+msgid "The video is longer than %(n)s seconds"
+msgstr ""
+
+#: media/serializers.py:86
+msgid "A photo must be a JPEG file"
+msgstr ""
+
+#: media/serializers.py:88
+#, python-format
+msgid "The photo is larger than %(n)s MB"
+msgstr ""
+
+#: media/serializers.py:92
+msgid "The preview must be a small JPEG file"
+msgstr ""
+
+#: media/serializers.py:95
+msgid "There is no room left for this archer's photos and videos"
+msgstr ""
+
+#: media/views.py:32
+msgid "Only the archer or whoever added it can change a photo or video"
+msgstr ""
+
+#: media/views.py:76 notes/views.py:82 training/views.py:112
+msgid "Give the id of the archer"
+msgstr ""
+
 #: notes/serializers.py:54
 msgid "A note cannot be empty"
 msgstr ""
@@ -182,10 +225,6 @@ msgstr ""
 
 #: notes/serializers.py:82
 msgid "Give the session this end belongs to"
-msgstr ""
-
-#: notes/views.py:82 training/views.py:112
-msgid "Give the id of the archer"
 msgstr ""
 
 #: privacy/serializers.py:14

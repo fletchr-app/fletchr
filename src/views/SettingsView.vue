@@ -11,6 +11,7 @@ import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useServer } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useUnits } from '@/composables/useUnits'
+import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
@@ -23,6 +24,7 @@ const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
 const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
+const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
 
 const THEMES: ThemeMode[] = ['system', 'light', 'dark']
 const LANGUAGES: { value: LanguageMode; key: string }[] = [
@@ -68,6 +70,12 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         <IonItem lines="full">
           <IonSelect :value="units" :label="$t('settings.units')" interface="action-sheet" @ion-change="saveUnits($event.detail.value)">
             <IonSelectOption v-for="u in UNITS" :key="u" :value="u">{{ $t(`settings.units${u === 'metric' ? 'Metric' : 'Imperial'}`) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+        <IonItem lines="full">
+          <IonSelect :value="videosWifiOnly ? 'wifi' : 'any'" :label="$t('settings.videoUpload')" interface="action-sheet" @ion-change="setVideosWifiOnly($event.detail.value === 'wifi')">
+            <IonSelectOption value="wifi">{{ $t('settings.videoWifi') }}</IonSelectOption>
+            <IonSelectOption value="any">{{ $t('settings.videoAny') }}</IonSelectOption>
           </IonSelect>
         </IonItem>
         <IonItem router-link="/settings/server" detail lines="full">

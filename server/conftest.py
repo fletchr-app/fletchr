@@ -16,6 +16,11 @@ def fast_password_hashing(settings):
 
 
 @pytest.fixture(autouse=True)
+def media_in_a_temporary_folder(settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path / "media"
+
+
+@pytest.fixture(autouse=True)
 def mail_without_threads(monkeypatch):
     monkeypatch.setattr("core.mail.run_in_background", lambda function, *args: function(*args))
 
