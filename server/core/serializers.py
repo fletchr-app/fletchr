@@ -14,9 +14,11 @@ def check_birth_date(value):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    video_allowed = serializers.BooleanField(read_only=True, help_text="False for an archer under 18 whose parents' consent is not on record")
+
     class Meta:
         model = Profile
-        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units"]
+        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "video_allowed"]
 
     def validate_date_of_birth(self, value):
         return check_birth_date(value)
@@ -162,6 +164,15 @@ class ArcherSerializer(serializers.Serializer):
     dominant_eye = serializers.CharField(allow_blank=True)
     age = serializers.IntegerField(allow_null=True, help_text="Whole years; the date of birth itself is private")
     date_of_birth = serializers.DateField(allow_null=True, help_text="Only for a profile without an account, which the coach keeps")
+    video_allowed = serializers.BooleanField(help_text="False for an archer under 18 whose parents' consent is not on record")
+    video_consent_at = serializers.DateTimeField(allow_null=True, help_text="When a coach recorded the parents' consent for video")
+    video_consent_by = serializers.CharField(allow_null=True, help_text="Who recorded it")
+
+
+class VideoConsentSerializer(serializers.Serializer):
+    video_allowed = serializers.BooleanField()
+    video_consent_at = serializers.DateTimeField(allow_null=True)
+    video_consent_by = serializers.CharField(allow_null=True)
 
 
 class CodePreviewSerializer(serializers.Serializer):

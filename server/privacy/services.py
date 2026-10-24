@@ -5,6 +5,7 @@ from django.db import transaction
 from core import claims
 from core.models import Invite, Role, TeamMember
 from equipment.models import ArrowSet, Bow, Setup
+from media.models import Media
 from notes.models import Note
 from training.models import Shot, TrainingSession
 
@@ -15,6 +16,13 @@ def _delete_training(user) -> dict:
     sessions = TrainingSession.objects.filter(owner=user)
     counts = {"sessions": sessions.count(), "shots": Shot.objects.filter(end__session__owner=user).count()}
     sessions.delete()  # ends, shots and volume entries go with them
+    return counts
+
+
+def _delete_media(user) -> dict:
+    media = Media.objects.filter(owner=user)  # what a coach added for the archer too: it is the archer's
+    counts = {"media": media.count()}
+    media.delete()  # the files go when the commit does
     return counts
 
 
@@ -37,11 +45,11 @@ def _delete_notes_about(user) -> dict:
 @transaction.atomic
 def delete_my_data(user) -> dict:
     """
-    Erase what the user has recorded: sessions, equipment, and the coach notes written about them.
+    Erase what the user has recorded: sessions, photos and videos, equipment, and the coach notes written about them.
     Kept: the account, the profile, the team memberships, and notes the user wrote about others.
     All or nothing.
     """
-    counts = {**_delete_training(user), **_delete_equipment(user), **_delete_notes_about(user)}
+    counts = {**_delete_training(user), **_delete_media(user), **_delete_equipment(user), **_delete_notes_about(user)}
     logger.info("User %s deleted their data: %s", user.pk, counts)
     return counts
 

@@ -79,6 +79,8 @@ class MediaDetailView(APIView):
         serializer = MediaWriteSerializer(existing, data=request.data, context={"owner": owner})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        if existing is None and data.get("kind") == Media.Kind.VIDEO and not owner.profile.video_allowed:
+            raise PermissionDenied(gettext("Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page."))
         if existing is None:
             file, thumbnail = data.pop("file"), data.pop("thumbnail")
             media = Media(id=media_id, owner=owner, uploaded_by=request.user, size=file.size + thumbnail.size, **data)

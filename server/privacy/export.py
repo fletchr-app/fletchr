@@ -9,6 +9,8 @@ from notes.models import Note
 from training.models import TrainingSession
 from training.serializers import SessionSerializer
 
+from .media_zip import file_name, media_of
+
 FORMAT_VERSION = 1
 
 
@@ -35,6 +37,25 @@ def _note(note, **extra):
     }
 
 
+def _media(media):
+    return {
+        "id": str(media.pk),
+        "kind": media.kind,
+        "file": file_name(media),  # the name in the zip of the files
+        "session": media.session_id,
+        "taken_at": media.taken_at,
+        "width": media.width,
+        "height": media.height,
+        "duration_ms": media.duration_ms,
+        "capture_fps": media.capture_fps,
+        "frame_count": media.frame_count,
+        "bytes": media.size,
+        "note": media.note,
+        "added_by": (media.uploaded_by.profile.name or media.uploaded_by.email) if media.uploaded_by else None,
+        "created_at": media.created_at,
+    }
+
+
 def export_user_data(user) -> dict:
     sessions = (
         TrainingSession.objects.filter(owner=user)
@@ -57,6 +78,8 @@ def export_user_data(user) -> dict:
             "dominant_eye": profile.dominant_eye,
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
+            "video_consent_at": profile.video_consent_at,
+            "video_consent_by": (profile.video_consent_by.profile.name or profile.video_consent_by.email) if profile.video_consent_by else None,
         },
         "teams": [
             {"team": m.team.name, "role": m.role, "also_shoots": m.also_shoots, "joined_at": m.joined_at}
@@ -76,6 +99,7 @@ def export_user_data(user) -> dict:
             ],
         },
         "sessions": SessionSerializer(sessions, many=True).data,
+        "media": [_media(m) for m in media_of(user).select_related("uploaded_by__profile")],
         "notes_about_me": [
             _note(n, author=(n.author.profile.name or n.author.email) if n.author else "Former coach") for n in about
         ],

@@ -9,6 +9,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import ManagedArcherActions from '@/components/ManagedArcherActions.vue'
 import NotesSection from '@/components/NotesSection.vue'
+import VideoConsent from '@/components/VideoConsent.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
@@ -52,6 +53,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
       <AppButton secondary :router-link="`/media?owner=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('media.title') }}</AppButton>
+      <VideoConsent v-if="info.data.value && info.data.value.age !== null && info.data.value.age !== undefined && info.data.value.age < 18" :archer="info.data.value" @changed="info.reload" />
       <NotesSection :archer-id="Number(id)" />
       <ErrorText :message="error" />
       <div v-if="loading">{{ $t('common.loading') }}</div>

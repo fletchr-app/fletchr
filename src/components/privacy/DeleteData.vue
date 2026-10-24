@@ -13,6 +13,7 @@ const { t } = useI18n()
 function summary(d: DeletedCounts) {
   return [
     t('privacy.sessions', { n: d.sessions }, d.sessions) + (d.shots > 0 ? ` (${t('privacy.shots', { n: d.shots }, d.shots)})` : ''),
+    t('privacy.media', { n: d.media }, d.media),
     t('privacy.bows', { n: d.bows }, d.bows),
     t('privacy.arrowSets', { n: d.arrow_sets }, d.arrow_sets),
     t('privacy.notesAboutMe', { n: d.notes_about_me }, d.notes_about_me),

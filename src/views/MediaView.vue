@@ -4,6 +4,7 @@ import {
   IonButton,
   IonButtons,
   IonContent,
+  IonFooter,
   IonHeader,
   IonIcon,
   IonModal,
@@ -15,7 +16,7 @@ import {
 import { closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
@@ -27,6 +28,7 @@ import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
 import { prepareImage } from '@/lib/image'
+import { byDay, dayTitle } from '@/lib/media-days'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
 import { canRecordVideo, type Picked, pickMedia, type PickSource } from '@/lib/pick-media'
@@ -41,8 +43,9 @@ type Shown = { key: string; src: string; kind: 'photo' | 'video'; queued?: Queue
 
 // The photos and videos of one session, or of one archer. Everyone can add to their own sessions, and a coach to
 // those of their archers: that shows as ?owner=. What is added waits on the phone until it is uploaded.
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const sessionId = (route.query.session as string | undefined) ?? null
 const ownerParam = route.query.owner ? Number(route.query.owner) : null
 const name = route.query.name as string | undefined
@@ -60,8 +63,19 @@ const { data, error, loading, reload } = useRemote(async () => {
   return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
 })
 
+// Video of an archer under 18 needs the consent of the parents on record. Unknown (offline) counts as allowed: the server decides.
+const consent = useRemote(async () => {
+  if (ownerParam && ownerParam !== me.value) return (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: ownerParam } } })).data?.video_allowed ?? null
+  return (await api.GET('/api/me/')).data?.profile.video_allowed ?? null
+})
+const videoAllowed = computed(() => consent.data.value !== false)
+
 let firstVisit = true
-onIonViewWillEnter(() => (firstVisit ? (firstVisit = false) : reload()))
+onIonViewWillEnter(() => {
+  if (firstVisit) return void (firstVisit = false)
+  reload()
+  consent.reload()
+})
 watch(media.uploaded, reload)
 
 // Previews of what is still on the phone.
@@ -84,6 +98,7 @@ watch(
 
 const preparing = ref<Preparing[]>([])
 onBeforeUnmount(() => {
+  Object.values(full.value).forEach((u) => URL.revokeObjectURL(u))
   Object.values(previews.value).forEach((u) => URL.revokeObjectURL(u))
   preparing.value.forEach((p) => p.src.startsWith('blob:') && URL.revokeObjectURL(p.src))
 })
@@ -93,6 +108,13 @@ const shown = computed<Shown[]>(() => [
   ...queued.value.map((q) => ({ key: q.id, src: previews.value[q.id] ?? '', kind: q.kind, queued: q })),
   ...preparing.value.map((p) => ({ key: p.key, src: p.src, kind: p.kind, preparing: p })),
   ...(data.value ?? []).filter((r) => !queued.value.some((q) => q.id === r.id)).map((r) => ({ key: r.id, src: r.thumbnail_url, kind: r.kind, remote: r })),
+])
+// What is on the phone comes first without a heading, what the server has follows by day.
+const waiting = computed(() => shown.value.filter((i) => !i.remote))
+const days = computed(() => byDay(shown.value.filter((i) => i.remote).map((i) => ({ ...i, taken_at: i.remote!.taken_at }))))
+const sections = computed(() => [
+  ...(waiting.value.length > 0 ? [{ key: 'waiting', title: '', items: waiting.value }] : []),
+  ...days.value.map((d) => ({ key: d.day, title: dayTitle(d.day, locale.value), items: d.items as unknown as Shown[] })),
 ])
 const videoWaits = computed(() => media.items.value.some((i) => i.kind === 'video') && videosWifiOnly.value)
 
@@ -111,11 +133,11 @@ const addError = ref<string | null>(null)
 async function chooseSource() {
   const buttons: { text: string; role?: string; handler?: () => void }[] = [
     { text: t('media.takePhoto'), handler: () => void add('photo') },
-    ...(canRecordVideo() ? [{ text: t('media.recordVideo'), handler: () => void add('video') }] : []),
+    ...(canRecordVideo() && videoAllowed.value ? [{ text: t('media.recordVideo'), handler: () => void add('video') }] : []),
     { text: t('media.fromGallery'), handler: () => void add('gallery') },
     { text: t('common.cancel'), role: 'cancel' },
   ]
-  const sheet = await actionSheetController.create({ header: t('media.pickHeader'), subHeader: canRecordVideo() ? t('media.slowMotionHint') : undefined, buttons })
+  const sheet = await actionSheetController.create({ header: t('media.pickHeader'), buttons })
   await sheet.present()
 }
 
@@ -132,6 +154,10 @@ async function add(source: PickSource) {
     adding.value = false // the next one can be picked while this one is prepared
   }
   if (!picked) return
+  if (picked.kind === 'video' && !videoAllowed.value) {
+    addError.value = t('media.needsConsent')
+    return
+  }
   const key = `preparing-${newId()}`
   try {
     if (picked.kind === 'photo') await addPhoto(key, picked)
@@ -208,31 +234,53 @@ function cancelConversion(tile: Preparing) {
   void VideoConverter.cancel().catch(() => stopPreparing(tile.key))
 }
 
-// The big picture, or the clip.
-const viewing = ref<Shown | null>(null)
-const bigSrc = ref('')
+// The photos full screen: swipe to the next. A clip opens in the player instead.
+const photos = computed(() => shown.value.filter((i) => i.kind === 'photo' && !(i.preparing && !i.preparing.error)))
+const viewKey = ref<string | null>(null)
+const viewing = computed(() => photos.value.find((p) => p.key === viewKey.value) ?? null)
+const strip = ref<HTMLElement | null>(null)
+const full = ref<Record<string, string>>({}) // the photos that wait on the phone, in full size
 const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
-let bigUrl: string | null = null
-async function open(item: Shown) {
-  if (item.preparing && !item.preparing.error) return // still working
-  viewing.value = item
-  confirmDelete.value = false
-  deleteError.value = null
-  bigSrc.value = item.remote?.file_url ?? item.src
-  if (item.queued && item.kind === 'photo') {
-    try {
-      bigUrl = URL.createObjectURL((await loadFiles(item.queued.id, 'image/jpeg')).file)
-      bigSrc.value = bigUrl
-    } catch {
-      /* the preview stays */
-    }
+
+async function loadFull(item: Shown) {
+  if (!item.queued || full.value[item.key]) return
+  try {
+    full.value = { ...full.value, [item.key]: URL.createObjectURL((await loadFiles(item.queued.id, 'image/jpeg')).file) }
+  } catch {
+    /* the preview stays */
   }
 }
+function open(item: Shown) {
+  if (item.preparing && !item.preparing.error) return // still working
+  if (item.remote?.kind === 'video') {
+    // The player page knows which clips are next to this one by the same query as this page.
+    const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
+    return void router.push({ path: `/media/${item.remote.id}`, query })
+  }
+  viewKey.value = item.key
+  confirmDelete.value = false
+  deleteError.value = null
+  void loadFull(item)
+}
+/** Once the modal is there, the strip starts at the photo that was tapped. */
+function placeStrip() {
+  const at = photos.value.findIndex((p) => p.key === viewKey.value)
+  strip.value?.scrollTo({ left: Math.max(0, at) * strip.value.clientWidth })
+}
+function swiped() {
+  const el = strip.value
+  const item = el && photos.value[Math.round(el.scrollLeft / el.clientWidth)]
+  if (!item || item.key === viewKey.value) return
+  viewKey.value = item.key
+  confirmDelete.value = false
+  deleteError.value = null
+  void loadFull(item)
+}
 function close() {
-  viewing.value = null
-  if (bigUrl) URL.revokeObjectURL(bigUrl)
-  bigUrl = null
+  viewKey.value = null
+  Object.values(full.value).forEach((u) => URL.revokeObjectURL(u))
+  full.value = {}
 }
 const canDelete = computed(() => !!viewing.value && (!!viewing.value.queued || !!viewing.value.preparing || viewing.value.remote?.can_edit === true))
 async function remove() {
@@ -260,49 +308,57 @@ const taken = (item: Shown | null) => {
   <AppPage :title="title">
     <div class="screen">
       <AppButton :busy="adding" @click="chooseSource">{{ $t('media.add') }}</AppButton>
+      <div v-if="!videoAllowed" class="muted">{{ $t('media.needsConsent') }}</div>
+      <div v-else-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
       <ErrorText :message="addError" />
       <SyncBanner />
       <div v-if="videoWaits && media.waitingForWifi() > 0" class="muted">{{ $t('media.videosWaitForWifi') }}</div>
       <ErrorText :message="error" />
       <div v-if="loading && shown.length === 0">{{ $t('common.loading') }}</div>
       <div v-else-if="shown.length === 0 && !error">{{ $t('media.empty') }}</div>
-      <div class="grid">
-        <button v-for="item in shown" :key="item.key" type="button" class="cell" @click="open(item)">
-          <img v-if="item.src" :src="item.src" alt="" />
-          <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
-          <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
-          <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
-          <span v-if="item.preparing && !item.preparing.error" class="veil" :title="$t('media.preparing')">
-            <IonSpinner name="crescent" />
-            <span v-if="item.preparing.percent !== undefined" class="percent">{{ item.preparing.percent }} %</span>
-          </span>
-          <IonIcon
-            v-if="item.preparing && item.kind === 'video' && !item.preparing.error"
-            :icon="closeCircle"
-            class="cancel"
-            :title="$t('media.cancelConversion')"
-            @click.stop="cancelConversion(item.preparing)"
-          />
-        </button>
-      </div>
+      <template v-for="section in sections" :key="section.key">
+        <h3 v-if="section.title" class="day">{{ section.title }}</h3>
+        <div class="grid">
+        <button v-for="item in section.items" :key="item.key" type="button" class="cell" @click="open(item)">
+            <img v-if="item.src" :src="item.src" alt="" />
+            <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
+            <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
+            <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
+            <span v-if="item.preparing && !item.preparing.error" class="veil" :title="$t('media.preparing')">
+              <IonSpinner name="crescent" />
+              <span v-if="item.preparing.percent !== undefined" class="percent">{{ item.preparing.percent }} %</span>
+            </span>
+            <IonIcon
+              v-if="item.preparing && item.kind === 'video' && !item.preparing.error"
+              :icon="closeCircle"
+              class="cancel"
+              :title="$t('media.cancelConversion')"
+              @click.stop="cancelConversion(item.preparing)"
+            />
+          </button>
+        </div>
+      </template>
     </div>
-    <IonModal :is-open="viewing !== null" @did-dismiss="close">
+    <IonModal :is-open="viewing !== null" class="viewer" @did-present="placeStrip" @did-dismiss="close">
       <IonHeader>
         <IonToolbar>
           <IonTitle>{{ taken(viewing) }}</IonTitle>
           <IonButtons slot="end"><IonButton @click="close">{{ $t('media.close') }}</IonButton></IonButtons>
         </IonToolbar>
       </IonHeader>
-      <IonContent>
+      <IonContent :scroll-y="false">
+        <div ref="strip" class="strip" @scroll.passive="swiped">
+          <img v-for="p in photos" :key="p.key" :src="full[p.key] ?? p.remote?.file_url ?? p.src" alt="" class="slide" loading="lazy" />
+        </div>
+      </IonContent>
+      <IonFooter v-if="viewing">
         <div class="screen">
-          <video v-if="viewing?.remote?.kind === 'video'" :src="bigSrc" :poster="viewing.src" class="big" controls playsinline></video>
-          <img v-else :src="bigSrc" alt="" class="big" />
-          <div v-if="viewing?.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.owner_name }) }}</div>
-          <div v-if="viewing?.queued?.error || viewing?.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
+          <div v-if="viewing.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.owner_name }) }}</div>
+          <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
           <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? $t('media.deleteConfirm') : $t('media.delete') }}</AppButton>
         </div>
-      </IonContent>
+      </IonFooter>
     </IonModal>
   </AppPage>
 </template>
@@ -317,7 +373,7 @@ const taken = (item: Shown | null) => {
   position: relative;
   padding: 0;
   border: 0;
-  background: var(--ion-color-step-100, #eee);
+  background: color-mix(in srgb, var(--ion-text-color, #000) 10%, transparent);
   aspect-ratio: 1;
   overflow: hidden;
 }
@@ -367,9 +423,39 @@ const taken = (item: Shown | null) => {
   color: #fff;
   filter: drop-shadow(0 0 3px rgb(0 0 0 / 70%));
 }
-.big {
+.day {
+  margin: 12px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.viewer {
+  --background: #000;
+}
+.viewer ion-toolbar {
+  --background: #000;
+  --color: #fff;
+}
+.viewer ion-content {
+  --background: #000;
+}
+.viewer ion-footer .screen {
+  --ion-color-primary: #fff;
+  background: #000;
+  color: #fff;
+}
+.strip {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.slide {
+  flex: 0 0 100%;
   width: 100%;
-  max-height: 70vh;
+  height: 100%;
   object-fit: contain;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 </style>

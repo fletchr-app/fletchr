@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Browser } from '@capacitor/browser'
+import { Capacitor } from '@capacitor/core'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -15,6 +17,8 @@ const password = ref('')
 const busy = ref(false)
 const error = ref<string | null>(null)
 const done = ref(false)
+const mediaBusy = ref(false)
+const mediaNote = ref<string | null>(null)
 
 async function download() {
   busy.value = true
@@ -33,6 +37,27 @@ async function download() {
   }
   busy.value = false
 }
+
+// The files can be many megabytes, so the browser of the phone fetches the zip from a link that works for ten minutes.
+async function downloadMedia() {
+  mediaBusy.value = true
+  error.value = null
+  mediaNote.value = null
+  try {
+    const { data, error: failure } = await api.POST('/api/me/export/media/', { body: { password: password.value } })
+    if (!data) error.value = errorMessage(failure)
+    else if (data.files === 0) mediaNote.value = t('privacy.noMedia')
+    else {
+      if (Capacitor.isNativePlatform()) await Browser.open({ url: data.url })
+      else window.location.assign(data.url)
+      password.value = ''
+      mediaNote.value = t('privacy.mediaStarted', { n: data.files, mb: Math.max(1, Math.round(data.bytes / 1024 / 1024)) })
+    }
+  } catch {
+    error.value = t('privacy.exportFailed')
+  }
+  mediaBusy.value = false
+}
 </script>
 
 <template>
@@ -43,5 +68,8 @@ async function download() {
     <ErrorText :message="error" />
     <div v-if="done" class="fw-semibold">{{ $t('privacy.exported') }}</div>
     <AppButton :busy="busy" @click="download">{{ $t('privacy.exportButton') }}</AppButton>
+    <p class="m-0">{{ $t('privacy.exportMediaText') }}</p>
+    <div v-if="mediaNote" class="fw-semibold">{{ mediaNote }}</div>
+    <AppButton :busy="mediaBusy" secondary @click="downloadMedia">{{ $t('privacy.exportMediaButton') }}</AppButton>
   </div>
 </template>

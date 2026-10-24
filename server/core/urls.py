@@ -9,6 +9,7 @@ urlpatterns = [
     path("codes/preview/", views.CodePreviewView.as_view()),
     path("claims/redeem/", views.RedeemClaimView.as_view()),
     path("archers/<int:user_id>/", views.ArcherView.as_view()),
+    path("archers/<int:user_id>/video-consent/", views.VideoConsentView.as_view()),
     path("password-reset/", views.PasswordResetRequestView.as_view()),
     path("password-reset/confirm/", views.PasswordResetConfirmView.as_view()),
     path("me/", views.MeView.as_view()),

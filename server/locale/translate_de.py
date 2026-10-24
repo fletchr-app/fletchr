@@ -70,6 +70,7 @@ DE = {
     "The preview must be a small JPEG file": "Die Vorschau muss eine kleine JPEG-Datei sein",
     "There is no room left for this archer's photos and videos": "Für die Fotos und Videos dieses Schützen ist kein Platz mehr",
     "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
+    "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page.": "Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen.",
 }
 
 PATH = "locale/de/LC_MESSAGES/django.po"

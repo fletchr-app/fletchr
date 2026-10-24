@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.3.0
+  version: 0.4.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -24,6 +24,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/Archer'
           description: ''
+  /api/archers/{user_id}/video-consent/:
+    put:
+      operationId: archers_video_consent_update
+      description: A coach records that the parents of an archer under 18 consented
+        to video, or withdraws that. Without it no video of the archer is added.
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - archers
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoConsent'
+          description: ''
+    delete:
+      operationId: archers_video_consent_destroy
+      description: 'Withdrawn: new video is refused again. Clips that exist stay until
+        someone deletes them.'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - archers
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/arrow-sets/:
     get:
       operationId: arrow_sets_list
@@ -656,6 +695,58 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+          description: ''
+  /api/me/export/media/:
+    post:
+      operationId: me_export_media_create
+      description: A link to a zip of my photos and videos. Needs my password. The
+        files are big, so the zip is fetched by the link, not in this answer.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaExportLink'
+          description: ''
+  /api/me/export/media/file/:
+    get:
+      operationId: me_export_media_file_retrieve
+      description: The zip. The link carries a token because a browser opens it, without
+        the sign-in header.
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From the link
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/me/password/:
     post:
@@ -2132,6 +2223,19 @@ components:
           format: date
           nullable: true
           description: Only for a profile without an account, which the coach keeps
+        video_allowed:
+          type: boolean
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        video_consent_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When a coach recorded the parents' consent for video
+        video_consent_by:
+          type: string
+          nullable: true
+          description: Who recorded it
       required:
       - age
       - date_of_birth
@@ -2142,6 +2246,9 @@ components:
       - name
       - team_id
       - team_name
+      - video_allowed
+      - video_consent_at
+      - video_consent_by
     ArcherNameRequest:
       type: object
       properties:
@@ -2800,6 +2907,9 @@ components:
           type: integer
         shots:
           type: integer
+        media:
+          type: integer
+          description: Photos and videos
         bows:
           type: integer
         arrow_sets:
@@ -2809,6 +2919,7 @@ components:
       required:
       - arrow_sets
       - bows
+      - media
       - notes_about_me
       - sessions
       - shots
@@ -3142,6 +3253,21 @@ components:
       - taken_at
       - thumbnail_url
       - width
+    MediaExportLink:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Opens the zip of my photos and videos. Valid for ten minutes,
+            no sign-in header needed
+        files:
+          type: integer
+        bytes:
+          type: integer
+      required:
+      - bytes
+      - files
+      - url
     MediaKindEnum:
       enum:
       - photo
@@ -3550,6 +3676,13 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+        video_allowed:
+          type: boolean
+          readOnly: true
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+      required:
+      - video_allowed
     ProfileRequest:
       type: object
       properties:
@@ -4193,6 +4326,22 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    VideoConsent:
+      type: object
+      properties:
+        video_allowed:
+          type: boolean
+        video_consent_at:
+          type: string
+          format: date-time
+          nullable: true
+        video_consent_by:
+          type: string
+          nullable: true
+      required:
+      - video_allowed
+      - video_consent_at
+      - video_consent_by
     VisibilityEnum:
       enum:
       - private

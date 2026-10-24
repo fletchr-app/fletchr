@@ -37,6 +37,7 @@ yarn-error.*
 .env*.local
 deploy/.env
 deploy/.env.prod
+deploy/.env.backup
 
 # self-hosted data (database, uploads, certificates)
 deploy/data/

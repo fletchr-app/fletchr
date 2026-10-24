@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.utils.translation import gettext
 from django.db import transaction
@@ -22,6 +24,7 @@ from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User
 from .serializers import (
     ArcherNameSerializer,
     ManagedArcherSerializer,
+    VideoConsentSerializer,
     ArcherSerializer,
     ClaimCodeSerializer,
     CodePreviewSerializer,
@@ -41,6 +44,8 @@ from .serializers import (
     RegisterSerializer,
     TeamSerializer,
 )
+
+logger = logging.getLogger("core")
 
 
 @extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField()}))
@@ -432,6 +437,15 @@ class ClaimCodeView(APIView):
         return Response(ClaimCodeSerializer(claim).data, status=status.HTTP_201_CREATED)
 
 
+def consent_data(profile) -> dict:
+    by = profile.video_consent_by
+    return {
+        "video_allowed": profile.video_allowed,
+        "video_consent_at": profile.video_consent_at,
+        "video_consent_by": (by.profile.name or by.email) if by else None,
+    }
+
+
 class ArcherView(APIView):
     @extend_schema(responses=ArcherSerializer)
     def get(self, request, user_id):
@@ -451,8 +465,36 @@ class ArcherView(APIView):
                 "age": archer.profile.age,
                 # Coaches see the age; the date itself only where they keep the profile themselves.
                 "date_of_birth": archer.profile.date_of_birth if archer.is_managed else None,
+                **consent_data(archer.profile),
             }
         )
+
+
+class VideoConsentView(APIView):
+    """A coach records that the parents of an archer under 18 consented to video, or withdraws that. Without it no video of the archer is added."""
+
+    def _archer(self, request, user_id):
+        archer = get_object_or_404(access.archers_visible_to(request.user).exclude(pk=request.user.pk).select_related("profile"), pk=user_id)
+        return archer
+
+    @extend_schema(request=None, responses=VideoConsentSerializer)
+    def put(self, request, user_id):
+        archer = self._archer(request, user_id)
+        archer.profile.video_consent_at = timezone.now()
+        archer.profile.video_consent_by = request.user
+        archer.profile.save(update_fields=["video_consent_at", "video_consent_by"])
+        logger.info("User %s recorded video consent for %s", request.user.pk, archer.pk)
+        return Response(consent_data(archer.profile))
+
+    @extend_schema(responses=VideoConsentSerializer)
+    def delete(self, request, user_id):
+        """Withdrawn: new video is refused again. Clips that exist stay until someone deletes them."""
+        archer = self._archer(request, user_id)
+        archer.profile.video_consent_at = None
+        archer.profile.video_consent_by = None
+        archer.profile.save(update_fields=["video_consent_at", "video_consent_by"])
+        logger.info("User %s withdrew video consent for %s", request.user.pk, archer.pk)
+        return Response(consent_data(archer.profile))
 
 
 class MyMembershipView(APIView):
