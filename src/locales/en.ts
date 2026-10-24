@@ -110,6 +110,10 @@ export default {
     deleteForm: 'Delete form',
     deleteFormConfirm: 'Tap again to delete the form',
   },
+  version: {
+    appTooOld: 'This app is too old for the server. Please update the app: things may not work, or may not be saved correctly.',
+    serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a video frame or a drawing may be saved without it. Ask whoever runs the server to update it.',
+  },
   media: {
     draw: 'Draw on this frame',
     undo: 'Undo',

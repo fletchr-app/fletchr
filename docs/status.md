@@ -19,6 +19,7 @@ Order of work: **features first, the Google Play release last** (milestone 6). T
 | Notes | built: coach notes on an archer, a session or an end, visibility private / coach-only / shared, "only me" notes stay out of the archer's export |
 | Home, Team, Settings | built: Home (this week's arrows, last session, your teams, the latest coach notes about you), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
 | Languages | built: English and German in the app, the server's messages and the mails |
+| App and server versions | `/api/health/` returns `version` and `min_app_version`; the app shows a banner on Home when it is below the minimum or the server is a minor version behind (`src/lib/version.ts`, `VersionBanner.vue`) |
 | Server and website | live: `app.fletchr.de` (Docker behind a web server, own SMTP for mail), `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
 
 Not in the app although the plan lists it:

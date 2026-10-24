@@ -216,6 +216,10 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# The oldest app that still works with this server. `/api/health/` tells the app, which then asks the person to update.
+# Raise it only when a change breaks old apps (docs/releasing.md); a server that keeps serving them needs no raise.
+MIN_APP_VERSION = "0.1.0"
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
     "VERSION": "0.5.0",

@@ -8,6 +8,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import LatestNotes from '@/components/LatestNotes.vue'
 import SessionListItem from '@/components/SessionListItem.vue'
+import VersionBanner from '@/components/VersionBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
@@ -51,6 +52,7 @@ onIonViewWillEnter(() => {
   <AppPage title="Fletchr" :back="false">
     <div class="screen">
       <h2 class="h4 m-0">{{ me ? $t('home.hello', { name: me.profile.name || me.email }) : 'Fletchr' }}</h2>
+      <VersionBanner />
       <ErrorText :message="error" />
       <template v-if="sessionsKnown">
         <div v-if="rows.length === 0" class="d-flex flex-column gap-2">

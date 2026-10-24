@@ -1,4 +1,7 @@
-import { computed, ref, watchEffect } from 'vue';
+import { App } from '@capacitor/app';
+import { computed, effectScope, ref, watch, watchEffect } from 'vue';
+
+import { compatibility } from '@/lib/version';
 
 // Default server address comes from VITE_SERVER_URL (.env), so one build can point at a local server
 // or the VPS. Users can override it in Settings; the override is stored on the device.
@@ -38,22 +41,35 @@ export function useServer() {
 
 export type HealthState = 'checking' | 'ok' | 'unreachable';
 
+// What the server says about itself: its version and the oldest app that works with it. Asked once per address and
+// again when the app comes back to the front (the server may have been updated meanwhile). An unreachable server says nothing.
+type ServerInfo = { version: string | null; minApp: string | null };
+const info = ref<ServerInfo | null>(null);
+let asked: AbortController | null = null;
+
+function askServer() {
+  asked?.abort();
+  const controller = (asked = new AbortController());
+  fetch(`${url.value}/api/health/`, { signal: controller.signal })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((body: { version?: string; min_app_version?: string } | null) => {
+      if (!controller.signal.aborted) info.value = body ? { version: body.version ?? null, minApp: body.min_app_version ?? null } : null;
+    })
+    .catch(() => {});
+}
+effectScope(true).run(() => {
+  watch(url, () => ((info.value = null), askServer()), { immediate: true });
+  void App.addListener('appStateChange', ({ isActive }) => isActive && askServer());
+});
+
 /** The version the server reports (null while unknown or when it cannot be reached). */
 export function useServerVersion() {
-  const version = ref<string | null>(null);
-  watchEffect((onCleanup) => {
-    const address = url.value;
-    const controller = new AbortController();
-    version.value = null;
-    fetch(`${address}/api/health/`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((body: { version?: string } | null) => {
-        if (!controller.signal.aborted) version.value = body?.version ?? null;
-      })
-      .catch(() => {});
-    onCleanup(() => controller.abort());
-  });
-  return version;
+  return computed(() => info.value?.version ?? null);
+}
+
+/** Whether this app fits the server: 'ok', 'appTooOld' or 'serverOlder' (see lib/version.ts). */
+export function useCompatibility() {
+  return computed(() => compatibility(__APP_VERSION__, info.value?.version, info.value?.minApp));
 }
 
 export function useServerHealth() {

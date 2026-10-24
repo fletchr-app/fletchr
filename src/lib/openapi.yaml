@@ -3534,7 +3534,10 @@ components:
           type: string
         version:
           type: string
+        min_app_version:
+          type: string
       required:
+      - min_app_version
       - status
       - version
     Invite:

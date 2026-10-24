@@ -14,7 +14,9 @@ One number for the whole project, `MAJOR.MINOR.PATCH`, starting at `0.1.0` (not 
 | `server/pyproject.toml` | the server |
 | `server/config/settings.py`, `SPECTACULAR_SETTINGS["VERSION"]` | the API schema |
 
-Android's `versionCode` is calculated from it (`MAJOR*10000 + MINOR*100 + PATCH`), so it grows with every release; Google Play rejects an upload whose `versionCode` is not higher than the last one. Counting: `0.x` while things can still change, `1.0.0` when the Play Store release is public; then PATCH for fixes, MINOR for features, MAJOR for changes that break old app versions (the server must keep serving them).
+Android's `versionCode` is calculated from it (`MAJOR*10000 + MINOR*100 + PATCH`), so it grows with every release; Google Play rejects an upload whose `versionCode` is not higher than the last one. **App and server versions.** `/api/health/` returns the server's `version` and `min_app_version` (`MIN_APP_VERSION` in `server/config/settings.py`). The app asks at start and whenever it comes to the front: below the minimum it asks the person to update the app, and when the server is a minor version or more behind the app it says so (a note on a frame would otherwise lose its frame without a word). Raise `MIN_APP_VERSION` only for a change that breaks old apps; additive changes need no raise. The app sends no version header on purpose: a custom header needs a CORS allowance, and an old server without it would refuse every request.
+
+Counting: `0.x` while things can still change, `1.0.0` when the Play Store release is public; then PATCH for fixes, MINOR for features, MAJOR for changes that break old app versions (the server must keep serving them).
 
 ## Making a release
 

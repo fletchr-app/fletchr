@@ -114,6 +114,10 @@ export default {
     deleteForm: 'Formular löschen',
     deleteFormConfirm: 'Zum Löschen des Formulars nochmal tippen',
   },
+  version: {
+    appTooOld: 'Diese App ist zu alt für den Server. Bitte aktualisiere die App: Manches funktioniert vielleicht nicht oder wird nicht richtig gespeichert.',
+    serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
+  },
   media: {
     draw: 'Auf diesem Bild zeichnen',
     undo: 'Rückgängig',

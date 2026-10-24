@@ -1494,6 +1494,7 @@ export interface components {
         Health: {
             status: string;
             version: string;
+            min_app_version: string;
         };
         Invite: {
             readonly id: number;
