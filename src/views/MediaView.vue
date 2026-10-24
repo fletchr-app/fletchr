@@ -115,7 +115,7 @@ async function chooseSource() {
     { text: t('media.fromGallery'), handler: () => void add('gallery') },
     { text: t('common.cancel'), role: 'cancel' },
   ]
-  const sheet = await actionSheetController.create({ header: t('media.pickHeader'), subHeader: canRecordVideo() ? t('media.slowMotionHint') : undefined, buttons })
+  const sheet = await actionSheetController.create({ header: t('media.pickHeader'), buttons })
   await sheet.present()
 }
 
@@ -260,6 +260,7 @@ const taken = (item: Shown | null) => {
   <AppPage :title="title">
     <div class="screen">
       <AppButton :busy="adding" @click="chooseSource">{{ $t('media.add') }}</AppButton>
+      <div v-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
       <ErrorText :message="addError" />
       <SyncBanner />
       <div v-if="videoWaits && media.waitingForWifi() > 0" class="muted">{{ $t('media.videosWaitForWifi') }}</div>
