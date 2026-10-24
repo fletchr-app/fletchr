@@ -34,6 +34,7 @@ const kindLabel = (kind?: string) => (kind === 'self' ? t('evaluations.selfKind'
     <div class="screen">
       <AppButton v-if="canCoach" :router-link="link('coach')">{{ $t('evaluations.new') }}</AppButton>
       <AppButton :secondary="canCoach" v-if="mine" :router-link="link('self')">{{ $t('evaluations.newSelf') }}</AppButton>
+      <AppButton v-if="list.data.value?.length" secondary :router-link="`/archers/${archerId}/progress?name=${encodeURIComponent(name ?? '')}`">{{ $t('progress.link') }}</AppButton>
       <ErrorText :message="list.error.value" />
       <div v-if="list.loading.value && !list.data.value">{{ $t('common.loading') }}</div>
       <div v-else-if="list.data.value?.length === 0">{{ $t('evaluations.empty') }}</div>

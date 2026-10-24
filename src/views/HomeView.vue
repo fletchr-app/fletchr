@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import LatestGoals from '@/components/LatestGoals.vue'
 import LatestNotes from '@/components/LatestNotes.vue'
 import SessionListItem from '@/components/SessionListItem.vue'
 import VersionBanner from '@/components/VersionBanner.vue'
@@ -71,6 +72,7 @@ onIonViewWillEnter(() => {
           </IonList>
         </template>
       </template>
+      <LatestGoals v-if="me" :user-id="me.id" :refresh="shown" />
       <LatestNotes v-if="me" :user-id="me.id" :refresh="shown" />
       <IonList inset>
         <IonItem router-link="/media" detail lines="full">

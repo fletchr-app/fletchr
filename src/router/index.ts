@@ -38,6 +38,7 @@ const router = createRouter({
     { path: '/evaluate', component: () => import('@/views/EvaluationEditView.vue'), meta: { title: 'Evaluation', auth: 'in' } },
     { path: '/evaluations/:id', component: () => import('@/views/EvaluationView.vue'), meta: { title: 'Evaluation', auth: 'in' } },
     { path: '/archers/:id/evaluations', component: () => import('@/views/EvaluationListView.vue'), meta: { title: 'Evaluations', auth: 'in' } },
+    { path: '/archers/:id/progress', component: () => import('@/views/ProgressView.vue'), meta: { title: 'Progress', auth: 'in' } },
     { path: '/archers/:id/details', component: () => import('@/views/ArcherDetailsView.vue'), meta: { title: 'Archer details', auth: 'in' } },
     { path: '/archers/:id', component: () => import('@/views/ArcherSessionsView.vue'), meta: { title: 'Archer', auth: 'in' } },
     { path: '/equipment', component: () => import('@/views/EquipmentListView.vue'), meta: { title: 'Equipment', auth: 'in' } },
