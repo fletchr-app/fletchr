@@ -32,6 +32,7 @@ def _note(note, **extra):
         "media": str(note.media_id) if note.media_id else None,
         "frame": note.frame,
         "time_ms": note.time_ms,
+        "drawing": note.drawing,
         "body": note.body,
         "visibility": note.visibility,
         "created_at": note.created_at,

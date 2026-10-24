@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 15:40+0200\n"
+"POT-Creation-Date: 2026-10-24 15:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -152,38 +152,38 @@ msgstr ""
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr ""
 
-#: media/serializers.py:65
+#: media/serializers.py:70
 msgid "This session belongs to another archer"
 msgstr ""
 
-#: media/serializers.py:77
+#: media/serializers.py:82
 msgid "A video must be an MP4 file"
 msgstr ""
 
-#: media/serializers.py:79
+#: media/serializers.py:84
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:83
+#: media/serializers.py:88
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr ""
 
-#: media/serializers.py:86
+#: media/serializers.py:91
 msgid "A photo must be a JPEG file"
 msgstr ""
 
-#: media/serializers.py:88
+#: media/serializers.py:93
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:92
+#: media/serializers.py:97
 msgid "The preview must be a small JPEG file"
 msgstr ""
 
-#: media/serializers.py:95
+#: media/serializers.py:100
 msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
@@ -201,55 +201,69 @@ msgid ""
 "coach can record it on the archer's page."
 msgstr ""
 
-#: notes/serializers.py:58
+#: notes/drawing.py:18 notes/drawing.py:25 notes/drawing.py:28
+#: notes/drawing.py:33 notes/drawing.py:38
+msgid "This is not a drawing"
+msgstr ""
+
+#: notes/drawing.py:21
+#, python-format
+msgid "A drawing can have %(n)s shapes at most"
+msgstr ""
+
+#: notes/serializers.py:60
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:65
+#: notes/serializers.py:73
+msgid "A drawing belongs to a frame of a clip"
+msgstr ""
+
+#: notes/serializers.py:77
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:70
+#: notes/serializers.py:82
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:76
+#: notes/serializers.py:88
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:80
+#: notes/serializers.py:92
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:82
+#: notes/serializers.py:94
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:84
+#: notes/serializers.py:96
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:86
+#: notes/serializers.py:98
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:90
+#: notes/serializers.py:102
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
-#: notes/serializers.py:92
+#: notes/serializers.py:104
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:94
+#: notes/serializers.py:106
 msgid "The clip has no such frame"
 msgstr ""
 
-#: notes/serializers.py:98
+#: notes/serializers.py:110
 msgid "This clip is from another session"
 msgstr ""
 
-#: notes/serializers.py:100
+#: notes/serializers.py:112
 msgid "Give the clip the frame is in"
 msgstr ""
 

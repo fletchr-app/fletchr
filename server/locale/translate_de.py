@@ -74,6 +74,9 @@ DE = {
     "The clip has no such frame": "Das Video hat dieses Bild nicht",
     "This clip is from another session": "Dieses Video ist aus einem anderen Training",
     "Give the clip the frame is in": "Gib das Video an, zu dem das Bild gehört",
+    "This is not a drawing": "Das ist keine Zeichnung",
+    "A drawing can have %(n)s shapes at most": "Eine Zeichnung kann höchstens %(n)s Formen haben",
+    "A drawing belongs to a frame of a clip": "Eine Zeichnung gehört zu einem Bild eines Videos",
     "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
     "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page.": "Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen.",
 }

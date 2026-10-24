@@ -24,6 +24,9 @@ class Note(models.Model):
     media = models.ForeignKey("media.Media", null=True, blank=True, on_delete=models.SET_NULL, related_name="coach_notes")
     frame = models.PositiveIntegerField(null=True, blank=True)
     time_ms = models.PositiveIntegerField(null=True, blank=True)
+    # What the coach drew on that frame: {"v": 1, "shapes": [{"t": "line" | "angle" | "circle", "p": [[x, y], ...], "c": "#rrggbb"}]},
+    # the points as fractions (0 to 1) of the picture, so the drawing fits any screen. See notes/drawing.py.
+    drawing = models.JSONField(null=True, blank=True)
     body = models.TextField()
     visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.COACH_ONLY)
     created_at = models.DateTimeField(auto_now_add=True)

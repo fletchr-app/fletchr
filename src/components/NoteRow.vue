@@ -23,7 +23,7 @@ const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
 ])
 
 const props = defineProps<{ note: Note; ends: { id: string; index: number }[] }>()
-const emit = defineEmits<{ changed: []; jump: [frame: number] }>()
+const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [note: Note] }>()
 
 const { api } = useAuth()
 const editing = ref(false)
@@ -72,6 +72,9 @@ const remove = () =>
     <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
     <IonButton v-if="note.frame !== null && note.frame !== undefined && !editing" fill="outline" size="small" class="m-0 align-self-start" @click="emit('jump', note.frame)">
       {{ $t('notes.frameLink', { n: note.frame + 1, time: clock((note.time_ms ?? 0) / 1000) }) }}
+    </IonButton>
+    <IonButton v-if="note.can_edit && note.frame !== null && note.frame !== undefined && !editing" fill="clear" size="small" class="m-0 align-self-start" @click="emit('editDrawing', note)">
+      {{ note.drawing ? $t('notes.editDrawing') : $t('notes.addDrawing') }}
     </IonButton>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
     <ErrorText :message="error" />

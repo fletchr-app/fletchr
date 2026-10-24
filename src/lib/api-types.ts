@@ -1482,6 +1482,8 @@ export interface components {
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
+            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["VisibilityEnum"];
             readonly can_edit: boolean;
@@ -1508,6 +1510,8 @@ export interface components {
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
+            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["VisibilityEnum"];
         };
@@ -1615,6 +1619,8 @@ export interface components {
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
+            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            drawing?: unknown;
             body?: string;
             visibility?: components["schemas"]["VisibilityEnum"];
         };

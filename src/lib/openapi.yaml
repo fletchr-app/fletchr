@@ -3413,6 +3413,10 @@ components:
           minimum: 0
           nullable: true
           description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
         visibility:
@@ -3473,6 +3477,10 @@ components:
           minimum: 0
           nullable: true
           description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
           minLength: 1
@@ -3694,6 +3702,10 @@ components:
           minimum: 0
           nullable: true
           description: Where that frame is in the clip
+        drawing:
+          nullable: true
+          description: Lines, angles and circles on the frame; see notes/drawing.py
+            for the format
         body:
           type: string
           minLength: 1
