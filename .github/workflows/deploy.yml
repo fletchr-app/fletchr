@@ -1,0 +1,46 @@
+name: Deploy
+
+# A release tag (vX.Y.Z on main, docs/releasing.md) updates the server: the checks first, then one SSH command.
+# The key can only run deploy/update.sh on the server (docs/deploy.md, step 9), which backs up, updates, checks
+# that the new version answers, and puts the old one back if it does not. Nothing else deploys: not develop, not main.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+# Two releases at once would update the server twice at the same time.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: checks
+    runs-on: ubuntu-latest
+    # Secrets live in the environment "production" (Settings, Environments), where a required reviewer can be set.
+    environment: production
+    steps:
+      - name: SSH key and the pinned host key
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          (umask 077; printf '%s\n' "$KEY" > ~/.ssh/deploy_key)
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Update the server to ${{ github.ref_name }}
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          TAG: ${{ github.ref_name }}
+        # The host key must match the pinned one; the tag is the whole command (the server accepts nothing but vX.Y.Z).
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -p "${PORT:-22}" "$DEPLOY_USER@$HOST" "$TAG"
