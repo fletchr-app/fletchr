@@ -657,6 +657,58 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/me/export/media/:
+    post:
+      operationId: me_export_media_create
+      description: A link to a zip of my photos and videos. Needs my password. The
+        files are big, so the zip is fetched by the link, not in this answer.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaExportLink'
+          description: ''
+  /api/me/export/media/file/:
+    get:
+      operationId: me_export_media_file_retrieve
+      description: The zip. The link carries a token because a browser opens it, without
+        the sign-in header.
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From the link
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/me/password/:
     post:
       operationId: me_password_create
@@ -2800,6 +2852,9 @@ components:
           type: integer
         shots:
           type: integer
+        media:
+          type: integer
+          description: Photos and videos
         bows:
           type: integer
         arrow_sets:
@@ -2809,6 +2864,7 @@ components:
       required:
       - arrow_sets
       - bows
+      - media
       - notes_about_me
       - sessions
       - shots
@@ -3142,6 +3198,21 @@ components:
       - taken_at
       - thumbnail_url
       - width
+    MediaExportLink:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Opens the zip of my photos and videos. Valid for ten minutes,
+            no sign-in header needed
+        files:
+          type: integer
+        bytes:
+          type: integer
+      required:
+      - bytes
+      - files
+      - url
     MediaKindEnum:
       enum:
       - photo

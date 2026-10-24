@@ -31,6 +31,7 @@ class DeleteAccountRequestSerializer(ConfirmedRequestSerializer):
 class DeletedCountsSerializer(serializers.Serializer):
     sessions = serializers.IntegerField()
     shots = serializers.IntegerField()
+    media = serializers.IntegerField(help_text="Photos and videos")
     bows = serializers.IntegerField()
     arrow_sets = serializers.IntegerField()
     notes_about_me = serializers.IntegerField()
@@ -63,3 +64,9 @@ class ExportRequestSerializer(serializers.Serializer):
         if not self.context["request"].user.check_password(value):
             raise serializers.ValidationError(gettext("Wrong password"))
         return value
+
+
+class MediaExportLinkSerializer(serializers.Serializer):
+    url = serializers.CharField(help_text="Opens the zip of my photos and videos. Valid for ten minutes, no sign-in header needed")
+    files = serializers.IntegerField()
+    bytes = serializers.IntegerField()

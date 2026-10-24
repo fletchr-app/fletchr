@@ -284,6 +284,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/export/media/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A link to a zip of my photos and videos. Needs my password. The files are big, so the zip is fetched by the link, not in this answer. */
+        post: operations["me_export_media_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/export/media/file/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The zip. The link carries a token because a browser opens it, without the sign-in header. */
+        get: operations["me_export_media_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/password/": {
         parameters: {
             query?: never;
@@ -1203,6 +1237,8 @@ export interface components {
         DeletedCounts: {
             sessions: number;
             shots: number;
+            /** @description Photos and videos */
+            media: number;
             bows: number;
             arrow_sets: number;
             notes_about_me: number;
@@ -1343,6 +1379,12 @@ export interface components {
             /** @description Opens for an hour; fetch the clip again for a new link */
             readonly thumbnail_url: string;
             readonly can_edit: boolean;
+        };
+        MediaExportLink: {
+            /** @description Opens the zip of my photos and videos. Valid for ten minutes, no sign-in header needed */
+            url: string;
+            files: number;
+            bytes: number;
         };
         /**
          * @description * `photo` - Photo
@@ -2472,6 +2514,53 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    me_export_media_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];
+                "multipart/form-data": components["schemas"]["ExportRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaExportLink"];
+                };
+            };
+        };
+    };
+    me_export_media_file_retrieve: {
+        parameters: {
+            query?: {
+                /** @description From the link */
+                token?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
                 };
             };
         };
