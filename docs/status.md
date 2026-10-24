@@ -20,7 +20,7 @@ Order of work: **features first, the Google Play release last** (milestone 6). T
 | Home, Team, Settings | built: Home (this week's arrows, last session, your teams, the latest coach notes about you), Team overview for coaches (last session, arrows in 7 days), Settings (theme, language, server address, About with app and server version) |
 | Languages | built: English and German in the app, the server's messages and the mails |
 | App and server versions | `/api/health/` returns `version` and `min_app_version`; the app shows a banner on Home when it is below the minimum or the server is a minor version behind (`src/lib/version.ts`, `VersionBanner.vue`) |
-| Deploy | `deploy/update.sh vX.Y.Z` (backup, update, health check, rollback) and `.github/workflows/deploy.yml` (on a release tag, over a restricted SSH key); written and tried against a fake server, not yet run on a real one |
+| Deploy | A release tag deploys the server from CI (`.github/workflows/deploy.yml`): checks, the server image built and pushed to `ghcr.io/fletchr-app/fletchr-server:<tag>`, then a restricted SSH key runs `deploy/update.sh` (backup, pull the image, restart, health check, rollback). Run for real: v0.6.2 and v0.6.3 (the pull path by hand on v0.6.3), and the failure path on the server. The `production` environment needs a click from the reviewer for every deploy. |
 | Server and website | `app.fletchr.de` runs the server in Docker behind a web server, with its own SMTP for mail; `fletchr.de` serves `fletchr.de` with German and English pages, Impressum, privacy policy, delete-account page and the invite-link page |
 
 Not in the app although the plan lists it:
