@@ -32,11 +32,10 @@ Open in practice (not release dependent):
 - **Website:** `noindex` is on; remove it after the legal review of the privacy text and the data processing agreement with Host Europe.
 - **Before the repository goes public:** the git author email in the history (rewrite or accept), trademark and store-name checks for "Fletchr".
 
-## Milestone 2: media and evaluations (not started)
+## Milestone 2: media and evaluations (started)
 
 - Evaluation forms and templates with trend charts, self-assessments, goals on Home.
-- Photos and videos: upload, server conversion (ffmpeg), gallery, frame-by-frame player, notes on frames, drawing tools.
-- **First:** the video prototype from the plan (frame-exact stepping on a real 240 fps clip in the Android WebView, overlay sync, background upload, memory). It decides whether the player stays in Capacitor or needs a native plugin.
+- Photos and videos: the phone converts them (Media3, `docs/video-prototype.md`), the server only stores and serves them. Done: the prototypes (#35, #70) and the server side (#36: `media` app, `/api/media/`, permission-checked files with Range support, limits, quota). Open: the app side (photos #37, the conversion plugin #39, upload #38, gallery #40, player #41), notes on frames, drawing tools. Export and deletion of media through "Your data" is #47: until then "Delete my data" leaves photos and videos (deleting the account removes them).
 - Backups of media (restic, off-site) belong here, if not done earlier.
 
 ## Milestone 3: deeper stats (partly)

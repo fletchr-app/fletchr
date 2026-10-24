@@ -685,6 +685,196 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenPair'
           description: ''
+  /api/media/:
+    get:
+      operationId: media_list
+      description: 'Photos and videos you may see: your own and those of the archers
+        you coach, newest first.'
+      parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - photo
+          - video
+        description: |-
+          * `photo` - Photo
+          * `video` - Video
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      - in: query
+        name: session
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - media
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Media'
+          description: ''
+  /api/media/{media_id}/:
+    get:
+      operationId: media_retrieve
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - media
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Media'
+          description: ''
+    put:
+      operationId: media_update
+      description: 'Upload the clip with this id, or change its note and session.
+        Safe to repeat: the files of a clip that exists are not replaced.'
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Upload for an archer without an account that you coach; default:
+          yourself'
+      tags:
+      - media
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MediaWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Media'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Media'
+          description: ''
+    delete:
+      operationId: media_destroy
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - media
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/media/{media_id}/file/:
+    get:
+      operationId: media_file_retrieve
+      description: |-
+        The file itself. The <video> and <img> elements cannot send the sign-in header, so the link from the clip
+        carries a token (one user, one clip, an hour); the sign-in header works too.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From `file_url`; not needed with the sign-in header
+      tags:
+      - media
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '206':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/media/{media_id}/thumbnail/:
+    get:
+      operationId: media_thumbnail_retrieve
+      description: |-
+        The file itself. The <video> and <img> elements cannot send the sign-in header, so the link from the clip
+        carries a token (one user, one clip, an hour); the sign-in header works too.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From `file_url`; not needed with the sign-in header
+      tags:
+      - media
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '206':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/notes/:
     get:
       operationId: notes_list
@@ -2822,6 +3012,14 @@ components:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
           default: archer
+    Kind018Enum:
+      enum:
+      - photo
+      - video
+      type: string
+      description: |-
+        * `photo` - Photo
+        * `video` - Video
     LastSession:
       type: object
       properties:
@@ -2866,6 +3064,139 @@ components:
       - email
       - id
       - profile
+    Media:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        owner:
+          type: integer
+        owner_name:
+          type: string
+          readOnly: true
+        uploaded_by:
+          type: integer
+          nullable: true
+        session:
+          type: string
+          format: uuid
+          nullable: true
+        kind:
+          $ref: '#/components/schemas/Kind018Enum'
+        taken_at:
+          type: string
+          format: date-time
+        width:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+        height:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+        size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          description: Bytes of the file and the thumbnail together
+        duration_ms:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        capture_fps:
+          type: number
+          format: double
+          minimum: 1
+          nullable: true
+        frame_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        note:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        file_url:
+          type: string
+          readOnly: true
+          description: Opens for an hour; fetch the clip again for a new link
+        thumbnail_url:
+          type: string
+          readOnly: true
+          description: Opens for an hour; fetch the clip again for a new link
+        can_edit:
+          type: boolean
+          readOnly: true
+      required:
+      - can_edit
+      - created_at
+      - file_url
+      - height
+      - id
+      - kind
+      - owner
+      - owner_name
+      - size
+      - taken_at
+      - thumbnail_url
+      - width
+    MediaWriteRequest:
+      type: object
+      description: A new clip needs everything but `note` and `session`. Repeating
+        the request for a clip that exists changes only those two.
+      properties:
+        kind:
+          $ref: '#/components/schemas/Kind018Enum'
+        file:
+          type: string
+          format: binary
+          description: A JPEG photo or an MP4 video, converted by the phone
+        thumbnail:
+          type: string
+          format: binary
+          description: A small JPEG
+        taken_at:
+          type: string
+          format: date-time
+        width:
+          type: integer
+          maximum: 32767
+          minimum: 1
+        height:
+          type: integer
+          maximum: 32767
+          minimum: 1
+        duration_ms:
+          type: integer
+          minimum: 1
+          nullable: true
+        capture_fps:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: 1
+          nullable: true
+        frame_count:
+          type: integer
+          minimum: 1
+          nullable: true
+        note:
+          type: string
+        session:
+          type: string
+          format: uuid
+          nullable: true
     Member:
       type: object
       properties:
