@@ -58,6 +58,7 @@ function reload() {
           @changed="reload"
         />
         <AppButton v-if="isCoach" secondary :router-link="`/team/${teamId}/forms`">{{ $t('evaluations.formsTitle') }}</AppButton>
+        <AppButton v-if="isCoach" secondary :router-link="`/team/${teamId}/progress`">{{ $t('progress.teamTitle') }}</AppButton>
         <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />
         <TeamLeaveDelete :team-id="teamId" :team-name="team.data.value.name" :is-admin="isAdmin" />
       </template>

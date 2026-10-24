@@ -2,6 +2,11 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.7.0, 2026-10-24
+
+- **Evaluations over time (finishes #46):** on the Progress screen "Up the most" and "Rated lowest" lists, and a radar chart by group (the latest coach evaluation against the first). Coaches and admins have a "Team ratings" screen on the team page: for each criterion the mean of every archer's newest coach evaluation. No server changes, no migrations.
+- Website: link to the source code.
+
 ## 0.6.3, 2026-10-24
 
 - **Deploy:** CI builds the server image and pushes it to `ghcr.io/fletchr-app/fletchr-server:<tag>`; `deploy/update.sh` pulls it instead of building on the server, and builds there only when the image cannot be pulled. No app changes, no migrations.
