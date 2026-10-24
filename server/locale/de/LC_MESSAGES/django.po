@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 15:44+0200\n"
+"POT-Creation-Date: 2026-10-24 19:32+0200\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -89,7 +89,7 @@ msgstr "Ein Team braucht einen Namen"
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:191 privacy/serializers.py:19 privacy/serializers.py:65
+#: core/serializers.py:191 privacy/serializers.py:19 privacy/serializers.py:66
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
@@ -157,6 +157,209 @@ msgstr "Das ist nicht dein Pfeilsatz"
 #: equipment/views.py:58
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr "Das wurde in einem Training benutzt. Deaktiviere es, statt es zu löschen."
+
+#: evaluations/defaults.py:8
+msgid "Pre-tension"
+msgstr "Vorspannung"
+
+#: evaluations/defaults.py:9
+msgid "Upright back, hips tilted, shoulders low"
+msgstr "Aufrechter Rücken, Becken gekippt, Schultern tief"
+
+#: evaluations/defaults.py:10
+msgid "Head still and facing the target"
+msgstr "Kopf ruhig und zur Scheibe gerichtet"
+
+#: evaluations/defaults.py:11
+msgid "Draw fingers sit deep in the hook"
+msgstr "Zugfinger sitzen tief im Haken"
+
+#: evaluations/defaults.py:12
+msgid "Bow arm turned in, bow hand set at the pressure point"
+msgstr "Bogenarm eingedreht, Bogenhand am Druckpunkt"
+
+#: evaluations/defaults.py:14
+msgid "Raising the bow"
+msgstr "Anheben"
+
+#: evaluations/defaults.py:15
+msgid "Both arms come up to eye height"
+msgstr "Beide Arme kommen auf Augenhöhe"
+
+#: evaluations/defaults.py:16
+msgid "Shoulder line points at the target"
+msgstr "Schulterlinie zeigt aufs Ziel"
+
+#: evaluations/defaults.py:17
+msgid "Draw hand and forearm stay straight in line"
+msgstr "Zughand und Unterarm bleiben gerade in einer Linie"
+
+#: evaluations/defaults.py:18
+msgid "Bow arm is extended"
+msgstr "Bogenarm ist gestreckt"
+
+#: evaluations/defaults.py:20
+msgid "Holding"
+msgstr "Halten"
+
+#: evaluations/defaults.py:21
+msgid "Solid anchor that is the same every shot"
+msgstr "Fester Anker, der bei jedem Schuss gleich ist"
+
+#: evaluations/defaults.py:22
+msgid "The load is visibly taken over by the back"
+msgstr "Die Last wird sichtbar vom Rücken übernommen"
+
+#: evaluations/defaults.py:23
+msgid "Small, stable force triangle"
+msgstr "Kleines, stabiles Kraftdreieck"
+
+#: evaluations/defaults.py:24
+msgid "Push and pull are in balance"
+msgstr "Druck und Zug sind im Gleichgewicht"
+
+#: evaluations/defaults.py:26
+msgid "Follow-through"
+msgstr "Nachhalten"
+
+#: evaluations/defaults.py:27
+msgid "Visible expansion through the shot"
+msgstr "Sichtbare Expansion durch den Schuss"
+
+#: evaluations/defaults.py:28
+msgid "Draw hand opens with a quick, relaxed move"
+msgstr "Zughand öffnet sich mit einer schnellen, entspannten Bewegung"
+
+#: evaluations/defaults.py:29
+msgid "Bow hand stays relaxed"
+msgstr "Bogenhand bleibt entspannt"
+
+#: evaluations/defaults.py:30
+msgid "The position is held after the release"
+msgstr "Die Position wird nach dem Lösen gehalten"
+
+#: evaluations/defaults.py:32
+msgid "Whole sequence"
+msgstr "Gesamtablauf"
+
+#: evaluations/defaults.py:33
+msgid "Arms and shoulders stay in a T"
+msgstr "Arme und Schultern bleiben im T"
+
+#: evaluations/defaults.py:34
+msgid "Every shot repeats the same elements"
+msgstr "Jeder Schuss wiederholt dieselben Elemente"
+
+#: evaluations/defaults.py:35
+msgid "The movement is fluid"
+msgstr "Die Bewegung ist flüssig"
+
+#: evaluations/defaults.py:36
+msgid "The timing is steady from shot to shot"
+msgstr "Das Zeitmuster ist von Schuss zu Schuss stabil"
+
+#: evaluations/defaults.py:42
+msgid "Shooting technique"
+msgstr "Schießtechnik"
+
+#: evaluations/serializers.py:31
+msgid "A criterion needs a name"
+msgstr "Ein Kriterium braucht einen Namen"
+
+#: evaluations/serializers.py:36
+msgid "A key has lower-case letters, digits and underscores"
+msgstr "Ein Schlüssel besteht aus Kleinbuchstaben, Ziffern und Unterstrichen"
+
+#: evaluations/serializers.py:51
+msgid "A form needs at least one criterion"
+msgstr "Ein Formular braucht mindestens ein Kriterium"
+
+#: evaluations/serializers.py:53
+#, python-format
+msgid "A form can have %(n)s criteria at most"
+msgstr "Ein Formular kann höchstens %(n)s Kriterien haben"
+
+#: evaluations/serializers.py:57
+msgid "Two criteria have the same key"
+msgstr "Zwei Kriterien haben denselben Schlüssel"
+
+#: evaluations/serializers.py:106
+msgid "A form needs a name"
+msgstr "Ein Formular braucht einen Namen"
+
+#: evaluations/serializers.py:182
+msgid "A self-assessment is about yourself"
+msgstr "Eine Selbsteinschätzung betrifft dich selbst"
+
+#: evaluations/serializers.py:186
+msgid "Only coaches can rate an archer"
+msgstr "Nur Trainer können einen Schützen bewerten"
+
+#: evaluations/serializers.py:190
+msgid "You cannot do an evaluation of this archer in that team"
+msgstr "Du kannst diesen Schützen in diesem Team nicht bewerten"
+
+#: evaluations/serializers.py:195
+msgid "You cannot do an evaluation of this person"
+msgstr "Du kannst diese Person nicht bewerten"
+
+#: evaluations/serializers.py:196
+msgid "This is in several teams: say which one"
+msgstr "Das gilt in mehreren Teams: gib an, in welchem"
+
+#: evaluations/serializers.py:203
+#, python-format
+msgid "This form has no criterion %(key)s"
+msgstr "Dieses Formular hat kein Kriterium %(key)s"
+
+#: evaluations/serializers.py:205
+msgid "A criterion is rated twice"
+msgstr "Ein Kriterium ist zweimal bewertet"
+
+#: evaluations/serializers.py:208
+#, python-format
+msgid "A rating goes from 1 to %(n)s"
+msgstr "Eine Bewertung geht von 1 bis %(n)s"
+
+#: evaluations/serializers.py:212 notes/serializers.py:112
+msgid "Give the clip the frame is in"
+msgstr "Gib das Video an, zu dem das Bild gehört"
+
+#: evaluations/serializers.py:215 notes/serializers.py:102
+msgid "This is not a photo or video of that archer"
+msgstr "Das ist kein Foto oder Video dieses Schützen"
+
+#: evaluations/serializers.py:217
+msgid "Say which frame the rating is about"
+msgstr "Gib an, zu welchem Bild die Bewertung gehört"
+
+#: evaluations/serializers.py:219 notes/serializers.py:106
+msgid "The clip has no such frame"
+msgstr "Das Video hat dieses Bild nicht"
+
+#: evaluations/serializers.py:225 evaluations/serializers.py:227
+msgid "This cannot be changed after the evaluation is written"
+msgstr "Das kann nach dem Speichern der Bewertung nicht mehr geändert werden"
+
+#: evaluations/serializers.py:237
+msgid "Say which form to use"
+msgstr "Gib an, welches Formular benutzt wird"
+
+#: evaluations/serializers.py:239
+msgid "This form belongs to another team"
+msgstr "Dieses Formular gehört zu einem anderen Team"
+
+#: evaluations/views.py:27
+msgid "Only coaches can change the forms of a team"
+msgstr "Nur Trainer können die Formulare eines Teams ändern"
+
+#: evaluations/views.py:54
+msgid "A form needs a name and criteria"
+msgstr "Ein Formular braucht einen Namen und Kriterien"
+
+#: evaluations/views.py:94
+msgid "Evaluations were made with this form, so it stays"
+msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 
 #: media/serializers.py:70
 msgid "This session belongs to another archer"
@@ -254,25 +457,13 @@ msgstr "Das ist kein Training dieses Schützen"
 msgid "Give the session this end belongs to"
 msgstr "Gib das Training an, zu dem diese Passe gehört"
 
-#: notes/serializers.py:102
-msgid "This is not a photo or video of that archer"
-msgstr "Das ist kein Foto oder Video dieses Schützen"
-
 #: notes/serializers.py:104
 msgid "Say which frame the note is about"
 msgstr "Gib an, zu welchem Bild die Notiz gehört"
 
-#: notes/serializers.py:106
-msgid "The clip has no such frame"
-msgstr "Das Video hat dieses Bild nicht"
-
 #: notes/serializers.py:110
 msgid "This clip is from another session"
 msgstr "Dieses Video ist aus einem anderen Training"
-
-#: notes/serializers.py:112
-msgid "Give the clip the frame is in"
-msgstr "Gib das Video an, zu dem das Bild gehört"
 
 #: privacy/serializers.py:14
 #, python-format

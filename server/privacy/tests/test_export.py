@@ -111,7 +111,7 @@ def test_a_new_account_has_an_empty_but_complete_export(client_for, club):
     d = doc(client_for, club["archer2"])
     assert d["sessions"] == [] and d["equipment"] == {"bows": [], "arrow_sets": [], "setups": []}
     assert d["notes_about_me"] == [] and d["notes_i_wrote"] == [] and d["media"] == []
-    assert set(d) == {"format_version", "exported_at", "account", "profile", "teams", "equipment", "sessions", "media", "notes_about_me", "notes_i_wrote"}
+    assert set(d) == {"format_version", "exported_at", "account", "profile", "teams", "equipment", "sessions", "media", "evaluations_about_me", "evaluations_i_wrote", "notes_about_me", "notes_i_wrote"}
 
 
 def test_exporting_changes_nothing(client_for, club):

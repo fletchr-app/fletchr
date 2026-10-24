@@ -52,6 +52,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <div v-if="profileLine" class="muted">{{ profileLine }}</div>
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
+      <AppButton secondary :router-link="`/archers/${id}/evaluations?name=${encodeURIComponent(shownName)}`">{{ $t('evaluations.title') }}</AppButton>
       <AppButton secondary :router-link="`/media?owner=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('media.title') }}</AppButton>
       <VideoConsent v-if="info.data.value && info.data.value.age !== null && info.data.value.age !== undefined && info.data.value.age < 18" :archer="info.data.value" @changed="info.reload" />
       <NotesSection :archer-id="Number(id)" />

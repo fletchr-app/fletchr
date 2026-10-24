@@ -481,6 +481,219 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodePreview'
           description: ''
+  /api/evaluation-templates/{id}/:
+    get:
+      operationId: evaluation_templates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - evaluation-templates
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+          description: ''
+    put:
+      operationId: evaluation_templates_update
+      description: Change the name or the criteria. A change makes a new version;
+        evaluations made before keep the one they were made with.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - evaluation-templates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+          description: ''
+    delete:
+      operationId: evaluation_templates_destroy
+      description: 'Only a form without evaluations: the others are kept, so that
+        what was rated stays readable.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - evaluation-templates
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          description: No response body
+  /api/evaluations/:
+    get:
+      operationId: evaluations_list
+      parameters:
+      - in: query
+        name: archer
+        schema:
+          type: integer
+      - in: query
+        name: author
+        schema:
+          type: integer
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - coach
+          - self
+        description: |-
+          * `coach` - Coach
+          * `self` - Self
+      - in: query
+        name: team
+        schema:
+          type: integer
+      tags:
+      - evaluations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evaluation'
+          description: ''
+    post:
+      operationId: evaluations_create
+      tags:
+      - evaluations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+          description: ''
+  /api/evaluations/{id}/:
+    get:
+      operationId: evaluations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluation.
+        required: true
+      tags:
+      - evaluations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+          description: ''
+    patch:
+      operationId: evaluations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluation.
+        required: true
+      tags:
+      - evaluations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEvaluationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEvaluationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEvaluationRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+          description: ''
+    delete:
+      operationId: evaluations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluation.
+        required: true
+      tags:
+      - evaluations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/faces/:
     get:
       operationId: faces_list
@@ -1881,6 +2094,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClaimCode'
           description: ''
+  /api/teams/{team_id}/evaluation-templates/:
+    get:
+      operationId: teams_evaluation_templates_list
+      description: The forms of a team, newest version of each. Every member can read
+        them (an archer fills in a self-assessment).
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+          description: ''
+    post:
+      operationId: teams_evaluation_templates_create
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+          description: ''
   /api/teams/{team_id}/invites/:
     get:
       operationId: teams_invites_list
@@ -2849,6 +3116,39 @@ components:
       description: |-
         * `invite` - invite
         * `claim` - claim
+    CriterionRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+          description: Stays the same through the versions; made from the label for
+            a new criterion
+          maxLength: 40
+        label:
+          type: string
+          minLength: 1
+          maxLength: 100
+        group:
+          type: string
+          default: ''
+          maxLength: 60
+        description:
+          type: string
+          default: ''
+          maxLength: 300
+        low:
+          type: string
+          default: ''
+          description: What the lowest rating looks like
+          maxLength: 150
+        high:
+          type: string
+          default: ''
+          description: What the highest rating looks like
+          maxLength: 150
+      required:
+      - label
     DeleteAccountRequestRequest:
       type: object
       description: Password plus a confirmation word that is typed out, so it cannot
@@ -2921,9 +3221,13 @@ components:
           type: integer
         notes_about_me:
           type: integer
+        evaluations:
+          type: integer
+          description: Evaluations about me, by coaches and by me
       required:
       - arrow_sets
       - bows
+      - evaluations
       - media
       - notes_about_me
       - sessions
@@ -3018,6 +3322,151 @@ components:
       description: |-
         * `indoor` - Indoor
         * `outdoor` - Outdoor
+    Evaluation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          description: Only needed in several teams
+        archer:
+          type: integer
+        archer_name:
+          type: string
+          readOnly: true
+        author:
+          type: integer
+          readOnly: true
+          nullable: true
+        author_name:
+          type: string
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/EvaluationKindEnum'
+          description: |-
+            coach (the default) or self
+
+            * `coach` - Coach
+            * `self` - Self
+        date:
+          type: string
+          format: date
+        comment:
+          type: string
+        goals:
+          type: string
+          description: What to work on until the next evaluation
+        visibility:
+          $ref: '#/components/schemas/EvaluationVisibilityEnum'
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/Score'
+        template_id:
+          type: integer
+          readOnly: true
+        template_name:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        scale:
+          type: integer
+          readOnly: true
+        criteria:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+          description: The form as it was when this was filled in
+        can_edit:
+          type: boolean
+          readOnly: true
+        can_delete:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archer
+      - archer_name
+      - author
+      - author_name
+      - can_delete
+      - can_edit
+      - created_at
+      - criteria
+      - id
+      - scale
+      - scores
+      - template_id
+      - template_name
+      - updated_at
+      - version
+    EvaluationKindEnum:
+      enum:
+      - coach
+      - self
+      type: string
+      description: |-
+        * `coach` - Coach
+        * `self` - Self
+    EvaluationRequest:
+      type: object
+      properties:
+        team:
+          type: integer
+          description: Only needed in several teams
+        archer:
+          type: integer
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/EvaluationKindEnum'
+          description: |-
+            coach (the default) or self
+
+            * `coach` - Coach
+            * `self` - Self
+        date:
+          type: string
+          format: date
+        comment:
+          type: string
+        goals:
+          type: string
+          description: What to work on until the next evaluation
+        visibility:
+          $ref: '#/components/schemas/EvaluationVisibilityEnum'
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreRequest'
+        template:
+          type: integer
+          writeOnly: true
+          description: The form to use, in its newest version; needed for a new evaluation
+      required:
+      - archer
+      - scores
+    EvaluationVisibilityEnum:
+      enum:
+      - shared
+      - coach_only
+      type: string
+      description: |-
+        * `shared` - Shared
+        * `coach_only` - Coach Only
     ExportRequestRequest:
       type: object
       properties:
@@ -3420,7 +3869,7 @@ components:
         body:
           type: string
         visibility:
-          $ref: '#/components/schemas/VisibilityEnum'
+          $ref: '#/components/schemas/NoteVisibilityEnum'
         can_edit:
           type: boolean
           readOnly: true
@@ -3485,7 +3934,7 @@ components:
           type: string
           minLength: 1
         visibility:
-          $ref: '#/components/schemas/VisibilityEnum'
+          $ref: '#/components/schemas/NoteVisibilityEnum'
       required:
       - archer
       - body
@@ -3499,6 +3948,16 @@ components:
       required:
       - id
       - name
+    NoteVisibilityEnum:
+      enum:
+      - private
+      - coach_only
+      - shared
+      type: string
+      description: |-
+        * `private` - Private
+        * `coach_only` - Coach Only
+        * `shared` - Shared
     PasswordChangeRequest:
       type: object
       description: 'Changing the login needs the current password, even when signed
@@ -3640,6 +4099,40 @@ components:
           maxLength: 150
         notes:
           type: string
+    PatchedEvaluationRequest:
+      type: object
+      properties:
+        team:
+          type: integer
+          description: Only needed in several teams
+        archer:
+          type: integer
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/EvaluationKindEnum'
+          description: |-
+            coach (the default) or self
+
+            * `coach` - Coach
+            * `self` - Self
+        date:
+          type: string
+          format: date
+        comment:
+          type: string
+        goals:
+          type: string
+          description: What to work on until the next evaluation
+        visibility:
+          $ref: '#/components/schemas/EvaluationVisibilityEnum'
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreRequest'
+        template:
+          type: integer
+          writeOnly: true
+          description: The form to use, in its newest version; needed for a new evaluation
     PatchedManagedArcherRequest:
       type: object
       description: What a coach may change on the profile of an archer without an
@@ -3710,7 +4203,7 @@ components:
           type: string
           minLength: 1
         visibility:
-          $ref: '#/components/schemas/VisibilityEnum'
+          $ref: '#/components/schemas/NoteVisibilityEnum'
     PatchedRoleChangeRequest:
       type: object
       properties:
@@ -3836,6 +4329,71 @@ components:
         * `archer` - Archer
         * `coach` - Coach
         * `admin` - Admin
+    Score:
+      type: object
+      properties:
+        criterion:
+          type: string
+          maxLength: 40
+        rating:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        comment:
+          type: string
+        media:
+          type: string
+          format: uuid
+          nullable: true
+        frame:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        time_ms:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+      required:
+      - criterion
+      - rating
+    ScoreRequest:
+      type: object
+      properties:
+        criterion:
+          type: string
+          minLength: 1
+          maxLength: 40
+        rating:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        comment:
+          type: string
+        media:
+          type: string
+          format: uuid
+          nullable: true
+        frame:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        time_ms:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+      required:
+      - criterion
+      - rating
     ScoreStats:
       type: object
       properties:
@@ -4321,6 +4879,67 @@ components:
           maxLength: 150
       required:
       - name
+    Template:
+      type: object
+      description: The form with its newest version.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+        name:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        version_id:
+          type: integer
+          readOnly: true
+        scale:
+          type: integer
+          readOnly: true
+        criteria:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          readOnly: true
+      required:
+      - created_at
+      - criteria
+      - id
+      - name
+      - scale
+      - team
+      - updated_at
+      - version
+      - version_id
+    TemplateWriteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        scale:
+          type: integer
+          maximum: 10
+          minimum: 2
+          description: Ratings go from 1 to this; set when the form is made and not
+            changed later, so ratings stay comparable
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/CriterionRequest'
     TokenBlacklistRequest:
       type: object
       properties:
@@ -4409,16 +5028,6 @@ components:
       - video_allowed
       - video_consent_at
       - video_consent_by
-    VisibilityEnum:
-      enum:
-      - private
-      - coach_only
-      - shared
-      type: string
-      description: |-
-        * `private` - Private
-        * `coach_only` - Coach Only
-        * `shared` - Shared
     VolumeEntry:
       type: object
       properties:

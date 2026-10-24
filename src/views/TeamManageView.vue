@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -25,6 +26,7 @@ const poll = { pollMs: REFRESH_MS, keepPolling: always }
 const team = useRemote(async () => (await api.GET('/api/teams/{team_id}/', { params: { path: { team_id: teamId } } })).data ?? null, poll)
 const members = useRemote(async () => (await api.GET('/api/teams/{team_id}/members/', { params: { path: { team_id: teamId } } })).data ?? null, poll)
 const isAdmin = computed(() => team.data.value?.my_role === 'admin')
+const isCoach = computed(() => isAdmin.value || team.data.value?.my_role === 'coach')
 const invites = useRemote(async () => {
   if (!isAdmin.value) return []
   return (await api.GET('/api/teams/{team_id}/invites/', { params: { path: { team_id: teamId } } })).data ?? null
@@ -55,6 +57,7 @@ function reload() {
           :my-id="userId === null ? null : Number(userId)"
           @changed="reload"
         />
+        <AppButton v-if="isCoach" secondary :router-link="`/team/${teamId}/forms`">{{ $t('evaluations.formsTitle') }}</AppButton>
         <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />
         <TeamLeaveDelete :team-id="teamId" :team-name="team.data.value.name" :is-admin="isAdmin" />
       </template>

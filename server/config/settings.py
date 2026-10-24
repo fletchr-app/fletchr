@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "targets",
     "training",
     "notes",
+    "evaluations",
     "privacy",
     "media",
 ]

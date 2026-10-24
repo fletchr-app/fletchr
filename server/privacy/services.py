@@ -5,6 +5,7 @@ from django.db import transaction
 from core import claims
 from core.models import Invite, Role, TeamMember
 from equipment.models import ArrowSet, Bow, Setup
+from evaluations.models import Evaluation
 from media.models import Media
 from notes.models import Note
 from training.models import Shot, TrainingSession
@@ -35,6 +36,13 @@ def _delete_equipment(user) -> dict:
     return counts
 
 
+def _delete_evaluations_about(user) -> dict:
+    evaluations = Evaluation.objects.filter(archer=user)  # the coaches' and their own
+    counts = {"evaluations": evaluations.count()}
+    evaluations.delete()
+    return counts
+
+
 def _delete_notes_about(user) -> dict:
     notes = Note.objects.filter(archer=user)
     counts = {"notes_about_me": notes.count()}
@@ -45,11 +53,11 @@ def _delete_notes_about(user) -> dict:
 @transaction.atomic
 def delete_my_data(user) -> dict:
     """
-    Erase what the user has recorded: sessions, photos and videos, equipment, and the coach notes written about them.
+    Erase what the user has recorded: sessions, photos and videos, equipment, and the coach notes and evaluations written about them.
     Kept: the account, the profile, the team memberships, and notes the user wrote about others.
     All or nothing.
     """
-    counts = {**_delete_training(user), **_delete_media(user), **_delete_equipment(user), **_delete_notes_about(user)}
+    counts = {**_delete_training(user), **_delete_media(user), **_delete_equipment(user), **_delete_notes_about(user), **_delete_evaluations_about(user)}
     logger.info("User %s deleted their data: %s", user.pk, counts)
     return counts
 

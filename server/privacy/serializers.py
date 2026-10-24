@@ -35,6 +35,7 @@ class DeletedCountsSerializer(serializers.Serializer):
     bows = serializers.IntegerField()
     arrow_sets = serializers.IntegerField()
     notes_about_me = serializers.IntegerField()
+    evaluations = serializers.IntegerField(help_text="Evaluations about me, by coaches and by me")
 
 
 class DeleteDataResponseSerializer(serializers.Serializer):

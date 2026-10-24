@@ -71,8 +71,11 @@ onIonViewWillEnter(() => {
       </template>
       <LatestNotes v-if="me" :user-id="me.id" :refresh="shown" />
       <IonList inset>
-        <IonItem router-link="/media" detail lines="none">
+        <IonItem router-link="/media" detail lines="full">
           <IonLabel>{{ $t('media.link') }}</IonLabel>
+        </IonItem>
+        <IonItem v-if="me" :router-link="`/archers/${me.id}/evaluations`" detail lines="none">
+          <IonLabel>{{ $t('evaluations.title') }}</IonLabel>
         </IonItem>
       </IonList>
       <div v-if="loaded && teams.length === 0">{{ $t('home.noTeam') }}</div>

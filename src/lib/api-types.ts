@@ -169,6 +169,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/evaluation-templates/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["evaluation_templates_retrieve"];
+        /** @description Change the name or the criteria. A change makes a new version; evaluations made before keep the one they were made with. */
+        put: operations["evaluation_templates_update"];
+        post?: never;
+        /** @description Only a form without evaluations: the others are kept, so that what was rated stays readable. */
+        delete: operations["evaluation_templates_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["evaluations_list"];
+        put?: never;
+        post: operations["evaluations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["evaluations_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["evaluations_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["evaluations_partial_update"];
+        trace?: never;
+    };
     "/api/faces/": {
         parameters: {
             query?: never;
@@ -758,6 +808,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teams/{team_id}/evaluation-templates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The forms of a team, newest version of each. Every member can read them (an archer fills in a self-assessment). */
+        get: operations["teams_evaluation_templates_list"];
+        put?: never;
+        post: operations["teams_evaluation_templates_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teams/{team_id}/invites/": {
         parameters: {
             query?: never;
@@ -1239,6 +1306,25 @@ export interface components {
          * @enum {string}
          */
         CodePreviewKindEnum: "invite" | "claim";
+        CriterionRequest: {
+            /** @description Stays the same through the versions; made from the label for a new criterion */
+            key?: string;
+            label: string;
+            /** @default  */
+            group: string;
+            /** @default  */
+            description: string;
+            /**
+             * @description What the lowest rating looks like
+             * @default
+             */
+            low: string;
+            /**
+             * @description What the highest rating looks like
+             * @default
+             */
+            high: string;
+        };
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteAccountRequestRequest: {
             password: string;
@@ -1269,6 +1355,8 @@ export interface components {
             bows: number;
             arrow_sets: number;
             notes_about_me: number;
+            /** @description Evaluations about me, by coaches and by me */
+            evaluations: number;
         };
         /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
         EmailChangeRequest: {
@@ -1304,6 +1392,76 @@ export interface components {
          * @enum {string}
          */
         EnvironmentEnum: "indoor" | "outdoor";
+        Evaluation: {
+            readonly id: number;
+            /** @description Only needed in several teams */
+            team?: number;
+            archer: number;
+            readonly archer_name: string;
+            readonly author: number | null;
+            readonly author_name: string;
+            /**
+             * @description coach (the default) or self
+             *
+             *     * `coach` - Coach
+             *     * `self` - Self
+             */
+            kind?: components["schemas"]["EvaluationKindEnum"];
+            /** Format: date */
+            date?: string;
+            comment?: string;
+            /** @description What to work on until the next evaluation */
+            goals?: string;
+            visibility?: components["schemas"]["EvaluationVisibilityEnum"];
+            scores: components["schemas"]["Score"][];
+            readonly template_id: number;
+            readonly template_name: string;
+            readonly version: number;
+            readonly scale: number;
+            /** @description The form as it was when this was filled in */
+            readonly criteria: {
+                [key: string]: unknown;
+            }[];
+            readonly can_edit: boolean;
+            readonly can_delete: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `coach` - Coach
+         *     * `self` - Self
+         * @enum {string}
+         */
+        EvaluationKindEnum: "coach" | "self";
+        EvaluationRequest: {
+            /** @description Only needed in several teams */
+            team?: number;
+            archer: number;
+            /**
+             * @description coach (the default) or self
+             *
+             *     * `coach` - Coach
+             *     * `self` - Self
+             */
+            kind?: components["schemas"]["EvaluationKindEnum"];
+            /** Format: date */
+            date?: string;
+            comment?: string;
+            /** @description What to work on until the next evaluation */
+            goals?: string;
+            visibility?: components["schemas"]["EvaluationVisibilityEnum"];
+            scores: components["schemas"]["ScoreRequest"][];
+            /** @description The form to use, in its newest version; needed for a new evaluation */
+            template?: number;
+        };
+        /**
+         * @description * `shared` - Shared
+         *     * `coach_only` - Coach Only
+         * @enum {string}
+         */
+        EvaluationVisibilityEnum: "shared" | "coach_only";
         ExportRequestRequest: {
             password: string;
         };
@@ -1485,7 +1643,7 @@ export interface components {
             /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
-            visibility?: components["schemas"]["VisibilityEnum"];
+            visibility?: components["schemas"]["NoteVisibilityEnum"];
             readonly can_edit: boolean;
             readonly can_delete: boolean;
             /** Format: date-time */
@@ -1513,12 +1671,19 @@ export interface components {
             /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
-            visibility?: components["schemas"]["VisibilityEnum"];
+            visibility?: components["schemas"]["NoteVisibilityEnum"];
         };
         NoteTeam: {
             id: number;
             name: string;
         };
+        /**
+         * @description * `private` - Private
+         *     * `coach_only` - Coach Only
+         *     * `shared` - Shared
+         * @enum {string}
+         */
+        NoteVisibilityEnum: "private" | "coach_only" | "shared";
         /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
         PasswordChangeRequest: {
             current_password: string;
@@ -1588,6 +1753,27 @@ export interface components {
             release_tab?: string;
             notes?: string;
         };
+        PatchedEvaluationRequest: {
+            /** @description Only needed in several teams */
+            team?: number;
+            archer?: number;
+            /**
+             * @description coach (the default) or self
+             *
+             *     * `coach` - Coach
+             *     * `self` - Self
+             */
+            kind?: components["schemas"]["EvaluationKindEnum"];
+            /** Format: date */
+            date?: string;
+            comment?: string;
+            /** @description What to work on until the next evaluation */
+            goals?: string;
+            visibility?: components["schemas"]["EvaluationVisibilityEnum"];
+            scores?: components["schemas"]["ScoreRequest"][];
+            /** @description The form to use, in its newest version; needed for a new evaluation */
+            template?: number;
+        };
         /** @description What a coach may change on the profile of an archer without an account. */
         PatchedManagedArcherRequest: {
             name?: string;
@@ -1622,7 +1808,7 @@ export interface components {
             /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body?: string;
-            visibility?: components["schemas"]["VisibilityEnum"];
+            visibility?: components["schemas"]["NoteVisibilityEnum"];
         };
         PatchedRoleChangeRequest: {
             role?: components["schemas"]["RoleEnum"];
@@ -1678,6 +1864,30 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "archer" | "coach" | "admin";
+        Score: {
+            criterion: string;
+            /** Format: int64 */
+            rating: number;
+            comment?: string;
+            /** Format: uuid */
+            media?: string | null;
+            /** Format: int64 */
+            frame?: number | null;
+            /** Format: int64 */
+            time_ms?: number | null;
+        };
+        ScoreRequest: {
+            criterion: string;
+            /** Format: int64 */
+            rating: number;
+            comment?: string;
+            /** Format: uuid */
+            media?: string | null;
+            /** Format: int64 */
+            frame?: number | null;
+            /** Format: int64 */
+            time_ms?: number | null;
+        };
         ScoreStats: {
             face: string;
             face_name: string;
@@ -1879,6 +2089,27 @@ export interface components {
         TeamNameRequest: {
             name: string;
         };
+        /** @description The form with its newest version. */
+        Template: {
+            readonly id: number;
+            team: number;
+            readonly name: string;
+            readonly version: number;
+            readonly version_id: number;
+            readonly scale: number;
+            readonly criteria: {
+                [key: string]: unknown;
+            }[];
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly updated_at: string;
+        };
+        TemplateWriteRequest: {
+            name?: string;
+            /** @description Ratings go from 1 to this; set when the form is made and not changed later, so ratings stay comparable */
+            scale?: number;
+            criteria?: components["schemas"]["CriterionRequest"][];
+        };
         TokenBlacklistRequest: {
             refresh: string;
         };
@@ -1913,13 +2144,6 @@ export interface components {
             video_consent_at: string | null;
             video_consent_by: string | null;
         };
-        /**
-         * @description * `private` - Private
-         *     * `coach_only` - Coach Only
-         *     * `shared` - Shared
-         * @enum {string}
-         */
-        VisibilityEnum: "private" | "coach_only" | "shared";
         VolumeEntry: {
             /** Format: uuid */
             readonly id: string;
@@ -2408,6 +2632,207 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CodePreview"];
+                };
+            };
+        };
+    };
+    evaluation_templates_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+        };
+    };
+    evaluation_templates_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TemplateWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TemplateWriteRequest"];
+                "multipart/form-data": components["schemas"]["TemplateWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+        };
+    };
+    evaluation_templates_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No response body */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    evaluations_list: {
+        parameters: {
+            query?: {
+                archer?: number;
+                author?: number;
+                date_from?: string;
+                date_to?: string;
+                /**
+                 * @description * `coach` - Coach
+                 *     * `self` - Self
+                 */
+                kind?: "coach" | "self";
+                team?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"][];
+                };
+            };
+        };
+    };
+    evaluations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EvaluationRequest"];
+                "multipart/form-data": components["schemas"]["EvaluationRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+        };
+    };
+    evaluations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this evaluation. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+        };
+    };
+    evaluations_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this evaluation. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    evaluations_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this evaluation. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEvaluationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedEvaluationRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEvaluationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
                 };
             };
         };
@@ -3652,6 +4077,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClaimCode"];
+                };
+            };
+        };
+    };
+    teams_evaluation_templates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"][];
+                };
+            };
+        };
+    };
+    teams_evaluation_templates_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TemplateWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TemplateWriteRequest"];
+                "multipart/form-data": components["schemas"]["TemplateWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
                 };
             };
         };
