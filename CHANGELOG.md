@@ -2,6 +2,21 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.6.0, 2026-10-24
+
+Evaluations, notes on frames, and deploying from CI. This also covers 0.4.0 and 0.5.0, which were not written up here.
+
+- **Evaluations:** forms per team with versions (a default shooting-technique form with 20 criteria, own wording), a rating from 1 to 5 per criterion with a comment and an optional frame of a video, a date, goals, and self-assessments by archers. A coach's evaluation is visible to coaches only until the coach shares it, and can take it back. "New evaluation" on the archer's page.
+- **Frame notes and drawings:** a note can be attached to a frame of a video; lines, arrows and angles can be drawn on a frame.
+- **Videos of under-18s:** need a consent recorded by a coach or admin (the mechanism only).
+- **Your data:** the export lists photos and videos and offers a zip download; deleting data removes them too. Privacy texts updated (photos, videos, evaluations, backups up to about 12 months).
+- **Gallery:** all photos and videos by day, with a full-screen swipeable photo viewer.
+- **Versions:** `/api/health/` returns `min_app_version`; the app warns when it is too old or the server is behind.
+- **Backups:** `deploy/backup.sh` with an optional restic copy off the server.
+- **Deploy:** pushing a release tag can update the server (`deploy/update.sh`, backup first, health check, rollback); `docs/self-hosting.md` replaces the old deployment guide.
+
+Update the server with `deploy/update.sh v0.6.0`, or `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **new migrations** (`media`, `core` 0005, `notes` 0003 and 0004, `evaluations`). No new required settings.
+
 ## 0.3.0, 2026-10-24
 
 Photos and videos.
