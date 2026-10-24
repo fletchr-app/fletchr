@@ -2,6 +2,11 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.6.2, 2026-10-24
+
+- **Progress of evaluations:** the goals of the newest evaluation show on Home, and a Progress screen (from the evaluation list) has a chart per group of the form with the coach's ratings and the archer's own, and the change per criterion. The radar chart, the improvement lists and the team averages are still to come. No server changes, no migrations.
+- First release deployed from CI.
+
 ## 0.6.1, 2026-10-24
 
 - **Deploy from CI:** `deploy/update.sh` could not take its lock as the deploy user and could be changed under itself when the checkout moved to the new tag. Both fixed. No migrations, no app changes.
