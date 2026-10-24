@@ -65,7 +65,7 @@ So a video of this size cannot be uploaded from the page when the person puts th
 ## Converting on the phone (#70)
 
 Instead of uploading the original and converting on the server, the app converts the clip right after it is picked.
-A throwaway Capacitor plugin (`android/app/src/main/java/de/fletchr/app/VideoConverterPlugin.java`, Media3 Transformer 1.8.0)
+A throwaway Capacitor plugin (the first version of `android/app/src/main/java/de/fletchr/app/VideoConverterPlugin.java`, Media3 Transformer 1.8.0)
 was tested with the same clip. **It works.**
 
 | | Result |
@@ -83,15 +83,10 @@ was tested with the same clip. **It works.**
 
 Because the frame times are not exactly `i / 120`, the player should step relative to the frame it shows: read the `mediaTime` of the current frame (from `requestVideoFrameCallback`) and aim at `mediaTime + 1.25 * frame_duration` for the next one.
 
-The plugin is the seed of the real media plugin. The throwaway page `src/prototype/` (build with `VITE_PROTOTYPE=1`) calls it.
+The prototype plugin became the real one (#39); the rules moved into `src/lib/video-plan.ts`. The test page `src/prototype/` and the scripts
+`scripts/video-prototype/` (stepping checks, background upload, the file server) were removed with that change. They are in the git history
+(commit `5efc4f6` and before) and the steps to repeat the checks were:
 
-## How to repeat it
-
-1. For the checks on the converted files: take the converted files from the app (`adb exec-out run-as de.fletchr.app cat cache/converted-*.mp4`) and write the sorted frame times of each file:
-   `ffprobe -v error -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 clipX.mp4 | tr -d ',' | python3 -c "import sys,json;print(json.dumps(sorted(float(x) for x in sys.stdin.read().split())))" > truthX.json`
-2. Build the app with the page: `VITE_PROTOTYPE=1 VITE_SERVER_URL=https://app.fletchr.de npm run build-only`, `npx cap sync android`, debug build, install.
-3. `python3 scripts/video-prototype/serve.py <folder>`, `adb reverse tcp:8765 tcp:8765`, `adb reverse tcp:8766 tcp:8766`, start the app.
-4. `uv run --with playwright python scripts/video-prototype/run_checks.py <folder> B C` (the stepping checks) and `background_upload.py <folder>`.
-5. The page `/dev/video` in the app also has the picker tests, done by hand.
-
-The page and its library are `src/prototype/` (only in a build made with `VITE_PROTOTYPE=1`); delete them when the real player exists.
+1. Record a 120 fps slow-motion clip with the camera app, copy it to the PC.
+2. Build the app with the page (`VITE_PROTOTYPE=1`), install it, serve the folder over `adb reverse`.
+3. Run the stepping checks through the WebView's debugger (Playwright over `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`).

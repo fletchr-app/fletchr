@@ -51,6 +51,13 @@
         </provider>
     </application>
 
+    <!-- The camera app that records a video must be visible to the app (Android 11 and later); the Camera plugin only lists photos. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.VIDEO_CAPTURE" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
