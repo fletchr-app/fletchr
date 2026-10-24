@@ -67,6 +67,7 @@ h2.h4,
   --chart-baseline: #c3c2b7;
   --chart-border: rgba(11, 11, 11, 0.1);
   --chart-series: #2a78d6;
+  --chart-series-2: #c2610f;
 }
 [data-bs-theme='dark'] {
   --chart-surface: #1a1a19;
@@ -77,6 +78,7 @@ h2.h4,
   --chart-baseline: #383835;
   --chart-border: rgba(255, 255, 255, 0.1);
   --chart-series: #3987e5;
+  --chart-series-2: #e8913a;
 }
 .chart-card {
   background-color: var(--chart-surface);
@@ -98,6 +100,8 @@ h2.h4,
 .chart-series-line { fill: none; stroke: var(--chart-series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .chart-series-fill { fill: var(--chart-series); }
 .chart-series-stroke { stroke: var(--chart-series); }
+.chart-series2-line { fill: none; stroke: var(--chart-series-2); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; stroke-linecap: round; }
+.chart-series2-fill { fill: var(--chart-series-2); }
 .chart-surface-fill { fill: var(--chart-surface); }
 .chart-hit { position: absolute; background: none; border: 0; padding: 0; }
 
