@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { currentGoals, progress, type Evaluated } from './progress.ts';
+import { currentGoals, movers, progress, radarAxes, teamAverages, type Evaluated } from './progress.ts';
 
 const c = (key: string, group = 'Stance') => ({ key, label: key.toUpperCase(), group });
 const ev = (id: number, date: string, scores: [string, number][], more: Partial<Evaluated> = {}): Evaluated => ({
@@ -56,4 +56,27 @@ test('the goals are those of the newest evaluation of each kind, only while it h
   ];
   assert.deepEqual(currentGoals(list).map((g) => [g.kind, g.evaluation.goals]), [['coach', 'Hold the draw'], ['self', 'Relax']]);
   assert.deepEqual(currentGoals([...list, ev(5, '2026-03-01', [], { goals: '' })]).map((g) => g.kind), ['self']);
+});
+
+test('movers: what rose the most and what is rated lowest', () => {
+  const g = progress([ev(1, '2026-01-01', [['a', 2], ['b', 4], ['x', 1]]), ev(2, '2026-02-01', [['a', 5], ['b', 4], ['x', 2]])]);
+  const m = movers(g, 2);
+  assert.deepEqual(m.improved.map((x) => [x.key, x.change]), [['a', 3], ['x', 1]]);
+  assert.deepEqual(m.attention.map((x) => [x.key, x.latest]), [['x', 2], ['b', 4]]);
+  assert.deepEqual(movers(progress([ev(1, '2026-01-01', [['a', 3]])])).improved, []);
+});
+
+test('the radar has the latest mean per group and the first one as the earlier', () => {
+  const g = progress([ev(1, '2026-01-01', [['a', 2], ['b', 2], ['x', 1]]), ev(2, '2026-02-01', [['a', 4], ['b', 4], ['x', 3]])]);
+  assert.deepEqual(radarAxes(g), [{ group: 'Stance', latest: 4, earlier: 2 }, { group: 'Release', latest: 3, earlier: 1 }]);
+  assert.equal(radarAxes(progress([ev(1, '2026-01-01', [['a', 2]])]))[0]!.earlier, null);
+});
+
+test('team: each archer counts once, with the newest coach evaluation; self-assessments do not count', () => {
+  const e = (id: number, archer: number, date: string, a: number, more: Partial<Evaluated> = {}) => ({ ...ev(id, date, [['a', a]], more), archer });
+  const t = teamAverages([e(1, 10, '2026-01-01', 1), e(2, 10, '2026-02-01', 3), e(3, 11, '2026-01-15', 5), e(4, 11, '2026-03-01', 1, { kind: 'self' })]);
+  assert.equal(t.archers, 2);
+  assert.deepEqual(t.groups.map((g) => [g.group, g.mean]), [['Stance', 4]]);
+  assert.deepEqual(t.groups[0]!.criteria, [{ key: 'a', label: 'A', mean: 4, archers: 2 }]);
+  assert.deepEqual(teamAverages([]), { archers: 0, groups: [] });
 });
