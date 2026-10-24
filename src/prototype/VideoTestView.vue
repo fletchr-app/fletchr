@@ -2,7 +2,10 @@
 import { IonButton } from '@ionic/vue'
 import { ref } from 'vue'
 
+import { Capacitor } from '@capacitor/core'
+
 import AppPage from '@/components/AppPage.vue'
+import { VideoConverter, type ConvertOptions } from './video-converter'
 import { jumpTest, loadVideo, measurePlayback, memoryMb, stepTest, uploadBlob } from './video-test'
 
 // Throwaway page for #35 (only built with VITE_PROTOTYPE=1). Choose or record a clip, then run the checks.
@@ -72,7 +75,24 @@ async function upload(source: string, target: string, copies: number) {
   })
   return state.totalMb
 }
-;(window as unknown as { __videoTest: unknown }).__videoTest = { fromUrl, run, upload }
+/** Pick a clip, convert it with the native plugin, show the result and play it. */
+async function convertOnPhone(options: ConvertOptions, again = false) {
+  log.value = []
+  say(again ? 'converting the same clip again...' : 'picking and converting...')
+  try {
+    const r = await (again ? VideoConverter.convertAgain(options) : VideoConverter.pickAndConvert(options))
+    say(`converted in ${(r.convertMs / 1000).toFixed(1)} s: ${(r.bytes / 1048576).toFixed(2)} MB, ${r.exportVideoFrames} frames (source ${r.srcFrames})`)
+    info.value = { converted: r }
+    const url = Capacitor.convertFileSrc(`file://${r.path}`)
+    const meta = await loadVideo(video.value!, url)
+    info.value = { converted: r, loaded: meta }
+    say(`playing the result: ${meta.width}x${meta.height}, ${meta.duration.toFixed(2)} s`)
+  } catch (e) {
+    say(`failed: ${(e as Error).message ?? e}`)
+  }
+  return info.value
+}
+;(window as unknown as { __videoTest: unknown }).__videoTest = { fromUrl, run, upload, convertOnPhone }
 </script>
 
 <template>
@@ -86,6 +106,7 @@ async function upload(source: string, target: string, copies: number) {
         <span class="fw-semibold">2. Take video (camera)</span>
         <input type="file" accept="video/*" capture="environment" @change="picked($event, 'camera')" />
       </label>
+      <IonButton :disabled="running" @click="convertOnPhone({})">3. Pick and convert on the phone (native)</IonButton>
       <video ref="video" playsinline muted style="width: 100%; max-height: 260px; background: #000"></video>
       <IonButton :disabled="running" @click="run()">Run checks on this clip</IonButton>
       <pre style="white-space: pre-wrap; font-size: 11px">{{ log.join('\n') }}</pre>

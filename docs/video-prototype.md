@@ -4,7 +4,7 @@ Tested 2026-10-23 on a Motorola edge 50 neo (Android 16, system WebView Chrome 1
 recorded with the phone's camera app. The aim was to decide whether the frame-by-frame player and the video upload can
 stay in Capacitor (WebView) or need native code (plan section 6).
 
-**Decision: the player stays in the WebView. The upload of large files needs a small native plugin.**
+**Decision: the player stays in the WebView. The conversion is done on the phone** (second part of this document, #70), so only a small file is uploaded and no server-side conversion is needed.
 
 ## What the phone writes
 
@@ -60,13 +60,34 @@ ffmpeg -i clip.mp4 -vf "setpts=N/(CAPTURE_FPS*TB),scale=-2:720" -fps_mode passth
 back to the front (48 seconds). The app process stayed alive. (Test through `adb reverse`; a plain mobile connection
 could behave differently, but stalls in the background are what Android does to WebViews.)
 
-So a video upload from the page is not reliable when the person puts the phone away. The plan's fallback is right: a small **native Capacitor
-plugin** (Kotlin, WorkManager with a foreground notification) that uploads a file in chunks, and a server that
-tells how much it already has so that an interrupted upload resumes. Not tested here (it needs the media endpoint, #36).
+So a video of this size cannot be uploaded from the page when the person puts the phone away. That is one more reason to convert on the phone first (below): the file to upload is then a few MB.
+
+## Converting on the phone (#70)
+
+Instead of uploading the original and converting on the server, the app converts the clip right after it is picked.
+A throwaway Capacitor plugin (`android/app/src/main/java/de/fletchr/app/VideoConverterPlugin.java`, Media3 Transformer 1.8.0)
+was tested with the same clip. **It works.**
+
+| | Result |
+|---|---|
+| Speed | 872 frames (7.3 s of real time) in 4.5 s on the phone, about 190 frames/s; a 60 s clip at 120 fps would take about 40 s (extrapolated, not measured) |
+| Output | H.264 High, 720p (portrait, with the rotation tag), no audio, **no B-frames**, **all 872 frames, one frame per input frame**, no duplicates |
+| Timeline | real time, 120 fps (the plugin reads the capture rate from the file with `MediaMetadataRetriever` and speeds the timestamps up by capture rate / file rate, here 4.03); frame spacing 8.18 to 8.46 ms (mean 8.33; not exactly constant, because the source timestamps are not) |
+| Keyframes | exactly every 10 frames, **if the interval is counted with the frame rate of the source file** (about 30 fps for slow motion): the encoder was configured with that rate, so asking for 10 frames at 120 fps gave a keyframe every 2 frames |
+| Bitrate | the encoder also counts against the source's timeline: 6 Mbit/s requested gave 24 Mbit/s on the real timeline (20.8 MB). So request `wanted / speed`; for a normal clip (speed 1) the requested value is what you get. 1.5 Mbit/s requested (about 6 Mbit/s real) gave 5.3 MB. Use a rule like 0.07 bits per pixel per frame |
+| Metadata | **no GPS position**; the device model, manufacturer and Android version tags stay (harmless) |
+| Stepping in the WebView | frame-exact on the output: 120/120 forward, 119/119 back, 40/40 jumps, 33 to 65 ms per step (real and stretched timeline; aiming at 25% or 50% of the frame) |
+| Normal clip (30 fps, no slow-motion tag) | speed 1, converted correctly: 218 frames, constant 33.3 ms, keyframe every 10 frames |
+| Broken file | "cannot read the video" as an error to the page, no crash (the message needs cleaning up) |
+| Not measured | battery and heat, a clip of a minute or more, other phones, the size of the Media3 library in the app |
+
+Because the frame times are not exactly `i / 120`, the player should step relative to the frame it shows: read the `mediaTime` of the current frame (from `requestVideoFrameCallback`) and aim at `mediaTime + 1.25 * frame_duration` for the next one.
+
+The plugin is the seed of the real media plugin. The throwaway page `src/prototype/` (build with `VITE_PROTOTYPE=1`) calls it.
 
 ## How to repeat it
 
-1. Convert the clip as above (keep the original too) and write the sorted frame times of each file:
+1. For the checks on the converted files: take the converted files from the app (`adb exec-out run-as de.fletchr.app cat cache/converted-*.mp4`) and write the sorted frame times of each file:
    `ffprobe -v error -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 clipX.mp4 | tr -d ',' | python3 -c "import sys,json;print(json.dumps(sorted(float(x) for x in sys.stdin.read().split())))" > truthX.json`
 2. Build the app with the page: `VITE_PROTOTYPE=1 VITE_SERVER_URL=https://app.fletchr.de npm run build-only`, `npx cap sync android`, debug build, install.
 3. `python3 scripts/video-prototype/serve.py <folder>`, `adb reverse tcp:8765 tcp:8765`, `adb reverse tcp:8766 tcp:8766`, start the app.
