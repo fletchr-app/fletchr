@@ -26,12 +26,16 @@
     <ul>
       <li>Account: email address, name, password (stored only as a hash). Optional in the profile: dominant hand, dominant eye, date of birth and the units (metric or imperial). Coaches of your team see hand, eye and your age, not the date of birth; for a profile without an account that a coach keeps, the coach also sees the date they entered.</li>
       <li>Training: sessions, ends, arrows, equipment.</li>
-      <li>Teams: memberships and roles, invites.</li>
+      <li>Teams: memberships and roles, invites, the evaluation forms of the team.</li>
       <li>Coach notes about archers, with their visibility. Notes marked "only me" cannot be read by anybody but the author and are not part of the archer's data export.</li>
-      <li>Profiles for archers without an account: a name, notes and sessions kept by a coach. The profile belongs to the team, not to the coach: it stays until a coach of the team deletes it or the team is deleted. When a coach deletes their account, the profiles stay with the team; if nobody is left in the team except profiles without an account, the team is deleted together with those profiles. The archer can ask a coach of the team to delete the profile, or create an account and take the profile over with a code (the sessions and notes then become theirs, except notes that the coach keeps only for themselves).</li>
+      <li>Photos and videos: files you (or a coach for you) add, with a small preview image, the time taken, size, length and a note. The app shrinks photos and removes their metadata (for example the location); videos are converted on the phone (without sound, at a smaller resolution) and then uploaded. You and the coaches of your teams can see them.</li>
+      <li>Notes on video frames and drawings: a coach can attach a note to a single frame of a video and draw on it (lines, angles, circles). They have the same visibility as the other coach notes.</li>
+      <li>Evaluations: a coach rates an archer with a form of the team (a rating per criterion, comments, goals, a date, and on request a video frame as evidence). At first only the coaches of the team can read an evaluation; the coach who wrote it decides whether you see it, and can take that back. You can also rate yourself; you and your coaches read that. Evaluations about you are part of your data export, also the ones that were not shared with you.</li>
+      <li>Consent for video: for archers under 18 (by the date of birth entered), no video is added until a coach has recorded that the parents consented. The time and the coach who recorded it are stored. The record can be withdrawn; videos that already exist stay until they are deleted.</li>
+      <li>Profiles for archers without an account: a name, notes, evaluations, photos, videos and sessions kept by a coach. The profile belongs to the team, not to the coach: it stays until a coach of the team deletes it or the team is deleted. When a coach deletes their account, the profiles stay with the team; if nobody is left in the team except profiles without an account, the team is deleted together with those profiles. The archer can ask a coach of the team to delete the profile, or create an account and take the profile over with a code (the sessions, photos, videos, evaluations and notes then become theirs, except notes that the coach keeps only for themselves).</li>
       <li>Password reset: the email address receives a code by mail. Only a hash of the code is stored; it is valid for one hour and allows at most five wrong tries. Afterwards the server sends a mail saying the password was changed. The server sends these mails itself from fletchr.de, without a mail service provider.</li>
       <li>Web server logs: IP address, time and requested address. They are deleted after 7 days.</li>
-      <li>On your device: a local copy of your sessions, so you can enter arrows without a connection, and your sign-in. Both are removed when you sign out or delete your data.</li>
+      <li>On your device: a local copy of your sessions, so you can enter arrows without a connection, and your sign-in. Both are removed when you sign out or delete your data. Photos and videos that wait to be uploaded are kept in a folder of the app until they are uploaded or you delete them.</li>
     </ul>
     <h2>What does not happen</h2>
     <p>The app contains no advertising, no analytics or tracking services, and no third-party libraries that send data. Data goes only to the Fletchr server.</p>
@@ -40,7 +44,7 @@
     <h2>Hosting</h2>
     <p>The server is operated by Host Europe GmbH in Cologne. Its data centres are in Germany (Cologne) and France (Strasbourg), so within the EU.</p>
     <h2>Retention</h2>
-    <p>Your data stays until you delete it or your account. A copy can remain in server backups for up to 14 days.</p>
+    <p>Your data stays until you delete it or your account. After that a copy can remain in backups for up to about 12 months: there are daily backups of the last 30 days and monthly ones of the last 12 months. The backups are encrypted and stored on storage outside the server.</p>
     <h2>Your rights</h2>
     <p>Access and export, deletion of your data and your account: in the app under "Settings", "Your data". On request also by email to <a href="mailto:kontakt@fletchr.de">kontakt@fletchr.de</a>. You can also complain to a data protection authority. See also <a href="/en/delete-account/">Delete your account and data</a>.</p>
   </main>

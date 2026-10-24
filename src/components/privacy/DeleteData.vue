@@ -17,6 +17,7 @@ function summary(d: DeletedCounts) {
     t('privacy.bows', { n: d.bows }, d.bows),
     t('privacy.arrowSets', { n: d.arrow_sets }, d.arrow_sets),
     t('privacy.notesAboutMe', { n: d.notes_about_me }, d.notes_about_me),
+    t('privacy.evaluations', { n: d.evaluations }, d.evaluations),
   ].join(', ')
 }
 

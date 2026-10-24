@@ -96,6 +96,7 @@ async function remove() {
         </div>
         <AppButton @click="create">{{ $t('evaluations.newForm') }}</AppButton>
         <div class="faint">{{ $t('evaluations.versionHint') }}</div>
+        <div class="faint">{{ $t('evaluations.whereToRate') }}</div>
       </template>
       <template v-else>
         <FormField v-model="editing.name" :label="$t('evaluations.formName')" capitalize="sentences" />
