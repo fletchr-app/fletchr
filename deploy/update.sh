@@ -7,7 +7,9 @@
 # What it does, in this order:
 #   1. checks: a tag that exists, is on main, and a clean checkout that is on main
 #   2. a database backup (deploy/backup.sh); if that fails, nothing is changed
-#   3. moves the checkout to the tag (fast-forward only) and rebuilds and restarts the container
+#   3. moves the checkout to the tag (fast-forward only) and restarts the container with the image CI built for the tag
+#      (ghcr.io/fletchr-app/fletchr-server:<tag>; IMAGE_BASE changes it, an empty IMAGE_BASE builds on this machine),
+#      or builds it here when that image cannot be pulled
 #   4. waits until /api/health/ reports the version of the tag
 #   5. if that does not happen: puts back the database copy from step 2 and the previous version, and exits with an error
 # The website (deploy/site.sh) is copied too where passwordless sudo is available.
@@ -23,6 +25,7 @@ if [ -z "${UPDATE_FROM_COPY:-}" ]; then
     UPDATE_FROM_COPY=1 FLETCHR_REPO="$repo" exec bash -c 'copy=$1; shift; trap "rm -f $copy" EXIT; bash "$copy" "$@"' _ "$copy" "$@"
 fi
 tag="${1:-${SSH_ORIGINAL_COMMAND:-}}"
+image_base="${IMAGE_BASE-ghcr.io/fletchr-app/fletchr-server}"
 health_url="${HEALTH_URL:-http://127.0.0.1:8000/api/health/}"
 wait_seconds="${WAIT_SECONDS:-90}"
 
@@ -52,19 +55,34 @@ wait_healthy() {
     return 1
 }
 
+# Starts what the checkout holds. $1 is the release tag of that commit, if it has one.
+start() {
+    if [ -n "$image_base" ] && [ -n "${1:-}" ]; then
+        export FLETCHR_IMAGE="$image_base:$1"
+        if compose pull --quiet django; then
+            compose up -d
+            return
+        fi
+        say "there is no image $FLETCHR_IMAGE (yet): building here"
+        unset FLETCHR_IMAGE
+    fi
+    compose up -d --build
+}
+
 git_ fetch --quiet --tags origin
 git_ rev-parse -q --verify "refs/tags/$tag^{commit}" >/dev/null || fail "there is no tag $tag"
 git_ merge-base --is-ancestor "refs/tags/$tag" origin/main || fail "$tag is not on main: only releases are deployed"
 [ "$(git_ symbolic-ref --short HEAD)" = main ] || fail "the checkout is not on main"
 [ -z "$(git_ status --porcelain --untracked-files=no)" ] || fail "the checkout has changes: nothing is touched"
 previous="$(git_ rev-parse HEAD)"
+previous_tag="$(git_ describe --tags --exact-match "$previous" 2>/dev/null || true)"
 
 say "backup first"
 "$repo/deploy/backup.sh" || fail "the backup failed: nothing was changed"
 
 say "from ${previous:0:7} to $tag"
 git_ merge --ff-only --quiet "refs/tags/$tag" || fail "the checkout cannot be moved to $tag without a merge: nothing was changed"
-if compose up -d --build && wait_healthy "$version"; then
+if start "$tag" && wait_healthy "$version"; then
     say "$tag is running"
 else
     echo "update: $tag did not start as version $version (within ${wait_seconds} s): going back" >&2
@@ -72,7 +90,7 @@ else
     # The newest database copy is the one from step 2. It is restored inside the container: the files belong to its user.
     compose run --rm --no-deps -T django sh -c 'f=$(ls -1 /data/backups/db-*.sqlite3 | sort | tail -n 1) && cp "$f" /data/db.sqlite3 && rm -f /data/db.sqlite3-wal /data/db.sqlite3-shm && echo "database restored from $f"' || echo "update: the database could not be restored: do it by hand (docs/self-hosting.md, section 4)" >&2
     git_ reset --hard --quiet "$previous"
-    compose up -d --build
+    start "$previous_tag"
     echo "update: the version from before is started again; anything written since the backup is gone" >&2
     exit 1
 fi

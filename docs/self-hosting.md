@@ -99,11 +99,11 @@ By hand, or with the script that CI uses:
 cd ~/fletchr && deploy/update.sh v0.6.0
 ```
 
-It makes a database backup first (`backup.sh`), moves the checkout to the tag (the tag must be on `main`, the checkout clean and on `main`), rebuilds and restarts, and waits until `/api/health/` reports that version. If it does not, it puts the database copy from before and the previous version back and exits with an error. What it cannot see: a migration that works but is wrong. The backup is for that. It copies the website too where `sudo` works without a password; otherwise run `deploy/site.sh` yourself when `site/` changed. (Do not turn on passwordless `rsync` as root just for this: it can write anywhere.)
+It makes a database backup first (`backup.sh`), moves the checkout to the tag (the tag must be on `main`, the checkout clean and on `main`), pulls the image CI built for the tag (`ghcr.io/fletchr-app/fletchr-server:vX.Y.Z`) and restarts, and waits until `/api/health/` reports that version. If it does not, it puts the database copy from before and the previous version back and exits with an error. Without that image (a fork, or the package is not public yet) it builds the image on the server instead; `IMAGE_BASE` in the environment of the script names another registry path, an empty one always builds here. What it cannot see: a migration that works but is wrong. The backup is for that. It copies the website too where `sudo` works without a password; otherwise run `deploy/site.sh` yourself when `site/` changed. (Do not turn on passwordless `rsync` as root just for this: it can write anywhere.)
 
 ### From CI on a release tag
 
-Pushing `vX.Y.Z` (docs/releasing.md) starts `.github/workflows/deploy.yml`: the tests first, then one SSH command with the tag. The key can do nothing else. Once:
+Pushing `vX.Y.Z` (docs/releasing.md) starts `.github/workflows/deploy.yml`: the tests first, then the server image is built and pushed to GHCR, then one SSH command with the tag. The key can do nothing else. The first time a tag builds the image, set the package `fletchr-server` to public (GitHub, your organisation, Packages, the package, Package settings, Change visibility): GitHub makes new packages private, and the server pulls without a login. Once:
 
 1. On your computer: `ssh-keygen -t ed25519 -N "" -C fletchr-ci -f fletchr-deploy`.
 2. On the server, in `~/.ssh/authorized_keys` of the user that owns `~/fletchr`, one line (`restrict` switches off the terminal and all forwarding):

@@ -13,11 +13,12 @@ check() { # description, command that must succeed
 }
 
 mkdir -p "$work/bin"
-# docker: "up" starts what VERSION says, "run" records the restore, "stop" stops
+# docker: "up" starts what VERSION says, "pull" fails when PULL_FAILS is set, "run" records the restore, "stop" stops
 cat > "$work/bin/docker" <<'D'
 #!/usr/bin/env bash
 case " $* " in
-  *" up "*)   echo up >> "$FAKE_LOG"; cp "$PWD/../VERSION" "$FAKE_STATE" ;;
+  *" pull "*) echo "pull $FLETCHR_IMAGE" >> "$FAKE_LOG"; [ -z "${PULL_FAILS:-}" ] ;;
+  *" up "*)   echo "up $*" >> "$FAKE_LOG"; cp "$PWD/../VERSION" "$FAKE_STATE" ;;
   *" run "*)  echo restore >> "$FAKE_LOG" ;;
   *" stop "*) echo stop >> "$FAKE_LOG"; rm -f "$FAKE_STATE" ;;
 esac
@@ -59,6 +60,17 @@ check "it succeeds" 'update v0.2.0'
 check "the checkout is at the tag" '[ "$(git -C $work/server describe --tags --exact-match)" = v0.2.0 ]'
 check "backup before the build" '[ "$(head -n 1 $FAKE_LOG)" = backup ] && grep -q "^up" $FAKE_LOG'
 check "no restore" '! grep -q restore $FAKE_LOG'
+check "the image of the tag is pulled and nothing is built here" 'grep -q "^pull ghcr.io/fletchr-app/fletchr-server:v0.2.0$" $FAKE_LOG && ! grep -q -- "--build" $FAKE_LOG'
+
+echo "-- no image for the tag: it is built here"
+new_server; release 0.2.0 0.2.0
+check "it succeeds" 'PULL_FAILS=1 update v0.2.0'
+check "built on the machine" 'grep -q -- "--build" $FAKE_LOG && grep -q "no image" $work/out'
+
+echo "-- an empty IMAGE_BASE builds here without trying to pull"
+new_server; release 0.2.0 0.2.0
+check "it succeeds" 'IMAGE_BASE= update v0.2.0'
+check "no pull" '! grep -q "^pull" $FAKE_LOG && grep -q -- "--build" $FAKE_LOG'
 
 echo "-- an update that never answers goes back"
 new_server; release 0.2.0 broken
@@ -66,6 +78,7 @@ before="$(git -C "$work/server" rev-parse HEAD)"
 check "it fails" '! update v0.2.0'
 check "the old commit is back" '[ "$(git -C $work/server rev-parse HEAD)" = "$before" ]'
 check "the database is restored and the old version started again" 'grep -q restore $FAKE_LOG && [ "$(grep -c "^up" $FAKE_LOG)" = 2 ] && [ "$(cat $FAKE_STATE)" = 0.1.0 ]'
+check "from the image of the old tag" '[ "$(grep -c "^pull" $FAKE_LOG)" = 2 ] && tail -n 3 $FAKE_LOG | grep -q "^pull ghcr.io/fletchr-app/fletchr-server:v0.1.0$"'
 
 echo "-- refused before anything is touched"
 new_server; release 0.2.0 0.2.0
