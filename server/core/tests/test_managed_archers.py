@@ -95,6 +95,7 @@ def test_archer_info_for_the_screen(client_for, club, managed):
     assert res.data == {
         "id": managed.pk, "name": "Max Muster", "managed": True, "team_id": club["a"].pk, "team_name": "Team A",
         "dominant_hand": "", "dominant_eye": "", "age": None, "date_of_birth": None,
+        "video_allowed": True, "video_consent_at": None, "video_consent_by": None,
     }
     assert client_for(club["b_admin"]).get(f"/api/archers/{managed.pk}/").status_code == 404
     assert client_for(club["archer1"]).get(f"/api/archers/{managed.pk}/").status_code == 404

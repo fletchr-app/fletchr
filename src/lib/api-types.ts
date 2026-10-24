@@ -21,6 +21,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/archers/{user_id}/video-consent/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description A coach records that the parents of an archer under 18 consented to video, or withdraws that. Without it no video of the archer is added. */
+        put: operations["archers_video_consent_update"];
+        post?: never;
+        /** @description Withdrawn: new video is refused again. Clips that exist stay until someone deletes them. */
+        delete: operations["archers_video_consent_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/arrow-sets/": {
         parameters: {
             query?: never;
@@ -925,6 +943,15 @@ export interface components {
              * @description Only for a profile without an account, which the coach keeps
              */
             date_of_birth: string | null;
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            video_allowed: boolean;
+            /**
+             * Format: date-time
+             * @description When a coach recorded the parents' consent for video
+             */
+            video_consent_at: string | null;
+            /** @description Who recorded it */
+            video_consent_by: string | null;
         };
         ArcherNameRequest: {
             name: string;
@@ -1575,6 +1602,8 @@ export interface components {
             /** Format: date */
             date_of_birth?: string | null;
             units?: components["schemas"]["UnitsEnum"];
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            readonly video_allowed: boolean;
         };
         ProfileRequest: {
             name?: string;
@@ -1843,6 +1872,12 @@ export interface components {
          * @enum {string}
          */
         UnitsEnum: "metric" | "imperial";
+        VideoConsent: {
+            video_allowed: boolean;
+            /** Format: date-time */
+            video_consent_at: string | null;
+            video_consent_by: string | null;
+        };
         /**
          * @description * `private` - Private
          *     * `coach_only` - Coach Only
@@ -1906,6 +1941,47 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Archer"];
                 };
+            };
+        };
+    };
+    archers_video_consent_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoConsent"];
+                };
+            };
+        };
+    };
+    archers_video_consent_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

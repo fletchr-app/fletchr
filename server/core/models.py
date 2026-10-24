@@ -85,6 +85,9 @@ class Profile(models.Model):
     dominant_eye = models.CharField(max_length=5, choices=Hand.choices, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     units = models.CharField(max_length=8, choices=Units.choices, default=Units.METRIC)
+    # Video of an archer under 18 needs the consent of the parents. A coach records that it was given.
+    video_consent_at = models.DateTimeField(null=True, blank=True)
+    video_consent_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
 
     def __str__(self):
         return self.name or self.user.email
@@ -92,6 +95,11 @@ class Profile(models.Model):
     @property
     def age(self):
         return age_in_years(self.date_of_birth)
+
+    @property
+    def video_allowed(self) -> bool:
+        """Adults, and archers whose age is not known (nothing says they are young), may be filmed; archers under 18 need consent on record."""
+        return self.age is None or self.age >= 18 or self.video_consent_at is not None
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

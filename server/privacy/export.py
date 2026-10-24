@@ -78,6 +78,8 @@ def export_user_data(user) -> dict:
             "dominant_eye": profile.dominant_eye,
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
+            "video_consent_at": profile.video_consent_at,
+            "video_consent_by": (profile.video_consent_by.profile.name or profile.video_consent_by.email) if profile.video_consent_by else None,
         },
         "teams": [
             {"team": m.team.name, "role": m.role, "also_shoots": m.also_shoots, "joined_at": m.joined_at}

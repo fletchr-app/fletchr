@@ -63,8 +63,19 @@ const { data, error, loading, reload } = useRemote(async () => {
   return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
 })
 
+// Video of an archer under 18 needs the consent of the parents on record. Unknown (offline) counts as allowed: the server decides.
+const consent = useRemote(async () => {
+  if (ownerParam && ownerParam !== me.value) return (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: ownerParam } } })).data?.video_allowed ?? null
+  return (await api.GET('/api/me/')).data?.profile.video_allowed ?? null
+})
+const videoAllowed = computed(() => consent.data.value !== false)
+
 let firstVisit = true
-onIonViewWillEnter(() => (firstVisit ? (firstVisit = false) : reload()))
+onIonViewWillEnter(() => {
+  if (firstVisit) return void (firstVisit = false)
+  reload()
+  consent.reload()
+})
 watch(media.uploaded, reload)
 
 // Previews of what is still on the phone.
@@ -122,7 +133,7 @@ const addError = ref<string | null>(null)
 async function chooseSource() {
   const buttons: { text: string; role?: string; handler?: () => void }[] = [
     { text: t('media.takePhoto'), handler: () => void add('photo') },
-    ...(canRecordVideo() ? [{ text: t('media.recordVideo'), handler: () => void add('video') }] : []),
+    ...(canRecordVideo() && videoAllowed.value ? [{ text: t('media.recordVideo'), handler: () => void add('video') }] : []),
     { text: t('media.fromGallery'), handler: () => void add('gallery') },
     { text: t('common.cancel'), role: 'cancel' },
   ]
@@ -143,6 +154,10 @@ async function add(source: PickSource) {
     adding.value = false // the next one can be picked while this one is prepared
   }
   if (!picked) return
+  if (picked.kind === 'video' && !videoAllowed.value) {
+    addError.value = t('media.needsConsent')
+    return
+  }
   const key = `preparing-${newId()}`
   try {
     if (picked.kind === 'photo') await addPhoto(key, picked)
@@ -293,7 +308,8 @@ const taken = (item: Shown | null) => {
   <AppPage :title="title">
     <div class="screen">
       <AppButton :busy="adding" @click="chooseSource">{{ $t('media.add') }}</AppButton>
-      <div v-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
+      <div v-if="!videoAllowed" class="muted">{{ $t('media.needsConsent') }}</div>
+      <div v-else-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
       <ErrorText :message="addError" />
       <SyncBanner />
       <div v-if="videoWaits && media.waitingForWifi() > 0" class="muted">{{ $t('media.videosWaitForWifi') }}</div>

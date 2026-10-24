@@ -59,7 +59,15 @@ export default {
     failed: '{n} Eintrag wurde vom Server abgelehnt: {error} | {n} Einträge wurden vom Server abgelehnt: {error}',
     giveUp: 'Diese Uploads aufgeben',
   },
+  consent: {
+    title: 'Einwilligung für Video',
+    missing: '{name} ist unter 18. Video bleibt aus, bis die Eltern zugestimmt haben und du das hier einträgst.',
+    given: 'Die Eltern haben Video zugestimmt. Eingetragen von {who} am {date}.',
+    record: 'Die Eltern haben Video zugestimmt',
+    withdraw: 'Einwilligung zurücknehmen',
+  },
   media: {
+    needsConsent: 'Für Video braucht es zuerst die Einwilligung der Eltern, weil dieser Schütze unter 18 ist. Ein Trainer trägt sie auf der Seite des Schützen ein.',
     title: 'Fotos und Videos',
     titleFor: 'Fotos und Videos von {name}',
     link: 'Fotos und Videos',

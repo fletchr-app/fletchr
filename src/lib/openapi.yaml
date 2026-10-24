@@ -24,6 +24,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/Archer'
           description: ''
+  /api/archers/{user_id}/video-consent/:
+    put:
+      operationId: archers_video_consent_update
+      description: A coach records that the parents of an archer under 18 consented
+        to video, or withdraws that. Without it no video of the archer is added.
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - archers
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoConsent'
+          description: ''
+    delete:
+      operationId: archers_video_consent_destroy
+      description: 'Withdrawn: new video is refused again. Clips that exist stay until
+        someone deletes them.'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - archers
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/arrow-sets/:
     get:
       operationId: arrow_sets_list
@@ -2184,6 +2223,19 @@ components:
           format: date
           nullable: true
           description: Only for a profile without an account, which the coach keeps
+        video_allowed:
+          type: boolean
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        video_consent_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When a coach recorded the parents' consent for video
+        video_consent_by:
+          type: string
+          nullable: true
+          description: Who recorded it
       required:
       - age
       - date_of_birth
@@ -2194,6 +2246,9 @@ components:
       - name
       - team_id
       - team_name
+      - video_allowed
+      - video_consent_at
+      - video_consent_by
     ArcherNameRequest:
       type: object
       properties:
@@ -3621,6 +3676,13 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+        video_allowed:
+          type: boolean
+          readOnly: true
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+      required:
+      - video_allowed
     ProfileRequest:
       type: object
       properties:
@@ -4264,6 +4326,22 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    VideoConsent:
+      type: object
+      properties:
+        video_allowed:
+          type: boolean
+        video_consent_at:
+          type: string
+          format: date-time
+          nullable: true
+        video_consent_by:
+          type: string
+          nullable: true
+      required:
+      - video_allowed
+      - video_consent_at
+      - video_consent_by
     VisibilityEnum:
       enum:
       - private

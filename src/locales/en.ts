@@ -55,7 +55,15 @@ export default {
     failed: '{n} item was refused by the server: {error} | {n} items were refused by the server: {error}',
     giveUp: 'Give up on these uploads',
   },
+  consent: {
+    title: 'Video consent',
+    missing: '{name} is under 18. Video stays off until the parents have agreed and you record it here.',
+    given: 'The parents agreed to video. Recorded by {who} on {date}.',
+    record: 'The parents agreed to video',
+    withdraw: 'Withdraw consent',
+  },
   media: {
+    needsConsent: 'Video needs the consent of the parents first, because this archer is under 18. A coach records it on the archer\'s page.',
     title: 'Photos and videos',
     titleFor: 'Photos and videos of {name}',
     link: 'Photos and videos',
