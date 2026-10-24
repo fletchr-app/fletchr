@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/", include("targets.urls")),
     path("api/", include("training.urls")),
     path("api/", include("notes.urls")),
+    path("api/", include("evaluations.urls")),
     path("api/", include("privacy.urls")),
     path("api/", include("media.urls")),
     path("api/token/", TokenObtainPairView.as_view()),

@@ -255,7 +255,7 @@ function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
   if (item.remote?.kind === 'video') {
     // The player page knows which clips are next to this one by the same query as this page.
-    const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
+    const query = { ...(sessionId ? { session: sessionId } : { owner: String(owner.value) }), ...(route.query.pick ? { pick: route.query.pick as string } : {}) }
     return void router.push({ path: `/media/${item.remote.id}`, query })
   }
   viewKey.value = item.key

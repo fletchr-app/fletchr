@@ -5,6 +5,8 @@ on:
   push:
     branches: [develop, main]
   pull_request:
+  # The release deploy (deploy.yml) runs the same checks before it touches the server.
+  workflow_call:
 
 permissions:
   contents: read
@@ -61,3 +63,11 @@ jobs:
       - run: npm run types:api
       - name: The generated files are up to date
         run: git diff --exit-code src/lib/openapi.yaml src/lib/api-types.ts
+
+  # The deploy scripts are tried against a fake server (a git remote and a fake docker): the part that runs on the real one
+  # without anybody watching should not be written untested.
+  deploy-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: deploy/tests/update_test.sh

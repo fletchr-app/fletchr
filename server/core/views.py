@@ -48,11 +48,11 @@ from .serializers import (
 logger = logging.getLogger("core")
 
 
-@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField()}))
+@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField(), "min_app_version": serializers.CharField()}))
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
-    return Response({"status": "ok", "version": settings.SPECTACULAR_SETTINGS["VERSION"]})
+    return Response({"status": "ok", "version": settings.SPECTACULAR_SETTINGS["VERSION"], "min_app_version": settings.MIN_APP_VERSION})
 
 
 class RegisterView(APIView):

@@ -3,6 +3,8 @@
 from django.utils import timezone
 
 from core.models import TeamMember
+from evaluations.defaults import localize
+from evaluations.models import Evaluation
 from equipment.models import ArrowSet, Bow, Setup
 from equipment.serializers import ArrowSetRevisionSerializer, ArrowSetSerializer, BowRevisionSerializer, BowSerializer
 from notes.models import Note
@@ -60,6 +62,40 @@ def _media(media):
     }
 
 
+def _evaluation(ev):
+    labels = {c["key"]: c["label"] for c in localize(ev.template_version.criteria)}
+    return {
+        "id": ev.pk,
+        "team": ev.team.name,
+        "kind": ev.kind,
+        "date": ev.date,
+        "form": {"name": ev.template_version.name, "version": ev.template_version.number, "scale": ev.template_version.scale},
+        "author": (ev.author.profile.name or ev.author.email) if ev.author else "Former coach",
+        "about": ev.archer.profile.name or ev.archer.email,
+        "visibility": ev.visibility,
+        "comment": ev.comment,
+        "goals": ev.goals,
+        "scores": [
+            {
+                "criterion": s.criterion,
+                "label": labels.get(s.criterion, s.criterion),
+                "rating": s.rating,
+                "comment": s.comment,
+                "media": str(s.media_id) if s.media_id else None,
+                "frame": s.frame,
+                "time_ms": s.time_ms,
+            }
+            for s in ev.scores.all()
+        ],
+        "created_at": ev.created_at,
+        "updated_at": ev.updated_at,
+    }
+
+
+def _evaluations(**filters):
+    return Evaluation.objects.filter(**filters).select_related("team", "author__profile", "archer__profile", "template_version").prefetch_related("scores").order_by("date", "id")
+
+
 def export_user_data(user) -> dict:
     sessions = (
         TrainingSession.objects.filter(owner=user)
@@ -104,6 +140,9 @@ def export_user_data(user) -> dict:
         },
         "sessions": SessionSerializer(sessions, many=True).data,
         "media": [_media(m) for m in media_of(user).select_related("uploaded_by__profile")],
+        # Evaluations about the user, the coach-only ones included (data about this person), and those the user wrote about others.
+        "evaluations_about_me": [_evaluation(e) for e in _evaluations(archer=user)],
+        "evaluations_i_wrote": [_evaluation(e) for e in _evaluations(author=user).exclude(archer=user)],
         "notes_about_me": [
             _note(n, author=(n.author.profile.name or n.author.email) if n.author else "Former coach") for n in about
         ],

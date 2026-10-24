@@ -109,6 +109,9 @@ effectScope(true).run(() => {
   watch(
     storageKey,
     async (key) => {
+      // Another account (or none): what is in memory belongs to the one before. Its queue stays on the device under its own key.
+      set([]);
+      loadedKey.value = null;
       if (!key) return;
       const mine = ++loading;
       const stored = await localStore

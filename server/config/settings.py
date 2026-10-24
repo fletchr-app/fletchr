@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "targets",
     "training",
     "notes",
+    "evaluations",
     "privacy",
     "media",
 ]
@@ -215,9 +216,13 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# The oldest app that still works with this server. `/api/health/` tells the app, which then asks the person to update.
+# Raise it only when a change breaks old apps (docs/releasing.md); a server that keeps serving them needs no raise.
+MIN_APP_VERSION = "0.1.0"
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.5.0",
+    "VERSION": "0.6.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",

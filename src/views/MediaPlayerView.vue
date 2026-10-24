@@ -11,6 +11,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import NewNote from '@/components/NewNote.vue'
 import NoteRow from '@/components/NoteRow.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
@@ -25,6 +26,16 @@ const router = useRouter()
 const { api } = useAuth()
 
 const PX_PER_FRAME = 12
+// Opened from an evaluation to choose the frame that shows a criterion: "Use this frame" goes back to the form.
+const frameDraft = useEvaluationDraft()
+const choosing = computed(() => !!route.query.pick && !!frameDraft.picking.value)
+function useFrame() {
+  halt()
+  const back = frameDraft.finishPick(currentId.value, frame.value, Math.round((frame.value / fps.value) * 1000))
+  if (back) void router.push(back)
+}
+// Opened with ?frame=: start at that frame (a link from an evaluation).
+let startFrame = route.query.frame !== undefined ? Number(route.query.frame) : null
 const currentId = ref(route.params.id as string)
 const siblings = ref<string[]>([])
 
@@ -153,6 +164,10 @@ function loaded() {
   if (video.value!.videoWidth) pictureSize.value = { width: video.value!.videoWidth, height: video.value!.videoHeight }
   duration.value = video.value!.duration
   video.value!.playbackRate = speed.value
+  if (startFrame !== null) {
+    show(Math.max(0, Math.min(startFrame, total.value - 1)))
+    startFrame = null
+  }
 }
 
 // One seek at a time: a seek to a frame between two keyframes decodes from the keyframe before it, so a fast drag that
@@ -408,6 +423,7 @@ watch(currentId, () => (confirmDelete.value = false))
           <span class="clock">{{ clock(frame / fps) }} s</span>
           <span class="faint">{{ $t('media.frame', { n: frame + 1, total }) }}</span>
         </div>
+        <button v-if="choosing" type="button" class="use" @click="useFrame">{{ $t('evaluations.useFrame', { n: frame + 1 }) }}</button>
         <button v-if="noteHere" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body }}</button>
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
         <div v-if="!drawing" ref="tape" class="tape" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
@@ -647,6 +663,16 @@ watch(currentId, () => (confirmDelete.value = false))
   height: 8px;
   border-radius: 4px;
   background: var(--ion-color-primary);
+}
+.use {
+  margin-inline: 16px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 1rem;
+  font-weight: 700;
 }
 .here {
   margin-inline: 16px;

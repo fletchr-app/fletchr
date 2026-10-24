@@ -8,6 +8,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import LatestNotes from '@/components/LatestNotes.vue'
 import SessionListItem from '@/components/SessionListItem.vue'
+import VersionBanner from '@/components/VersionBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
@@ -51,6 +52,7 @@ onIonViewWillEnter(() => {
   <AppPage title="Fletchr" :back="false">
     <div class="screen">
       <h2 class="h4 m-0">{{ me ? $t('home.hello', { name: me.profile.name || me.email }) : 'Fletchr' }}</h2>
+      <VersionBanner />
       <ErrorText :message="error" />
       <template v-if="sessionsKnown">
         <div v-if="rows.length === 0" class="d-flex flex-column gap-2">
@@ -71,8 +73,11 @@ onIonViewWillEnter(() => {
       </template>
       <LatestNotes v-if="me" :user-id="me.id" :refresh="shown" />
       <IonList inset>
-        <IonItem router-link="/media" detail lines="none">
+        <IonItem router-link="/media" detail lines="full">
           <IonLabel>{{ $t('media.link') }}</IonLabel>
+        </IonItem>
+        <IonItem v-if="me" :router-link="`/archers/${me.id}/evaluations`" detail lines="none">
+          <IonLabel>{{ $t('evaluations.title') }}</IonLabel>
         </IonItem>
       </IonList>
       <div v-if="loaded && teams.length === 0">{{ $t('home.noTeam') }}</div>
