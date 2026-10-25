@@ -2,6 +2,15 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.9.0, 2026-10-25
+
+Deeper statistics (milestone 3 is done).
+
+- **Score by your rating:** per face and distance, the average score of the sessions you rated 1 to 5 for physical and for mental form.
+- **Compare setups:** two equipment setups side by side (average, spread, group centre), for example before and after a limb change.
+- **Numbered arrows:** a list of the numbered arrows that land farthest from the group of their session, for archers who number their arrows.
+- Server: new endpoint `/api/stats/arrows/`; `physical_rating`, `mental_rating` and `setup` on the session points of `/api/stats/`. No migrations.
+
 ## 0.8.0, 2026-10-25
 
 - **Statistics:** under each average chart the arrows per ring as bars; a heatmap screen ("Where the arrows land", by face, distance and period); a group chart with spread and the centre left/right and low/high over time; in the session view a line "Move the sight ..." (6 arrows or more, centre at least 0.5 cm off).
