@@ -2,6 +2,13 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.8.0, 2026-10-25
+
+- **Statistics:** under each average chart the arrows per ring as bars; a heatmap screen ("Where the arrows land", by face, distance and period); a group chart with spread and the centre left/right and low/high over time; in the session view a line "Move the sight ..." (6 arrows or more, centre at least 0.5 cm off).
+- **Centred score:** the session view shows the score of the plotted arrows next to what it would be with the centre of the group in the middle, and the average chart has a dashed second line. From 6 plotted arrows. Not an official score.
+- **Team:** archers with no arrows in the last 7 days are marked, and a chip shows only them. A "Compare archers" screen (arrows and average per archer) that coaches see only when an admin switches it on in the team settings; it is off by default.
+- Server: new endpoints `/api/stats/positions/` and `/api/teams/<id>/ranking/`, `show_ranking` on the team (migration `core.0006`).
+
 ## 0.7.0, 2026-10-24
 
 - **Evaluations over time (finishes #46):** on the Progress screen "Up the most" and "Rated lowest" lists, and a radar chart by group (the latest coach evaluation against the first). Coaches and admins have a "Team ratings" screen on the team page: for each criterion the mean of every archer's newest coach evaluation. No server changes, no migrations.
