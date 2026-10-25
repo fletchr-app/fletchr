@@ -281,7 +281,7 @@ class StatsView(APIView):
 
         shots = Shot.objects.filter(end__session__owner_id=owner_id).values_list(
             "end__session_id", "end__session__started_at", "end__session__type", "end__distance_m", "end__face",
-            "value", "is_x", "is_miss", "x", "y",
+            "value", "is_x", "is_miss", "x", "y", "end__session__physical_rating", "end__session__mental_rating",
         )
         volume = VolumeEntry.objects.filter(session__owner_id=owner_id).values_list("session__started_at", "arrow_count")
         stats = compute_stats(list(shots), list(volume), timezone.now(), tz, weeks)

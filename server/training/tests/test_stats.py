@@ -16,8 +16,8 @@ def at(day, hour=12, month=10):
     return datetime(2026, month, day, hour, 0, tzinfo=timezone.utc)
 
 
-def shot(value, *, sid="s1", started=None, typ="scoring", distance="18.0", face="wa-40", is_x=False, miss=False, at_xy=(None, None)):
-    return (sid, started or at(20), typ, distance, face, None if miss else value, is_x, miss, *at_xy)
+def shot(value, *, sid="s1", started=None, typ="scoring", distance="18.0", face="wa-40", is_x=False, miss=False, at_xy=(None, None), ratings=(None, None)):
+    return (sid, started or at(20), typ, distance, face, None if miss else value, is_x, miss, *at_xy, *ratings)
 
 
 def stats(shots=(), volume=(), tz=UTC, weeks=4):
@@ -172,6 +172,13 @@ def test_below_six_plotted_arrows_there_is_no_centred_average():
     assert (point["plotted_average"], point["centred_average"]) == (None, None)
 
 
+def test_a_session_carries_its_ratings():
+    shots = [shot(9, sid="a", started=at(20), ratings=(4, 2)), shot(8, sid="a", started=at(20), ratings=(4, 2)), shot(7, sid="b", started=at(21))]
+    a, b = only(stats(shots))["sessions"]
+    assert (a["physical_rating"], a["mental_rating"]) == (4, 2)
+    assert (b["physical_rating"], b["mental_rating"]) == (None, None)
+
+
 def test_the_spot_radius_is_the_edge_of_the_last_ring():
     assert only(stats([shot(9)]))["radius_cm"] == 20.0 and only(stats([shot(9, face="wa-122")]))["radius_cm"] == 61.0
 
@@ -295,3 +302,10 @@ def test_positions_parameters_are_checked(client_for, club):
     for params in ({"face": "nope"}, {"face": "blank"}, {"distance_m": "x"}, {"distance_m": ""}, {"tz": "Mars/Base"}, {"from": "yesterday"}, {"setup": "a"}, {"owner": "me"}):
         assert positions(client_for, "archer1", club, **params).status_code == 400, params
     assert client_for().get("/api/stats/positions/").status_code == 401
+
+
+def test_the_ratings_of_a_session_are_in_the_stats_endpoint(client_for, club):
+    session = make_session(club["archer1"], arrows=6)
+    type(session).objects.filter(pk=session.pk).update(physical_rating=5, mental_rating=3)
+    [point] = get(client_for, "archer1", club).data["scores"][0]["sessions"]
+    assert (point["physical_rating"], point["mental_rating"]) == (5, 3)

@@ -47,7 +47,9 @@ Team view (#34): the overview marks archers with no arrows in the last 7 days an
 
 Centred score (#68): the group centre (mean position of the plotted arrows, per distance and face, all spots of a triple face together) is moved to the middle and every arrow is scored again; an arrow then outside the face is a miss. From 6 plotted arrows, otherwise not shown. Rule in `src/lib/centred.ts` and `server/targets/centred.py`, both tested against the hand-calculated `shared/centred-vectors.json`. The session view shows "Score 252 · centred 250 (-2)" for the plotted arrows (it can be lower: moving the mean does not always help), and the average chart has a dashed second line (`plotted_average` and `centred_average` per session in `/api/stats/`). Not an official score; the wording is in `plots.centredHint`.
 
-Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31), self-rating vs score (#33).
+Self-rating vs score (#33): each session point in `/api/stats/` carries `physical_rating` and `mental_rating`; per face and distance a card "Score by your rating" shows the average score (every arrow counts the same) of the sessions rated 1, 2, ... 5, for physical and mental form, only when sessions with at least two different ratings exist. The bars start below the lowest average (said in the note), and the note calls few sessions a hint, not a result. Only the archer's own ratings, as the stats already are for whoever may see the archer.
+
+Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31).
 
 ## Milestone 4: notifications and remaining polish (not started)
 

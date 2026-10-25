@@ -380,6 +380,11 @@ export default {
     heatmapLink: 'Where the arrows land',
     pickCentred: 'Centred: {centred} (the plotted arrows scored {real})',
     centredNote: 'Dashed line: the average if the centre of the group had been in the middle, from sessions with at least 6 plotted arrows. Not an official score.',
+    ratingTitle: 'Score by your rating',
+    ratingPhysical: 'Physical form',
+    ratingMental: 'Mental form',
+    ratingSessions: '{n} session | {n} sessions',
+    ratingNote: 'Average score of the sessions you rated 1 to 5 (the number on the left). The bars start at {lo}. With few sessions per rating this is a hint, not a result.',
   },
   ranking: {
     title: 'Compare archers',

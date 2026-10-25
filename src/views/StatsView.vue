@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
 import GroupTrend from '@/components/GroupTrend.vue'
+import RatingBars from '@/components/RatingBars.vue'
 import ScoreChart from '@/components/ScoreChart.vue'
 import VolumeChart from '@/components/VolumeChart.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -67,6 +68,7 @@ onIonViewWillEnter(() => {
         <template v-for="group in data.scores" :key="`${group.face}-${group.distance_m}`">
           <ScoreChart :group="group" :heatmap-to="heatmapTo(group.face, group.distance_m)" />
           <GroupTrend :group="group" />
+          <RatingBars :group="group" />
         </template>
       </template>
     </div>

@@ -2046,6 +2046,10 @@ export interface components {
              * @description Average points per arrow in this session
              */
             average: number;
+            /** @description How the archer rated their physical form in this session, 1 to 5 */
+            physical_rating: number | null;
+            /** @description How the archer rated their mental form in this session, 1 to 5 */
+            mental_rating: number | null;
             /** @description Arrows with a position (typed scores have none) */
             plotted: number;
             /**

@@ -4771,6 +4771,16 @@ components:
           type: number
           format: double
           description: Average points per arrow in this session
+        physical_rating:
+          type: integer
+          nullable: true
+          description: How the archer rated their physical form in this session, 1
+            to 5
+        mental_rating:
+          type: integer
+          nullable: true
+          description: How the archer rated their mental form in this session, 1 to
+            5
         plotted:
           type: integer
           description: Arrows with a position (typed scores have none)
@@ -4811,6 +4821,8 @@ components:
       - centred_average
       - competition
       - date
+      - mental_rating
+      - physical_rating
       - plotted
       - plotted_average
       - session

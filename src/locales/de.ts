@@ -384,6 +384,11 @@ export default {
     heatmapLink: 'Wo die Pfeile landen',
     pickCentred: 'Zentriert: {centred} (die Pfeile mit Position erzielten {real})',
     centredNote: 'Gestrichelte Linie: der Durchschnitt, wenn die Mitte der Gruppe in der Mitte gelegen hätte, aus Trainings mit mindestens 6 Pfeilen mit Position. Keine offizielle Wertung.',
+    ratingTitle: 'Ergebnis nach deiner Bewertung',
+    ratingPhysical: 'Körperliche Form',
+    ratingMental: 'Mentale Form',
+    ratingSessions: '{n} Training | {n} Trainings',
+    ratingNote: 'Durchschnitt der Trainings, die du mit 1 bis 5 bewertet hast (die Zahl links). Die Balken beginnen bei {lo}. Bei wenigen Trainings pro Bewertung ist das ein Hinweis, kein Ergebnis.',
   },
   ranking: {
     title: 'Schützen vergleichen',

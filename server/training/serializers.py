@@ -256,6 +256,8 @@ class SessionPointSerializer(serializers.Serializer):
     competition = serializers.BooleanField()
     arrows = serializers.IntegerField()
     average = serializers.FloatField(help_text="Average points per arrow in this session")
+    physical_rating = serializers.IntegerField(allow_null=True, help_text="How the archer rated their physical form in this session, 1 to 5")
+    mental_rating = serializers.IntegerField(allow_null=True, help_text="How the archer rated their mental form in this session, 1 to 5")
     plotted = serializers.IntegerField(help_text="Arrows with a position (typed scores have none)")
     centre_x = serializers.FloatField(allow_null=True, help_text="Group centre, right is positive, 1 = the spot radius; null without positions")
     centre_y = serializers.FloatField(allow_null=True, help_text="Group centre, up is positive, 1 = the spot radius")
