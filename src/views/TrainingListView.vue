@@ -16,14 +16,14 @@ import { sessionRows } from '@/lib/session-rows'
 const REFRESH_MS = 15000
 
 const { api, userId } = useAuth()
-const { sessions: local } = useLog()
+const { sessions: local, goneSessions } = useLog()
 const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null, {
   pollMs: REFRESH_MS,
   keepPolling: () => true,
 })
 
 // Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? []))
+const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value))
 </script>
 
 <template>

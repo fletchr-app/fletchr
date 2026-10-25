@@ -26,9 +26,9 @@ const { teams, loaded, load } = useTeams()
 const error = ref<string | null>(null)
 
 // Your own sessions, the same list as the Training tab: those on the device (also the ones not uploaded yet) and the server's.
-const { sessions: local } = useLog()
+const { sessions: local, goneSessions } = useLog()
 const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? []))
+const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value))
 const lastSession = computed(() => rows.value[0])
 const weekArrows = computed(() => arrowsSince(rows.value, weekStart(new Date())))
 const sessionsKnown = computed(() => !remote.loading.value || rows.value.length > 0)
