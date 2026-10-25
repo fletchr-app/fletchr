@@ -4781,6 +4781,11 @@ components:
           nullable: true
           description: How the archer rated their mental form in this session, 1 to
             5
+        setup:
+          type: integer
+          nullable: true
+          description: The equipment setup of the session (see /api/setups/); null
+            if none was recorded
         plotted:
           type: integer
           description: Arrows with a position (typed scores have none)
@@ -4826,6 +4831,7 @@ components:
       - plotted
       - plotted_average
       - session
+      - setup
       - spread
     SessionSummary:
       type: object

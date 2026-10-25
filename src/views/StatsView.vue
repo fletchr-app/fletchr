@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 import ErrorText from '@/components/ErrorText.vue'
 import GroupTrend from '@/components/GroupTrend.vue'
 import RatingBars from '@/components/RatingBars.vue'
+import SetupCompare from '@/components/SetupCompare.vue'
 import ScoreChart from '@/components/ScoreChart.vue'
 import VolumeChart from '@/components/VolumeChart.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -41,11 +42,25 @@ const { data, error, loading, reload } = useRemote(
     (await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })).data ?? null,
 )
 
+// The names of the equipment setups, for the comparison.
+const setups = useRemote(async () => (await api.GET('/api/setups/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)
+const setupLabels = computed(() =>
+  Object.fromEntries(
+    (setups.data.value ?? []).map((s) => [
+      s.id,
+      [`${s.bow.name} (r${s.bow.number})`, s.arrow_set ? `${s.arrow_set.name} (r${s.arrow_set.number})` : ''].filter(Boolean).join(' · '),
+    ]),
+  ),
+)
+
 // The tab stays alive between visits: show fresh numbers each time it is opened again (the first time it has just loaded).
 let firstVisit = true
 onIonViewWillEnter(() => {
   if (firstVisit) firstVisit = false
-  else reload()
+  else {
+    reload()
+    setups.reload()
+  }
 })
 </script>
 
@@ -69,6 +84,7 @@ onIonViewWillEnter(() => {
           <ScoreChart :group="group" :heatmap-to="heatmapTo(group.face, group.distance_m)" />
           <GroupTrend :group="group" />
           <RatingBars :group="group" />
+          <SetupCompare :group="group" :labels="setupLabels" />
         </template>
       </template>
     </div>

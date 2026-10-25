@@ -2050,6 +2050,8 @@ export interface components {
             physical_rating: number | null;
             /** @description How the archer rated their mental form in this session, 1 to 5 */
             mental_rating: number | null;
+            /** @description The equipment setup of the session (see /api/setups/); null if none was recorded */
+            setup: number | null;
             /** @description Arrows with a position (typed scores have none) */
             plotted: number;
             /**

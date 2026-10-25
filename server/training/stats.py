@@ -46,9 +46,9 @@ def group_of(points) -> dict:
 
 def compute_stats(shots, volume, now: datetime, tz: ZoneInfo, weeks: int) -> dict:
     """
-    shots:  (session_id, started_at, session_type, distance_m, face, value, is_x, is_miss, x, y, physical, mental) for every arrow shot at a face;
+    shots:  (session_id, started_at, session_type, distance_m, face, value, is_x, is_miss, x, y, physical, mental, setup_id) for every arrow shot at a face;
             x and y are the position in the spot (x right, y up, 1 = outer edge), None for a typed score;
-            physical and mental are the ratings (1 to 5) of the session, None if not given
+            physical and mental are the ratings (1 to 5) of the session, None if not given; setup_id is the equipment, None if not recorded
     volume: (started_at, arrow_count) for every volume entry
     Arrows are dated by the day their session started, in the viewer's time zone.
     """
@@ -75,12 +75,12 @@ def compute_stats(shots, volume, now: datetime, tz: ZoneInfo, weeks: int) -> dic
 
     # --- scores: per face and distance, because points on different faces cannot be compared ---------
     groups = defaultdict(list)
-    for session_id, started_at, session_type, distance, slug, value, is_x, is_miss, x, y, physical, mental in shots:
+    for session_id, started_at, session_type, distance, slug, value, is_x, is_miss, x, y, physical, mental, setup_id in shots:
         face = get_face(slug)
         if face is None or not face["rings"] or (value is None and not is_miss):
             continue  # blank face, or no score
         groups[(slug, Decimal(distance).quantize(Decimal("0.1")))].append(
-            (session_id, started_at, session_type, 0 if is_miss else value, is_x, is_miss, x, y, physical, mental)
+            (session_id, started_at, session_type, 0 if is_miss else value, is_x, is_miss, x, y, physical, mental, setup_id)
         )
 
     scores = []
@@ -105,6 +105,7 @@ def compute_stats(shots, volume, now: datetime, tz: ZoneInfo, weeks: int) -> dic
                     "average": round(sum(r[3] for r in session_rows) / len(session_rows), 3),
                     "physical_rating": session_rows[0][8],
                     "mental_rating": session_rows[0][9],
+                    "setup": session_rows[0][10],
                     **centre,
                     "plotted_average": round(centred.real / centred.n, 3) if centred else None,
                     "centred_average": round(centred.centred / centred.n, 3) if centred else None,

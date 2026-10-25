@@ -49,7 +49,9 @@ Centred score (#68): the group centre (mean position of the plotted arrows, per 
 
 Self-rating vs score (#33): each session point in `/api/stats/` carries `physical_rating` and `mental_rating`; per face and distance a card "Score by your rating" shows the average score (every arrow counts the same) of the sessions rated 1, 2, ... 5, for physical and mental form, only when sessions with at least two different ratings exist. The bars start below the lowest average (said in the note), and the note calls few sessions a hint, not a result. Only the archer's own ratings, as the stats already are for whoever may see the archer.
 
-Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31).
+Comparison by setup (#31): each session point in `/api/stats/` has its `setup` id; per face and distance a card "Compare setups" (when the archer used at least two) shows setup A and B side by side: sessions, arrows, average, spread and group centre, and B against A. Numbers come from the session points (`src/lib/setup-compare.ts`; spread and centre are the mean over sessions with plotted arrows, weighed by those arrows), the names from `/api/setups/`. The note says a difference can also come from the day, weather or form. Sessions without equipment form a group of their own.
+
+Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32).
 
 ## Milestone 4: notifications and remaining polish (not started)
 

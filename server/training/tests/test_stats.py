@@ -16,8 +16,8 @@ def at(day, hour=12, month=10):
     return datetime(2026, month, day, hour, 0, tzinfo=timezone.utc)
 
 
-def shot(value, *, sid="s1", started=None, typ="scoring", distance="18.0", face="wa-40", is_x=False, miss=False, at_xy=(None, None), ratings=(None, None)):
-    return (sid, started or at(20), typ, distance, face, None if miss else value, is_x, miss, *at_xy, *ratings)
+def shot(value, *, sid="s1", started=None, typ="scoring", distance="18.0", face="wa-40", is_x=False, miss=False, at_xy=(None, None), ratings=(None, None), setup=None):
+    return (sid, started or at(20), typ, distance, face, None if miss else value, is_x, miss, *at_xy, *ratings, setup)
 
 
 def stats(shots=(), volume=(), tz=UTC, weeks=4):
@@ -179,6 +179,12 @@ def test_a_session_carries_its_ratings():
     assert (b["physical_rating"], b["mental_rating"]) == (None, None)
 
 
+def test_a_session_says_which_setup_it_was_shot_with():
+    shots = [shot(9, sid="a", started=at(20), setup=7), shot(8, sid="b", started=at(21))]
+    a, b = only(stats(shots))["sessions"]
+    assert (a["setup"], b["setup"]) == (7, None)
+
+
 def test_the_spot_radius_is_the_edge_of_the_last_ring():
     assert only(stats([shot(9)]))["radius_cm"] == 20.0 and only(stats([shot(9, face="wa-122")]))["radius_cm"] == 61.0
 
@@ -309,3 +315,14 @@ def test_the_ratings_of_a_session_are_in_the_stats_endpoint(client_for, club):
     type(session).objects.filter(pk=session.pk).update(physical_rating=5, mental_rating=3)
     [point] = get(client_for, "archer1", club).data["scores"][0]["sessions"]
     assert (point["physical_rating"], point["mental_rating"]) == (5, 3)
+
+
+def test_the_setup_of_a_session_is_in_the_stats_endpoint(client_for, club):
+    from equipment.models import Bow, BowRevision, Setup
+
+    bow = Bow.objects.create(owner=club["archer1"], name="Hoyt")
+    setup = Setup.objects.create(owner=club["archer1"], bow_revision=BowRevision.objects.create(bow=bow, number=1, name="Hoyt", type="recurve", draw_weight="38"))
+    session = make_session(club["archer1"], arrows=6)
+    type(session).objects.filter(pk=session.pk).update(setup=setup)
+    [point] = get(client_for, "archer1", club).data["scores"][0]["sessions"]
+    assert point["setup"] == setup.pk
