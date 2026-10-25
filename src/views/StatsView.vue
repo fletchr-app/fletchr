@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
+import ArrowOffsets from '@/components/ArrowOffsets.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import GroupTrend from '@/components/GroupTrend.vue'
 import RatingBars from '@/components/RatingBars.vue'
@@ -53,6 +54,9 @@ const setupLabels = computed(() =>
   ),
 )
 
+// Numbered arrows: which ones land away from the group. Empty for an archer who does not number them.
+const arrows = useRemote(async () => (await api.GET('/api/stats/arrows/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)
+
 // The tab stays alive between visits: show fresh numbers each time it is opened again (the first time it has just loaded).
 let firstVisit = true
 onIonViewWillEnter(() => {
@@ -60,6 +64,7 @@ onIonViewWillEnter(() => {
   else {
     reload()
     setups.reload()
+    arrows.reload()
   }
 })
 </script>
@@ -85,6 +90,10 @@ onIonViewWillEnter(() => {
           <GroupTrend :group="group" />
           <RatingBars :group="group" />
           <SetupCompare :group="group" :labels="setupLabels" />
+        </template>
+        <template v-if="arrows.data.value?.length">
+          <h2 class="h5 mt-2 mb-0">{{ $t('stats.numberedArrows') }}</h2>
+          <ArrowOffsets v-for="group in arrows.data.value" :key="`${group.face}-${group.distance_m}`" :group="group" />
         </template>
       </template>
     </div>

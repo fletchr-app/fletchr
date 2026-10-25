@@ -333,3 +333,27 @@ class RankingSerializer(serializers.Serializer):
     max_value = serializers.IntegerField(allow_null=True, help_text="Points of the best ring of the chosen face")
     choices = RankingChoiceSerializer(many=True, help_text="Faces and distances to pick from, most arrows first")
     rows = RankingRowSerializer(many=True, help_text="Most arrows first")
+
+
+class ArrowOffsetSerializer(serializers.Serializer):
+    number = serializers.IntegerField(help_text="The number on the arrow")
+    shots = serializers.IntegerField(help_text="Numbered shots of this arrow that count (in sessions with at least 6 plotted arrows)")
+    sessions = serializers.IntegerField()
+    offset_x = serializers.FloatField(help_text="Mean position relative to the centre of the group of its session, right is positive, 1 = the spot radius")
+    offset_y = serializers.FloatField(help_text="The same upwards")
+    offset = serializers.FloatField(help_text="Distance of the mean position from the centre of the group, 1 = the spot radius")
+    spread = serializers.FloatField(help_text="Mean distance of its shots from its own mean position, 1 = the spot radius")
+
+
+class ArrowSetStatsSerializer(serializers.Serializer):
+    arrow_set = serializers.IntegerField(allow_null=True, help_text="Null for sessions without an arrow set")
+    arrow_set_name = serializers.CharField(allow_null=True)
+    arrows = ArrowOffsetSerializer(many=True, help_text="The arrow farthest from the group first")
+
+
+class ArrowStatsGroupSerializer(serializers.Serializer):
+    face = serializers.CharField()
+    face_name = serializers.CharField()
+    distance_m = serializers.CharField()
+    radius_cm = serializers.FloatField(help_text="The spot radius: positions of 1 are this far from the middle")
+    sets = ArrowSetStatsSerializer(many=True)

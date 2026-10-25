@@ -18,6 +18,7 @@ DE = {
     "The ranking is switched off for this team": "Die Rangliste ist für dieses Team ausgeschaltet",
     "days and distance_m must be numbers": "days und distance_m müssen Zahlen sein",
     "Give a name or show_ranking": "Gib einen Namen oder show_ranking an",
+    "owner must be a number": "owner muss eine Zahl sein",
     "Between 1 and 365": "Zwischen 1 und 365",
     "Give face and distance_m together": "Gib face und distance_m zusammen an",
     "Only team admins can change roles": "Nur Team-Admins können Rollen ändern",

@@ -1860,6 +1860,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/Stats'
           description: ''
+  /api/stats/arrows/:
+    get:
+      operationId: stats_arrows_list
+      description: Numbered arrows that land away from the group of their session,
+        per face and distance and arrow set.
+      parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Whose arrows; default: yours'
+      tags:
+      - stats
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArrowStatsGroup'
+          description: ''
   /api/stats/positions/:
     get:
       operationId: stats_positions_retrieve
@@ -2654,6 +2678,45 @@ components:
       - name
       - role
       - user_id
+    ArrowOffset:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: The number on the arrow
+        shots:
+          type: integer
+          description: Numbered shots of this arrow that count (in sessions with at
+            least 6 plotted arrows)
+        sessions:
+          type: integer
+        offset_x:
+          type: number
+          format: double
+          description: Mean position relative to the centre of the group of its session,
+            right is positive, 1 = the spot radius
+        offset_y:
+          type: number
+          format: double
+          description: The same upwards
+        offset:
+          type: number
+          format: double
+          description: Distance of the mean position from the centre of the group,
+            1 = the spot radius
+        spread:
+          type: number
+          format: double
+          description: Mean distance of its shots from its own mean position, 1 =
+            the spot radius
+      required:
+      - number
+      - offset
+      - offset_x
+      - offset_y
+      - sessions
+      - shots
+      - spread
     ArrowSet:
       type: object
       properties:
@@ -2872,6 +2935,48 @@ components:
       - arrow_set
       - name
       - number
+    ArrowSetStats:
+      type: object
+      properties:
+        arrow_set:
+          type: integer
+          nullable: true
+          description: Null for sessions without an arrow set
+        arrow_set_name:
+          type: string
+          nullable: true
+        arrows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArrowOffset'
+          description: The arrow farthest from the group first
+      required:
+      - arrow_set
+      - arrow_set_name
+      - arrows
+    ArrowStatsGroup:
+      type: object
+      properties:
+        face:
+          type: string
+        face_name:
+          type: string
+        distance_m:
+          type: string
+        radius_cm:
+          type: number
+          format: double
+          description: 'The spot radius: positions of 1 are this far from the middle'
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArrowSetStats'
+      required:
+      - distance_m
+      - face
+      - face_name
+      - radius_cm
+      - sets
     BlankEnum:
       enum:
       - ''

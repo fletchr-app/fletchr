@@ -401,6 +401,13 @@ export default {
     setupSpread: 'Streuung',
     setupCentre: 'Mitte der Gruppe',
     setupNote: 'Durchschnitt: jeder Pfeil zählt gleich. Streuung und Mitte: nur Trainings mit Pfeilen mit Position. Ein Unterschied kann auch am Tag, am Wetter oder an deiner Form liegen; bei wenigen Trainings ist das ein Hinweis, kein Ergebnis.',
+    numberedArrows: 'Nummerierte Pfeile',
+    arrowsTitle: 'Pfeile',
+    arrowsNoSet: 'Kein Pfeilsatz eingetragen',
+    arrowsNone: 'Noch kein Pfeil hat {n} Schüsse.',
+    arrowsSpread: 'Streuung {spread} · {n} Schuss | Streuung {spread} · {n} Schüsse',
+    arrowsFew: 'Zu wenige Schüsse für ein Urteil (weniger als {n}): {numbers}.',
+    arrowsNote: 'Jeder Pfeil wird mit der Mitte der Gruppe seines eigenen Trainings verglichen, ein an dem Tag falsch eingestelltes Visier geht also nicht zu seinen Lasten. Der Balken zeigt, wie weit der Pfeil im Mittel von dieser Mitte landet; die Streuung, wie stark er schwankt. Ein Hinweis, sich diesen Pfeil anzusehen, kein Urteil.',
   },
   ranking: {
     title: 'Schützen vergleichen',

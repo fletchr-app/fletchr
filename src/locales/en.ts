@@ -397,6 +397,13 @@ export default {
     setupSpread: 'Spread',
     setupCentre: 'Group centre',
     setupNote: 'Average: every arrow counts the same. Spread and centre: sessions with plotted arrows only. A difference can also come from the day, the weather or your form; with few sessions it is a hint, not a result.',
+    numberedArrows: 'Numbered arrows',
+    arrowsTitle: 'Arrows',
+    arrowsNoSet: 'No arrow set recorded',
+    arrowsNone: 'No arrow has {n} shots yet.',
+    arrowsSpread: 'spread {spread} · {n} shot | spread {spread} · {n} shots',
+    arrowsFew: 'Too few shots to judge (fewer than {n}): {numbers}.',
+    arrowsNote: 'Each arrow is compared with the centre of the group of its own session, so a sight that was off on one day does not count against it. The bar is how far the arrow lands from that centre on average; the spread is how much it varies. A hint to look at that arrow, not a verdict.',
   },
   ranking: {
     title: 'Compare archers',

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 17:04+0100\n"
+"POT-Creation-Date: 2026-10-25 17:26+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -404,7 +404,7 @@ msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:76 notes/views.py:82 training/views.py:119
+#: media/views.py:76 notes/views.py:82 training/views.py:121
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
@@ -487,7 +487,7 @@ msgstr "Gib x und y an, oder keines von beiden"
 msgid "Position is out of range"
 msgstr "Die Position liegt außerhalb des Bereichs"
 
-#: training/serializers.py:50 training/views.py:323 training/views.py:383
+#: training/serializers.py:50 training/views.py:325 training/views.py:385
 msgid "Unknown target face"
 msgstr "Unbekannte Scheibe"
 
@@ -523,65 +523,69 @@ msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/views.py:56
+#: training/views.py:58
 msgid "Only the archer can change a session"
 msgstr "Nur der Schütze kann ein Training ändern"
 
-#: training/views.py:145
+#: training/views.py:147
 msgid "This end id belongs to another session"
 msgstr "Diese Passen-ID gehört zu einem anderen Training"
 
-#: training/views.py:151
+#: training/views.py:153
 msgid "Another end of this session has this index"
 msgstr "Eine andere Passe dieses Trainings hat diesen Index"
 
-#: training/views.py:153
+#: training/views.py:155
 msgid "A shot id is already used in another end"
 msgstr "Eine Schuss-ID wird schon in einer anderen Passe verwendet"
 
-#: training/views.py:178
+#: training/views.py:180
 msgid "This entry id belongs to another session"
 msgstr "Diese Eintrags-ID gehört zu einem anderen Training"
 
-#: training/views.py:206 training/views.py:368
+#: training/views.py:208 training/views.py:370
 msgid "Only coaches can see the team overview"
 msgstr "Nur Trainer können die Teamübersicht sehen"
 
-#: training/views.py:272
+#: training/views.py:274
 msgid "owner and weeks must be numbers"
 msgstr "owner und weeks müssen Zahlen sein"
 
-#: training/views.py:274
+#: training/views.py:276
 msgid "Between 1 and 52"
 msgstr "Zwischen 1 und 52"
 
-#: training/views.py:278 training/views.py:320
+#: training/views.py:280 training/views.py:322
 msgid "Unknown time zone"
 msgstr "Unbekannte Zeitzone"
 
-#: training/views.py:316
+#: training/views.py:318
 msgid "owner, distance_m and setup must be numbers"
 msgstr "owner, distance_m und setup müssen Zahlen sein"
 
-#: training/views.py:330
+#: training/views.py:332
 msgid "Use a date like 2026-10-25"
 msgstr "Nutze ein Datum wie 2026-10-25"
 
-#: training/views.py:370
+#: training/views.py:372
 msgid "The ranking is switched off for this team"
 msgstr "Die Rangliste ist für dieses Team ausgeschaltet"
 
-#: training/views.py:376
+#: training/views.py:378
 msgid "days and distance_m must be numbers"
 msgstr "days und distance_m müssen Zahlen sein"
 
-#: training/views.py:378
+#: training/views.py:380
 msgid "Between 1 and 365"
 msgstr "Zwischen 1 und 365"
 
-#: training/views.py:381
+#: training/views.py:383
 msgid "Give face and distance_m together"
 msgstr "Gib face und distance_m zusammen an"
+
+#: training/views.py:414
+msgid "owner must be a number"
+msgstr "owner muss eine Zahl sein"
 
 #~ msgid "This field is required."
 #~ msgstr "Dieses Feld ist erforderlich."

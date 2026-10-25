@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 17:04+0100\n"
+"POT-Creation-Date: 2026-10-25 17:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -398,7 +398,7 @@ msgstr ""
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:76 notes/views.py:82 training/views.py:119
+#: media/views.py:76 notes/views.py:82 training/views.py:121
 msgid "Give the id of the archer"
 msgstr ""
 
@@ -482,7 +482,7 @@ msgstr ""
 msgid "Position is out of range"
 msgstr ""
 
-#: training/serializers.py:50 training/views.py:323 training/views.py:383
+#: training/serializers.py:50 training/views.py:325 training/views.py:385
 msgid "Unknown target face"
 msgstr ""
 
@@ -518,63 +518,67 @@ msgstr ""
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/views.py:56
+#: training/views.py:58
 msgid "Only the archer can change a session"
 msgstr ""
 
-#: training/views.py:145
+#: training/views.py:147
 msgid "This end id belongs to another session"
 msgstr ""
 
-#: training/views.py:151
+#: training/views.py:153
 msgid "Another end of this session has this index"
 msgstr ""
 
-#: training/views.py:153
+#: training/views.py:155
 msgid "A shot id is already used in another end"
 msgstr ""
 
-#: training/views.py:178
+#: training/views.py:180
 msgid "This entry id belongs to another session"
 msgstr ""
 
-#: training/views.py:206 training/views.py:368
+#: training/views.py:208 training/views.py:370
 msgid "Only coaches can see the team overview"
 msgstr ""
 
-#: training/views.py:272
+#: training/views.py:274
 msgid "owner and weeks must be numbers"
 msgstr ""
 
-#: training/views.py:274
+#: training/views.py:276
 msgid "Between 1 and 52"
 msgstr ""
 
-#: training/views.py:278 training/views.py:320
+#: training/views.py:280 training/views.py:322
 msgid "Unknown time zone"
 msgstr ""
 
-#: training/views.py:316
+#: training/views.py:318
 msgid "owner, distance_m and setup must be numbers"
 msgstr ""
 
-#: training/views.py:330
+#: training/views.py:332
 msgid "Use a date like 2026-10-25"
 msgstr ""
 
-#: training/views.py:370
+#: training/views.py:372
 msgid "The ranking is switched off for this team"
 msgstr ""
 
-#: training/views.py:376
+#: training/views.py:378
 msgid "days and distance_m must be numbers"
 msgstr ""
 
-#: training/views.py:378
+#: training/views.py:380
 msgid "Between 1 and 365"
 msgstr ""
 
-#: training/views.py:381
+#: training/views.py:383
 msgid "Give face and distance_m together"
+msgstr ""
+
+#: training/views.py:414
+msgid "owner must be a number"
 msgstr ""
 
