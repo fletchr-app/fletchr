@@ -47,7 +47,13 @@ Team view (#34): the overview marks archers with no arrows in the last 7 days an
 
 Centred score (#68): the group centre (mean position of the plotted arrows, per distance and face, all spots of a triple face together) is moved to the middle and every arrow is scored again; an arrow then outside the face is a miss. From 6 plotted arrows, otherwise not shown. Rule in `src/lib/centred.ts` and `server/targets/centred.py`, both tested against the hand-calculated `shared/centred-vectors.json`. The session view shows "Score 252 · centred 250 (-2)" for the plotted arrows (it can be lower: moving the mean does not always help), and the average chart has a dashed second line (`plotted_average` and `centred_average` per session in `/api/stats/`). Not an official score; the wording is in `plots.centredHint`.
 
-Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31), self-rating vs score (#33).
+Self-rating vs score (#33): each session point in `/api/stats/` carries `physical_rating` and `mental_rating`; per face and distance a card "Score by your rating" shows the average score (every arrow counts the same) of the sessions rated 1, 2, ... 5, for physical and mental form, only when sessions with at least two different ratings exist. The bars start below the lowest average (said in the note), and the note calls few sessions a hint, not a result. Only the archer's own ratings, as the stats already are for whoever may see the archer.
+
+Comparison by setup (#31): each session point in `/api/stats/` has its `setup` id; per face and distance a card "Compare setups" (when the archer used at least two) shows setup A and B side by side: sessions, arrows, average, spread and group centre, and B against A. Numbers come from the session points (`src/lib/setup-compare.ts`; spread and centre are the mean over sessions with plotted arrows, weighed by those arrows), the names from `/api/setups/`. The note says a difference can also come from the day, weather or form. Sessions without equipment form a group of their own.
+
+Numbered arrows (#32): `GET /api/stats/arrows/` (per face and distance and arrow set) gives for each numbered arrow the mean position relative to the centre of the group of its own session (sessions with at least 6 plotted arrows; unnumbered arrows count for the centre), its distance from that centre and the spread of its shots. The Statistics screen lists them under "Numbered arrows", the one farthest from the group first, with a bar; arrows with fewer than 5 shots are named but not ranked. Only archers who number their arrows see it.
+
+Not built: the group trend has no setup picker in the app (the endpoint has the filter).
 
 ## Milestone 4: notifications and remaining polish (not started)
 

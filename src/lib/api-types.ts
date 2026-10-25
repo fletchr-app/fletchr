@@ -717,6 +717,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stats/arrows/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Numbered arrows that land away from the group of their session, per face and distance and arrow set. */
+        get: operations["stats_arrows_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stats/positions/": {
         parameters: {
             query?: never;
@@ -1068,6 +1085,33 @@ export interface components {
             /** @description Arrows shot in sessions started in the last 7 days */
             arrows_7d: number;
         };
+        ArrowOffset: {
+            /** @description The number on the arrow */
+            number: number;
+            /** @description Numbered shots of this arrow that count (in sessions with at least 6 plotted arrows) */
+            shots: number;
+            sessions: number;
+            /**
+             * Format: double
+             * @description Mean position relative to the centre of the group of its session, right is positive, 1 = the spot radius
+             */
+            offset_x: number;
+            /**
+             * Format: double
+             * @description The same upwards
+             */
+            offset_y: number;
+            /**
+             * Format: double
+             * @description Distance of the mean position from the centre of the group, 1 = the spot radius
+             */
+            offset: number;
+            /**
+             * Format: double
+             * @description Mean distance of its shots from its own mean position, 1 = the spot radius
+             */
+            spread: number;
+        };
         ArrowSet: {
             readonly id: number;
             readonly owner: number;
@@ -1164,6 +1208,24 @@ export interface components {
             /** Format: int64 */
             count?: number | null;
             notes?: string;
+        };
+        ArrowSetStats: {
+            /** @description Null for sessions without an arrow set */
+            arrow_set: number | null;
+            arrow_set_name: string | null;
+            /** @description The arrow farthest from the group first */
+            arrows: components["schemas"]["ArrowOffset"][];
+        };
+        ArrowStatsGroup: {
+            face: string;
+            face_name: string;
+            distance_m: string;
+            /**
+             * Format: double
+             * @description The spot radius: positions of 1 are this far from the middle
+             */
+            radius_cm: number;
+            sets: components["schemas"]["ArrowSetStats"][];
         };
         /** @enum {unknown} */
         BlankEnum: "";
@@ -2046,6 +2108,12 @@ export interface components {
              * @description Average points per arrow in this session
              */
             average: number;
+            /** @description How the archer rated their physical form in this session, 1 to 5 */
+            physical_rating: number | null;
+            /** @description How the archer rated their mental form in this session, 1 to 5 */
+            mental_rating: number | null;
+            /** @description The equipment setup of the session (see /api/setups/); null if none was recorded */
+            setup: number | null;
             /** @description Arrows with a position (typed scores have none) */
             plotted: number;
             /**
@@ -3992,6 +4060,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Stats"];
+                };
+            };
+        };
+    };
+    stats_arrows_list: {
+        parameters: {
+            query?: {
+                /** @description Whose arrows; default: yours */
+                owner?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowStatsGroup"][];
                 };
             };
         };

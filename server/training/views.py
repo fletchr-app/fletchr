@@ -22,10 +22,12 @@ from core.models import COACH_ROLES, Role, Team, TeamMember, User
 from .models import End, Shot, TrainingSession, VolumeEntry
 from targets.catalogue import get_face
 
+from .arrow_stats import compute_arrow_stats
 from .ranking import compute_ranking
 from .stats import compute_stats, spot_radius_cm
 from .serializers import (
     ArcherOverviewSerializer,
+    ArrowStatsGroupSerializer,
     PositionsSerializer,
     RankingSerializer,
     StatsSerializer,
@@ -281,7 +283,7 @@ class StatsView(APIView):
 
         shots = Shot.objects.filter(end__session__owner_id=owner_id).values_list(
             "end__session_id", "end__session__started_at", "end__session__type", "end__distance_m", "end__face",
-            "value", "is_x", "is_miss", "x", "y",
+            "value", "is_x", "is_miss", "x", "y", "end__session__physical_rating", "end__session__mental_rating", "end__session__setup_id",
         )
         volume = VolumeEntry.objects.filter(session__owner_id=owner_id).values_list("session__started_at", "arrow_count")
         stats = compute_stats(list(shots), list(volume), timezone.now(), tz, weeks)
@@ -396,3 +398,28 @@ class TeamRankingView(APIView):
         volume = VolumeEntry.objects.filter(session__owner_id__in=owners, session__started_at__gte=since).values_list("session__owner_id", "arrow_count")
         result = compute_ranking(listed, list(shots), list(volume), face, distance)
         return Response(RankingSerializer({"days": days, **result}).data)
+
+
+class ArrowStatsView(APIView):
+    """Numbered arrows that land away from the group of their session, per face and distance and arrow set."""
+
+    @extend_schema(
+        parameters=[OpenApiParameter("owner", int, description="Whose arrows; default: yours")],
+        responses=ArrowStatsGroupSerializer(many=True),
+    )
+    def get(self, request):
+        try:
+            owner_id = int(request.query_params.get("owner", request.user.pk))
+        except ValueError:
+            raise ValidationError(gettext("owner must be a number"))
+        if not archers_visible_to(request.user).filter(pk=owner_id).exists():
+            raise NotFound()
+        shots = Shot.objects.filter(end__session__owner_id=owner_id, x__isnull=False, y__isnull=False)
+        # Only an archer who numbers their arrows has anything to show.
+        if not shots.filter(arrow_number__isnull=False).exists():
+            return Response([])
+        rows = shots.values_list(
+            "end__session_id", "end__session__setup__arrow_set_revision__arrow_set_id", "end__session__setup__arrow_set_revision__arrow_set__name",
+            "end__face", "end__distance_m", "arrow_number", "x", "y",
+        )
+        return Response(ArrowStatsGroupSerializer(compute_arrow_stats(list(rows)), many=True).data)
