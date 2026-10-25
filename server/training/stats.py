@@ -7,6 +7,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from targets.catalogue import get_face
+from targets.centred import centred_score
 
 
 def week_start(day: date) -> date:
@@ -91,7 +92,9 @@ def compute_stats(shots, volume, now: datetime, tz: ZoneInfo, weeks: int) -> dic
             per_session[row[0]].append(row)
         sessions = []
         for session_rows in per_session.values():
-            centre = group_of([(r[6], r[7]) for r in session_rows if r[6] is not None and r[7] is not None])
+            plotted = [(r[6], r[7]) for r in session_rows if r[6] is not None and r[7] is not None]
+            centre = group_of(plotted)
+            centred = centred_score(face, plotted)
             sessions.append(
                 {
                     "session": session_rows[0][0],
@@ -100,6 +103,8 @@ def compute_stats(shots, volume, now: datetime, tz: ZoneInfo, weeks: int) -> dic
                     "arrows": len(session_rows),
                     "average": round(sum(r[3] for r in session_rows) / len(session_rows), 3),
                     **centre,
+                    "plotted_average": round(centred.real / centred.n, 3) if centred else None,
+                    "centred_average": round(centred.centred / centred.n, 3) if centred else None,
                     "_started_at": session_rows[0][1],
                 }
             )

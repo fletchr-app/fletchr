@@ -158,6 +158,20 @@ def test_a_session_without_positions_has_no_centre():
     assert (point["plotted"], point["centre_x"], point["centre_y"], point["spread"]) == (0, None, None, None)
 
 
+def test_a_session_has_its_centred_average_from_six_plotted_arrows():
+    # the vector of shared/centred-vectors.json (wa-40): real 41, centred 54, over six arrows; a typed arrow does not take part
+    spots = [(0.42, -0.2), (0.18, -0.2), (0.3, -0.08), (0.3, -0.32), (0.38, -0.12), (0.22, -0.28)]
+    values = [6, 8, 7, 6, 7, 7]
+    [point] = only(stats([shot(v, at_xy=xy) for v, xy in zip(values, spots)] + [shot(9)]))["sessions"]
+    assert point["plotted"] == 6
+    assert (point["plotted_average"], point["centred_average"]) == (pytest.approx(41 / 6, abs=1e-3), 9.0)
+
+
+def test_below_six_plotted_arrows_there_is_no_centred_average():
+    [point] = only(stats([shot(9, at_xy=(0.1, 0.1)) for _ in range(5)] + [shot(9) for _ in range(5)]))["sessions"]
+    assert (point["plotted_average"], point["centred_average"]) == (None, None)
+
+
 def test_the_spot_radius_is_the_edge_of_the_last_ring():
     assert only(stats([shot(9)]))["radius_cm"] == 20.0 and only(stats([shot(9, face="wa-122")]))["radius_cm"] == 61.0
 

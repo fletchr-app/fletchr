@@ -45,7 +45,9 @@ Built: volume, average score, best-ring/X/miss rates, group centre and spread pe
 
 Team view (#34): the overview marks archers with no arrows in the last 7 days and has a chip that shows only them. A ranking (`GET /api/teams/<id>/ranking/`, screen `/team/:id/ranking`): arrows of the last 7, 28 or 90 days and the average on one face and distance per archer, sortable. Coaches only, and off by default: an admin switches it on in the team settings (`show_ranking`), so young teams do not get a table that orders them.
 
-Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31), self-rating vs score (#33), centred score (#68).
+Centred score (#68): the group centre (mean position of the plotted arrows, per distance and face, all spots of a triple face together) is moved to the middle and every arrow is scored again; an arrow then outside the face is a miss. From 6 plotted arrows, otherwise not shown. Rule in `src/lib/centred.ts` and `server/targets/centred.py`, both tested against the hand-calculated `shared/centred-vectors.json`. The session view shows "Score 252 · centred 250 (-2)" for the plotted arrows (it can be lower: moving the mean does not always help), and the average chart has a dashed second line (`plotted_average` and `centred_average` per session in `/api/stats/`). Not an official score; the wording is in `plots.centredHint`.
+
+Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31), self-rating vs score (#33).
 
 ## Milestone 4: notifications and remaining polish (not started)
 

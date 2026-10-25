@@ -341,6 +341,9 @@ export default {
     toDown: 'nach unten',
     sightAnd: ' und ',
     sightHint: 'Visier {directions} verstellen.',
+    centred: 'Ergebnis {real} · zentriert {centred} ({diff})',
+    centredHint: 'Ergebnis, wenn die Mitte der Gruppe in der Mitte der Scheibe gelegen hätte. Keine offizielle Wertung.',
+    centredPartial: 'Nur die {n} Pfeile mit Position.',
   },
   stats: {
     title: 'Statistik',
@@ -379,6 +382,8 @@ export default {
     groupSessionRow: '{date} · {n} Pfeil mit Position | {date} · {n} Pfeile mit Position',
     groupPointLabel: '{date}: {value}',
     heatmapLink: 'Wo die Pfeile landen',
+    pickCentred: 'Zentriert: {centred} (die Pfeile mit Position erzielten {real})',
+    centredNote: 'Gestrichelte Linie: der Durchschnitt, wenn die Mitte der Gruppe in der Mitte gelegen hätte, aus Trainings mit mindestens 6 Pfeilen mit Position. Keine offizielle Wertung.',
   },
   ranking: {
     title: 'Schützen vergleichen',

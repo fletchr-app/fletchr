@@ -4790,14 +4790,29 @@ components:
           format: double
           nullable: true
           description: Mean distance of the arrows from the centre, 1 = the spot radius
+        plotted_average:
+          type: number
+          format: double
+          nullable: true
+          description: Average points of the plotted arrows only; null below 6 plotted
+            arrows
+        centred_average:
+          type: number
+          format: double
+          nullable: true
+          description: Average of the plotted arrows with the group centre moved to
+            the middle of the spot (a miss is 0); null below 6 plotted arrows. Not
+            an official score
       required:
       - arrows
       - average
       - centre_x
       - centre_y
+      - centred_average
       - competition
       - date
       - plotted
+      - plotted_average
       - session
       - spread
     SessionSummary:

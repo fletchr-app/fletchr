@@ -2063,6 +2063,16 @@ export interface components {
              * @description Mean distance of the arrows from the centre, 1 = the spot radius
              */
             spread: number | null;
+            /**
+             * Format: double
+             * @description Average points of the plotted arrows only; null below 6 plotted arrows
+             */
+            plotted_average: number | null;
+            /**
+             * Format: double
+             * @description Average of the plotted arrows with the group centre moved to the middle of the spot (a miss is 0); null below 6 plotted arrows. Not an official score
+             */
+            centred_average: number | null;
         };
         SessionSummary: {
             /** Format: uuid */

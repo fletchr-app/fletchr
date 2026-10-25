@@ -260,6 +260,11 @@ class SessionPointSerializer(serializers.Serializer):
     centre_x = serializers.FloatField(allow_null=True, help_text="Group centre, right is positive, 1 = the spot radius; null without positions")
     centre_y = serializers.FloatField(allow_null=True, help_text="Group centre, up is positive, 1 = the spot radius")
     spread = serializers.FloatField(allow_null=True, help_text="Mean distance of the arrows from the centre, 1 = the spot radius")
+    plotted_average = serializers.FloatField(allow_null=True, help_text="Average points of the plotted arrows only; null below 6 plotted arrows")
+    centred_average = serializers.FloatField(
+        allow_null=True,
+        help_text="Average of the plotted arrows with the group centre moved to the middle of the spot (a miss is 0); null below 6 plotted arrows. Not an official score",
+    )
 
 
 class ValueCountSerializer(serializers.Serializer):

@@ -337,6 +337,9 @@ export default {
     toDown: 'down',
     sightAnd: ' and ',
     sightHint: 'Move the sight {directions}.',
+    centred: 'Score {real} · centred {centred} ({diff})',
+    centredHint: 'Score if the centre of the group had been in the middle. Not an official score.',
+    centredPartial: 'Only the {n} plotted arrows.',
   },
   stats: {
     title: 'Statistics',
@@ -375,6 +378,8 @@ export default {
     groupSessionRow: '{date} · {n} arrow plotted | {date} · {n} arrows plotted',
     groupPointLabel: '{date}: {value}',
     heatmapLink: 'Where the arrows land',
+    pickCentred: 'Centred: {centred} (the plotted arrows scored {real})',
+    centredNote: 'Dashed line: the average if the centre of the group had been in the middle, from sessions with at least 6 plotted arrows. Not an official score.',
   },
   ranking: {
     title: 'Compare archers',
