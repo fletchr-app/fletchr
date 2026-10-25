@@ -36,3 +36,21 @@ export function describeCentre(group: Group, spotRadiusCm: number, words: Centre
 }
 
 export const spreadCm = (group: Group, spotRadiusCm: number) => group.meanRadius * spotRadiusCm;
+
+export type SightMove = { horizontal: 'left' | 'right' | null; vertical: 'up' | 'down' | null };
+
+const SIGHT_MIN_ARROWS = 6;
+const SIGHT_MIN_CM = 0.5;
+
+/**
+ * Which way to move the sight, from where the group sits: towards the group (a group low and left means the
+ * sight goes down and left). Null when the group is too small to say, or less than half a centimetre off on both axes.
+ */
+export function sightMove(group: Group, spotRadiusCm: number): SightMove | null {
+  if (group.n < SIGHT_MIN_ARROWS) return null;
+  const x = group.cx * spotRadiusCm;
+  const y = group.cy * spotRadiusCm;
+  const horizontal = Math.abs(x) >= SIGHT_MIN_CM ? (x < 0 ? 'left' : 'right') : null;
+  const vertical = Math.abs(y) >= SIGHT_MIN_CM ? (y < 0 ? 'down' : 'up') : null;
+  return horizontal || vertical ? { horizontal, vertical } : null;
+}

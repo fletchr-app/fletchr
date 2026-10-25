@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { describeCentre, groupOf, spreadCm } from './group.ts';
+import { describeCentre, groupOf, sightMove, spreadCm } from './group.ts';
 
 const near = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 
@@ -36,4 +36,17 @@ test('the sight hint says which way the centre is off, in cm of the real spot', 
 test('the centre in inches for imperial units', () => {
   const group = (cx: number, cy: number) => ({ n: 3, cx, cy, meanRadius: 0.1 });
   assert.equal(describeCentre(group(-0.127, 0.0635), 20, undefined, 'imperial'), '1.0 in left, 0.5 in high');
+});
+
+test('the sight moves towards the group', () => {
+  const group = (cx: number, cy: number, n = 6) => ({ n, cx, cy, meanRadius: 0.1 });
+  assert.deepEqual(sightMove(group(-0.1, -0.1), 20), { horizontal: 'left', vertical: 'down' });
+  assert.deepEqual(sightMove(group(0.1, 0.1), 20), { horizontal: 'right', vertical: 'up' });
+  assert.deepEqual(sightMove(group(0.1, 0.01), 20), { horizontal: 'right', vertical: null });
+});
+
+test('no sight hint for a small group or a centre less than half a centimetre off', () => {
+  assert.equal(sightMove({ n: 5, cx: 0.5, cy: 0.5, meanRadius: 0.1 }, 20), null);
+  assert.equal(sightMove({ n: 12, cx: 0.02, cy: -0.02, meanRadius: 0.1 }, 20), null); // 0.4 cm
+  assert.notEqual(sightMove({ n: 12, cx: 0.0251, cy: 0, meanRadius: 0.1 }, 20), null); // just over 0.5 cm
 });

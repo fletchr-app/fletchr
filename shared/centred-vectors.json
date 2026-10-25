@@ -1,0 +1,47 @@
+{
+ "_comment": "Hand-calculated expected centred scores, used by both the Python tests (server/targets) and the TypeScript tests (src/lib/centred.test.ts). Do not generate these from the code under test. Units: 1 = outer edge of the face. On the wa-40 a ring of value v ends at (11 - v) * 0.1, on the triple face at (11 - v) * 0.2. A centred score needs at least 6 arrows (expect null below).",
+ "vectors": [
+  {
+   "face": "wa-40",
+   "points": [[0.15, 0], [0.15, 0], [0.15, 0], [0.15, 0], [0.15, 0], [0.15, 0]],
+   "expect": {"n": 6, "real": 54, "centred": 60, "centre": [0.15, 0]},
+   "why": "six arrows in one place, all 9s; in the middle they are all 10s"
+  },
+  {
+   "face": "wa-40",
+   "points": [[0.05, 0], [-0.05, 0], [0, 0.05], [0, -0.05], [0.05, 0], [-0.05, 0]],
+   "expect": {"n": 6, "real": 60, "centred": 60, "centre": [0, 0]},
+   "why": "a group that is centred already does not change"
+  },
+  {
+   "face": "wa-40",
+   "points": [[0.42, -0.2], [0.18, -0.2], [0.3, -0.08], [0.3, -0.32], [0.38, -0.12], [0.22, -0.28]],
+   "expect": {"n": 6, "real": 41, "centred": 54, "centre": [0.3, -0.2]},
+   "why": "a group of spread 0.1 around (0.3, -0.2): 6 + 8 + 7 + 6 + 7 + 7 = 41, centred six 9s"
+  },
+  {
+   "face": "wa-40",
+   "points": [[0.88, 0], [0.88, 0], [0.88, 0], [0.88, 0], [0.88, 0], [-0.88, 0]],
+   "expect": {"n": 6, "real": 12, "centred": 40, "centre": [0.586667, 0]},
+   "why": "five 2s and a 2; after the move five 8s and one arrow beyond the face, which is a miss"
+  },
+  {
+   "face": "wa-40",
+   "points": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+   "expect": null,
+   "why": "five arrows are too few"
+  },
+  {
+   "face": "wa-40-triple-vertical",
+   "points": [[0.3, 0], [0.3, 0], [0.3, 0], [0.3, 0], [0.3, 0], [0.3, 0]],
+   "expect": {"n": 6, "real": 54, "centred": 60, "centre": [0.3, 0]},
+   "why": "the rings of a triple face are 0.2 wide: 0.3 is a 9"
+  },
+  {
+   "face": "blank",
+   "points": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+   "expect": null,
+   "why": "a blank face has no rings, nothing to score"
+  }
+ ]
+}

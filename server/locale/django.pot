@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 19:32+0200\n"
+"POT-Creation-Date: 2026-10-25 17:04+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:128
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:129
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -75,68 +75,72 @@ msgstr ""
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:128 core/serializers.py:143
+#: core/serializers.py:98
+msgid "Give a name or show_ranking"
+msgstr ""
+
+#: core/serializers.py:141 core/serializers.py:156
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:191 privacy/serializers.py:19 privacy/serializers.py:66
+#: core/serializers.py:204 privacy/serializers.py:19 privacy/serializers.py:66
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:201
+#: core/serializers.py:214
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:215
+#: core/serializers.py:228
 msgid "This address is not available"
 msgstr ""
 
-#: core/views.py:248
+#: core/views.py:249
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:294
+#: core/views.py:295
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:303
-msgid "Only team admins can rename the team"
+#: core/views.py:304
+msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:327
+#: core/views.py:330
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:333 core/views.py:347
+#: core/views.py:336 core/views.py:350
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:344
+#: core/views.py:347
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:358 core/views.py:375
+#: core/views.py:361 core/views.py:378
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:383
+#: core/views.py:386
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:508
+#: core/views.py:511
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:520
+#: core/views.py:523
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:532
+#: core/views.py:535
 msgid "This account no longer exists"
 msgstr ""
 
@@ -256,90 +260,90 @@ msgstr ""
 msgid "Shooting technique"
 msgstr ""
 
-#: evaluations/serializers.py:31
+#: evaluations/serializers.py:32
 msgid "A criterion needs a name"
 msgstr ""
 
-#: evaluations/serializers.py:36
+#: evaluations/serializers.py:37
 msgid "A key has lower-case letters, digits and underscores"
 msgstr ""
 
-#: evaluations/serializers.py:51
+#: evaluations/serializers.py:52
 msgid "A form needs at least one criterion"
 msgstr ""
 
-#: evaluations/serializers.py:53
+#: evaluations/serializers.py:54
 #, python-format
 msgid "A form can have %(n)s criteria at most"
 msgstr ""
 
-#: evaluations/serializers.py:57
+#: evaluations/serializers.py:58
 msgid "Two criteria have the same key"
 msgstr ""
 
-#: evaluations/serializers.py:106
+#: evaluations/serializers.py:111
 msgid "A form needs a name"
 msgstr ""
 
-#: evaluations/serializers.py:182
+#: evaluations/serializers.py:187
 msgid "A self-assessment is about yourself"
 msgstr ""
 
-#: evaluations/serializers.py:186
+#: evaluations/serializers.py:191
 msgid "Only coaches can rate an archer"
 msgstr ""
 
-#: evaluations/serializers.py:190
+#: evaluations/serializers.py:195
 msgid "You cannot do an evaluation of this archer in that team"
 msgstr ""
 
-#: evaluations/serializers.py:195
+#: evaluations/serializers.py:200
 msgid "You cannot do an evaluation of this person"
 msgstr ""
 
-#: evaluations/serializers.py:196
+#: evaluations/serializers.py:201
 msgid "This is in several teams: say which one"
-msgstr ""
-
-#: evaluations/serializers.py:203
-#, python-format
-msgid "This form has no criterion %(key)s"
-msgstr ""
-
-#: evaluations/serializers.py:205
-msgid "A criterion is rated twice"
 msgstr ""
 
 #: evaluations/serializers.py:208
 #, python-format
+msgid "This form has no criterion %(key)s"
+msgstr ""
+
+#: evaluations/serializers.py:210
+msgid "A criterion is rated twice"
+msgstr ""
+
+#: evaluations/serializers.py:213
+#, python-format
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:212 notes/serializers.py:112
+#: evaluations/serializers.py:217 notes/serializers.py:112
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:215 notes/serializers.py:102
+#: evaluations/serializers.py:220 notes/serializers.py:102
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
-#: evaluations/serializers.py:217
+#: evaluations/serializers.py:222
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:219 notes/serializers.py:106
+#: evaluations/serializers.py:224 notes/serializers.py:106
 msgid "The clip has no such frame"
 msgstr ""
 
-#: evaluations/serializers.py:225 evaluations/serializers.py:227
+#: evaluations/serializers.py:230 evaluations/serializers.py:232
 msgid "This cannot be changed after the evaluation is written"
 msgstr ""
 
-#: evaluations/serializers.py:237
+#: evaluations/serializers.py:242
 msgid "Say which form to use"
 msgstr ""
 
-#: evaluations/serializers.py:239
+#: evaluations/serializers.py:244
 msgid "This form belongs to another team"
 msgstr ""
 
@@ -351,7 +355,7 @@ msgstr ""
 msgid "A form needs a name and criteria"
 msgstr ""
 
-#: evaluations/views.py:94
+#: evaluations/views.py:95
 msgid "Evaluations were made with this form, so it stays"
 msgstr ""
 
@@ -394,7 +398,7 @@ msgstr ""
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:76 notes/views.py:82 training/views.py:112
+#: media/views.py:76 notes/views.py:82 training/views.py:119
 msgid "Give the id of the archer"
 msgstr ""
 
@@ -478,7 +482,7 @@ msgstr ""
 msgid "Position is out of range"
 msgstr ""
 
-#: training/serializers.py:50
+#: training/serializers.py:50 training/views.py:323 training/views.py:383
 msgid "Unknown target face"
 msgstr ""
 
@@ -514,39 +518,63 @@ msgstr ""
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/views.py:49
+#: training/views.py:56
 msgid "Only the archer can change a session"
 msgstr ""
 
-#: training/views.py:138
+#: training/views.py:145
 msgid "This end id belongs to another session"
 msgstr ""
 
-#: training/views.py:144
+#: training/views.py:151
 msgid "Another end of this session has this index"
 msgstr ""
 
-#: training/views.py:146
+#: training/views.py:153
 msgid "A shot id is already used in another end"
 msgstr ""
 
-#: training/views.py:171
+#: training/views.py:178
 msgid "This entry id belongs to another session"
 msgstr ""
 
-#: training/views.py:199
+#: training/views.py:206 training/views.py:368
 msgid "Only coaches can see the team overview"
 msgstr ""
 
-#: training/views.py:265
+#: training/views.py:272
 msgid "owner and weeks must be numbers"
 msgstr ""
 
-#: training/views.py:267
+#: training/views.py:274
 msgid "Between 1 and 52"
 msgstr ""
 
-#: training/views.py:271
+#: training/views.py:278 training/views.py:320
 msgid "Unknown time zone"
+msgstr ""
+
+#: training/views.py:316
+msgid "owner, distance_m and setup must be numbers"
+msgstr ""
+
+#: training/views.py:330
+msgid "Use a date like 2026-10-25"
+msgstr ""
+
+#: training/views.py:370
+msgid "The ranking is switched off for this team"
+msgstr ""
+
+#: training/views.py:376
+msgid "days and distance_m must be numbers"
+msgstr ""
+
+#: training/views.py:378
+msgid "Between 1 and 365"
+msgstr ""
+
+#: training/views.py:381
+msgid "Give face and distance_m together"
 msgstr ""
 

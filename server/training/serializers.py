@@ -256,6 +256,20 @@ class SessionPointSerializer(serializers.Serializer):
     competition = serializers.BooleanField()
     arrows = serializers.IntegerField()
     average = serializers.FloatField(help_text="Average points per arrow in this session")
+    plotted = serializers.IntegerField(help_text="Arrows with a position (typed scores have none)")
+    centre_x = serializers.FloatField(allow_null=True, help_text="Group centre, right is positive, 1 = the spot radius; null without positions")
+    centre_y = serializers.FloatField(allow_null=True, help_text="Group centre, up is positive, 1 = the spot radius")
+    spread = serializers.FloatField(allow_null=True, help_text="Mean distance of the arrows from the centre, 1 = the spot radius")
+    plotted_average = serializers.FloatField(allow_null=True, help_text="Average points of the plotted arrows only; null below 6 plotted arrows")
+    centred_average = serializers.FloatField(
+        allow_null=True,
+        help_text="Average of the plotted arrows with the group centre moved to the middle of the spot (a miss is 0); null below 6 plotted arrows. Not an official score",
+    )
+
+
+class ValueCountSerializer(serializers.Serializer):
+    value = serializers.IntegerField(help_text="Points; 0 for misses")
+    count = serializers.IntegerField()
 
 
 class ScoreStatsSerializer(serializers.Serializer):
@@ -268,6 +282,8 @@ class ScoreStatsSerializer(serializers.Serializer):
     top_rate = serializers.FloatField(help_text="Share of arrows in the best ring (10s including Xs)")
     x_rate = serializers.FloatField(allow_null=True, help_text="Share of Xs; null for faces without an X ring")
     miss_rate = serializers.FloatField()
+    radius_cm = serializers.FloatField(help_text="The spot radius: positions of 1 are this far from the middle")
+    distribution = ValueCountSerializer(many=True, help_text="Arrows per value, best ring first, misses (0) last")
     sessions = SessionPointSerializer(many=True, help_text="Oldest first")
 
 
@@ -276,3 +292,41 @@ class StatsSerializer(serializers.Serializer):
     tz = serializers.CharField()
     volume = VolumeStatsSerializer()
     scores = ScoreStatsSerializer(many=True)
+
+
+class PositionsSerializer(serializers.Serializer):
+    owner = serializers.IntegerField()
+    face = serializers.CharField()
+    distance_m = serializers.CharField()
+    radius_cm = serializers.FloatField(help_text="The spot radius: positions of 1 are this far from the middle")
+    arrows = serializers.IntegerField(help_text="How many plotted arrows match the filter")
+    limited = serializers.BooleanField(help_text="True when there are more arrows than points returned (the newest are kept)")
+    points = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField(), min_length=2, max_length=2),
+        help_text="[x, y] per arrow, newest first; x right, y up, 1 = the spot radius",
+    )
+
+
+class RankingChoiceSerializer(serializers.Serializer):
+    face = serializers.CharField()
+    face_name = serializers.CharField()
+    distance_m = serializers.CharField()
+    arrows = serializers.IntegerField(help_text="Scored arrows of the team on this face and distance in the period")
+
+
+class RankingRowSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    name = serializers.CharField()
+    managed = serializers.BooleanField()
+    arrows = serializers.IntegerField(help_text="All arrows in the period, scored or not")
+    scored_arrows = serializers.IntegerField(help_text="Scored arrows on the chosen face and distance")
+    average = serializers.FloatField(allow_null=True, help_text="Average points per arrow on the chosen face and distance; null without scored arrows")
+
+
+class RankingSerializer(serializers.Serializer):
+    days = serializers.IntegerField()
+    face = serializers.CharField(allow_null=True)
+    distance_m = serializers.CharField(allow_null=True)
+    max_value = serializers.IntegerField(allow_null=True, help_text="Points of the best ring of the chosen face")
+    choices = RankingChoiceSerializer(many=True, help_text="Faces and distances to pick from, most arrows first")
+    rows = RankingRowSerializer(many=True, help_text="Most arrows first")

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.7.0
+  version: 0.8.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -1860,6 +1860,64 @@ paths:
               schema:
                 $ref: '#/components/schemas/Stats'
           description: ''
+  /api/stats/positions/:
+    get:
+      operationId: stats_positions_retrieve
+      description: 'Where the arrows of one face at one distance landed, for the heatmap:
+        positions only, not whole sessions.'
+      parameters:
+      - in: query
+        name: distance_m
+        schema:
+          type: number
+          format: double
+        description: Distance in metres
+        required: true
+      - in: query
+        name: face
+        schema:
+          type: string
+        description: Slug of the target face
+        required: true
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        description: 'First day (in the time zone), default: no limit'
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Whose arrows; default: yours'
+      - in: query
+        name: setup
+        schema:
+          type: integer
+        description: Only sessions shot with this setup
+      - in: query
+        name: to
+        schema:
+          type: string
+          format: date
+        description: Last day, included
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: IANA time zone that decides which day a session falls on; default
+          UTC
+      tags:
+      - stats
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Positions'
+          description: ''
   /api/teams/:
     get:
       operationId: teams_list
@@ -1925,7 +1983,8 @@ paths:
           description: ''
     patch:
       operationId: teams_partial_update
-      description: Rename the team. Only admins.
+      description: Rename the team or switch the ranking of archers on or off. Only
+        admins.
       parameters:
       - in: path
         name: team_id
@@ -1938,13 +1997,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
       security:
       - jwtAuth: []
       responses:
@@ -2374,6 +2433,44 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArcherOverview'
+          description: ''
+  /api/teams/{team_id}/ranking/:
+    get:
+      operationId: teams_ranking_retrieve
+      description: 'For coaches, when an admin has switched it on: how many arrows
+        each archer shot lately and their average on one face and distance.'
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: How far back, 1 to 365; default 28
+      - in: query
+        name: distance_m
+        schema:
+          type: number
+          format: double
+        description: Distance for the average; needed with face
+      - in: query
+        name: face
+        schema:
+          type: string
+        description: 'Slug of the face for the average; default: the one shot most'
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ranking'
           description: ''
   /api/token/:
     post:
@@ -4212,13 +4309,55 @@ components:
       properties:
         role:
           $ref: '#/components/schemas/RoleEnum'
-    PatchedTeamNameRequest:
+    PatchedTeamUpdateRequest:
       type: object
       properties:
         name:
           type: string
           minLength: 1
           maxLength: 150
+        show_ranking:
+          type: boolean
+          description: Whether coaches see the table that compares the archers
+    Positions:
+      type: object
+      properties:
+        owner:
+          type: integer
+        face:
+          type: string
+        distance_m:
+          type: string
+        radius_cm:
+          type: number
+          format: double
+          description: 'The spot radius: positions of 1 are this far from the middle'
+        arrows:
+          type: integer
+          description: How many plotted arrows match the filter
+        limited:
+          type: boolean
+          description: True when there are more arrows than points returned (the newest
+            are kept)
+        points:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          description: '[x, y] per arrow, newest first; x right, y up, 1 = the spot
+            radius'
+      required:
+      - arrows
+      - distance_m
+      - face
+      - limited
+      - owner
+      - points
+      - radius_cm
     Profile:
       type: object
       properties:
@@ -4266,6 +4405,84 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+    Ranking:
+      type: object
+      properties:
+        days:
+          type: integer
+        face:
+          type: string
+          nullable: true
+        distance_m:
+          type: string
+          nullable: true
+        max_value:
+          type: integer
+          nullable: true
+          description: Points of the best ring of the chosen face
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankingChoice'
+          description: Faces and distances to pick from, most arrows first
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankingRow'
+          description: Most arrows first
+      required:
+      - choices
+      - days
+      - distance_m
+      - face
+      - max_value
+      - rows
+    RankingChoice:
+      type: object
+      properties:
+        face:
+          type: string
+        face_name:
+          type: string
+        distance_m:
+          type: string
+        arrows:
+          type: integer
+          description: Scored arrows of the team on this face and distance in the
+            period
+      required:
+      - arrows
+      - distance_m
+      - face
+      - face_name
+    RankingRow:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        managed:
+          type: boolean
+        arrows:
+          type: integer
+          description: All arrows in the period, scored or not
+        scored_arrows:
+          type: integer
+          description: Scored arrows on the chosen face and distance
+        average:
+          type: number
+          format: double
+          nullable: true
+          description: Average points per arrow on the chosen face and distance; null
+            without scored arrows
+      required:
+      - arrows
+      - average
+      - managed
+      - name
+      - scored_arrows
+      - user_id
     RedeemRequest:
       type: object
       properties:
@@ -4427,6 +4644,15 @@ components:
         miss_rate:
           type: number
           format: double
+        radius_cm:
+          type: number
+          format: double
+          description: 'The spot radius: positions of 1 are this far from the middle'
+        distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValueCount'
+          description: Arrows per value, best ring first, misses (0) last
         sessions:
           type: array
           items:
@@ -4436,10 +4662,12 @@ components:
       - arrows
       - average
       - distance_m
+      - distribution
       - face
       - face_name
       - max_value
       - miss_rate
+      - radius_cm
       - sessions
       - top_rate
       - x_rate
@@ -4543,12 +4771,50 @@ components:
           type: number
           format: double
           description: Average points per arrow in this session
+        plotted:
+          type: integer
+          description: Arrows with a position (typed scores have none)
+        centre_x:
+          type: number
+          format: double
+          nullable: true
+          description: Group centre, right is positive, 1 = the spot radius; null
+            without positions
+        centre_y:
+          type: number
+          format: double
+          nullable: true
+          description: Group centre, up is positive, 1 = the spot radius
+        spread:
+          type: number
+          format: double
+          nullable: true
+          description: Mean distance of the arrows from the centre, 1 = the spot radius
+        plotted_average:
+          type: number
+          format: double
+          nullable: true
+          description: Average points of the plotted arrows only; null below 6 plotted
+            arrows
+        centred_average:
+          type: number
+          format: double
+          nullable: true
+          description: Average of the plotted arrows with the group centre moved to
+            the middle of the spot (a miss is 0); null below 6 plotted arrows. Not
+            an official score
       required:
       - arrows
       - average
+      - centre_x
+      - centre_y
+      - centred_average
       - competition
       - date
+      - plotted
+      - plotted_average
       - session
+      - spread
     SessionSummary:
       type: object
       properties:
@@ -4861,6 +5127,8 @@ components:
         name:
           type: string
           maxLength: 150
+        show_ranking:
+          type: boolean
         my_role:
           type: string
           readOnly: true
@@ -5015,6 +5283,17 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    ValueCount:
+      type: object
+      properties:
+        value:
+          type: integer
+          description: Points; 0 for misses
+        count:
+          type: integer
+      required:
+      - count
+      - value
     VideoConsent:
       type: object
       properties:

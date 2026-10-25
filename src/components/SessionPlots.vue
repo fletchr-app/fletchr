@@ -5,8 +5,9 @@ import { useI18n } from 'vue-i18n'
 
 import FaceView from '@/components/FaceView.vue'
 import { useUnits } from '@/composables/useUnits'
+import { centredScore } from '@/lib/centred'
 import { getFace } from '@/lib/faces'
-import { type CentreWords, describeCentre, spreadCm } from '@/lib/group'
+import { type CentreWords, describeCentre, groupOf, sightMove, spreadCm } from '@/lib/group'
 import type { LogSession } from '@/lib/log-model'
 import { blocksOf } from '@/lib/session-view'
 
@@ -30,6 +31,25 @@ const words = computed<CentreWords>(() => ({ left: t('plots.left'), right: t('pl
 const shown = ref(0)
 const showNumbers = ref(false)
 const current = computed(() => blocks.value[Math.min(shown.value, blocks.value.length - 1)])
+// "Move the sight to the left and down", only where the group is big enough and clearly off.
+// The arrows of all spots are taken together: every position is relative to its own spot.
+const sightText = (plotted: { x: number; y: number }[], radius: number) => {
+  const group = groupOf(plotted)
+  const move = group && sightMove(group, radius)
+  if (!move) return null
+  const parts = [move.horizontal === 'left' ? t('plots.toLeft') : move.horizontal === 'right' ? t('plots.toRight') : null, move.vertical === 'up' ? t('plots.toUp') : move.vertical === 'down' ? t('plots.toDown') : null]
+  return t('plots.sightHint', { directions: parts.filter(Boolean).join(t('plots.sightAnd')) })
+}
+// The score of the plotted arrows next to what it would be with the group centre in the middle. Not for small groups.
+const centredText = (block: { plotted: { x: number; y: number }[]; typed: number }, face: Parameters<typeof centredScore>[0]) => {
+  const result = centredScore(face, block.plotted)
+  if (!result) return null
+  const diff = result.centred - result.real
+  return {
+    line: t('plots.centred', { real: result.real, centred: result.centred, diff: diff > 0 ? `+${diff}` : String(diff) }),
+    partial: block.typed > 0 ? t('plots.centredPartial', { n: result.n }) : '',
+  }
+}
 const hasNumbers = (plotted: { arrow_number?: number }[]) => plotted.some((s) => s.arrow_number != null)
 </script>
 
@@ -56,6 +76,11 @@ const hasNumbers = (plotted: { arrow_number?: number }[]) => plotted.some((s) =>
     <div v-for="{ spot, group } in current.block.groups" :key="spot" class="muted">
       {{ $t('plots.summary', { label: current.face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, current.radius, words, units), spread: formatLength(spreadCm(group, current.radius)) }) }}
     </div>
+    <div v-if="centredText(current.block, current.face)" class="muted">
+      {{ centredText(current.block, current.face)!.line }} {{ centredText(current.block, current.face)!.partial }}
+      <div class="faint">{{ $t('plots.centredHint') }}</div>
+    </div>
+    <div v-if="sightText(current.block.plotted, current.radius)" class="muted">{{ sightText(current.block.plotted, current.radius) }}</div>
     <div v-if="current.block.typed > 0" class="faint">{{ $t('plots.typedShort', { n: current.block.typed }) }}</div>
   </div>
   <div v-else-if="blocks.length > 0" class="d-flex flex-column gap-3">
@@ -69,6 +94,11 @@ const hasNumbers = (plotted: { arrow_number?: number }[]) => plotted.some((s) =>
         {{ $t('plots.summary', { label: face.spots.length > 1 ? $t('plots.spot', { n: spot + 1 }) : $t('plots.group'), centre: describeCentre(group, radius, words, units), spread: formatLength(spreadCm(group, radius)) }) }}
         ({{ $t('count.arrows', group.n) }})
       </div>
+      <div v-if="centredText(block, face)">
+        {{ centredText(block, face)!.line }} {{ centredText(block, face)!.partial }}
+        <div class="faint">{{ $t('plots.centredHint') }}</div>
+      </div>
+      <div v-if="sightText(block.plotted, radius)">{{ sightText(block.plotted, radius) }}</div>
       <div v-if="block.typed > 0" class="faint">
         {{ $t('plots.typed', { n: block.typed }, block.typed) }}
       </div>
