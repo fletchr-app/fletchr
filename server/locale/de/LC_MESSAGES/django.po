@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 14:54+0100\n"
+"POT-Creation-Date: 2026-10-25 17:04+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,7 +26,7 @@ msgstr "Ungültiger oder abgelaufener Einladungscode"
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:128
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:129
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
@@ -85,64 +85,68 @@ msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
 msgid "A team needs a name"
 msgstr "Ein Team braucht einen Namen"
 
-#: core/serializers.py:128 core/serializers.py:143
+#: core/serializers.py:98
+msgid "Give a name or show_ranking"
+msgstr "Gib einen Namen oder show_ranking an"
+
+#: core/serializers.py:141 core/serializers.py:156
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:191 privacy/serializers.py:19 privacy/serializers.py:66
+#: core/serializers.py:204 privacy/serializers.py:19 privacy/serializers.py:66
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:201
+#: core/serializers.py:214
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:215
+#: core/serializers.py:228
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
-#: core/views.py:248
+#: core/views.py:249
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:294
+#: core/views.py:295
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
-#: core/views.py:303
-msgid "Only team admins can rename the team"
-msgstr "Nur Team-Admins können das Team umbenennen"
+#: core/views.py:304
+msgid "Only team admins can change the team"
+msgstr "Nur Team-Admins können das Team ändern"
 
-#: core/views.py:327
+#: core/views.py:330
 msgid "Only team admins can change roles"
 msgstr "Nur Team-Admins können Rollen ändern"
 
-#: core/views.py:333 core/views.py:347
+#: core/views.py:336 core/views.py:350
 msgid "A team needs at least one admin"
 msgstr "Ein Team braucht mindestens einen Admin"
 
-#: core/views.py:344
+#: core/views.py:347
 msgid "Only team admins can remove members"
 msgstr "Nur Team-Admins können Mitglieder entfernen"
 
-#: core/views.py:358 core/views.py:375
+#: core/views.py:361 core/views.py:378
 msgid "Only team admins can manage invites"
 msgstr "Nur Team-Admins können Einladungen verwalten"
 
-#: core/views.py:383
+#: core/views.py:386
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:508
+#: core/views.py:511
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:520
+#: core/views.py:523
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:532
+#: core/views.py:535
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
@@ -400,7 +404,7 @@ msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:76 notes/views.py:82 training/views.py:117
+#: media/views.py:76 notes/views.py:82 training/views.py:119
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
@@ -483,7 +487,7 @@ msgstr "Gib x und y an, oder keines von beiden"
 msgid "Position is out of range"
 msgstr "Die Position liegt außerhalb des Bereichs"
 
-#: training/serializers.py:50 training/views.py:321
+#: training/serializers.py:50 training/views.py:323 training/views.py:383
 msgid "Unknown target face"
 msgstr "Unbekannte Scheibe"
 
@@ -519,49 +523,65 @@ msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/views.py:54
+#: training/views.py:56
 msgid "Only the archer can change a session"
 msgstr "Nur der Schütze kann ein Training ändern"
 
-#: training/views.py:143
+#: training/views.py:145
 msgid "This end id belongs to another session"
 msgstr "Diese Passen-ID gehört zu einem anderen Training"
 
-#: training/views.py:149
+#: training/views.py:151
 msgid "Another end of this session has this index"
 msgstr "Eine andere Passe dieses Trainings hat diesen Index"
 
-#: training/views.py:151
+#: training/views.py:153
 msgid "A shot id is already used in another end"
 msgstr "Eine Schuss-ID wird schon in einer anderen Passe verwendet"
 
-#: training/views.py:176
+#: training/views.py:178
 msgid "This entry id belongs to another session"
 msgstr "Diese Eintrags-ID gehört zu einem anderen Training"
 
-#: training/views.py:204
+#: training/views.py:206 training/views.py:368
 msgid "Only coaches can see the team overview"
 msgstr "Nur Trainer können die Teamübersicht sehen"
 
-#: training/views.py:270
+#: training/views.py:272
 msgid "owner and weeks must be numbers"
 msgstr "owner und weeks müssen Zahlen sein"
 
-#: training/views.py:272
+#: training/views.py:274
 msgid "Between 1 and 52"
 msgstr "Zwischen 1 und 52"
 
-#: training/views.py:276 training/views.py:318
+#: training/views.py:278 training/views.py:320
 msgid "Unknown time zone"
 msgstr "Unbekannte Zeitzone"
 
-#: training/views.py:314
+#: training/views.py:316
 msgid "owner, distance_m and setup must be numbers"
 msgstr "owner, distance_m und setup müssen Zahlen sein"
 
-#: training/views.py:328
+#: training/views.py:330
 msgid "Use a date like 2026-10-25"
 msgstr "Nutze ein Datum wie 2026-10-25"
+
+#: training/views.py:370
+msgid "The ranking is switched off for this team"
+msgstr "Die Rangliste ist für dieses Team ausgeschaltet"
+
+#: training/views.py:376
+msgid "days and distance_m must be numbers"
+msgstr "days und distance_m müssen Zahlen sein"
+
+#: training/views.py:378
+msgid "Between 1 and 365"
+msgstr "Zwischen 1 und 365"
+
+#: training/views.py:381
+msgid "Give face and distance_m together"
+msgstr "Gib face und distance_m zusammen an"
 
 #~ msgid "This field is required."
 #~ msgstr "Dieses Feld ist erforderlich."

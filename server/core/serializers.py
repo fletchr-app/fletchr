@@ -73,7 +73,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ["id", "name", "my_role", "also_shoots"]
+        fields = ["id", "name", "show_ranking", "my_role", "also_shoots"]
 
 
 class TeamNameSerializer(serializers.Serializer):
@@ -84,6 +84,19 @@ class TeamNameSerializer(serializers.Serializer):
         if not value:
             raise serializers.ValidationError(gettext("A team needs a name"))
         return value
+
+
+class TeamUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150, required=False)
+    show_ranking = serializers.BooleanField(required=False, help_text="Whether coaches see the table that compares the archers")
+
+    def validate_name(self, value):
+        return TeamNameSerializer().validate_name(value)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError(gettext("Give a name or show_ranking"))
+        return attrs
 
 
 class RoleChangeSerializer(serializers.Serializer):

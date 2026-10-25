@@ -37,6 +37,7 @@ const router = createRouter({
     { path: '/team', component: () => import('@/views/TeamListView.vue'), meta: { title: 'Team', auth: 'in', tab: true } },
     { path: '/team/:id', component: () => import('@/views/TeamManageView.vue'), meta: { title: 'Team', auth: 'in' } },
     { path: '/team/:id/forms', component: () => import('@/views/EvaluationFormsView.vue'), meta: { title: 'Evaluation forms', auth: 'in' } },
+    { path: '/team/:id/ranking', component: () => import('@/views/TeamRankingView.vue'), meta: { title: 'Compare archers', auth: 'in' } },
     { path: '/team/:id/progress', component: () => import('@/views/TeamProgressView.vue'), meta: { title: 'Team ratings', auth: 'in' } },
     { path: '/evaluate', component: () => import('@/views/EvaluationEditView.vue'), meta: { title: 'Evaluation', auth: 'in' } },
     { path: '/evaluations/:id', component: () => import('@/views/EvaluationView.vue'), meta: { title: 'Evaluation', auth: 'in' } },

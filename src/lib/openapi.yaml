@@ -1983,7 +1983,8 @@ paths:
           description: ''
     patch:
       operationId: teams_partial_update
-      description: Rename the team. Only admins.
+      description: Rename the team or switch the ranking of archers on or off. Only
+        admins.
       parameters:
       - in: path
         name: team_id
@@ -1996,13 +1997,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedTeamNameRequest'
+              $ref: '#/components/schemas/PatchedTeamUpdateRequest'
       security:
       - jwtAuth: []
       responses:
@@ -2432,6 +2433,44 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArcherOverview'
+          description: ''
+  /api/teams/{team_id}/ranking/:
+    get:
+      operationId: teams_ranking_retrieve
+      description: 'For coaches, when an admin has switched it on: how many arrows
+        each archer shot lately and their average on one face and distance.'
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: How far back, 1 to 365; default 28
+      - in: query
+        name: distance_m
+        schema:
+          type: number
+          format: double
+        description: Distance for the average; needed with face
+      - in: query
+        name: face
+        schema:
+          type: string
+        description: 'Slug of the face for the average; default: the one shot most'
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ranking'
           description: ''
   /api/token/:
     post:
@@ -4270,13 +4309,16 @@ components:
       properties:
         role:
           $ref: '#/components/schemas/RoleEnum'
-    PatchedTeamNameRequest:
+    PatchedTeamUpdateRequest:
       type: object
       properties:
         name:
           type: string
           minLength: 1
           maxLength: 150
+        show_ranking:
+          type: boolean
+          description: Whether coaches see the table that compares the archers
     Positions:
       type: object
       properties:
@@ -4363,6 +4405,84 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+    Ranking:
+      type: object
+      properties:
+        days:
+          type: integer
+        face:
+          type: string
+          nullable: true
+        distance_m:
+          type: string
+          nullable: true
+        max_value:
+          type: integer
+          nullable: true
+          description: Points of the best ring of the chosen face
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankingChoice'
+          description: Faces and distances to pick from, most arrows first
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankingRow'
+          description: Most arrows first
+      required:
+      - choices
+      - days
+      - distance_m
+      - face
+      - max_value
+      - rows
+    RankingChoice:
+      type: object
+      properties:
+        face:
+          type: string
+        face_name:
+          type: string
+        distance_m:
+          type: string
+        arrows:
+          type: integer
+          description: Scored arrows of the team on this face and distance in the
+            period
+      required:
+      - arrows
+      - distance_m
+      - face
+      - face_name
+    RankingRow:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        managed:
+          type: boolean
+        arrows:
+          type: integer
+          description: All arrows in the period, scored or not
+        scored_arrows:
+          type: integer
+          description: Scored arrows on the chosen face and distance
+        average:
+          type: number
+          format: double
+          nullable: true
+          description: Average points per arrow on the chosen face and distance; null
+            without scored arrows
+      required:
+      - arrows
+      - average
+      - managed
+      - name
+      - scored_arrows
+      - user_id
     RedeemRequest:
       type: object
       properties:
@@ -4992,6 +5112,8 @@ components:
         name:
           type: string
           maxLength: 150
+        show_ranking:
+          type: boolean
         my_role:
           type: string
           readOnly: true

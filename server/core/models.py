@@ -121,6 +121,8 @@ COACH_ROLES = (Role.COACH, Role.ADMIN)
 class Team(models.Model):
     name = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Off by default, so a team of young archers does not get a table that puts them in order. An admin turns it on.
+    show_ranking = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

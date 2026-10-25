@@ -22,10 +22,12 @@ from core.models import COACH_ROLES, Role, Team, TeamMember, User
 from .models import End, Shot, TrainingSession, VolumeEntry
 from targets.catalogue import get_face
 
+from .ranking import compute_ranking
 from .stats import compute_stats, spot_radius_cm
 from .serializers import (
     ArcherOverviewSerializer,
     PositionsSerializer,
+    RankingSerializer,
     StatsSerializer,
     EndSerializer,
     SessionSerializer,
@@ -345,3 +347,52 @@ class PositionsView(APIView):
             "arrows": total, "limited": total > MAX_POSITIONS, "points": [[x, y] for x, y in rows],
         }
         return Response(PositionsSerializer(data).data)
+
+
+class TeamRankingView(APIView):
+    """For coaches, when an admin has switched it on: how many arrows each archer shot lately and their average on one face and distance."""
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("days", int, description="How far back, 1 to 365; default 28"),
+            OpenApiParameter("face", str, description="Slug of the face for the average; default: the one shot most"),
+            OpenApiParameter("distance_m", float, description="Distance for the average; needed with face"),
+        ],
+        responses=RankingSerializer,
+    )
+    def get(self, request, team_id):
+        team = Team.objects.filter(pk=team_id, memberships__user=request.user).first()
+        if team is None:
+            raise NotFound()
+        if not is_coach_in(request.user, team):
+            raise PermissionDenied(gettext("Only coaches can see the team overview"))
+        if not team.show_ranking:
+            raise PermissionDenied(gettext("The ranking is switched off for this team"))
+        params = request.query_params
+        try:
+            days = int(params.get("days", 28))
+            distance = Decimal(params["distance_m"]).quantize(Decimal("0.1")) if "distance_m" in params else None
+        except (ValueError, ArithmeticError):
+            raise ValidationError(gettext("days and distance_m must be numbers"))
+        if not 1 <= days <= 365:
+            raise ValidationError({"days": gettext("Between 1 and 365")})
+        face = params.get("face")
+        if (face is None) != (distance is None):
+            raise ValidationError(gettext("Give face and distance_m together"))
+        if face is not None and get_face(face) is None:
+            raise ValidationError({"face": gettext("Unknown target face")})
+
+        since = timezone.now() - timedelta(days=days)
+        members = (
+            TeamMember.objects.filter(team=team)
+            .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
+            .select_related("user__profile")
+        )
+        listed = [(m.user_id, m.user.profile.name or m.user.email, m.user.is_managed) for m in members]
+        owners = [m[0] for m in listed]
+        shots = Shot.objects.filter(end__session__owner_id__in=owners, end__session__started_at__gte=since).values_list(
+            "end__session__owner_id", "end__face", "end__distance_m", "value", "is_miss"
+        )
+        volume = VolumeEntry.objects.filter(session__owner_id__in=owners, session__started_at__gte=since).values_list("session__owner_id", "arrow_count")
+        result = compute_ranking(listed, list(shots), list(volume), face, distance)
+        return Response(RankingSerializer({"days": days, **result}).data)

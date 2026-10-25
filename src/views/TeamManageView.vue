@@ -9,6 +9,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import InvitesSection from '@/components/InvitesSection.vue'
 import MembersSection from '@/components/MembersSection.vue'
 import TeamLeaveDelete from '@/components/TeamLeaveDelete.vue'
+import TeamRankingToggle from '@/components/TeamRankingToggle.vue'
 import TeamRename from '@/components/TeamRename.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
@@ -49,6 +50,7 @@ function reload() {
       <div v-if="team.loading.value">{{ $t('common.loading') }}</div>
       <template v-if="team.data.value">
         <TeamRename v-if="isAdmin" :key="team.data.value.name" :team-id="teamId" :name="team.data.value.name" @changed="reload" />
+        <TeamRankingToggle v-if="isAdmin" :team-id="teamId" :on="!!team.data.value.show_ranking" @changed="reload" />
         <MembersSection
           v-if="members.data.value"
           :team-id="teamId"

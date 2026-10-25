@@ -39,6 +39,7 @@ from .serializers import (
     MeSerializer,
     RoleChangeSerializer,
     TeamNameSerializer,
+    TeamUpdateSerializer,
     RedeemSerializer,
     RegisterResponseSerializer,
     RegisterSerializer,
@@ -295,16 +296,18 @@ class TeamDetailView(APIView):
         claims.delete_team(Team.objects.get(pk=team.pk))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(request=TeamNameSerializer, responses=TeamSerializer)
+    @extend_schema(request=TeamUpdateSerializer, responses=TeamSerializer)
     def patch(self, request, team_id):
-        """Rename the team. Only admins."""
+        """Rename the team or switch the ranking of archers on or off. Only admins."""
         team = self._team(request, team_id)
         if team.my_role != Role.ADMIN:
-            raise PermissionDenied(gettext("Only team admins can rename the team"))
-        serializer = TeamNameSerializer(data=request.data)
+            raise PermissionDenied(gettext("Only team admins can change the team"))
+        serializer = TeamUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        team.name = serializer.validated_data["name"]
-        team.save(update_fields=["name"])
+        changes = serializer.validated_data
+        for field, value in changes.items():
+            setattr(team, field, value)
+        team.save(update_fields=list(changes))
         return Response(TeamSerializer(team).data)
 
 

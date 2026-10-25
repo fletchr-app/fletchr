@@ -769,7 +769,7 @@ export interface paths {
         delete: operations["teams_destroy"];
         options?: never;
         head?: never;
-        /** @description Rename the team. Only admins. */
+        /** @description Rename the team or switch the ranking of archers on or off. Only admins. */
         patch: operations["teams_partial_update"];
         trace?: never;
     };
@@ -937,6 +937,23 @@ export interface paths {
          *     session and arrows of the last 7 days.
          */
         get: operations["teams_overview_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teams/{team_id}/ranking/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description For coaches, when an admin has switched it on: how many arrows each archer shot lately and their average on one face and distance. */
+        get: operations["teams_ranking_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1831,8 +1848,10 @@ export interface components {
         PatchedRoleChangeRequest: {
             role?: components["schemas"]["RoleEnum"];
         };
-        PatchedTeamNameRequest: {
+        PatchedTeamUpdateRequest: {
             name?: string;
+            /** @description Whether coaches see the table that compares the archers */
+            show_ranking?: boolean;
         };
         Positions: {
             owner: number;
@@ -1867,6 +1886,38 @@ export interface components {
             /** Format: date */
             date_of_birth?: string | null;
             units?: components["schemas"]["UnitsEnum"];
+        };
+        Ranking: {
+            days: number;
+            face: string | null;
+            distance_m: string | null;
+            /** @description Points of the best ring of the chosen face */
+            max_value: number | null;
+            /** @description Faces and distances to pick from, most arrows first */
+            choices: components["schemas"]["RankingChoice"][];
+            /** @description Most arrows first */
+            rows: components["schemas"]["RankingRow"][];
+        };
+        RankingChoice: {
+            face: string;
+            face_name: string;
+            distance_m: string;
+            /** @description Scored arrows of the team on this face and distance in the period */
+            arrows: number;
+        };
+        RankingRow: {
+            user_id: number;
+            name: string;
+            managed: boolean;
+            /** @description All arrows in the period, scored or not */
+            arrows: number;
+            /** @description Scored arrows on the chosen face and distance */
+            scored_arrows: number;
+            /**
+             * Format: double
+             * @description Average points per arrow on the chosen face and distance; null without scored arrows
+             */
+            average: number | null;
         };
         RedeemRequest: {
             invite_code: string;
@@ -2140,6 +2191,7 @@ export interface components {
         Team: {
             readonly id: number;
             name: string;
+            show_ranking?: boolean;
             readonly my_role: string;
             /** @description Whether I share my own training with the other coaches */
             readonly also_shoots: boolean;
@@ -4064,9 +4116,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedTeamNameRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedTeamNameRequest"];
-                "multipart/form-data": components["schemas"]["PatchedTeamNameRequest"];
+                "application/json": components["schemas"]["PatchedTeamUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTeamUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTeamUpdateRequest"];
             };
         };
         responses: {
@@ -4429,6 +4481,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArcherOverview"][];
+                };
+            };
+        };
+    };
+    teams_ranking_retrieve: {
+        parameters: {
+            query?: {
+                /** @description How far back, 1 to 365; default 28 */
+                days?: number;
+                /** @description Distance for the average; needed with face */
+                distance_m?: number;
+                /** @description Slug of the face for the average; default: the one shot most */
+                face?: string;
+            };
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ranking"];
                 };
             };
         };
