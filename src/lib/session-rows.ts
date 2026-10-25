@@ -16,15 +16,18 @@ export type SessionRow = {
 
 type Summary = components['schemas']['SessionSummary'];
 
-/** Newest first. A session known on both sides is shown from the device, where it can still be edited. */
-export function sessionRows(local: LogSession[], remote: Summary[]): SessionRow[] {
+/**
+ * Newest first. A session known on both sides is shown from the device, where it can still be edited. `gone` are sessions
+ * deleted on this device: the server's list may still have them until the delete has gone out and the list is fetched again.
+ */
+export function sessionRows(local: LogSession[], remote: Summary[], gone: ReadonlySet<string> = new Set()): SessionRow[] {
   return [
     ...local.map((s) => {
       const { arrows, score } = sessionTotals(s);
       return { id: s.id, to: `/training/${s.id}`, started_at: s.started_at, type: s.type, location: s.location, finished: !!s.ended_at, ends: s.ends.length, arrows, points: score };
     }),
     ...remote
-      .filter((s) => !local.some((l) => l.id === s.id))
+      .filter((s) => !local.some((l) => l.id === s.id) && !gone.has(s.id))
       .map((s) => ({
         id: s.id, to: `/sessions/${s.id}`, started_at: s.started_at, type: s.type, location: s.location ?? '',
         finished: !!s.ended_at, ends: s.ends, arrows: s.scored_arrows + s.volume_arrows, points: s.score_total,

@@ -25,7 +25,7 @@ const name = route.query.name as string | undefined
 
 const { t } = useI18n()
 const { api } = useAuth()
-const { sessions: local } = useLog()
+const { sessions: local, goneSessions } = useLog()
 const info = useRemote(async () => (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: Number(id) } } })).data ?? null)
 const { data, error, loading } = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(id) } } })).data ?? null, {
   pollMs: REFRESH_MS,
@@ -44,7 +44,7 @@ const profileLine = computed(() => {
     .join(' · ')
 })
 // Sessions the coach logged on this device (editable), then those the server has.
-const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? []))
+const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? [], goneSessions.value))
 </script>
 
 <template>

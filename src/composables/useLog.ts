@@ -51,6 +51,12 @@ const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length
 const failed = computed(() => state.value.outbox.filter((o) => o.error));
 const sessions = computed(() => (loaded.value ? state.value.sessions : []));
 const equipment = computed(() => state.value.equipment);
+// Sessions deleted on this device. The server's list of sessions can still show them until the delete has been sent and
+// the list is fetched again; ones whose delete is still queued stay hidden after a restart too.
+const deletedHere = ref<ReadonlySet<string>>(new Set());
+const goneSessions = computed(
+  () => new Set([...deletedHere.value, ...state.value.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId)]),
+);
 
 async function flush() {
   if (flushing || paused || !loaded.value || status.value !== 'signedIn') return;
@@ -141,7 +147,10 @@ const actions = {
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
     dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),
-  deleteSession: (id: string) => dispatch({ type: 'deleteSession', id }),
+  deleteSession: (id: string) => {
+    deletedHere.value = new Set([...deletedHere.value, id]);
+    dispatch({ type: 'deleteSession', id });
+  },
   saveEnd: (sessionId: string, end: LogEnd) => dispatch({ type: 'saveEnd', sessionId, end }),
   deleteEnd: (sessionId: string, endId: string) => dispatch({ type: 'deleteEnd', sessionId, endId }),
   saveVolume: (sessionId: string, entry: LogVolume) => dispatch({ type: 'saveVolume', sessionId, entry }),
@@ -195,6 +204,6 @@ effectScope(true).run(() => {
 });
 
 export function useLog() {
-  return { loaded, sessions, equipment, waiting, failed, ...actions };
+  return { loaded, sessions, equipment, waiting, failed, goneSessions, ...actions };
 }
 

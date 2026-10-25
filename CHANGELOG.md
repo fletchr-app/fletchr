@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.9.1, 2026-10-25
+
+- **Fix:** a session you deleted on the phone showed up in the Training list, on Home and on an archer's page until the list refreshed (up to 15 s). It is hidden at once now. No server changes, no migrations.
+
 ## 0.9.0, 2026-10-25
 
 Deeper statistics (milestone 3 is done).

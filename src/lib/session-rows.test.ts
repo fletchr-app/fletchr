@@ -20,6 +20,12 @@ test('local and server sessions are merged, newest first, a shared one is shown 
   assert.equal(rows[0]!.finished, true);
 });
 
+test('a session deleted on this device is not shown from the server list while that still has it', () => {
+  const rows = sessionRows([local('a', '2026-10-18T09:00:00Z')], [remote('b', '2026-10-17T09:00:00Z'), remote('c', '2026-10-19T09:00:00Z')], new Set(['b']));
+  assert.deepEqual(rows.map((r) => r.id), ['c', 'a']);
+  assert.deepEqual(sessionRows([], [remote('b', '2026-10-17T09:00:00Z')]).map((r) => r.id), ['b']); // nothing deleted: shown as before
+});
+
 test('the week starts on Monday, on the device clock', () => {
   assert.deepEqual(weekStart(new Date(2026, 9, 21, 15, 30)), new Date(2026, 9, 19)); // Wednesday
   assert.deepEqual(weekStart(new Date(2026, 9, 25, 23, 59)), new Date(2026, 9, 19)); // Sunday
