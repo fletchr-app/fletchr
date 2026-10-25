@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 
+import DistributionBars from '@/components/DistributionBars.vue'
 import { useElementWidth } from '@/composables/useElementWidth'
 import { useUnits } from '@/composables/useUnits'
 import type { components } from '@/lib/api-types'
@@ -28,7 +29,7 @@ const percent = (share: number) => `${Math.round(share * 100)}%`
 // How one face at one distance went: the average points per arrow in each session, as a line. A filled
 // dot is a practice session, a ring a competition. Each face and distance gets its own chart, because
 // points on different faces cannot be compared.
-const props = defineProps<{ group: Group }>()
+const props = defineProps<{ group: Group; heatmapTo?: string }>()
 
 const box = ref<HTMLElement | null>(null)
 const width = useElementWidth(box)
@@ -60,6 +61,7 @@ const hitWidth = computed(() => Math.max(24, plotW.value / points.value.length))
       }}
       · {{ $t('stats.misses', { rate: percent(group.miss_rate) }) }}
     </div>
+    <DistributionBars :distribution="group.distribution" />
     <div v-if="pick">
       {{ $t('stats.pick', { date: date(pick.date), avg: pick.average.toFixed(2), n: pick.arrows }, pick.arrows) }}{{ pick.competition ? ` · ${$t('stats.competition')}` : '' }}
     </div>
@@ -102,5 +104,6 @@ const hitWidth = computed(() => Math.max(24, plotW.value / points.value.length))
     <div v-if="points.length === 1 && !asTable" style="color: var(--chart-muted)">{{ $t('stats.oneSession') }}</div>
     <div style="color: var(--chart-muted)">{{ $t('stats.note', { lo: domain.lo }) }}</div>
     <button type="button" class="chart-link" @click="asTable = !asTable">{{ asTable ? $t('stats.showChart') : $t('stats.showTable') }}</button>
+    <RouterLink v-if="heatmapTo" :to="heatmapTo" class="chart-link">{{ $t('stats.heatmapLink') }}</RouterLink>
   </div>
 </template>

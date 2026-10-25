@@ -1860,6 +1860,64 @@ paths:
               schema:
                 $ref: '#/components/schemas/Stats'
           description: ''
+  /api/stats/positions/:
+    get:
+      operationId: stats_positions_retrieve
+      description: 'Where the arrows of one face at one distance landed, for the heatmap:
+        positions only, not whole sessions.'
+      parameters:
+      - in: query
+        name: distance_m
+        schema:
+          type: number
+          format: double
+        description: Distance in metres
+        required: true
+      - in: query
+        name: face
+        schema:
+          type: string
+        description: Slug of the target face
+        required: true
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        description: 'First day (in the time zone), default: no limit'
+      - in: query
+        name: owner
+        schema:
+          type: integer
+        description: 'Whose arrows; default: yours'
+      - in: query
+        name: setup
+        schema:
+          type: integer
+        description: Only sessions shot with this setup
+      - in: query
+        name: to
+        schema:
+          type: string
+          format: date
+        description: Last day, included
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: IANA time zone that decides which day a session falls on; default
+          UTC
+      tags:
+      - stats
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Positions'
+          description: ''
   /api/teams/:
     get:
       operationId: teams_list
@@ -4219,6 +4277,45 @@ components:
           type: string
           minLength: 1
           maxLength: 150
+    Positions:
+      type: object
+      properties:
+        owner:
+          type: integer
+        face:
+          type: string
+        distance_m:
+          type: string
+        radius_cm:
+          type: number
+          format: double
+          description: 'The spot radius: positions of 1 are this far from the middle'
+        arrows:
+          type: integer
+          description: How many plotted arrows match the filter
+        limited:
+          type: boolean
+          description: True when there are more arrows than points returned (the newest
+            are kept)
+        points:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          description: '[x, y] per arrow, newest first; x right, y up, 1 = the spot
+            radius'
+      required:
+      - arrows
+      - distance_m
+      - face
+      - limited
+      - owner
+      - points
+      - radius_cm
     Profile:
       type: object
       properties:
@@ -4427,6 +4524,15 @@ components:
         miss_rate:
           type: number
           format: double
+        radius_cm:
+          type: number
+          format: double
+          description: 'The spot radius: positions of 1 are this far from the middle'
+        distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValueCount'
+          description: Arrows per value, best ring first, misses (0) last
         sessions:
           type: array
           items:
@@ -4436,10 +4542,12 @@ components:
       - arrows
       - average
       - distance_m
+      - distribution
       - face
       - face_name
       - max_value
       - miss_rate
+      - radius_cm
       - sessions
       - top_rate
       - x_rate
@@ -4543,12 +4651,35 @@ components:
           type: number
           format: double
           description: Average points per arrow in this session
+        plotted:
+          type: integer
+          description: Arrows with a position (typed scores have none)
+        centre_x:
+          type: number
+          format: double
+          nullable: true
+          description: Group centre, right is positive, 1 = the spot radius; null
+            without positions
+        centre_y:
+          type: number
+          format: double
+          nullable: true
+          description: Group centre, up is positive, 1 = the spot radius
+        spread:
+          type: number
+          format: double
+          nullable: true
+          description: Mean distance of the arrows from the centre, 1 = the spot radius
       required:
       - arrows
       - average
+      - centre_x
+      - centre_y
       - competition
       - date
+      - plotted
       - session
+      - spread
     SessionSummary:
       type: object
       properties:
@@ -5015,6 +5146,17 @@ components:
       description: |-
         * `metric` - Metric
         * `imperial` - Imperial
+    ValueCount:
+      type: object
+      properties:
+        value:
+          type: integer
+          description: Points; 0 for misses
+        count:
+          type: integer
+      required:
+      - count
+      - value
     VideoConsent:
       type: object
       properties:

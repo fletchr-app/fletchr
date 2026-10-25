@@ -54,6 +54,8 @@ DE = {
     "This entry id belongs to another session": "Diese Eintrags-ID gehört zu einem anderen Training",
     "Only coaches can see the team overview": "Nur Trainer können die Teamübersicht sehen",
     "owner and weeks must be numbers": "owner und weeks müssen Zahlen sein",
+    "owner, distance_m and setup must be numbers": "owner, distance_m und setup müssen Zahlen sein",
+    "Use a date like 2026-10-25": "Nutze ein Datum wie 2026-10-25",
     "Between 1 and 52": "Zwischen 1 und 52",
     "Unknown time zone": "Unbekannte Zeitzone",
     "Enter a date of birth in the past": "Gib ein Geburtsdatum in der Vergangenheit ein",

@@ -717,6 +717,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stats/positions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Where the arrows of one face at one distance landed, for the heatmap: positions only, not whole sessions. */
+        get: operations["stats_positions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teams/": {
         parameters: {
             query?: never;
@@ -1817,6 +1834,22 @@ export interface components {
         PatchedTeamNameRequest: {
             name?: string;
         };
+        Positions: {
+            owner: number;
+            face: string;
+            distance_m: string;
+            /**
+             * Format: double
+             * @description The spot radius: positions of 1 are this far from the middle
+             */
+            radius_cm: number;
+            /** @description How many plotted arrows match the filter */
+            arrows: number;
+            /** @description True when there are more arrows than points returned (the newest are kept) */
+            limited: boolean;
+            /** @description [x, y] per arrow, newest first; x right, y up, 1 = the spot radius */
+            points: number[][];
+        };
         Profile: {
             name?: string;
             dominant_hand?: components["schemas"]["HandEnum"] | components["schemas"]["BlankEnum"];
@@ -1913,6 +1946,13 @@ export interface components {
             x_rate: number | null;
             /** Format: double */
             miss_rate: number;
+            /**
+             * Format: double
+             * @description The spot radius: positions of 1 are this far from the middle
+             */
+            radius_cm: number;
+            /** @description Arrows per value, best ring first, misses (0) last */
+            distribution: components["schemas"]["ValueCount"][];
             /** @description Oldest first */
             sessions: components["schemas"]["SessionPoint"][];
         };
@@ -1955,6 +1995,23 @@ export interface components {
              * @description Average points per arrow in this session
              */
             average: number;
+            /** @description Arrows with a position (typed scores have none) */
+            plotted: number;
+            /**
+             * Format: double
+             * @description Group centre, right is positive, 1 = the spot radius; null without positions
+             */
+            centre_x: number | null;
+            /**
+             * Format: double
+             * @description Group centre, up is positive, 1 = the spot radius
+             */
+            centre_y: number | null;
+            /**
+             * Format: double
+             * @description Mean distance of the arrows from the centre, 1 = the spot radius
+             */
+            spread: number | null;
         };
         SessionSummary: {
             /** Format: uuid */
@@ -2139,6 +2196,11 @@ export interface components {
          * @enum {string}
          */
         UnitsEnum: "metric" | "imperial";
+        ValueCount: {
+            /** @description Points; 0 for misses */
+            value: number;
+            count: number;
+        };
         VideoConsent: {
             video_allowed: boolean;
             /** Format: date-time */
@@ -3868,6 +3930,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Stats"];
+                };
+            };
+        };
+    };
+    stats_positions_retrieve: {
+        parameters: {
+            query: {
+                /** @description Distance in metres */
+                distance_m: number;
+                /** @description Slug of the target face */
+                face: string;
+                /** @description First day (in the time zone), default: no limit */
+                from?: string;
+                /** @description Whose arrows; default: yours */
+                owner?: number;
+                /** @description Only sessions shot with this setup */
+                setup?: number;
+                /** @description Last day, included */
+                to?: string;
+                /** @description IANA time zone that decides which day a session falls on; default UTC */
+                tz?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Positions"];
                 };
             };
         };

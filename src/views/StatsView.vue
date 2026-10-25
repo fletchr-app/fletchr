@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
+import GroupTrend from '@/components/GroupTrend.vue'
 import ScoreChart from '@/components/ScoreChart.vue'
 import VolumeChart from '@/components/VolumeChart.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -28,6 +29,10 @@ const owner = route.params.id as string | undefined
 const name = route.query.name as string | undefined
 const title = name ? t('stats.titleFor', { name }) : t('stats.title')
 const hasBack = owner !== undefined // opened from an archer's page, not from the tab bar
+
+// The heatmap screen of the same archer, preselected to a face and distance.
+const heatmapTo = (face: string, distance: string) =>
+  `${owner ? `/archers/${owner}` : ''}/stats/heatmap?${new URLSearchParams({ face, distance, ...(name ? { name } : {}) })}`
 
 const { api } = useAuth()
 const { data, error, loading, reload } = useRemote(
@@ -59,7 +64,10 @@ onIonViewWillEnter(() => {
         <VolumeChart :weeks="data.volume.weeks" />
         <h2 class="h5 mt-2 mb-0">{{ $t('stats.averageScore') }}</h2>
         <div v-if="data.scores.length === 0">{{ $t('stats.noScored') }}</div>
-        <ScoreChart v-for="group in data.scores" :key="`${group.face}-${group.distance_m}`" :group="group" />
+        <template v-for="group in data.scores" :key="`${group.face}-${group.distance_m}`">
+          <ScoreChart :group="group" :heatmap-to="heatmapTo(group.face, group.distance_m)" />
+          <GroupTrend :group="group" />
+        </template>
       </template>
     </div>
   </AppPage>

@@ -41,9 +41,9 @@ Open in practice (not release dependent):
 
 ## Milestone 3: deeper stats (partly)
 
-Built: volume, average score, best-ring/X/miss rates, group centre and spread per session.
+Built: volume, average score, best-ring/X/miss rates, group centre and spread per session. Score distribution (#28): arrows per ring as bars under each average chart. Heatmap (#29): `GET /api/stats/positions/` gives the positions of one face and distance (filter: period, setup), the app draws a density picture at `/stats/heatmap` (linked from each average chart); on a triple face all spots are laid on top of each other. Group trend (#30): per session the centre and spread of the plotted arrows (`centre_x`, `centre_y`, `spread` as fractions of the spot radius, `radius_cm`), a chart with spread, left/right and low/high, and in the session view a line "Move the sight ..." (six arrows or more, centre at least 0.5 cm off; the direction is towards the group, a rule of thumb that is not checked against a coach yet).
 
-Not built: score histogram, heatmap of all arrows, group trend over time, per-arrow-number grouping (needs the arrow number in the app), comparison by setup, self-rating vs score, team comparison and leaderboard, "who has not trained this week".
+Not built: group trend needs the setup filter in the app (the endpoint has it), per-arrow-number grouping (needs the arrow number in the app, #32), comparison by setup (#31), self-rating vs score (#33), team comparison and leaderboard (#34), centred score (#68).
 
 ## Milestone 4: notifications and remaining polish (not started)
 

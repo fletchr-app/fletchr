@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 19:32+0200\n"
+"POT-Creation-Date: 2026-10-25 14:54+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -262,90 +262,90 @@ msgstr "Das Zeitmuster ist von Schuss zu Schuss stabil"
 msgid "Shooting technique"
 msgstr "Schießtechnik"
 
-#: evaluations/serializers.py:31
+#: evaluations/serializers.py:32
 msgid "A criterion needs a name"
 msgstr "Ein Kriterium braucht einen Namen"
 
-#: evaluations/serializers.py:36
+#: evaluations/serializers.py:37
 msgid "A key has lower-case letters, digits and underscores"
 msgstr "Ein Schlüssel besteht aus Kleinbuchstaben, Ziffern und Unterstrichen"
 
-#: evaluations/serializers.py:51
+#: evaluations/serializers.py:52
 msgid "A form needs at least one criterion"
 msgstr "Ein Formular braucht mindestens ein Kriterium"
 
-#: evaluations/serializers.py:53
+#: evaluations/serializers.py:54
 #, python-format
 msgid "A form can have %(n)s criteria at most"
 msgstr "Ein Formular kann höchstens %(n)s Kriterien haben"
 
-#: evaluations/serializers.py:57
+#: evaluations/serializers.py:58
 msgid "Two criteria have the same key"
 msgstr "Zwei Kriterien haben denselben Schlüssel"
 
-#: evaluations/serializers.py:106
+#: evaluations/serializers.py:111
 msgid "A form needs a name"
 msgstr "Ein Formular braucht einen Namen"
 
-#: evaluations/serializers.py:182
+#: evaluations/serializers.py:187
 msgid "A self-assessment is about yourself"
 msgstr "Eine Selbsteinschätzung betrifft dich selbst"
 
-#: evaluations/serializers.py:186
+#: evaluations/serializers.py:191
 msgid "Only coaches can rate an archer"
 msgstr "Nur Trainer können einen Schützen bewerten"
 
-#: evaluations/serializers.py:190
+#: evaluations/serializers.py:195
 msgid "You cannot do an evaluation of this archer in that team"
 msgstr "Du kannst diesen Schützen in diesem Team nicht bewerten"
 
-#: evaluations/serializers.py:195
+#: evaluations/serializers.py:200
 msgid "You cannot do an evaluation of this person"
 msgstr "Du kannst diese Person nicht bewerten"
 
-#: evaluations/serializers.py:196
+#: evaluations/serializers.py:201
 msgid "This is in several teams: say which one"
 msgstr "Das gilt in mehreren Teams: gib an, in welchem"
 
-#: evaluations/serializers.py:203
+#: evaluations/serializers.py:208
 #, python-format
 msgid "This form has no criterion %(key)s"
 msgstr "Dieses Formular hat kein Kriterium %(key)s"
 
-#: evaluations/serializers.py:205
+#: evaluations/serializers.py:210
 msgid "A criterion is rated twice"
 msgstr "Ein Kriterium ist zweimal bewertet"
 
-#: evaluations/serializers.py:208
+#: evaluations/serializers.py:213
 #, python-format
 msgid "A rating goes from 1 to %(n)s"
 msgstr "Eine Bewertung geht von 1 bis %(n)s"
 
-#: evaluations/serializers.py:212 notes/serializers.py:112
+#: evaluations/serializers.py:217 notes/serializers.py:112
 msgid "Give the clip the frame is in"
 msgstr "Gib das Video an, zu dem das Bild gehört"
 
-#: evaluations/serializers.py:215 notes/serializers.py:102
+#: evaluations/serializers.py:220 notes/serializers.py:102
 msgid "This is not a photo or video of that archer"
 msgstr "Das ist kein Foto oder Video dieses Schützen"
 
-#: evaluations/serializers.py:217
+#: evaluations/serializers.py:222
 msgid "Say which frame the rating is about"
 msgstr "Gib an, zu welchem Bild die Bewertung gehört"
 
-#: evaluations/serializers.py:219 notes/serializers.py:106
+#: evaluations/serializers.py:224 notes/serializers.py:106
 msgid "The clip has no such frame"
 msgstr "Das Video hat dieses Bild nicht"
 
-#: evaluations/serializers.py:225 evaluations/serializers.py:227
+#: evaluations/serializers.py:230 evaluations/serializers.py:232
 msgid "This cannot be changed after the evaluation is written"
 msgstr "Das kann nach dem Speichern der Bewertung nicht mehr geändert werden"
 
-#: evaluations/serializers.py:237
+#: evaluations/serializers.py:242
 msgid "Say which form to use"
 msgstr "Gib an, welches Formular benutzt wird"
 
-#: evaluations/serializers.py:239
+#: evaluations/serializers.py:244
 msgid "This form belongs to another team"
 msgstr "Dieses Formular gehört zu einem anderen Team"
 
@@ -357,7 +357,7 @@ msgstr "Nur Trainer können die Formulare eines Teams ändern"
 msgid "A form needs a name and criteria"
 msgstr "Ein Formular braucht einen Namen und Kriterien"
 
-#: evaluations/views.py:94
+#: evaluations/views.py:95
 msgid "Evaluations were made with this form, so it stays"
 msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 
@@ -400,7 +400,7 @@ msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:76 notes/views.py:82 training/views.py:112
+#: media/views.py:76 notes/views.py:82 training/views.py:117
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
@@ -483,7 +483,7 @@ msgstr "Gib x und y an, oder keines von beiden"
 msgid "Position is out of range"
 msgstr "Die Position liegt außerhalb des Bereichs"
 
-#: training/serializers.py:50
+#: training/serializers.py:50 training/views.py:321
 msgid "Unknown target face"
 msgstr "Unbekannte Scheibe"
 
@@ -519,41 +519,49 @@ msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/views.py:49
+#: training/views.py:54
 msgid "Only the archer can change a session"
 msgstr "Nur der Schütze kann ein Training ändern"
 
-#: training/views.py:138
+#: training/views.py:143
 msgid "This end id belongs to another session"
 msgstr "Diese Passen-ID gehört zu einem anderen Training"
 
-#: training/views.py:144
+#: training/views.py:149
 msgid "Another end of this session has this index"
 msgstr "Eine andere Passe dieses Trainings hat diesen Index"
 
-#: training/views.py:146
+#: training/views.py:151
 msgid "A shot id is already used in another end"
 msgstr "Eine Schuss-ID wird schon in einer anderen Passe verwendet"
 
-#: training/views.py:171
+#: training/views.py:176
 msgid "This entry id belongs to another session"
 msgstr "Diese Eintrags-ID gehört zu einem anderen Training"
 
-#: training/views.py:199
+#: training/views.py:204
 msgid "Only coaches can see the team overview"
 msgstr "Nur Trainer können die Teamübersicht sehen"
 
-#: training/views.py:265
+#: training/views.py:270
 msgid "owner and weeks must be numbers"
 msgstr "owner und weeks müssen Zahlen sein"
 
-#: training/views.py:267
+#: training/views.py:272
 msgid "Between 1 and 52"
 msgstr "Zwischen 1 und 52"
 
-#: training/views.py:271
+#: training/views.py:276 training/views.py:318
 msgid "Unknown time zone"
 msgstr "Unbekannte Zeitzone"
+
+#: training/views.py:314
+msgid "owner, distance_m and setup must be numbers"
+msgstr "owner, distance_m und setup müssen Zahlen sein"
+
+#: training/views.py:328
+msgid "Use a date like 2026-10-25"
+msgstr "Nutze ein Datum wie 2026-10-25"
 
 #~ msgid "This field is required."
 #~ msgstr "Dieses Feld ist erforderlich."

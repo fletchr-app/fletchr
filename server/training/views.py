@@ -1,8 +1,10 @@
 from django.utils.translation import gettext
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import django_filters
+from decimal import Decimal
+
 from django.db import transaction
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
@@ -18,9 +20,12 @@ from core.claims import can_write_sessions_of
 from core.models import COACH_ROLES, Role, Team, TeamMember, User
 
 from .models import End, Shot, TrainingSession, VolumeEntry
-from .stats import compute_stats
+from targets.catalogue import get_face
+
+from .stats import compute_stats, spot_radius_cm
 from .serializers import (
     ArcherOverviewSerializer,
+    PositionsSerializer,
     StatsSerializer,
     EndSerializer,
     SessionSerializer,
@@ -274,8 +279,69 @@ class StatsView(APIView):
 
         shots = Shot.objects.filter(end__session__owner_id=owner_id).values_list(
             "end__session_id", "end__session__started_at", "end__session__type", "end__distance_m", "end__face",
-            "value", "is_x", "is_miss",
+            "value", "is_x", "is_miss", "x", "y",
         )
         volume = VolumeEntry.objects.filter(session__owner_id=owner_id).values_list("session__started_at", "arrow_count")
         stats = compute_stats(list(shots), list(volume), timezone.now(), tz, weeks)
         return Response(StatsSerializer({"owner": owner_id, "tz": str(tz), **stats}).data)
+
+
+MAX_POSITIONS = 5000
+
+
+class PositionsView(APIView):
+    """Where the arrows of one face at one distance landed, for the heatmap: positions only, not whole sessions."""
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("owner", int, description="Whose arrows; default: yours"),
+            OpenApiParameter("face", str, required=True, description="Slug of the target face"),
+            OpenApiParameter("distance_m", float, required=True, description="Distance in metres"),
+            OpenApiParameter("from", date, description="First day (in the time zone), default: no limit"),
+            OpenApiParameter("to", date, description="Last day, included"),
+            OpenApiParameter("setup", int, description="Only sessions shot with this setup"),
+            OpenApiParameter("tz", str, description="IANA time zone that decides which day a session falls on; default UTC"),
+        ],
+        responses=PositionsSerializer,
+    )
+    def get(self, request):
+        params = request.query_params
+        try:
+            owner_id = int(params.get("owner", request.user.pk))
+            distance = Decimal(params.get("distance_m", "")).quantize(Decimal("0.1"))
+            setup = int(params["setup"]) if "setup" in params else None
+        except (ValueError, ArithmeticError):
+            raise ValidationError(gettext("owner, distance_m and setup must be numbers"))
+        try:
+            tz = ZoneInfo(params.get("tz", "UTC"))
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValidationError({"tz": gettext("Unknown time zone")})
+        face = get_face(params.get("face", ""))
+        if face is None or not face["rings"]:
+            raise ValidationError({"face": gettext("Unknown target face")})
+        days = {}
+        for key in ("from", "to"):
+            if key in params:
+                try:
+                    days[key] = date.fromisoformat(params[key])
+                except ValueError:
+                    raise ValidationError({key: gettext("Use a date like 2026-10-25")})
+        if not archers_visible_to(request.user).filter(pk=owner_id).exists():
+            raise NotFound()
+
+        shots = Shot.objects.filter(
+            end__session__owner_id=owner_id, end__face=face["slug"], end__distance_m=distance, x__isnull=False, y__isnull=False
+        )
+        if setup is not None:
+            shots = shots.filter(end__session__setup_id=setup)
+        if "from" in days:
+            shots = shots.filter(end__session__started_at__gte=datetime.combine(days["from"], time.min, tz))
+        if "to" in days:
+            shots = shots.filter(end__session__started_at__lt=datetime.combine(days["to"] + timedelta(days=1), time.min, tz))
+        total = shots.count()
+        rows = shots.order_by("-end__session__started_at", "-end__index", "-index").values_list("x", "y")[:MAX_POSITIONS]
+        data = {
+            "owner": owner_id, "face": face["slug"], "distance_m": str(distance), "radius_cm": spot_radius_cm(face),
+            "arrows": total, "limited": total > MAX_POSITIONS, "points": [[x, y] for x, y in rows],
+        }
+        return Response(PositionsSerializer(data).data)
