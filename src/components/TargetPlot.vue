@@ -13,10 +13,13 @@ const HIT_PX = 16 // how close a touch must be to an arrow to move it instead of
 const ZOOM = 3
 const CROSS_OFFSET_PX = 44 // how far above the finger the position cross sits
 const CROSS_PX = 28
+const EDGE_PX = 56 // within this of the face's edge the view keeps panning towards it
+const PAN_PER_SECOND = 0.4 // of the face's size, at the very edge
 
 // Touch the face to place an arrow: while the finger is down the whole view zooms in around the
-// touch and a cross a bit above the finger marks the exact spot; lifting places the arrow.
-// Touching an existing arrow moves it instead. The face is drawn as large as fits the space the
+// touch and a cross a bit above the finger marks the exact spot; lifting places the arrow. The
+// cross follows the finger at a third of its speed (the face slides underneath), and holding it
+// near the edge of the face keeps panning, so every spot can be reached. Touching an existing arrow moves it instead. The face is drawn as large as fits the space the
 // parent gives this component (it fills the parent's height).
 const props = defineProps<{ face: Face; shots: LogShot[]; max: number; selectedId: string | null; numberNext?: number | null }>()
 const emit = defineEmits<{ change: [shots: LogShot[]] }>()
@@ -24,8 +27,8 @@ const emit = defineEmits<{ change: [shots: LogShot[]] }>()
 const box = ref<HTMLElement | null>(null)
 const boxSize = useElementSize(box)
 const boxWidth = computed(() => boxSize.value.width)
-// px, py: the cross, in the unzoomed face. ox, oy: the point the view zooms around (where the cross started).
-const touch = ref<{ px: number; py: number; ox: number; oy: number } | null>(null)
+// px, py: the arrow's spot, in the unzoomed face. sx, sy: where the cross is on screen (the spot is shown there).
+const touch = ref<{ px: number; py: number; sx: number; sy: number } | null>(null)
 const dragIndex = ref(-1)
 
 const scene = computed(() => sceneOf(props.face))
@@ -42,13 +45,16 @@ function shotAt(point: PlotPoint, id: string, keep?: LogShot): LogShot {
 let pointerId = -1
 let startX = 0
 let startY = 0
-let startClientX = 0
-let startClientY = 0
+let rectLeft = 0
+let rectTop = 0
+let lastClientX = 0
+let lastClientY = 0
+let raf = 0
 let drag = -1
-let originX = 0
-let originY = 0
 let x = 0
 let y = 0
+let anchorX = 0
+let anchorY = 0
 
 const full = () => drag < 0 && props.shots.length >= props.max
 const clamp = (v: number, hi: number) => Math.max(0, Math.min(v, hi))
@@ -59,25 +65,51 @@ function onDown(e: PointerEvent) {
   const rect = target.getBoundingClientRect()
   pointerId = e.pointerId
   target.setPointerCapture(e.pointerId)
-  startClientX = e.clientX
-  startClientY = e.clientY
-  startX = clamp(e.clientX - rect.left, width.value)
-  startY = clamp(e.clientY - rect.top, height.value)
+  rectLeft = rect.left
+  rectTop = rect.top
+  lastClientX = e.clientX
+  lastClientY = e.clientY
+  startX = clamp(e.clientX - rectLeft, width.value)
+  startY = clamp(e.clientY - rectTop, height.value)
   const plotted = props.shots.flatMap((s, i) => (s.x === undefined || s.y === undefined ? [] : [i]))
   const points = plotted.map((i) => toPixel(props.face, scene.value, scale.value, { spot: props.shots[i]!.spot ?? 0, x: props.shots[i]!.x!, y: props.shots[i]!.y! }))
   const hit = nearestShot(points, startX, startY, HIT_PX)
   drag = hit >= 0 ? plotted[hit]! : -1
-  originX = x = startX
-  originY = y = clamp(startY - CROSS_OFFSET_PX, height.value)
-  if (!full()) show() // a full end only lets arrows be moved
+  anchorX = x = startX
+  anchorY = y = clamp(startY - CROSS_OFFSET_PX, height.value)
+  if (!full()) {
+    show() // a full end only lets arrows be moved
+    raf = requestAnimationFrame(pan)
+  }
 }
 
 function onMove(e: PointerEvent) {
   if (e.pointerId !== pointerId || full()) return
-  // The view is zoomed around the origin, so a finger movement moves the cross ZOOM times less on the face.
-  x = clamp(originX + (e.clientX - startClientX) / ZOOM, width.value)
-  y = clamp(originY + (e.clientY - startClientY) / ZOOM, height.value)
+  // The view is zoomed, so a finger movement moves the spot ZOOM times less on the face.
+  x = clamp(x + (e.clientX - lastClientX) / ZOOM, width.value)
+  y = clamp(y + (e.clientY - lastClientY) / ZOOM, height.value)
+  lastClientX = e.clientX
+  lastClientY = e.clientY
+  anchorX = clamp(e.clientX - rectLeft, width.value)
+  anchorY = clamp(e.clientY - rectTop - CROSS_OFFSET_PX, height.value)
   show()
+}
+
+// With the cross near the edge of the face, move the spot towards the edge, faster the closer it is.
+const push = (a: number, size: number) => (a < EDGE_PX ? -(EDGE_PX - a) / EDGE_PX : a > size - EDGE_PX ? (a - (size - EDGE_PX)) / EDGE_PX : 0)
+let lastFrame = 0
+function pan(now: number) {
+  if (pointerId < 0) return
+  const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.05) : 0
+  lastFrame = now
+  const dx = push(anchorX, width.value)
+  const dy = push(anchorY, height.value)
+  if (dx || dy) {
+    x = clamp(x + dx * PAN_PER_SECOND * width.value * dt, width.value)
+    y = clamp(y + dy * PAN_PER_SECOND * width.value * dt, height.value)
+    show()
+  }
+  raf = requestAnimationFrame(pan)
 }
 
 function onUp(e: PointerEvent) {
@@ -87,6 +119,8 @@ function onUp(e: PointerEvent) {
 
 function finish(commit: boolean) {
   pointerId = -1
+  cancelAnimationFrame(raf)
+  lastFrame = 0
   if (commit && !full()) {
     const point = pickAt(props.face, scene.value, scale.value, x, y)
     if (drag >= 0) emit('change', props.shots.map((s, i) => (i === drag ? shotAt(point, s.id, s) : s)))
@@ -97,7 +131,7 @@ function finish(commit: boolean) {
 }
 
 function show() {
-  touch.value = { px: x, py: y, ox: originX, oy: originY }
+  touch.value = { px: x, py: y, sx: anchorX, sy: anchorY }
   dragIndex.value = drag
 }
 
@@ -123,7 +157,7 @@ const preview = computed(() => {
     <div
       v-if="boxWidth > 0 && boxSize.height > 0"
       class="position-relative"
-      :style="{ width: `${width}px`, height: `${height}px`, ...(touch ? { transform: `scale(${ZOOM})`, transformOrigin: `${touch.ox}px ${touch.oy}px` } : {}) }"
+      :style="{ width: `${width}px`, height: `${height}px`, ...(touch ? { transform: `translate(${touch.sx - ZOOM * touch.px}px, ${touch.sy - ZOOM * touch.py}px) scale(${ZOOM})`, transformOrigin: '0 0' } : {}) }"
     >
       <FaceSvg
         :face="face"
