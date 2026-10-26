@@ -14,7 +14,7 @@ import type { Face } from '@/lib/faces'
 import { ringFill, ringLine } from '@/lib/plot'
 import { outerRadiusCm } from '@/lib/scoring'
 
-// The face drawn in cm, looking at `view`. Used for the whole face and, zoomed in, for the magnifier.
+// The face drawn in cm, looking at `view`. Used for the whole face.
 const props = withDefaults(
   defineProps<{
     face: Face

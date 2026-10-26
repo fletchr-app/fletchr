@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `docs/releasing.md`.
 
+## 0.9.2, 2026-10-26
+
+- **Placing arrows:** while the finger is down, the whole view zooms in around the spot, and a cross a bit above the finger marks it, so the finger no longer covers it. The spot is the one the unzoomed view would mark. No server changes, no migrations.
+
 ## 0.9.1, 2026-10-25
 
 - **Fix:** a session you deleted on the phone showed up in the Training list, on Home and on an archer's page until the list refreshed (up to 15 s). It is hidden at once now. No server changes, no migrations.

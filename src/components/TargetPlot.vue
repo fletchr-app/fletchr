@@ -5,24 +5,27 @@ import FaceSvg, { type Marker } from '@/components/FaceSvg.vue'
 import { useElementSize } from '@/composables/useElementSize'
 import type { Face } from '@/lib/faces'
 import type { LogShot } from '@/lib/log-model'
-import { fitScale, magnifierPlacement, nearestShot, pickAt, sceneOf, toPixel, type PlotPoint } from '@/lib/plot'
+import { fitScale, nearestShot, pickAt, sceneOf, toPixel, type PlotPoint } from '@/lib/plot'
 import { score } from '@/lib/scoring'
 import { newId } from '@/lib/uuid'
 
 const HIT_PX = 16 // how close a touch must be to an arrow to move it instead of placing a new one
-const MAGNIFIER_PX = 130
-const ZOOM = 4
-const GAP_PX = 36
+const ZOOM = 3
+const CROSS_OFFSET_PX = 64 // how far above the finger the position cross sits
+const CROSS_PX = 28
 
-// Touch the face to place an arrow: while the finger is down a magnifier above it shows the exact
-// spot, and lifting places the arrow. Touching an existing arrow moves it instead. The face is
-// drawn as large as fits the space the parent gives this component (it fills the parent's height).
+// Touch the face to place an arrow: while the finger is down the whole view zooms in around the
+// touch and a cross a bit above the finger marks the exact spot; lifting places the arrow. The
+// spot is the one the unzoomed view would mark (the zoom only magnifies around it), so every spot
+// can be reached. Touching an existing arrow moves it instead. The face is drawn as large as fits the space the
+// parent gives this component (it fills the parent's height).
 const props = defineProps<{ face: Face; shots: LogShot[]; max: number; selectedId: string | null; numberNext?: number | null }>()
 const emit = defineEmits<{ change: [shots: LogShot[]] }>()
 
 const box = ref<HTMLElement | null>(null)
 const boxSize = useElementSize(box)
 const boxWidth = computed(() => boxSize.value.width)
+// px, py: the arrow's spot, in the unzoomed face, which the view zooms around.
 const touch = ref<{ px: number; py: number } | null>(null)
 const dragIndex = ref(-1)
 
@@ -40,8 +43,8 @@ function shotAt(point: PlotPoint, id: string, keep?: LogShot): LogShot {
 let pointerId = -1
 let startX = 0
 let startY = 0
-let startClientX = 0
-let startClientY = 0
+let rectLeft = 0
+let rectTop = 0
 let drag = -1
 let x = 0
 let y = 0
@@ -55,23 +58,23 @@ function onDown(e: PointerEvent) {
   const rect = target.getBoundingClientRect()
   pointerId = e.pointerId
   target.setPointerCapture(e.pointerId)
-  startClientX = e.clientX
-  startClientY = e.clientY
-  startX = clamp(e.clientX - rect.left, width.value)
-  startY = clamp(e.clientY - rect.top, height.value)
+  rectLeft = rect.left
+  rectTop = rect.top
+  startX = clamp(e.clientX - rectLeft, width.value)
+  startY = clamp(e.clientY - rectTop, height.value)
   const plotted = props.shots.flatMap((s, i) => (s.x === undefined || s.y === undefined ? [] : [i]))
   const points = plotted.map((i) => toPixel(props.face, scene.value, scale.value, { spot: props.shots[i]!.spot ?? 0, x: props.shots[i]!.x!, y: props.shots[i]!.y! }))
   const hit = nearestShot(points, startX, startY, HIT_PX)
   drag = hit >= 0 ? plotted[hit]! : -1
   x = startX
-  y = startY
+  y = clamp(startY - CROSS_OFFSET_PX, height.value)
   if (!full()) show() // a full end only lets arrows be moved
 }
 
 function onMove(e: PointerEvent) {
   if (e.pointerId !== pointerId || full()) return
-  x = clamp(startX + e.clientX - startClientX, width.value)
-  y = clamp(startY + e.clientY - startClientY, height.value)
+  x = clamp(e.clientX - rectLeft, width.value)
+  y = clamp(e.clientY - rectTop - CROSS_OFFSET_PX, height.value)
   show()
 }
 
@@ -111,15 +114,15 @@ const preview = computed(() => {
   const result = score(props.face, picked.x, picked.y)
   return result.is_miss ? 'M' : result.is_x ? 'X' : result.value === null ? '' : String(result.value)
 })
-const place = computed(() => (touch.value ? magnifierPlacement(touch.value.px, touch.value.py, width.value, MAGNIFIER_PX, GAP_PX) : null))
-const half = computed(() => MAGNIFIER_PX / (2 * scale.value * ZOOM))
-const centreX = computed(() => (touch.value ? scene.value.x0 + touch.value.px / scale.value : 0))
-const centreY = computed(() => (touch.value ? scene.value.y0 + touch.value.py / scale.value : 0))
 </script>
 
 <template>
-  <div ref="box" class="w-100 d-flex justify-content-center align-items-center" style="flex: 1 1 0; min-height: 0">
-    <div v-if="boxWidth > 0 && boxSize.height > 0" class="position-relative" :style="{ width: `${width}px`, height: `${height}px` }">
+  <div ref="box" class="w-100 d-flex justify-content-center align-items-center overflow-hidden" style="flex: 1 1 0; min-height: 0">
+    <div
+      v-if="boxWidth > 0 && boxSize.height > 0"
+      class="position-relative"
+      :style="{ width: `${width}px`, height: `${height}px`, ...(touch ? { transform: `translate(${(1 - ZOOM) * touch.px}px, ${(1 - ZOOM) * touch.py}px) scale(${ZOOM})`, transformOrigin: '0 0' } : {}) }"
+    >
       <FaceSvg
         :face="face"
         :view="{ x: scene.x0, y: scene.y0, w: scene.width, h: scene.height }"
@@ -137,21 +140,13 @@ const centreY = computed(() => (touch.value ? scene.value.y0 + touch.value.py / 
         @pointercancel="onUp"
       ></div>
       <div
-        v-if="touch && place"
-        class="position-absolute overflow-hidden border border-2 border-dark bg-white"
-        :style="{ left: `${place.left}px`, top: `${place.top}px`, width: `${MAGNIFIER_PX}px`, height: `${MAGNIFIER_PX}px`, borderRadius: '50%', pointerEvents: 'none' }"
+        v-if="touch"
+        class="position-absolute"
+        :style="{ left: `${touch.px}px`, top: `${touch.py}px`, width: `${CROSS_PX}px`, height: `${CROSS_PX}px`, transform: `translate(-50%, -50%) scale(${1 / ZOOM})`, pointerEvents: 'none' }"
       >
-        <FaceSvg
-          :face="face"
-          :view="{ x: centreX - half, y: centreY - half, w: 2 * half, h: 2 * half }"
-          :width="MAGNIFIER_PX"
-          :height="MAGNIFIER_PX"
-          :cm-per-px="1 / (scale * ZOOM)"
-          :markers="markers"
-        />
-        <div class="position-absolute top-0 bottom-0" :style="{ left: `${MAGNIFIER_PX / 2 - 1}px`, width: '1px', backgroundColor: '#ff00ff' }"></div>
-        <div class="position-absolute start-0 end-0" :style="{ top: `${MAGNIFIER_PX / 2 - 1}px`, height: '1px', backgroundColor: '#ff00ff' }"></div>
-        <div class="position-absolute start-50 translate-middle-x bg-black text-white fw-bold rounded-pill px-2" style="bottom: 4px">
+        <div class="position-absolute top-0 bottom-0" :style="{ left: `${CROSS_PX / 2 - 1}px`, width: '2px', backgroundColor: '#ff00ff' }"></div>
+        <div class="position-absolute start-0 end-0" :style="{ top: `${CROSS_PX / 2 - 1}px`, height: '2px', backgroundColor: '#ff00ff' }"></div>
+        <div class="position-absolute start-50 translate-middle-x bg-black text-white fw-bold rounded-pill px-2" style="bottom: 100%; margin-bottom: 6px">
           {{ preview || '·' }}
         </div>
       </div>

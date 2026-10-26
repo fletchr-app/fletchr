@@ -12,7 +12,7 @@ Order of work: **features first, the Google Play release last** (milestone 6). T
 | Teams | built: create, leave, delete, invites (code and link), roles archer/coach/admin, role changes and admin handover in the app, "also shoots" per team |
 | Archers without an account | built: a coach keeps a profile, logs sessions and writes notes for it; the archer takes it over with a claim code |
 | Equipment | built: bows and arrow sets with revision history, a setup (bow + arrow set) chosen per session |
-| Logging | built: sessions of type scoring, competition, volume and technique, indoor/outdoor, location; ends with arrows placed on the face with a magnifier; number-pad entry; offline first, uploaded later; the server recomputes scores |
+| Logging | built: sessions of type scoring, competition, volume and technique, indoor/outdoor, location; ends with arrows placed on the face with a zoom; number-pad entry; offline first, uploaded later; the server recomputes scores |
 | Target faces | built: WA 122, 80, 60, 40, compound and 6-ring variants, triple faces (vertical and triangle), field faces, blank |
 | Session view | built: arrows on the face, group centre and spread, ends, totals; a coach sees live sessions ("shooting now") |
 | Stats | built: arrows per week/month/total, average score per face and distance with a trend line, best-ring, X and miss rates |

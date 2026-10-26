@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { fitScale, magnifierPlacement, nearestShot, pickAt, ringFill, ringLine, sceneOf, toPixel, type PlotFace } from './plot.ts';
+import { fitScale, nearestShot, pickAt, ringFill, ringLine, sceneOf, toPixel, type PlotFace } from './plot.ts';
 import { score } from './scoring.ts';
 
 const faces: Record<string, PlotFace & { slug: string }> = Object.fromEntries(
@@ -113,13 +113,6 @@ test('nearestShot finds the closest arrow within reach, else -1', () => {
   assert.equal(nearestShot(points, 33, 12, 14), 2);
   assert.equal(nearestShot(points, 100, 100, 14), -1);
   assert.equal(nearestShot([], 0, 0, 14), -1);
-});
-
-test('the magnifier sits above the finger, and below it near the top; it stays inside the box', () => {
-  assert.deepEqual(magnifierPlacement(200, 300, 400, 120, 40), { left: 140, top: 140 });
-  assert.deepEqual(magnifierPlacement(200, 100, 400, 120, 40), { left: 140, top: 140 }); // no room above: below
-  assert.equal(magnifierPlacement(10, 300, 400, 120, 40).left, 0);
-  assert.equal(magnifierPlacement(395, 300, 400, 120, 40).left, 280);
 });
 
 test('colours: gold centre, dark rings get light lines', () => {
