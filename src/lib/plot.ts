@@ -71,13 +71,6 @@ export function nearestShot(points: { px: number; py: number }[], px: number, py
   return found;
 }
 
-/** Top-left corner of the magnifier: above the finger, or below it when there is no room above. */
-export function magnifierPlacement(px: number, py: number, boxWidth: number, size: number, gap: number) {
-  const left = Math.max(0, Math.min(px - size / 2, boxWidth - size));
-  const above = py - gap - size;
-  return { left, top: above >= 0 ? above : py + gap };
-}
-
 // --- colours ------------------------------------------------------------------------------------
 
 const WA_COLOURS: Record<number, string> = {

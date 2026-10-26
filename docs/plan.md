@@ -56,7 +56,7 @@ Access control is enforced on the server in Django REST Framework (permission cl
 
 ## 3a. Arrow plotting (like MyTargets)
 
-- The end screen shows the chosen target face full width. The archer touches where the arrow hit; while the finger is down, a **magnifier** above the finger shows the area enlarged so the exact spot can be placed, and the arrow is set on release.
+- The end screen shows the chosen target face full width. The archer touches where the arrow hit; while the finger is down, the whole view **zooms** in and a cross a bit above the finger marks the exact spot, and the arrow is set on release.
 - The score is **computed from the position** using the face's ring radii (an arrow touching a line is placed in the higher ring by the archer, as in WA rules). Tapping outside the face records a miss.
 - Placed arrows can be dragged to correct them or deleted. The end's arrows are listed under the face with their scores, sorted high to low.
 - Optional: assign the **arrow number** for each shot, to spot a single arrow that groups badly.
