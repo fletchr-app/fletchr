@@ -624,9 +624,17 @@ export interface paths {
             cookie?: never;
         };
         get: operations["sessions_retrieve"];
-        /** @description Create the session with this id, or update it. Safe to repeat. */
+        /**
+         * @description Create the session with this id, or update it. Safe to repeat.
+         *
+         *     An id that was merged into another session writes to that one; an id that was deleted gives 410.
+         *     The owner (and a coach of a profile without an account) writes everything. A coach who opened the
+         *     session for the archer changes its times and notes, not the type, ratings or equipment. After a
+         *     merge a coach's repeated request only fills what is still empty.
+         */
         put: operations["sessions_update"];
         post?: never;
+        /** @description Delete the session. The id of a merged or deleted session answers 204 and deletes nothing. */
         delete: operations["sessions_destroy"];
         options?: never;
         head?: never;
@@ -661,6 +669,23 @@ export interface paths {
         put: operations["sessions_volume_update"];
         post?: never;
         delete: operations["sessions_volume_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/gone/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Ids of sessions that are gone: `merged_into` is the session that took its place, null if it was deleted. */
+        get: operations["sessions_gone_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2075,11 +2100,13 @@ export interface components {
             readonly id: string;
             owner: number;
             readonly owner_name: string;
+            opened_by?: number | null;
+            readonly opened_by_name: string | null;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
@@ -2147,11 +2174,13 @@ export interface components {
             readonly id: string;
             owner: number;
             readonly owner_name: string;
+            opened_by?: number | null;
+            readonly opened_by_name: string | null;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             setup?: number | null;
@@ -2161,6 +2190,15 @@ export interface components {
             readonly scored_arrows: number;
             readonly score_total: number;
             readonly volume_arrows: number;
+        };
+        SessionTombstone: {
+            /** Format: uuid */
+            readonly id: string;
+            owner: number;
+            /** Format: uuid */
+            merged_into?: string | null;
+            /** Format: date-time */
+            at?: string;
         };
         /**
          * @description * `scoring` - Scoring
@@ -2180,7 +2218,7 @@ export interface components {
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
@@ -3968,6 +4006,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    sessions_gone_list: {
+        parameters: {
+            query?: {
+                owner?: number;
+                updated_after?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTombstone"][];
+                };
             };
         };
     };

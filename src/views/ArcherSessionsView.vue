@@ -13,6 +13,7 @@ import VideoConsent from '@/components/VideoConsent.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
+import { sessionTypeKey } from '@/lib/log-model'
 import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 10000
@@ -52,6 +53,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
     <div class="screen">
       <div v-if="profileLine" class="muted">{{ profileLine }}</div>
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
+      <AppButton v-if="info.data.value" secondary :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}&open=1&managed=${info.data.value.managed ? 1 : 0}`">{{ $t('archer.openSession') }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
       <AppButton v-if="writable.data.value?.length" :router-link="`/evaluate?archer=${id}&kind=coach&name=${encodeURIComponent(shownName)}`">{{ $t('evaluations.new') }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/evaluations?name=${encodeURIComponent(shownName)}`">{{ $t('evaluations.title') }}</AppButton>
@@ -64,7 +66,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <IonList v-if="rows.length > 0" inset>
         <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
           <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(`sessionType.${row.type}`) }}{{ row.finished ? '' : `  ● ${$t('training.inProgress')}` }}</h3>
+            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(sessionTypeKey(row.type)) }}{{ row.finished ? '' : `  ● ${$t('training.inProgress')}` }}</h3>
             <p>
               {{ row.location ? `${row.location} · ` : '' }}{{ $t('count.ends', row.ends) }} · {{ $t('count.arrows', row.arrows) }}{{ row.ends > 0 ? ` · ${$t('count.points', row.points)}` : '' }}
             </p>

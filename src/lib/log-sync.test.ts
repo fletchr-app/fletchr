@@ -4,7 +4,7 @@ import { test } from 'vitest';
 import createClient from 'openapi-fetch';
 
 import type { paths } from './api-types.ts';
-import { drain, fetchEquipment, send } from './log-sync.ts';
+import { drain, fetchEquipment, pull, send } from './log-sync.ts';
 import { EMPTY_LOG, gearFor, reduce, type LogAction, type LogEnd, type LogSession, type LogState } from './log-model.ts';
 
 type Call = { method: string; path: string; search: string; body: unknown };
@@ -264,4 +264,58 @@ test('a pause that starts in the middle stops after the item being sent', async 
   await drain(() => h.state(), h.dispatch, (state, op) => send(apiOf(h), state, op), () => paused);
   assert.equal(h.calls.length, 1);
   assert.deepEqual(h.queued(), ['end'], 'the finished item left the queue, the rest waits');
+});
+
+// --- merged and deleted sessions, pulling --------------------------------------------------------
+
+test('a session PUT answered with another id means the server merged it', async () => {
+  const h = harness(() => json(200, { id: 'winner' }));
+  h.dispatch({ type: 'startSession', session });
+  await h.run();
+  assert.deepEqual(h.state().sessions.map((s) => s.id), ['winner']);
+  assert.deepEqual(h.queued(), []);
+});
+
+test('the ends queued under the merged id go to the winner', async () => {
+  const h = harness((call) => (call.path === '/api/sessions/s1/' ? json(200, { id: 'winner' }) : ok(call)));
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => c.path), ['/api/sessions/s1/', '/api/sessions/winner/ends/e1/']);
+  assert.deepEqual(h.queued(), []);
+});
+
+test('410 on a session PUT drops the session', async () => {
+  const h = harness(() => json(410, { detail: 'gone' }));
+  h.dispatch({ type: 'startSession', session });
+  await h.run();
+  assert.deepEqual(h.state().sessions, []);
+  assert.deepEqual(h.queued(), []);
+});
+
+const summary = (id: string, extra = {}) => ({
+  id, owner: 7, owner_name: 'Me', opened_by: 3, opened_by_name: 'Coach', started_at: '2026-10-18T09:00:00Z', ended_at: null, type: '', environment: '', location: 'Hall',
+  updated_at: '2026-10-18T09:05:00Z', ends: 0, scored_arrows: 0, score_total: 0, volume_arrows: 0, ...extra,
+});
+
+test('pull turns the list and the tombstones into actions', async () => {
+  const h = harness((call) => {
+    if (call.path === '/api/sessions/gone/') return json(200, [{ id: 'old', owner: 7, merged_into: 'new', at: '2026-10-18T10:00:00Z' }, { id: 'dead', owner: 7, merged_into: null, at: '2026-10-18T09:30:00Z' }]);
+    if (call.path === '/api/sessions/') return json(200, [summary('open1'), summary('mine', { opened_by: 7 }), summary('shot', { ends: 2 }), summary('plain', { opened_by: null })]);
+    return json(200, { ...summary('open1'), weather: 'wind', goals: 'anchor', notes: '', physical_rating: null, mental_rating: 4 });
+  });
+  const actions = await pull(apiOf(h), 7, '2026-10-17T00:00:00Z');
+  assert.ok(actions);
+  assert.match(h.calls[0].search + h.calls[1].search, /updated_after=2026-10-17/);
+  assert.deepEqual(actions.slice(0, 2), [{ type: 'replaceSessionId', from: 'old', to: 'new' }, { type: 'sessionGone', id: 'dead' }]);
+  const pulled = actions[2];
+  assert.equal(pulled.type, 'pulled');
+  if (pulled.type !== 'pulled') return;
+  assert.deepEqual(pulled.sessions.map((s) => [s.id, s.type, s.keep, s.opened_by_name, s.details?.goals]), [['open1', '', true, 'Coach', 'anchor']]);
+  assert.equal(pulled.lastPull, '2026-10-18T10:00:00Z');
+});
+
+test('pull gives nothing when the server cannot be reached', async () => {
+  const h = harness(() => json(500));
+  assert.equal(await pull(apiOf(h), 7), null);
 });

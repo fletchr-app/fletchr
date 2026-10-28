@@ -1562,7 +1562,13 @@ paths:
           description: ''
     put:
       operationId: sessions_update
-      description: Create the session with this id, or update it. Safe to repeat.
+      description: |-
+        Create the session with this id, or update it. Safe to repeat.
+
+        An id that was merged into another session writes to that one; an id that was deleted gives 410.
+        The owner (and a coach of a profile without an account) writes everything. A coach who opened the
+        session for the archer changes its times and notes, not the type, ratings or equipment. After a
+        merge a coach's repeated request only fills what is still empty.
       parameters:
       - in: query
         name: owner
@@ -1607,6 +1613,8 @@ paths:
           description: ''
     delete:
       operationId: sessions_destroy
+      description: Delete the session. The id of a merged or deleted session answers
+        204 and deletes nothing.
       parameters:
       - in: path
         name: session_id
@@ -1757,6 +1765,34 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sessions/gone/:
+    get:
+      operationId: sessions_gone_list
+      description: 'Ids of sessions that are gone: `merged_into` is the session that
+        took its place, null if it was deleted.'
+      parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionTombstone'
+          description: ''
   /api/setups/:
     get:
       operationId: setups_list
@@ -4789,6 +4825,13 @@ components:
         owner_name:
           type: string
           readOnly: true
+        opened_by:
+          type: integer
+          nullable: true
+        opened_by_name:
+          type: string
+          nullable: true
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -4797,7 +4840,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -4852,11 +4897,11 @@ components:
       - created_at
       - ends
       - id
+      - opened_by_name
       - owner
       - owner_name
       - setup_info
       - started_at
-      - type
       - updated_at
       - volume_entries
     SessionPoint:
@@ -4950,6 +4995,13 @@ components:
         owner_name:
           type: string
           readOnly: true
+        opened_by:
+          type: integer
+          nullable: true
+        opened_by_name:
+          type: string
+          nullable: true
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -4958,7 +5010,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -4988,14 +5042,33 @@ components:
       required:
       - ends
       - id
+      - opened_by_name
       - owner
       - owner_name
       - score_total
       - scored_arrows
       - started_at
-      - type
       - updated_at
       - volume_arrows
+    SessionTombstone:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        owner:
+          type: integer
+        merged_into:
+          type: string
+          format: uuid
+          nullable: true
+        at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - owner
     SessionTypeEnum:
       enum:
       - scoring
@@ -5023,7 +5096,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -5056,7 +5131,6 @@ components:
           type: string
       required:
       - started_at
-      - type
     Setup:
       type: object
       properties:
