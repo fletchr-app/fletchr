@@ -48,6 +48,8 @@ curl -s https://app.example.org/api/health/        # {"status":"ok","version":".
 
 The database and uploads are in `deploy/data/django/` (photos and videos in `media/`). Migrations run on every start. The limits are in `server/config/settings.py` (`MEDIA_MAX_*`, and the quota per archer, `DJANGO_MEDIA_QUOTA_MB`, 2048 by default). The links to media files carry a token in the address, which gunicorn's access log shows; the token works for one user and one clip for an hour.
 
+Google sign-in is not available for self-hosted servers: the Google project it needs is tied to the app's package name and signing key, so only the operator of the app in the Play Store can run it. Leave `DJANGO_GOOGLE_CLIENT_IDS` unset; the app then shows no Google button for your server. Email and password work as always.
+
 First account (signup is invite-only):
 
 ```bash
