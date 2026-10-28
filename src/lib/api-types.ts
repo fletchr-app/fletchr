@@ -1804,14 +1804,16 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
+            /** @description The photo or clip of the note; empty if it is gone or you may not see it */
+            readonly picture: components["schemas"]["NotePicture"] | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
@@ -1821,6 +1823,15 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        NotePicture: {
+            kind: string;
+            width: number;
+            height: number;
+            /** @description Opens for an hour */
+            thumbnail_url: string;
+            /** @description Opens for an hour */
+            file_url: string;
         };
         NoteRequest: {
             /** @description Only needed if you coach this archer in several teams */
@@ -1832,14 +1843,14 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
@@ -1969,14 +1980,14 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];

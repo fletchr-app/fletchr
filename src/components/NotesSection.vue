@@ -4,6 +4,8 @@ import NewNote from '@/components/NewNote.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
+import { noteLink } from '@/lib/media-notes'
+import { useRouter } from 'vue-router'
 
 const REFRESH_MS = 10000
 const always = () => true
@@ -13,6 +15,16 @@ const always = () => true
 const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[] }>(), { ends: () => [] })
 
 const { api } = useAuth()
+const router = useRouter()
+// A note on a photo or a frame opens its photo or clip; to change the drawing it goes there too, and starts drawing.
+const open = (note: { media?: string | null; frame?: number | null }) => {
+  const link = noteLink(note)
+  if (link) void router.push(link)
+}
+const draw = (note: { id: number; media?: string | null; frame?: number | null }) => {
+  const link = noteLink(note)
+  if (link) void router.push(`${link}${link.includes('?') ? '&' : '?'}draw=${note.id}`)
+}
 const notes = useRemote(
   async () => (await api.GET('/api/notes/', { params: { query: { archer: props.archerId, session: props.sessionId } } })).data ?? null,
   { pollMs: REFRESH_MS, keepPolling: always },
@@ -32,6 +44,16 @@ const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params
       :teams="teams.data.value"
       @added="notes.reload"
     />
-    <NoteRow v-for="note in notes.data.value" :key="note.id" :note="note" :ends="ends" @changed="notes.reload" />
+    <NoteRow
+      v-for="note in notes.data.value"
+      :key="note.id"
+      :note="note"
+      :ends="ends"
+      picture
+      @changed="notes.reload"
+      @jump="open(note)"
+      @open="open"
+      @edit-drawing="draw"
+    />
   </div>
 </template>

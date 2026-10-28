@@ -4207,7 +4207,14 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
+        picture:
+          allOf:
+          - $ref: '#/components/schemas/NotePicture'
+          nullable: true
+          readOnly: true
+          description: The photo or clip of the note; empty if it is gone or you may
+            not see it
         frame:
           type: integer
           minimum: 0
@@ -4220,7 +4227,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string
@@ -4250,7 +4257,29 @@ components:
       - can_edit
       - created_at
       - id
+      - picture
       - updated_at
+    NotePicture:
+      type: object
+      properties:
+        kind:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        thumbnail_url:
+          type: string
+          description: Opens for an hour
+        file_url:
+          type: string
+          description: Opens for an hour
+      required:
+      - file_url
+      - height
+      - kind
+      - thumbnail_url
+      - width
     NoteRequest:
       type: object
       properties:
@@ -4271,7 +4300,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
         frame:
           type: integer
           minimum: 0
@@ -4284,7 +4313,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string
@@ -4540,7 +4569,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
         frame:
           type: integer
           minimum: 0
@@ -4553,7 +4582,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 21:36+0100\n"
+"POT-Creation-Date: 2026-10-28 21:50+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -109,15 +109,15 @@ msgstr "Gib einen Namen oder show_ranking an"
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:237 privacy/serializers.py:19 privacy/serializers.py:67
+#: core/serializers.py:239 privacy/serializers.py:19 privacy/serializers.py:67
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:247
+#: core/serializers.py:249
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:261
+#: core/serializers.py:263
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
@@ -158,15 +158,15 @@ msgstr "Nur Team-Admins können Einladungen verwalten"
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:580
+#: core/views.py:582
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:592
+#: core/views.py:594
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:604
+#: core/views.py:606
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
@@ -345,11 +345,11 @@ msgstr "Ein Kriterium ist zweimal bewertet"
 msgid "A rating goes from 1 to %(n)s"
 msgstr "Eine Bewertung geht von 1 bis %(n)s"
 
-#: evaluations/serializers.py:217 notes/serializers.py:112
+#: evaluations/serializers.py:217 notes/serializers.py:149
 msgid "Give the clip the frame is in"
 msgstr "Gib das Video an, zu dem das Bild gehört"
 
-#: evaluations/serializers.py:220 notes/serializers.py:102
+#: evaluations/serializers.py:220 notes/serializers.py:136
 msgid "This is not a photo or video of that archer"
 msgstr "Das ist kein Foto oder Video dieses Schützen"
 
@@ -357,7 +357,7 @@ msgstr "Das ist kein Foto oder Video dieses Schützen"
 msgid "Say which frame the rating is about"
 msgstr "Gib an, zu welchem Bild die Bewertung gehört"
 
-#: evaluations/serializers.py:224 notes/serializers.py:106
+#: evaluations/serializers.py:224 notes/serializers.py:143
 msgid "The clip has no such frame"
 msgstr "Das Video hat dieses Bild nicht"
 
@@ -385,50 +385,50 @@ msgstr "Ein Formular braucht einen Namen und Kriterien"
 msgid "Evaluations were made with this form, so it stays"
 msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 
-#: media/serializers.py:70
+#: media/serializers.py:66
 msgid "This session belongs to another archer"
 msgstr "Dieses Training gehört einem anderen Schützen"
 
-#: media/serializers.py:82
+#: media/serializers.py:78
 msgid "A video must be an MP4 file"
 msgstr "Ein Video muss eine MP4-Datei sein"
 
-#: media/serializers.py:84
+#: media/serializers.py:80
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr "Das Video ist größer als %(n)s MB"
 
-#: media/serializers.py:88
+#: media/serializers.py:84
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr "Das Video ist länger als %(n)s Sekunden"
 
-#: media/serializers.py:91
+#: media/serializers.py:87
 msgid "A photo must be a JPEG file"
 msgstr "Ein Foto muss eine JPEG-Datei sein"
 
-#: media/serializers.py:93
+#: media/serializers.py:89
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr "Das Foto ist größer als %(n)s MB"
 
-#: media/serializers.py:97
+#: media/serializers.py:93
 msgid "The preview must be a small JPEG file"
 msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 
-#: media/serializers.py:100
+#: media/serializers.py:96
 msgid "There is no room left for this archer's photos and videos"
 msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 
-#: media/views.py:32
+#: media/views.py:26
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:76 notes/views.py:82 training/views.py:121
+#: media/views.py:70 notes/views.py:83 training/views.py:121
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
-#: media/views.py:83
+#: media/views.py:77
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the "
 "archer's page."
@@ -445,47 +445,51 @@ msgstr "Das ist keine Zeichnung"
 msgid "A drawing can have %(n)s shapes at most"
 msgstr "Eine Zeichnung kann höchstens %(n)s Formen haben"
 
-#: notes/serializers.py:60
+#: notes/serializers.py:94
 msgid "A note cannot be empty"
 msgstr "Eine Notiz darf nicht leer sein"
 
-#: notes/serializers.py:73
-msgid "A drawing belongs to a frame of a clip"
-msgstr "Eine Zeichnung gehört zu einem Bild eines Videos"
+#: notes/serializers.py:107
+msgid "A drawing belongs to a photo or a frame of a clip"
+msgstr "Eine Zeichnung gehört zu einem Foto oder einem Bild eines Videos"
 
-#: notes/serializers.py:77
+#: notes/serializers.py:111
 msgid "This cannot be changed after the note is written"
 msgstr "Das lässt sich nach dem Schreiben der Notiz nicht mehr ändern"
 
-#: notes/serializers.py:82
+#: notes/serializers.py:116
 msgid "Only coaches can write notes"
 msgstr "Nur Trainer können Notizen schreiben"
 
-#: notes/serializers.py:88
+#: notes/serializers.py:122
 msgid "You cannot write notes about this archer in that team"
 msgstr "In diesem Team kannst du keine Notizen über diesen Schützen schreiben"
 
-#: notes/serializers.py:92
+#: notes/serializers.py:126
 msgid "You cannot write notes about this person"
 msgstr "Über diese Person kannst du keine Notizen schreiben"
 
-#: notes/serializers.py:94
+#: notes/serializers.py:128
 msgid "You coach this archer in several teams: say which one"
 msgstr "Du trainierst diesen Schützen in mehreren Teams: Gib an, in welchem"
 
-#: notes/serializers.py:96
+#: notes/serializers.py:130
 msgid "This is not a session of that archer"
 msgstr "Das ist kein Training dieses Schützen"
 
-#: notes/serializers.py:98
+#: notes/serializers.py:132
 msgid "Give the session this end belongs to"
 msgstr "Gib das Training an, zu dem diese Passe gehört"
 
-#: notes/serializers.py:104
+#: notes/serializers.py:139
+msgid "A photo has no frames"
+msgstr "Ein Foto hat keine Einzelbilder"
+
+#: notes/serializers.py:141
 msgid "Say which frame the note is about"
 msgstr "Gib an, zu welchem Bild die Notiz gehört"
 
-#: notes/serializers.py:110
+#: notes/serializers.py:147
 msgid "This clip is from another session"
 msgstr "Dieses Video ist aus einem anderen Training"
 

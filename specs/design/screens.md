@@ -17,7 +17,7 @@ Updated: 2026-10-28
 **Coach** (same app, extra tabs)
 1. Team overview: list of archers with last session, weekly volume, trend arrow
 2. Archer detail: everything the archer sees, plus a notes timeline
-3. Notes: write a note on an archer, session or a specific video frame
+3. Notes: write a note on an archer, session or a specific video frame or photo
 4. Evaluations: fill in an evaluation form for an archer (tap a 1 to 5 rating per criterion, optional comment and video frame per criterion, goals at the end); edit the team's form templates
 5. Team stats: archers with no arrows in the last 7 days; a ranking (coach only, off by default, see [roles-and-access.md](roles-and-access.md))
 6. Team admin: invites, roles
