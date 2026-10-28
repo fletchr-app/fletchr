@@ -1,5 +1,6 @@
 from django.utils.translation import gettext
 import logging
+import uuid
 from math import hypot, isfinite
 
 from drf_spectacular.utils import extend_schema_field
@@ -9,7 +10,8 @@ from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
 
-from .models import End, Shot, TrainingSession, VolumeEntry
+from .merge import has_results, resolve_session_id
+from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
 
 logger = logging.getLogger("training.scoring")
 
@@ -102,6 +104,20 @@ class VolumeEntrySerializer(serializers.ModelSerializer):
         fields = ["id", "distance_m", "arrow_count"]
 
 
+class SessionRefField(serializers.PrimaryKeyRelatedField):
+    """A session by id. The id of a session that was merged into another gives the session it went into."""
+
+    def __init__(self, **kwargs):
+        super().__init__(queryset=TrainingSession.objects.all(), **kwargs)
+
+    def to_internal_value(self, data):
+        try:
+            resolved = resolve_session_id(uuid.UUID(str(data)))
+        except ValueError:
+            resolved = None
+        return super().to_internal_value(resolved or data)
+
+
 class SessionWriteSerializer(serializers.ModelSerializer):
     """
     The equipment is chosen by revision: the app knows the revision ids from its stored copy of your
@@ -128,6 +144,12 @@ class SessionWriteSerializer(serializers.ModelSerializer):
         if revision is not None and revision.arrow_set.owner_id != self.context["request"].user.id:
             raise serializers.ValidationError(gettext("Not your arrow set"))
         return revision
+
+    def validate_type(self, value):
+        # The type decides how results are entered, so it can't change under existing ones (resending it is fine).
+        if self.instance is not None and value != self.instance.type and has_results(self.instance):
+            raise serializers.ValidationError(gettext("The type can't change once there are results"))
+        return value
 
     def validate(self, attrs):
         if attrs.get("arrow_set_revision") is not None and attrs.get("bow_revision") is None:
@@ -168,10 +190,16 @@ def owner_name(session):
     return session.owner.profile.name or session.owner.email
 
 
+def opened_by_name(session):
+    user = session.opened_by
+    return None if user is None else user.profile.name or user.email
+
+
 class SessionSerializer(serializers.ModelSerializer):
     """Full session for the detail view."""
 
     owner_name = serializers.SerializerMethodField()
+    opened_by_name = serializers.SerializerMethodField()
     setup_info = serializers.SerializerMethodField()
     ends = EndSerializer(many=True, read_only=True)
     volume_entries = VolumeEntrySerializer(many=True, read_only=True)
@@ -179,13 +207,16 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainingSession
         fields = [
-            "id", "owner", "owner_name", "started_at", "ended_at", "type", "environment", "location", "weather",
+            "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "weather",
             "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "created_at", "updated_at",
             "ends", "volume_entries",
         ]
 
     def get_owner_name(self, session) -> str:
         return owner_name(session)
+
+    def get_opened_by_name(self, session) -> str | None:
+        return opened_by_name(session)
 
     @extend_schema_field(SetupInfoSerializer(allow_null=True))
     def get_setup_info(self, session):
@@ -203,6 +234,7 @@ class SessionSerializer(serializers.ModelSerializer):
 
 class SessionSummarySerializer(serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
+    opened_by_name = serializers.SerializerMethodField()
     ends = serializers.IntegerField(source="end_count", read_only=True)
     scored_arrows = serializers.IntegerField(read_only=True)
     score_total = serializers.IntegerField(read_only=True)
@@ -211,12 +243,21 @@ class SessionSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainingSession
         fields = [
-            "id", "owner", "owner_name", "started_at", "ended_at", "type", "environment", "location", "setup",
+            "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "setup",
             "updated_at", "ends", "scored_arrows", "score_total", "volume_arrows",
         ]
 
     def get_owner_name(self, session) -> str:
         return owner_name(session)
+
+    def get_opened_by_name(self, session) -> str | None:
+        return opened_by_name(session)
+
+
+class SessionTombstoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionTombstone
+        fields = ["id", "owner", "merged_into", "at"]
 
 
 class LastSessionSerializer(serializers.Serializer):

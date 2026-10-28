@@ -1,4 +1,4 @@
-"""Move everything of one account to another (a person changed how they sign in, ADR 0004).
+"""Move everything of one account to another (a person changed how they sign in, ADR 0005).
 
 The list of what points at a user is not written here, it is discovered (`relations()`): every relation to `User` must have
 an entry in `HANDLERS`, and `core/tests/test_transfer_guard.py` fails when a new one has none. When you add a model that
@@ -36,6 +36,8 @@ HANDLERS: dict[str, object] = {
     "equipment.ArrowSet.owner": MOVE,
     "equipment.Setup.owner": MOVE,
     "training.TrainingSession.owner": MOVE,
+    "training.TrainingSession.opened_by": MOVE,
+    "training.SessionTombstone.owner": MOVE,
     "notes.Note.author": MOVE,
     "notes.Note.archer": MOVE,
     "evaluations.TemplateVersion.created_by": MOVE,

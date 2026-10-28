@@ -1,15 +1,17 @@
 // Uploading the queue of a local log. No React here, so the retry rules can be tested with `npm test`.
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
-import type { Equipment, LogAction, LogState, Op } from './log-model.ts';
+import type { components } from './api-types.ts';
+import type { Equipment, LogAction, LogSession, LogState, Op } from './log-model.ts';
 
-export type SendResult = { kind: 'ok' } | { kind: 'retry' } | { kind: 'failed'; message: string };
+/** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. */
+export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'failed'; message: string };
 
 /** Upload one queued item, with its body taken from the current local data. */
 export async function send(api: ApiClient, state: LogState, op: Op): Promise<SendResult> {
   const session = state.sessions.find((s) => s.id === op.sessionId);
   try {
-    let result: { response: Response; error?: unknown };
+    let result: { response: Response; data?: { id?: string }; error?: unknown };
     if (op.kind === 'session' && op.delete) {
       result = await api.DELETE('/api/sessions/{session_id}/', { params: { path: { session_id: op.sessionId } } });
     } else if (op.kind === 'session') {
@@ -66,8 +68,9 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
         body: { distance_m: entry.distance_m, arrow_count: entry.arrow_count },
       });
     }
-    const { response, error } = result;
-    if (response.ok) return { kind: 'ok' };
+    const { response, error, data } = result;
+    if (response.ok) return op.kind === 'session' && !op.delete && data?.id && data.id !== op.sessionId ? { kind: 'ok', mergedInto: data.id } : { kind: 'ok' };
+    if (op.kind === 'session' && !op.delete && response.status === 410) return { kind: 'gone' };
     if (op.delete && response.status === 404) return { kind: 'ok' }; // already gone
     // Signed out, or the server is having trouble: try again later.
     if (response.status === 401 || response.status >= 500) return { kind: 'retry' };
@@ -95,7 +98,10 @@ export async function drain(
     const op = state.outbox.find((o) => !o.error);
     if (!op) return;
     const result = await sendOp(state, op);
-    if (result.kind === 'ok') dispatch({ type: 'opDone', key: op.key, rev: op.rev });
+    if (result.kind === 'ok') {
+      dispatch({ type: 'opDone', key: op.key, rev: op.rev });
+      if (result.mergedInto) dispatch({ type: 'replaceSessionId', from: op.sessionId, to: result.mergedInto });
+    } else if (result.kind === 'gone') dispatch({ type: 'sessionGone', id: op.sessionId });
     else if (result.kind === 'failed') dispatch({ type: 'opFailed', key: op.key, rev: op.rev, error: result.message });
     else return;
   }
@@ -114,6 +120,41 @@ export async function fetchEquipment(api: ApiClient, userId: number): Promise<Eq
       bows: bows.data.map((b) => ({ id: b.id, name: b.name, type: b.type, revision: b.revision, revision_number: b.revision_number })),
       arrowSets: arrowSets.data.map((a) => ({ id: a.id, name: a.name, revision: a.revision, revision_number: a.revision_number, count: a.count ?? null })),
     };
+  } catch {
+    return null;
+  }
+}
+
+type Summary = components['schemas']['SessionSummary'];
+
+/** A session someone else opened for you and nobody has shot in: the only kind this device takes over from the server. */
+const isOpenedForMe = (s: Summary, userId: number) =>
+  s.opened_by != null && s.opened_by !== userId && s.ends === 0 && s.scored_arrows === 0 && s.volume_arrows === 0;
+
+/**
+ * What the server knows that this device does not, as actions to dispatch in order: ids that were merged or deleted, then
+ * the sessions a coach opened for you. Null if the server cannot be reached. `since` is where the last pull got to.
+ */
+export async function pull(api: ApiClient, userId: number, since?: string): Promise<LogAction[] | null> {
+  try {
+    const query = { owner: userId, ...(since ? { updated_after: since } : {}) };
+    const [list, gone] = await Promise.all([api.GET('/api/sessions/', { params: { query } }), api.GET('/api/sessions/gone/', { params: { query } })]);
+    if (!list.data || !gone.data) return null;
+    const actions: LogAction[] = gone.data.map((g) => (g.merged_into ? { type: 'replaceSessionId', from: g.id, to: g.merged_into } : { type: 'sessionGone', id: g.id }));
+    const sessions: LogSession[] = [];
+    for (const s of list.data.filter((row) => isOpenedForMe(row, userId))) {
+      const detail = await api.GET('/api/sessions/{session_id}/', { params: { path: { session_id: s.id } } });
+      if (!detail.data) return null;
+      const d = detail.data;
+      sessions.push({
+        id: d.id, started_at: d.started_at, ended_at: d.ended_at ?? null, type: d.type ?? '', environment: d.environment ?? '', location: d.location ?? '',
+        ends: [], volume: [], opened_by: d.opened_by ?? undefined, opened_by_name: d.opened_by_name ?? undefined, keep: true,
+        details: { weather: d.weather ?? '', physical_rating: d.physical_rating ?? null, mental_rating: d.mental_rating ?? null, goals: d.goals ?? '', notes: d.notes ?? '' },
+      });
+    }
+    const stamps = [...list.data.map((r) => r.updated_at), ...gone.data.map((g) => g.at ?? '')].filter(Boolean).sort();
+    actions.push({ type: 'pulled', sessions, lastPull: stamps.at(-1) });
+    return actions;
   } catch {
     return null;
   }

@@ -1,7 +1,7 @@
 # Accounts and sign-in methods
 
 status: implemented (Google sign-in and account transfer, #78)
-Decision: [ADR 0004](../adrs/0004-sign-in-methods-are-separate.md). Plan: [2026-10-28-google-sign-in.md](../plans/2026-10-28-google-sign-in.md).
+Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-10-28-google-sign-in.md](../plans/2026-10-28-google-sign-in.md).
 
 ## How people sign in
 

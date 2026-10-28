@@ -40,7 +40,7 @@ def claim_profile(code, user):
     """
     from media.models import Media
     from notes.models import Note
-    from training.models import TrainingSession
+    from training.models import SessionTombstone, TrainingSession
 
     claim = ClaimCode.objects.select_for_update().select_related("profile").filter(code=normalize_code(code)).first()
     if claim is None or not claim.is_usable:
@@ -60,6 +60,7 @@ def claim_profile(code, user):
             m.user = user
             m.save(update_fields=["user"])
     TrainingSession.objects.filter(owner=profile).update(owner=user)
+    SessionTombstone.objects.filter(owner=profile).update(owner=user)
     Media.objects.filter(owner=profile).update(owner=user)  # the files keep their names, which hold the old id
     Note.objects.filter(archer=profile).update(archer=user)
     team = claim.team

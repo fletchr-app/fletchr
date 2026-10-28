@@ -1,5 +1,5 @@
 """Sign in with a provider (Google now, Apple later). One verifier per provider turns a token into `Claims`;
-`sign_in` is the same for all of them (ADR 0004: accounts are separate, an unknown subject never signs in to an existing account)."""
+`sign_in` is the same for all of them (ADR 0005: accounts are separate, an unknown subject never signs in to an existing account)."""
 
 import logging
 from dataclasses import dataclass

@@ -214,6 +214,7 @@ export default {
     competition: 'Competition',
     volume: 'Volume',
     technique: 'Technique',
+    unset: 'Session',
   },
   home: {
     hello: 'Hello {name}',
@@ -232,6 +233,8 @@ export default {
     title: 'Training',
     start: 'Start a session',
     inProgress: 'in progress',
+    chooseType: 'What did you shoot?',
+    openedBy: 'Opened by {name}',
   },
   session: {
     notOnDevice: 'This session is not on this device.',
@@ -295,6 +298,8 @@ export default {
   newSession: {
     title: 'New session',
     forTitle: 'New session for {name}',
+    openTitle: 'Open a session for {name}',
+    openStart: 'Open session',
     theArcher: 'the archer',
     type: 'Type',
     where: 'Where',
@@ -561,6 +566,7 @@ export default {
     eyeIs: 'Eye: {side}',
     ageIs: '{n} years old',
     startFor: 'Start a session for {name}',
+    openSession: 'Open a session (photos, videos, notes)',
     statistics: 'Statistics',
     noSessions: 'No sessions yet.',
     hasNoAccount: '{name} has no account. When they join, they can take over this profile with a code.',

@@ -1,6 +1,6 @@
 # Sign-in methods are separate accounts, no linking and no email matching
 
-status: proposed
+status: accepted
 date: 2026-10-28
 
 ## Context and Problem Statement

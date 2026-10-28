@@ -6,6 +6,7 @@ import AddArcher from '@/components/AddArcher.vue'
 import AppButton from '@/components/AppButton.vue'
 
 import ErrorText from '@/components/ErrorText.vue'
+import { sessionTypeKey } from '@/lib/log-model'
 import ShareTraining from '@/components/ShareTraining.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
@@ -49,7 +50,7 @@ const shown = computed(() => (onlyIdle.value ? (data.value ?? []).filter((a) => 
         <IonLabel class="ion-text-wrap">
           <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ` (${$t('teams.coachSuffix')})` : '' }}{{ archer.managed ? ` (${$t('teams.noAccount')})` : '' }}{{ archer.last_session?.live ? `  ● ${$t('teams.shootingNow')}` : '' }}</h3>
           <p>
-            {{ archer.last_session ? $t('teams.lastSession', { date: new Date(archer.last_session.started_at).toLocaleDateString(), type: $t(`sessionType.${archer.last_session.type}`) }) : $t('teams.noSessions') }} ·
+            {{ archer.last_session ? $t('teams.lastSession', { date: new Date(archer.last_session.started_at).toLocaleDateString(), type: $t(sessionTypeKey(archer.last_session.type)) }) : $t('teams.noSessions') }} ·
             {{ $t('teams.arrows7d', { n: archer.arrows_7d }, archer.arrows_7d) }}{{ archer.arrows_7d === 0 ? ` · ${$t('teams.idleMark')}` : '' }}
           </p>
         </IonLabel>

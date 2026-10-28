@@ -7,7 +7,8 @@ from core.access import archers_visible_to, note_teams
 from core.models import COACH_ROLES, Team, TeamMember, User
 from media.access import media_link, visible_media
 from media.models import Media
-from training.models import End, TrainingSession
+from training.serializers import SessionRefField
+from training.models import End
 
 from .drawing import check_drawing
 from .models import Note
@@ -40,7 +41,7 @@ class NoteSerializer(serializers.ModelSerializer):
         queryset=Team.objects.all(), required=False, help_text="Only needed if you coach this archer in several teams"
     )
     archer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    session = serializers.PrimaryKeyRelatedField(queryset=TrainingSession.objects.all(), required=False, allow_null=True)
+    session = SessionRefField(required=False, allow_null=True)
     end = serializers.PrimaryKeyRelatedField(queryset=End.objects.all(), required=False, allow_null=True)
     media = VisibleMediaField(queryset=Media.objects.none(), required=False, allow_null=True, help_text="A note on this photo, or on a frame of this clip (needs `frame`)")
     frame = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="The frame, counted from 0")

@@ -218,6 +218,7 @@ export default {
     competition: 'Wettkampf',
     volume: 'Umfang',
     technique: 'Technik',
+    unset: 'Training',
   },
   home: {
     hello: 'Hallo {name}',
@@ -236,6 +237,8 @@ export default {
     title: 'Training',
     start: 'Training starten',
     inProgress: 'läuft',
+    chooseType: 'Was hast du geschossen?',
+    openedBy: 'Angelegt von {name}',
   },
   session: {
     notOnDevice: 'Dieses Training ist nicht auf diesem Gerät.',
@@ -299,6 +302,8 @@ export default {
   newSession: {
     title: 'Neues Training',
     forTitle: 'Neues Training für {name}',
+    openTitle: 'Training für {name} anlegen',
+    openStart: 'Training anlegen',
     theArcher: 'den Schützen',
     type: 'Art',
     where: 'Wo',
@@ -565,6 +570,7 @@ export default {
     eyeIs: 'Auge: {side}',
     ageIs: '{n} Jahre alt',
     startFor: 'Training für {name} starten',
+    openSession: 'Training anlegen (Fotos, Videos, Notizen)',
     statistics: 'Statistik',
     noSessions: 'Noch keine Trainings.',
     hasNoAccount: '{name} hat kein Konto. Wenn er beitritt, kann er dieses Profil mit einem Code übernehmen.',

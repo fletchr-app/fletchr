@@ -1,9 +1,9 @@
 # Sign in with Google, admin account transfer (#78)
 
-Status: implemented 2026-10-28 (server, app, transfer, docs); needs the Google Cloud setup and a test on a phone, see "Done and open" below
+Status: implemented 2026-10-28 (server, app, transfer, docs); needs the Google Cloud setup and a test on a phone, see "Done and open"
 Date: 2026-10-28
 
-Decision record: [ADR 0004](../adrs/0004-sign-in-methods-are-separate.md) (separate accounts, no linking, no email matching). Avatar part of the transfer: [profile picture plan](2026-10-28-profile-picture.md) (#79).
+Decision record: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md) (separate accounts, no linking, no email matching). Avatar part of the transfer: [profile picture plan](2026-10-28-profile-picture.md) (#79).
 
 ## Done and open
 
@@ -17,8 +17,6 @@ Questions Q1 to Q4 were taken as planned (log line for the `sub`, no password or
 - [ ] Google Cloud project, consent screen, web and Android OAuth clients, SHA-1 keys (Tim, by hand, see `specs/design/accounts.md`).
 - [ ] Test on a phone with the checks below (nothing here has run on a device; the plugin result shape was read from its type definitions).
 - [ ] Legal review of the new privacy wording (#63). Google Play data safety form.
-- [ ] ADR 0004 stays `proposed` until Tim accepts it.
-
 ## Scope
 
 - `POST /api/auth/google/` verifies a Google ID token and returns the normal JWT pair. Android first. iOS is blocked until Sign in with Apple exists (own issue, see the end).
@@ -31,7 +29,7 @@ Questions Q1 to Q4 were taken as planned (log line for the `sub`, no password or
 ## Decisions made
 
 1. **Same rules as email register.** `RegisterView` is invite-only; an unknown `sub` with no code is refused (`no_account`), with a code it creates the account and redeems the code (team invite or claim code, same helper as `RegisterView`). The sign-in screen never creates accounts; the register screen does. Why: otherwise Google would be a way around the invite.
-2. **Email from the token, `email_verified` required.** Becomes `User.email`. If that address belongs to another account: refused with a message, never signed in to it (ADR 0004).
+2. **Email from the token, `email_verified` required.** Becomes `User.email`. If that address belongs to another account: refused with a message, never signed in to it (ADR 0005).
 3. **Plugin: `@capgo/capacitor-social-login`** (see Plugin below), because it also does Sign in with Apple, which the iOS release needs.
 4. **No password for Google accounts** (`set_unusable_password`). They cannot set one, and cannot change the email themselves (the address is what the provider said). Why: "separate ways to register" in the issue, and a password would add a second way in that the person did not ask for.
 5. **Official server only (Tim, 2026-10-28).** Google sign-in is not offered for self-hosted servers: the Android OAuth client is bound to the app's package and signing key in one Google project, so only the operator of the Play Store app can run it. The app shows the button only for the default server; a self-hosted server leaves `DJANGO_GOOGLE_CLIENT_IDS` unset and the endpoint answers 404.
@@ -59,7 +57,7 @@ Questions Q1 to Q4 were taken as planned (log line for the `sub`, no password or
      1. identity exists: return its user; refuse if `not is_active` (same error as a wrong password, generic).
      2. no identity and no `invite_code`: log and raise `no_account`.
      3. `email_verified` false: refuse.
-     4. `User.objects.filter(email__iexact=email).exists()`: log and raise `email_taken` (ADR 0004).
+     4. `User.objects.filter(email__iexact=email).exists()`: log and raise `email_taken` (ADR 0005).
      5. create user (`create_user(email)` then `set_unusable_password()`), set `profile.name` from the token `name` (fallback: part before `@`), create the identity, redeem the code with the shared helper; a bad code rolls back everything (as `RegisterView` does).
      6. `IntegrityError` on the identity (two requests with the same new `sub`): rollback, look it up again, return that user.
    - Every refusal in 2 to 4 logs one line at INFO with provider, `sub` and email (`logger.info("Social sign-in refused (%s): %s %s %s", reason, provider, sub, email)`). This is how the admin gets the `sub` for the attach path (open question Q1). Server logs are rotated like the web server logs; mention it in the privacy text.
@@ -128,7 +126,7 @@ Without a `nonce` the ID token has no replay protection beyond `exp` (about an h
   4. Admin how-to: "A person changes how they sign in": cheap path (change the email in the User admin, or add the Google identity in the inline; the `sub` is in the server log, `docker compose logs django | grep "Social sign-in refused"`), expensive path (`transfer_account --dry-run`, then for real, or the admin action).
 - Privacy: German and English privacy pages in `site/datenschutz/` and `site/en/`, the in-app `PrivacyView.vue` texts and the delete-account page: Google sign-in is optional, stores provider and subject ID (an identifier from Google) and the address, no token, Google receives the sign-in request from the phone (their privacy policy applies), the log line with `sub` and email on a refused sign-in. The wording needs the legal review (#63); say so in the PR. Google Play data safety form: add "email address" and "user IDs" collected for account management (already declared for email sign-in, check the entry).
 - `specs/design/roles-and-access.md` or a new `specs/design/accounts.md`: sign-in methods, password-less accounts, transfer. `specs/design/ios-without-an-apple-device.md`: line on the plugin. `specs/steering/releasing.md` needs no change. `CHANGELOG.md`.
-- ADR 0004 status to `accepted` when Tim agrees.
+- ADR 0005 status to `accepted` when Tim agrees.
 
 ## Order
 
@@ -150,7 +148,7 @@ Checks on the phone: sign in with a known account; register with an invite; canc
 - **Admin needs the `sub`.** The person cannot read their own `sub`. The plan uses the log line of a refused sign-in. If that is too clumsy, alternative (Q1): an admin-made "attach code" (like `ClaimCode`) that the person enters on the register screen instead of an invite. More code, no log reading.
 - **Plugin quality is unproven.** Capgo is actively published and matches Capacitor 8 on paper; nothing here has run on the repo's Gradle setup. A day for the build may be lost. The fallback exists.
 - **No nonce** (see Plugin). Token replay within its lifetime is possible for whoever already holds a valid ID token of the user.
-- **Account takeover through reused Google accounts or addresses** is the reason for ADR 0004. The remaining weak spot is the admin attach: attaching the wrong `sub` hands an account over. The admin page shows the target's email and name next to the `sub`; no automation.
+- **Account takeover through reused Google accounts or addresses** is the reason for ADR 0005. The remaining weak spot is the admin attach: attaching the wrong `sub` hands an account over. The admin page shows the target's email and name next to the `sub`; no automation.
 - **Transfer is not undoable.** Run `--dry-run` first; the admin action always shows the dry run before its confirm button. Back up before the first real transfer (`restic`, SELFHOSTING section 4).
 - **Transfer and unique constraints.** Per-user unique rows (team membership today) are handled by hand; the guard test only proves a handler exists, not that it is right. The tests for the clashes are the protection.
 - **Files on disk keep names with the old user id** after a move (same as `claim_profile`). Fine for serving; if a later change derives paths from the owner id, it breaks transferred files. Note in the media design doc.
