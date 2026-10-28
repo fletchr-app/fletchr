@@ -93,7 +93,10 @@ class ExportMyMediaLinkView(APIView):
         serializer.is_valid(raise_exception=True)
         media = media_zip.media_of(request.user)
         url = request.build_absolute_uri(f"/api/me/export/media/file/?token={media_zip.sign_link(request.user.pk)}")
-        return Response({"url": url, "files": media.count(), "bytes": media.aggregate(total=Sum("size"))["total"] or 0})
+        picture = media_zip.avatar_of(request.user)
+        files = media.count() + (1 if picture else 0)
+        total = (media.aggregate(total=Sum("size"))["total"] or 0) + (picture[0] if picture else 0)
+        return Response({"url": url, "files": files, "bytes": total})
 
 
 class ExportMyMediaFileView(APIView):

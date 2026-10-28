@@ -20,14 +20,18 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
+import DrawnPicture from '@/components/DrawnPicture.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
+import { fitted, type Shape } from '@/lib/drawing'
 import { prepareImage } from '@/lib/image'
+import { drawnShapes } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
@@ -53,6 +57,12 @@ const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId } = useAuth()
 const media = useMedia()
+const { renamed } = useLog()
+// The server merged this session into another one: continue there.
+watch(
+  () => (sessionId ? renamed.value[sessionId] : undefined),
+  (to) => to && void router.replace({ path: '/media', query: { ...route.query, session: to } }),
+)
 const { videosWifiOnly } = useUploadSettings()
 const me = computed(() => Number(userId.value))
 const owner = computed(() => ownerParam ?? me.value)
@@ -75,6 +85,7 @@ onIonViewWillEnter(() => {
   if (firstVisit) return void (firstVisit = false)
   reload()
   consent.reload()
+  reopen()
 })
 watch(media.uploaded, reload)
 
@@ -277,6 +288,66 @@ function swiped() {
   deleteError.value = null
   void loadFull(item)
 }
+// The coach's notes and drawings, for the photos swiped to while the modal is open. Not polled.
+type MediaNotes = components['schemas']['Note'][]
+const photoNotes = ref<Record<string, MediaNotes>>({})
+const writable = ref<Record<number, boolean>>({}) // per archer: may I write notes about them
+async function loadNotes(item: Shown) {
+  const remote = item.remote
+  if (!remote) return
+  try {
+    if (photoNotes.value[remote.id] === undefined) {
+      const { data: list } = await api.GET('/api/notes/', { params: { query: { media: remote.id } } })
+      if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
+    }
+    if (writable.value[remote.owner] === undefined) {
+      const { data: teams } = await api.GET('/api/notes/teams/', { params: { query: { archer: remote.owner } } })
+      if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 }
+    }
+  } catch {
+    /* no drawings and no Notes button; the photo is still there */
+  }
+}
+const shapesOf = (item: Shown): Shape[] => (item.remote ? drawnShapes(photoNotes.value[item.remote.id] ?? []) : [])
+const notesButton = computed(() => {
+  const remote = viewing.value?.remote
+  if (!remote) return false
+  return (photoNotes.value[remote.id]?.length ?? 0) > 0 || writable.value[remote.owner] === true
+})
+const notesCount = computed(() => photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0)
+// Each slide is as large as the strip; a photo with a drawing is sized to fit, the drawing lies over exactly the photo.
+const stripBox = ref({ width: 0, height: 0 })
+let stripWatch: ResizeObserver | null = null
+watch(strip, (el) => {
+  stripWatch?.disconnect()
+  if (!el) return
+  const measure = () => (stripBox.value = { width: el.clientWidth, height: el.clientHeight })
+  measure()
+  stripWatch = new ResizeObserver(measure)
+  stripWatch.observe(el)
+})
+onBeforeUnmount(() => stripWatch?.disconnect())
+function fit(remote: Remote) {
+  const box = fitted(stripBox.value, remote.width / remote.height)
+  return { width: `${box.width}px`, height: `${box.height}px` }
+}
+watch(viewing, (item) => item && void loadNotes(item))
+
+// "Notes" opens the photo in the player, where the notes and the pencil are. Back lands on the same photo here again.
+let comeBackTo: string | null = null
+function openNotes() {
+  const remote = viewing.value!.remote!
+  comeBackTo = viewKey.value
+  const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
+  close()
+  void router.push({ path: `/media/${remote.id}`, query })
+}
+function reopen() {
+  const item = comeBackTo && photos.value.find((p) => p.key === comeBackTo)
+  comeBackTo = null
+  photoNotes.value = {} // what was drawn in the player is new
+  if (item) open(item)
+}
 function close() {
   viewKey.value = null
   Object.values(full.value).forEach((u) => URL.revokeObjectURL(u))
@@ -348,7 +419,10 @@ const taken = (item: Shown | null) => {
       </IonHeader>
       <IonContent :scroll-y="false">
         <div ref="strip" class="strip" @scroll.passive="swiped">
-          <img v-for="p in photos" :key="p.key" :src="full[p.key] ?? p.remote?.file_url ?? p.src" alt="" class="slide" loading="lazy" />
+          <div v-for="p in photos" :key="p.key" class="slide">
+            <DrawnPicture v-if="p.remote && shapesOf(p).length > 0" :src="full[p.key] ?? p.remote.file_url" :width="p.remote.width" :height="p.remote.height" :shapes="shapesOf(p)" :style="fit(p.remote)" />
+            <img v-else :src="full[p.key] ?? p.remote?.file_url ?? p.src" alt="" loading="lazy" />
+          </div>
         </div>
       </IonContent>
       <IonFooter v-if="viewing">
@@ -356,7 +430,8 @@ const taken = (item: Shown | null) => {
           <div v-if="viewing.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.uploaded_by_name }) }}</div>
           <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
-          <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? $t('media.deleteConfirm') : $t('media.delete') }}</AppButton>
+          <AppButton v-if="notesButton" secondary @click="openNotes">{{ $t('media.openNotes') }}{{ notesCount > 0 ? ` (${notesCount})` : '' }}</AppButton>
+          <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? (notesCount > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</AppButton>
         </div>
       </IonFooter>
     </IonModal>
@@ -454,8 +529,15 @@ const taken = (item: Shown | null) => {
   flex: 0 0 100%;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   scroll-snap-align: center;
   scroll-snap-stop: always;
+}
+.slide > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 </style>

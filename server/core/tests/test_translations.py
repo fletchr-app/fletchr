@@ -45,7 +45,7 @@ def test_the_catalog_is_complete():
     translated = {m.id: m.string for m in catalog if m.id}
     assert all(translated.values()), "an untranslated text"
     assert not [m.id for m in catalog if m.id and "fuzzy" in m.flags]
-    # every text the code asks for is in the catalog (run docs/i18n.md's update steps after adding one)
+    # every text the code asks for is in the catalog (run specs/steering/i18n.md's update steps after adding one)
     used = {
         message
         for path, _line, message, _comments, _context in extract_from_dir(str(ROOT), method_map=[("**.py", "python")], keywords={"gettext": None})

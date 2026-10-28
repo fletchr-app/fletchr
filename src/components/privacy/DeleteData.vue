@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
+import { useProof } from '@/composables/useProof'
 import { type DeletedCounts, useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 
@@ -14,6 +15,7 @@ function summary(d: DeletedCounts) {
   return [
     t('privacy.sessions', { n: d.sessions }, d.sessions) + (d.shots > 0 ? ` (${t('privacy.shots', { n: d.shots }, d.shots)})` : ''),
     t('privacy.media', { n: d.media }, d.media),
+    ...(d.avatar > 0 ? [t('privacy.avatarDeleted')] : []),
     t('privacy.bows', { n: d.bows }, d.bows),
     t('privacy.arrowSets', { n: d.arrow_sets }, d.arrow_sets),
     t('privacy.notesAboutMe', { n: d.notes_about_me }, d.notes_about_me),
@@ -22,6 +24,7 @@ function summary(d: DeletedCounts) {
 }
 
 const { deleteMyData } = useLog()
+const { hasPassword, proof } = useProof()
 const { discardAll } = useMedia()
 const password = ref('')
 const confirm = ref('')
@@ -32,7 +35,17 @@ const done = ref<DeletedCounts | null>(null)
 async function erase() {
   busy.value = true
   error.value = null
-  const result = await deleteMyData(password.value, confirm.value)
+  let result: Awaited<ReturnType<typeof deleteMyData>> = { error: '' }
+  try {
+    const body = await proof(password.value)
+    if (!body) {
+      busy.value = false
+      return // cancelled the Google chooser
+    }
+    result = await deleteMyData(body, confirm.value)
+  } catch {
+    result = { error: t('privacy.googleFailed') }
+  }
   if ('error' in result) error.value = result.error
   else {
     done.value = result.deleted
@@ -52,7 +65,8 @@ async function erase() {
     <p class="m-0">{{ $t('privacy.cannotUndo') }}</p>
     <div v-if="done" class="fw-semibold">{{ $t('privacy.deletedSummary', { summary: summary(done) }) }}</div>
     <template v-else>
-      <FormField v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" />
+      <FormField v-if="hasPassword" v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" />
+      <p v-else class="m-0">{{ $t('privacy.googleProof') }}</p>
       <FormField v-model="confirm" :label="$t('privacy.typeDelete')" capitalize="characters" @enter="erase" />
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="erase">{{ $t('privacy.deleteData') }}</AppButton>

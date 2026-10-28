@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { computed, shallowRef, watch } from 'vue';
 
 import type { components } from '@/lib/api-types';
@@ -6,12 +7,14 @@ import { currentLanguage, t } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { userIdOf } from '@/lib/jwt';
 import { useServer } from '@/composables/useServer';
+import { googleErrorKey } from '@/lib/google-errors';
+import { GOOGLE_WEB_CLIENT_ID, googleIdToken } from '@/lib/social-login';
 
 export type RegisterBody = components['schemas']['RegisterRequest'];
 
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
-const { url } = useServer();
+const { url, isOverride } = useServer();
 
 // A new session per server address, so switching servers signs out.
 const session = shallowRef(new AuthSession(url.value, currentLanguage));
@@ -71,6 +74,31 @@ async function register(body: RegisterBody): Promise<string | null> {
   }
 }
 
+/** Google sign-in is offered by the official server only (its Google project is tied to the app): not with another server address, not in the browser. */
+const googleAvailable = computed(() => GOOGLE_WEB_CLIENT_ID !== '' && !isOverride.value && Capacitor.isNativePlatform());
+
+export type GoogleResult = { error: string | null; noAccount?: boolean };
+
+/** Sign in with Google, or register with an invite or claim code. `error` is null on success and also when the person cancels the chooser. */
+async function signInWithGoogle(inviteCode?: string): Promise<GoogleResult> {
+  try {
+    const idToken = await googleIdToken();
+    if (!idToken) return { error: null };
+    const { data, error } = await api.POST('/api/auth/google/', {
+      body: { id_token: idToken, ...(inviteCode?.trim() ? { invite_code: inviteCode.trim() } : {}) },
+    });
+    if (!data) {
+      const key = googleErrorKey(error);
+      return { error: key ? t(key) : errorMessage(error), noAccount: key === 'auth.google.noAccount' };
+    }
+    session.value.setTokens({ access: data.access, refresh: data.refresh });
+    return { error: null };
+  } catch (e) {
+    // A plugin failure (Google not set up for this build, no Play services) is not the same as no network.
+    return { error: e instanceof TypeError ? t('common.serverNotReachable') : t('auth.google.failed') };
+  }
+}
+
 async function signOut(): Promise<void> {
   const refresh = session.value.getState().tokens?.refresh;
   session.value.setTokens(null);
@@ -86,5 +114,5 @@ function replaceTokens(tokens: { access: string; refresh: string }) {
 }
 
 export function useAuth() {
-  return { status, api, userId, signIn, register, signOut, replaceTokens };
+  return { status, api, userId, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
 }

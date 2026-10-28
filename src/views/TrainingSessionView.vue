@@ -2,20 +2,23 @@
 import AppPage from '@/components/AppPage.vue'
 import { IonIcon } from '@ionic/vue'
 import { cloudUploadOutline } from 'ionicons/icons'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
+import ChipGroup from '@/components/ChipGroup.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import VolumeLog from '@/components/VolumeLog.vue'
 import { useLog } from '@/composables/useLog'
-import { gearLine, nextEndDefaults, sessionTotals, usesEnds } from '@/lib/log-model'
+import { gearLine, nextEndDefaults, type SessionType, sessionTotals, sessionTypeKey, usesEnds } from '@/lib/log-model'
 
 const route = useRoute()
 const router = useRouter()
-const { loaded, sessions, waiting, failed, finishSession, deleteSession } = useLog()
+const { t } = useI18n()
+const { loaded, sessions, waiting, failed, finishSession, deleteSession, setType, renamed } = useLog()
 const confirmDelete = ref(false)
 
 const sessionId = route.params.id as string
@@ -25,6 +28,16 @@ const mediaLink = computed(() => ({
   query: { session: sessionId, ...(session.value?.owner ? { owner: session.value.owner, name: session.value.owner_name } : {}) },
 }))
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
+// The server merged this session into another one: follow it (a coach's copy of an archer's session is read on the server).
+watch(
+  () => renamed.value[sessionId],
+  (to) => to && void router.replace(sessions.value.some((s) => s.id === to) ? `/training/${to}` : `/sessions/${to}`),
+)
+// The archer chooses the type of a session a coach opened when starting the results.
+const TYPES = computed<{ value: SessionType; label: string }[]>(() =>
+  (['scoring', 'competition', 'volume', 'technique'] as const).map((value) => ({ value, label: t(sessionTypeKey(value)) })),
+)
+const chosen = computed({ get: () => '' as SessionType, set: (type) => setType(sessionId, type) })
 const fixed = computed(() => !!session.value && usesEnds(session.value.type))
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
 
@@ -32,7 +45,7 @@ const totals = computed(() => (session.value ? sessionTotals(session.value) : nu
 onBeforeRouteLeave((to) => {
   const s = session.value
   const staying = to.path.startsWith(`/training/${s?.id}`) || (to.path === '/media' && to.query.session === s?.id)
-  if (s && !staying && s.ends.length === 0 && s.volume.length === 0) deleteSession(s.id)
+  if (s && !staying && !s.keep && s.ends.length === 0 && s.volume.length === 0) deleteSession(s.id)
 })
 
 // The settings are asked once, before the first end; later ends start from the previous one (changeable via the link).
@@ -57,11 +70,25 @@ function newEnd() {
   <AppPage :title="$t('session.title')" :fixed="fixed">
     <div v-if="!session || !totals" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <!-- Ends sessions: one screen without scrolling. The list of ends and delete are on the ends page. -->
+    <!-- Opened without a type: the archer chooses it before adding results. -->
+    <div v-else-if="!session.type" class="screen">
+      <SyncBanner />
+      <h2 class="h5 m-0">{{ $t(sessionTypeKey(session.type)) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+      <div class="muted">{{ session.location ? `${session.location} · ` : '' }}{{ session.ended_at ? $t('session.finished') : $t('training.inProgress') }}</div>
+      <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
+      <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
+      <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+      <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
+      <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
+      <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
+        {{ confirmDelete ? $t('session.deleteConfirm') : $t('session.delete') }}
+      </AppButton>
+    </div>
     <div v-else-if="usesEnds(session.type)" class="entry">
       <!-- Uploads that wait show as an icon, so the screen does not jump when they finish; only refused ones need the full banner. -->
       <SyncBanner v-if="failed.length > 0" />
       <div class="d-flex align-items-center gap-2">
-        <h2 class="h5 m-0 flex-grow-1">{{ $t(`sessionType.${session.type}`) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+        <h2 class="h5 m-0 flex-grow-1">{{ $t(sessionTypeKey(session.type)) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
         <IonIcon v-if="waiting > 0" :icon="cloudUploadOutline" class="muted" :title="$t('session.waiting', { n: waiting }, waiting)" />
       </div>
       <div class="muted">
@@ -69,6 +96,7 @@ function newEnd() {
       </div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
+      <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
       <div class="d-flex justify-content-center gap-4">
@@ -84,7 +112,7 @@ function newEnd() {
     </div>
     <div v-else class="screen">
       <SyncBanner />
-      <h2 class="h5 m-0">{{ $t(`sessionType.${session.type}`) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
+      <h2 class="h5 m-0">{{ $t(sessionTypeKey(session.type)) }} · {{ new Date(session.started_at).toLocaleDateString() }}</h2>
       <div class="muted">
         {{ session.location ? `${session.location} · ` : '' }}{{ $t('count.arrows', totals.arrows) }}{{ session.ended_at ? ` · ${$t('session.finished')}` : '' }}
       </div>

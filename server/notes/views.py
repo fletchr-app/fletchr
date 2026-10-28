@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 
-from core.access import note_teams
+from core.access import archers_visible_to, note_teams
 from core.models import COACH_ROLES, Role, TeamMember, User
 
 from .models import Note
@@ -46,6 +46,7 @@ class NoteViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         if self.request is not None and self.request.user.is_authenticated:
             context["admin_team_ids"] = self.admin_team_ids(self.request.user)
+            context["visible_owner_ids"] = set(archers_visible_to(self.request.user).values_list("pk", flat=True))
         return context
 
     def get_queryset(self):
@@ -62,7 +63,7 @@ class NoteViewSet(viewsets.ModelViewSet):
                 | Q(archer=user, visibility=Note.Visibility.SHARED)
                 | Q(author=user, visibility=private)
             )
-            .select_related("author__profile", "archer__profile")
+            .select_related("author__profile", "archer__profile", "media")
         )
 
     def perform_create(self, serializer):

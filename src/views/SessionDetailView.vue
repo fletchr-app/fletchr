@@ -11,7 +11,7 @@ import SessionPlots from '@/components/SessionPlots.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { useUnits } from '@/composables/useUnits'
-import { gearLine, sessionTotals, usesEnds } from '@/lib/log-model'
+import { gearLine, sessionTotals, sessionTypeKey, usesEnds } from '@/lib/log-model'
 import { fromServer } from '@/lib/session-view'
 
 const REFRESH_MS = 5000
@@ -42,10 +42,11 @@ const mediaLink = computed(() => ({
       <ErrorText :message="error" />
     </div>
     <div v-else class="screen">
-      <h2 class="h5 m-0">{{ session.owner_name }} · {{ $t(`sessionType.${session.type}`) }}</h2>
+      <h2 class="h5 m-0">{{ session.owner_name }} · {{ $t(sessionTypeKey(session.type)) }}</h2>
       <div class="muted">
         {{ new Date(session.started_at).toLocaleString() }}{{ session.location ? ` · ${session.location}` : '' }}{{ session.ended_at ? ` · ${$t('session.finished')}` : ` · ${$t('training.inProgress')}` }}
       </div>
+      <div v-if="data.opened_by_name && data.opened_by !== data.owner" class="muted">{{ $t('training.openedBy', { name: data.opened_by_name }) }}</div>
       <div>{{ $t('count.arrows', totals.arrows) }}{{ usesEnds(session.type) ? ` · ${$t('count.points', totals.score)}` : '' }}</div>
       <div v-if="session.gear">{{ $t('session.equipment', { gear: gearLine(session.gear) }) }}</div>
       <ErrorText :message="error" />

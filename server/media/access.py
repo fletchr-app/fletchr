@@ -3,6 +3,19 @@
 from core.access import archers_visible_to
 from core.claims import can_write_sessions_of
 
+from .files import sign_link
+from .models import Media
+
+
+def visible_media(user):
+    """The photos and clips of the archers whose training `user` may see."""
+    return Media.objects.filter(owner__in=archers_visible_to(user)).select_related("owner__profile")
+
+
+def media_link(request, media, part) -> str:
+    """A link to the file or the thumbnail that opens for an hour, for whoever asks."""
+    return request.build_absolute_uri(f"/api/media/{media.pk}/{part}/?token={sign_link(media.pk, request.user.pk)}")
+
 
 def can_add_for(user, owner) -> bool:
     """Yourself, or an archer you coach (a coach films technique and takes photos of their archers)."""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 17:26+0100\n"
+"POT-Creation-Date: 2026-10-28 22:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,23 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:129
+#: core/avatar.py:36 core/avatar.py:41
+msgid "The picture must be a JPEG"
+msgstr ""
+
+#: core/avatar.py:38
+msgid "The picture is too large, it should be about 256 px on a side"
+msgstr ""
+
+#: core/avatar.py:56
+msgid "A picture of an archer under 18 needs the consent of the parents"
+msgstr ""
+
+#: core/avatar.py:58
+msgid "The picture is larger than 512 KB"
+msgstr ""
+
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:156
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -63,92 +79,152 @@ msgid ""
 "email password."
 msgstr ""
 
-#: core/serializers.py:12
+#: core/serializers.py:14
 msgid "Enter a date of birth in the past"
 msgstr ""
 
-#: core/serializers.py:52
+#: core/serializers.py:74
 msgid "An account with this email already exists"
 msgstr ""
 
-#: core/serializers.py:85
+#: core/serializers.py:107
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:98
+#: core/serializers.py:120
 msgid "Give a name or show_ranking"
 msgstr ""
 
-#: core/serializers.py:141 core/serializers.py:156
+#: core/serializers.py:182 core/serializers.py:197
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:204 privacy/serializers.py:19 privacy/serializers.py:66
+#: core/serializers.py:247 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:214
+#: core/serializers.py:257
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:228
+#: core/serializers.py:271
 msgid "This address is not available"
 msgstr ""
 
-#: core/views.py:249
+#: core/social.py:50 core/social.py:53 core/social.py:55
+msgid "Google sign-in failed. Please try again."
+msgstr ""
+
+#: core/social.py:72
+msgid "This account cannot sign in."
+msgstr ""
+
+#: core/social.py:82
+msgid ""
+"There is no account for this Google sign-in yet. Register with your "
+"invite code."
+msgstr ""
+
+#: core/social.py:84
+msgid "Google did not confirm your email address."
+msgstr ""
+
+#: core/social.py:86
+msgid ""
+"This email address already has an account. Ask an admin to connect it "
+"with your Google sign-in."
+msgstr ""
+
+#: core/transfer.py:125
+msgid "Source and target are the same account"
+msgstr ""
+
+#: core/transfer.py:128
+#, python-format
+msgid "%(email)s is a profile without an account or an admin of the site"
+msgstr ""
+
+#: core/transfer.py:130
+#, python-format
+msgid "%(email)s is deactivated"
+msgstr ""
+
+#: core/transfer.py:134
+#, python-format
+msgid ""
+"%(email)s already has data (%(what)s). Only an account without data can "
+"receive one."
+msgstr ""
+
+#: core/transfer.py:153
+#, python-format
+msgid ""
+"Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
+"of them first."
+msgstr ""
+
+#: core/views.py:206
+msgid "No picture sent"
+msgstr ""
+
+#: core/views.py:257
+msgid "This account signs in with Google and has no password."
+msgstr ""
+
+#: core/views.py:352
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:295
+#: core/views.py:398
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:304
+#: core/views.py:407
 msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:330
+#: core/views.py:433
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:336 core/views.py:350
+#: core/views.py:439 core/views.py:453
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:347
+#: core/views.py:450
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:361 core/views.py:378
+#: core/views.py:464 core/views.py:481
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:386
+#: core/views.py:489
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:511
+#: core/views.py:616
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:523
+#: core/views.py:628
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:535
+#: core/views.py:640
 msgid "This account no longer exists"
 msgstr ""
 
-#: equipment/serializers.py:51 training/serializers.py:124
+#: equipment/serializers.py:51 training/serializers.py:140
 msgid "Not your bow"
 msgstr ""
 
-#: equipment/serializers.py:56 training/serializers.py:129
+#: equipment/serializers.py:56 training/serializers.py:145
 msgid "Not your arrow set"
 msgstr ""
 
@@ -319,11 +395,11 @@ msgstr ""
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:217 notes/serializers.py:112
+#: evaluations/serializers.py:217 notes/serializers.py:150
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:220 notes/serializers.py:102
+#: evaluations/serializers.py:220 notes/serializers.py:137
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
@@ -331,7 +407,7 @@ msgstr ""
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:224 notes/serializers.py:106
+#: evaluations/serializers.py:224 notes/serializers.py:144
 msgid "The clip has no such frame"
 msgstr ""
 
@@ -359,50 +435,50 @@ msgstr ""
 msgid "Evaluations were made with this form, so it stays"
 msgstr ""
 
-#: media/serializers.py:70
+#: media/serializers.py:66
 msgid "This session belongs to another archer"
 msgstr ""
 
-#: media/serializers.py:82
+#: media/serializers.py:78
 msgid "A video must be an MP4 file"
 msgstr ""
 
-#: media/serializers.py:84
+#: media/serializers.py:80
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:88
+#: media/serializers.py:84
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr ""
 
-#: media/serializers.py:91
+#: media/serializers.py:87
 msgid "A photo must be a JPEG file"
 msgstr ""
 
-#: media/serializers.py:93
+#: media/serializers.py:89
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:97
+#: media/serializers.py:93
 msgid "The preview must be a small JPEG file"
 msgstr ""
 
-#: media/serializers.py:100
+#: media/serializers.py:96
 msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
-#: media/views.py:32
+#: media/views.py:26
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:76 notes/views.py:82 training/views.py:121
+#: media/views.py:70 notes/views.py:83 training/views.py:153
 msgid "Give the id of the archer"
 msgstr ""
 
-#: media/views.py:83
+#: media/views.py:77
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A "
 "coach can record it on the archer's page."
@@ -418,51 +494,59 @@ msgstr ""
 msgid "A drawing can have %(n)s shapes at most"
 msgstr ""
 
-#: notes/serializers.py:60
+#: notes/serializers.py:95
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:73
-msgid "A drawing belongs to a frame of a clip"
+#: notes/serializers.py:108
+msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr ""
 
-#: notes/serializers.py:77
+#: notes/serializers.py:112
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:82
+#: notes/serializers.py:117
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:88
+#: notes/serializers.py:123
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:92
+#: notes/serializers.py:127
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:94
+#: notes/serializers.py:129
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:96
+#: notes/serializers.py:131
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:98
+#: notes/serializers.py:133
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:104
+#: notes/serializers.py:140
+msgid "A photo has no frames"
+msgstr ""
+
+#: notes/serializers.py:142
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:110
+#: notes/serializers.py:148
 msgid "This clip is from another session"
 msgstr ""
 
-#: privacy/serializers.py:14
+#: privacy/serializers.py:24
+msgid "Confirm with Google first"
+msgstr ""
+
+#: privacy/serializers.py:36
 #, python-format
 msgid "Type the words \"%(word)s\" to confirm"
 msgstr ""
@@ -474,111 +558,123 @@ msgid ""
 "first."
 msgstr ""
 
-#: training/serializers.py:34
+#: training/serializers.py:36
 msgid "Give both x and y, or neither"
 msgstr ""
 
-#: training/serializers.py:36
+#: training/serializers.py:38
 msgid "Position is out of range"
 msgstr ""
 
-#: training/serializers.py:50 training/views.py:325 training/views.py:385
+#: training/serializers.py:52 training/views.py:405 training/views.py:465
 msgid "Unknown target face"
 msgstr ""
 
-#: training/serializers.py:57
+#: training/serializers.py:59
 msgid "More shots than arrows per end"
 msgstr ""
 
-#: training/serializers.py:60
+#: training/serializers.py:62
 msgid "Duplicate shot id"
 msgstr ""
 
-#: training/serializers.py:69
+#: training/serializers.py:71
 #, python-format
 msgid "Shot %(n)s: this face has no spot %(spot)s"
 msgstr ""
 
-#: training/serializers.py:85
+#: training/serializers.py:87
 #, python-format
 msgid "Shot %(n)s: this face has no scores, place the arrow on it"
 msgstr ""
 
-#: training/serializers.py:90
+#: training/serializers.py:92
 #, python-format
 msgid "Shot %(n)s: %(value)s is not a score on this face"
 msgstr ""
 
-#: training/serializers.py:92
+#: training/serializers.py:94
 #, python-format
 msgid "Shot %(n)s: this face has no X ring"
 msgstr ""
 
-#: training/serializers.py:134
+#: training/serializers.py:151
+msgid "The type can't change once there are results"
+msgstr ""
+
+#: training/serializers.py:156
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/views.py:58
+#: training/views.py:65 training/views.py:147
 msgid "Only the archer can change a session"
 msgstr ""
 
-#: training/views.py:147
+#: training/views.py:71
+msgid "Choose the type of session first"
+msgstr ""
+
+#: training/views.py:134
+msgid "This session was deleted"
+msgstr ""
+
+#: training/views.py:215
 msgid "This end id belongs to another session"
 msgstr ""
 
-#: training/views.py:153
+#: training/views.py:221
 msgid "Another end of this session has this index"
 msgstr ""
 
-#: training/views.py:155
+#: training/views.py:223
 msgid "A shot id is already used in another end"
 msgstr ""
 
-#: training/views.py:180
+#: training/views.py:252
 msgid "This entry id belongs to another session"
 msgstr ""
 
-#: training/views.py:208 training/views.py:370
+#: training/views.py:283 training/views.py:450
 msgid "Only coaches can see the team overview"
 msgstr ""
 
-#: training/views.py:274
+#: training/views.py:354
 msgid "owner and weeks must be numbers"
 msgstr ""
 
-#: training/views.py:276
+#: training/views.py:356
 msgid "Between 1 and 52"
 msgstr ""
 
-#: training/views.py:280 training/views.py:322
+#: training/views.py:360 training/views.py:402
 msgid "Unknown time zone"
 msgstr ""
 
-#: training/views.py:318
+#: training/views.py:398
 msgid "owner, distance_m and setup must be numbers"
 msgstr ""
 
-#: training/views.py:332
+#: training/views.py:412
 msgid "Use a date like 2026-10-25"
 msgstr ""
 
-#: training/views.py:372
+#: training/views.py:452
 msgid "The ranking is switched off for this team"
 msgstr ""
 
-#: training/views.py:378
+#: training/views.py:458
 msgid "days and distance_m must be numbers"
 msgstr ""
 
-#: training/views.py:380
+#: training/views.py:460
 msgid "Between 1 and 365"
 msgstr ""
 
-#: training/views.py:383
+#: training/views.py:463
 msgid "Give face and distance_m together"
 msgstr ""
 
-#: training/views.py:414
+#: training/views.py:494
 msgid "owner must be a number"
 msgstr ""
 

@@ -1,4 +1,4 @@
-"""The drawing on a frame of a clip. The app draws it; the server only checks that it is what it says it is."""
+"""The drawing on a photo or a frame of a clip. The app draws it; the server only checks that it is what it says it is."""
 
 import re
 

@@ -10,7 +10,7 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useServer } from '@/composables/useServer'
 
-const { signIn } = useAuth()
+const { signIn, googleAvailable, signInWithGoogle } = useAuth()
 const { url } = useServer()
 const email = ref('')
 const password = ref('')
@@ -20,6 +20,12 @@ const busy = ref(false)
 async function submit() {
   busy.value = true
   error.value = await signIn(email.value, password.value)
+  busy.value = false
+}
+
+async function google() {
+  busy.value = true
+  error.value = (await signInWithGoogle()).error
   busy.value = false
 }
 </script>
@@ -32,6 +38,7 @@ async function submit() {
       <FormField v-model="password" :label="$t('auth.signIn.password')" type="password" autocomplete="current-password" @enter="submit" />
       <ErrorText :message="error" />
       <AppButton :busy="busy" @click="submit">{{ $t('auth.signIn.button') }}</AppButton>
+      <AppButton v-if="googleAvailable" secondary :busy="busy" @click="google">{{ $t('auth.google.signIn') }}</AppButton>
       <RouterLink to="/reset-password">{{ $t('auth.signIn.forgot') }}</RouterLink>
       <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
       <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings/server">{{ $t('auth.signIn.change') }}</RouterLink></div>

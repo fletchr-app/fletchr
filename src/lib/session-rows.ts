@@ -29,7 +29,7 @@ export function sessionRows(local: LogSession[], remote: Summary[], gone: Readon
     ...remote
       .filter((s) => !local.some((l) => l.id === s.id) && !gone.has(s.id))
       .map((s) => ({
-        id: s.id, to: `/sessions/${s.id}`, started_at: s.started_at, type: s.type, location: s.location ?? '',
+        id: s.id, to: `/sessions/${s.id}`, started_at: s.started_at, type: s.type ?? '', location: s.location ?? '',
         finished: !!s.ended_at, ends: s.ends, arrows: s.scored_arrows + s.volume_arrows, points: s.score_total,
       })),
   ].sort((a, b) => b.started_at.localeCompare(a.started_at));

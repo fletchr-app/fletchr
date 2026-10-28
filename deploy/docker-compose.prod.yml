@@ -1,5 +1,5 @@
 # Production on a server that already has nginx (or Apache) in front: only Django runs in Docker, on
-# 127.0.0.1:8000, and the web server passes requests to it and ends HTTPS. See docs/self-hosting.md.
+# 127.0.0.1:8000, and the web server passes requests to it and ends HTTPS. See SELFHOSTING.md.
 # Use:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 # deploy/update.sh sets FLETCHR_IMAGE to the image CI built for a release (ghcr.io/fletchr-app/fletchr-server:<tag>) and pulls it;
 # without it the image is built from this checkout.
@@ -17,6 +17,7 @@ services:
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?set DJANGO_ALLOWED_HOSTS in deploy/.env.prod}
       DJANGO_CORS_ORIGINS: ${DJANGO_CORS_ORIGINS:-}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
+      DJANGO_GOOGLE_CLIENT_IDS: ${DJANGO_GOOGLE_CLIENT_IDS:-}
       DJANGO_BEHIND_PROXY: "1"
       DJANGO_EMAIL_HOST: ${DJANGO_EMAIL_HOST:-}
       DJANGO_EMAIL_PORT: ${DJANGO_EMAIL_PORT:-587}

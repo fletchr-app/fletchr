@@ -14,11 +14,11 @@ import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
 import { useUnits } from '@/composables/useUnits'
 import { FACES } from '@/lib/faces'
-import { defaultChoice, type Environment, firstEndDefaults, gearFor, type SessionType, usesEnds } from '@/lib/log-model'
+import { defaultChoice, type Environment, firstEndDefaults, gearFor, type SessionType, sessionTypeKey, usesEnds } from '@/lib/log-model'
 
 const { t } = useI18n()
 const TYPES = computed<{ value: SessionType; label: string }[]>(() =>
-  (['scoring', 'competition', 'volume', 'technique'] as const).map((value) => ({ value, label: t(`sessionType.${value}`) })),
+  (['scoring', 'competition', 'volume', 'technique'] as const).map((value) => ({ value, label: t(sessionTypeKey(value)) })),
 )
 const ENVIRONMENTS = computed<{ value: Environment; label: string }[]>(() => [
   { value: 'indoor', label: t('newSession.indoor') },
@@ -30,6 +30,10 @@ const route = useRoute()
 const router = useRouter()
 // A coach logging for an archer without an account (?for=<id>&name=...): no equipment, it is the archer's.
 const archer = route.query.for ? { id: Number(route.query.for), name: String(route.query.name ?? t('newSession.theArcher')) } : undefined
+// A coach opening a session for the archer (?open=1): no type, no ends, no equipment; photos, videos and notes go into it.
+// For an archer with an account (managed=0) the results stay the archer's.
+const open = route.query.open === '1'
+const managed = route.query.managed === '1'
 const { startSession, sessions, equipment, refreshEquipment } = useLog()
 const { numbering, setNumbering } = useNumberArrows()
 const { distanceField, distanceUnit, parseDistance } = useUnits()
@@ -52,6 +56,10 @@ const arrows = computed({ get: () => typed.value.arrows ?? String(defaults.value
 const error = ref<string | null>(null)
 
 function start() {
+  if (open && archer) {
+    const id = startSession('', environment.value, location.value.trim(), undefined, archer, { keep: true, noResults: !managed })
+    return void router.replace(`/training/${id}`)
+  }
   const metres = parseDistance(distance.value)
   const ends = usesEnds(type.value)
   if (ends && metres === null) return (error.value = t('newSession.enterDistance'))
@@ -66,12 +74,12 @@ function start() {
 </script>
 
 <template>
-  <AppPage :title="archer ? $t('newSession.forTitle', { name: archer.name }) : $t('newSession.title')">
+  <AppPage :title="open && archer ? $t('newSession.openTitle', { name: archer.name }) : archer ? $t('newSession.forTitle', { name: archer.name }) : $t('newSession.title')">
     <div class="screen">
-      <ChipGroup v-model="type" :label="$t('newSession.type')" :options="TYPES" />
+      <ChipGroup v-if="!open" v-model="type" :label="$t('newSession.type')" :options="TYPES" />
       <ChipGroup v-model="environment" :label="$t('newSession.where')" :options="ENVIRONMENTS" />
       <FormField v-model="location" :label="$t('newSession.location')" capitalize="sentences" />
-      <template v-if="usesEnds(type)">
+      <template v-if="!open && usesEnds(type)">
         <div class="row g-3">
           <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance', { unit: distanceUnit() })" inputmode="decimal" /></div>
           <div class="col-6"><FormField v-model="arrows" :label="$t('newSession.arrowsPerEnd')" inputmode="numeric" /></div>
@@ -81,9 +89,9 @@ function start() {
         </IonSelect>
         <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       </template>
-      <GearPicker v-if="!archer" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
+      <GearPicker v-if="!archer && !open" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
       <ErrorText :message="error" />
-      <AppButton @click="start">{{ $t('newSession.start') }}</AppButton>
+      <AppButton @click="start">{{ open ? $t('newSession.openStart') : $t('newSession.start') }}</AppButton>
     </div>
   </AppPage>
 </template>

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import End, Shot, TrainingSession, VolumeEntry
+from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
 
-for model in (TrainingSession, End, Shot, VolumeEntry):
+for model in (TrainingSession, SessionTombstone, End, Shot, VolumeEntry):
     admin.site.register(model)

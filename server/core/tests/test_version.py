@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_app_and_server_have_the_same_version():
     app = json.loads((ROOT / "package.json").read_text())["version"]
     server = tomllib.loads((ROOT / "server" / "pyproject.toml").read_text())["project"]["version"]
-    assert server == app == settings.SPECTACULAR_SETTINGS["VERSION"], "change the version in package.json, pyproject.toml and the API settings together (docs/releasing.md)"
+    assert server == app == settings.SPECTACULAR_SETTINGS["VERSION"], "change the version in package.json, pyproject.toml and the API settings together (specs/steering/releasing.md)"
 
 
 def test_the_minimum_app_version_is_a_version_not_newer_than_the_server():

@@ -36,7 +36,7 @@ export function fromServer(s: ServerSession): ViewSession {
     updated_at: s.updated_at,
     started_at: s.started_at,
     ended_at: s.ended_at ?? null,
-    type: s.type,
+    type: s.type ?? '',
     environment: s.environment ?? '',
     location: s.location ?? '',
     ends: s.ends.map((e) => ({

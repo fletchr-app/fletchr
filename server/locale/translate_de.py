@@ -1,4 +1,4 @@
-"""Fills the German catalog (locale/de/LC_MESSAGES/django.po) from the table below, then compile with Babel (docs/i18n.md)."""
+"""Fills the German catalog (locale/de/LC_MESSAGES/django.po) from the table below, then compile with Babel (specs/steering/i18n.md)."""
 from babel.messages.pofile import read_po, write_po
 
 DE = {
@@ -54,6 +54,9 @@ DE = {
     "Shot %(n)s: this face has no X ring": "Schuss %(n)s: Diese Scheibe hat keinen X-Ring",
     "Arrows go with a bow: choose the bow too": "Pfeile gehören zu einem Bogen: Wähle auch den Bogen",
     "Only the archer can change a session": "Nur der Schütze kann ein Training ändern",
+    "The type can't change once there are results": "Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr geändert werden",
+    "Choose the type of session first": "Wähle zuerst die Art des Trainings",
+    "This session was deleted": "Dieses Training wurde gelöscht",
     "This end id belongs to another session": "Diese Passen-ID gehört zu einem anderen Training",
     "Another end of this session has this index": "Eine andere Passe dieses Trainings hat diesen Index",
     "A shot id is already used in another end": "Eine Schuss-ID wird schon in einer anderen Passe verwendet",
@@ -84,7 +87,8 @@ DE = {
     "Give the clip the frame is in": "Gib das Video an, zu dem das Bild gehört",
     "This is not a drawing": "Das ist keine Zeichnung",
     "A drawing can have %(n)s shapes at most": "Eine Zeichnung kann höchstens %(n)s Formen haben",
-    "A drawing belongs to a frame of a clip": "Eine Zeichnung gehört zu einem Bild eines Videos",
+    "A drawing belongs to a photo or a frame of a clip": "Eine Zeichnung gehört zu einem Foto oder einem Bild eines Videos",
+    "A photo has no frames": "Ein Foto hat keine Einzelbilder",
     "Shooting technique": "Schießtechnik",
     "Pre-tension": "Vorspannung",
     "Raising the bow": "Anheben",
@@ -134,9 +138,26 @@ DE = {
     "Say which frame the rating is about": "Gib an, zu welchem Bild die Bewertung gehört",
     "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
     "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page.": "Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen.",
+    "No picture sent": "Es wurde kein Bild gesendet",
+    "The picture must be a JPEG": "Das Bild muss ein JPEG sein",
+    "The picture is too large, it should be about 256 px on a side": "Das Bild ist zu groß, es sollte etwa 256 px an einer Seite haben",
+    "The picture is larger than 512 KB": "Das Bild ist größer als 512 KB",
+    "A picture of an archer under 18 needs the consent of the parents": "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern",
+    "Google sign-in failed. Please try again.": "Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch einmal.",
+    "This account cannot sign in.": "Mit diesem Konto kann man sich nicht anmelden.",
+    "There is no account for this Google sign-in yet. Register with your invite code.": "Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit deinem Einladungscode.",
+    "Google did not confirm your email address.": "Google hat deine E-Mail-Adresse nicht bestätigt.",
+    "This email address already has an account. Ask an admin to connect it with your Google sign-in.": "Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu verbinden.",
+    "This account signs in with Google and has no password.": "Dieses Konto meldet sich mit Google an und hat kein Passwort.",
+    "Confirm with Google first": "Bestätige zuerst mit Google",
+    "Source and target are the same account": "Quelle und Ziel sind dasselbe Konto",
+    "%(email)s is a profile without an account or an admin of the site": "%(email)s ist ein Profil ohne Konto oder ein Admin der Seite",
+    "%(email)s is deactivated": "%(email)s ist deaktiviert",
+    "%(email)s already has data (%(what)s). Only an account without data can receive one.": "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen.",
+    "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first.": "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon.",
 }
 
-PATH = "locale/de/LC_MESSAGES/django.po"
+PATH ="locale/de/LC_MESSAGES/django.po"
 with open(PATH, "rb") as f:
     catalog = read_po(f, locale="de")
 missing = [m.id for m in catalog if m.id and m.id not in DE]

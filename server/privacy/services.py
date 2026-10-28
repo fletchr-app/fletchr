@@ -2,7 +2,7 @@ import logging
 
 from django.db import transaction
 
-from core import claims
+from core import avatar, claims
 from core.models import Invite, Role, TeamMember
 from equipment.models import ArrowSet, Bow, Setup
 from evaluations.models import Evaluation
@@ -25,6 +25,10 @@ def _delete_media(user) -> dict:
     counts = {"media": media.count()}
     media.delete()  # the files go when the commit does
     return counts
+
+
+def _delete_avatar(user) -> dict:
+    return {"avatar": int(avatar.remove_avatar(user.profile))}  # the profile stays, the picture goes
 
 
 def _delete_equipment(user) -> dict:
@@ -57,7 +61,7 @@ def delete_my_data(user) -> dict:
     Kept: the account, the profile, the team memberships, and notes the user wrote about others.
     All or nothing.
     """
-    counts = {**_delete_training(user), **_delete_media(user), **_delete_equipment(user), **_delete_notes_about(user), **_delete_evaluations_about(user)}
+    counts = {**_delete_training(user), **_delete_media(user), **_delete_avatar(user), **_delete_equipment(user), **_delete_notes_about(user), **_delete_evaluations_about(user)}
     logger.info("User %s deleted their data: %s", user.pk, counts)
     return counts
 
@@ -101,6 +105,7 @@ def delete_account(user) -> dict:
         claims.delete_team(team)
     # An invite nobody used yet should not outlive the person who made it.
     Invite.objects.filter(created_by=user, used_at__isnull=True).delete()
+    counts["sign_in_methods"] = user.social_identities.count()  # they go with the account
     pk = user.pk
     user.delete()
     logger.info("User %s deleted their account: %s", pk, counts)

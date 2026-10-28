@@ -1,4 +1,4 @@
-// What to do with a chosen video before it is uploaded (docs/video-prototype.md). The rules live here, not in the
+// What to do with a chosen video before it is uploaded (specs/design/video-prototype.md). The rules live here, not in the
 // native plugin, so they can be tested; the plugin only reads the file and does what the plan says.
 
 /** What the plugin finds in the file. `width` and `height` are as the video is shown (rotation applied). */

@@ -19,7 +19,10 @@ from core.access import archers_visible_to, is_coach_in
 from core.claims import can_write_sessions_of
 from core.models import COACH_ROLES, Role, Team, TeamMember, User
 
-from .models import End, Shot, TrainingSession, VolumeEntry
+from media.access import can_add_for
+
+from .merge import has_results, merge_if_possible, opened_by_other, resolve_session_id
+from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
 from targets.catalogue import get_face
 
 from .arrow_stats import compute_arrow_stats
@@ -34,29 +37,38 @@ from .serializers import (
     EndSerializer,
     SessionSerializer,
     SessionSummarySerializer,
+    SessionTombstoneSerializer,
     SessionWriteSerializer,
     VolumeEntrySerializer,
 )
 
 
+# What a coach who opened a session may still change (the rest is the archer's).
+COACH_FIELDS = ("started_at", "ended_at", "environment", "location", "weather", "goals", "notes")
 LIVE_WINDOW = timedelta(hours=3)
 OVERVIEW_DAYS = 7
 
 
 def visible_sessions(user):
     return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related(
-        "owner__profile", "setup__bow_revision", "setup__arrow_set_revision"
+        "owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision"
     )
 
 
 def get_session(request, session_id, write=False):
-    """Sessions of archers you can't see are 404. Ones you can see but don't own are read-only."""
-    session = visible_sessions(request.user).filter(pk=session_id).first()
+    """Sessions of archers you can't see are 404. Ones you can see but don't own are read-only.
+    The id of a session that was merged into another gives that one."""
+    session = visible_sessions(request.user).filter(pk=resolve_session_id(session_id) or session_id).first()
     if session is None:
         raise NotFound()
     if write and not can_write_sessions_of(request.user, session.owner):
         raise PermissionDenied(gettext("Only the archer can change a session"))
     return session
+
+
+def require_type(session):
+    if not session.type:
+        raise ValidationError(gettext("Choose the type of session first"))
 
 
 def touch(session):
@@ -109,32 +121,87 @@ class SessionDetailView(APIView):
         responses={200: SessionSerializer, 201: SessionSerializer},
     )
     def put(self, request, session_id):
-        """Create the session with this id, or update it. Safe to repeat."""
+        """Create the session with this id, or update it. Safe to repeat.
+
+        An id that was merged into another session writes to that one; an id that was deleted gives 410.
+        The owner (and a coach of a profile without an account) writes everything. A coach who opened the
+        session for the archer changes its times and notes, not the type, ratings or equipment. After a
+        merge a coach's repeated request only fills what is still empty."""
+        tombstone = SessionTombstone.objects.filter(pk=session_id).first()
         existing = TrainingSession.objects.filter(pk=session_id).first()
+        if existing is None and tombstone is not None:
+            if tombstone.merged_into_id is None:
+                return Response({"detail": gettext("This session was deleted")}, status=status.HTTP_410_GONE)
+            existing = TrainingSession.objects.get(pk=tombstone.merged_into_id)
+        mode = "full"
         if existing is not None:
-            existing = get_session(request, session_id, write=True)
+            existing = visible_sessions(request.user).filter(pk=existing.pk).first()
+            if existing is None:
+                raise NotFound()
+            if not can_write_sessions_of(request.user, existing.owner):
+                if tombstone is not None:
+                    mode = "fill"
+                elif existing.opened_by_id == request.user.pk:
+                    mode = "metadata"
+                else:
+                    raise PermissionDenied(gettext("Only the archer can change a session"))
         owner = request.user
         if existing is None and "owner" in request.query_params:
             try:
                 owner = User.objects.filter(pk=int(request.query_params["owner"])).first()
             except ValueError:
                 raise ValidationError({"owner": gettext("Give the id of the archer")})
-            if owner is None or not can_write_sessions_of(request.user, owner):
+            if owner is None or not can_add_for(request.user, owner):
                 raise NotFound()
-        serializer = SessionWriteSerializer(existing, data=request.data, context={"request": request})
+        data = request.data
+        if mode != "full":
+            data = {k: v for k, v in request.data.items() if k in COACH_FIELDS}
+            if mode == "fill":
+                data = {k: v for k, v in data.items() if getattr(existing, k) in (None, "")}
+        serializer = SessionWriteSerializer(existing, data=data, partial=mode != "full", context={"request": request})
         serializer.is_valid(raise_exception=True)
-        session = serializer.save(**({} if existing else {"id": session_id, "owner": owner}))
+        changed = serializer.validated_data
+        times_changed = existing is None or any(k in changed and changed[k] != getattr(existing, k) for k in ("started_at", "ended_at"))
+        with transaction.atomic():
+            session = serializer.save(**({} if existing else {"id": session_id, "owner": owner, "opened_by": request.user}))
+            merged = merge_if_possible(session) if times_changed else session
         session = (
-            TrainingSession.objects.select_related("owner__profile", "setup__bow_revision", "setup__arrow_set_revision")
+            TrainingSession.objects.select_related("owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision")
             .prefetch_related("ends__shots", "volume_entries")
-            .get(pk=session.pk)
+            .get(pk=merged.pk)
         )
-        return Response(SessionSerializer(session).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
+        created = existing is None and merged.pk == session_id
+        return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
     @extend_schema(responses={204: None})
     def delete(self, request, session_id):
-        get_session(request, session_id, write=True).delete()
+        """Delete the session. The id of a merged or deleted session answers 204 and deletes nothing."""
+        if not TrainingSession.objects.filter(pk=session_id).exists() and SessionTombstone.objects.filter(pk=session_id).exists():
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        session = get_session(request, session_id, write=True)
+        SessionTombstone.objects.update_or_create(pk=session.pk, defaults={"owner_id": session.owner_id, "merged_into": None, "at": timezone.now()})
+        session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SessionTombstoneFilter(django_filters.FilterSet):
+    updated_after = django_filters.IsoDateTimeFilter(field_name="at", lookup_expr="gt")
+
+    class Meta:
+        model = SessionTombstone
+        fields = ["owner"]
+
+
+class SessionTombstoneListView(generics.ListAPIView):
+    """Ids of sessions that are gone: `merged_into` is the session that took its place, null if it was deleted."""
+
+    serializer_class = SessionTombstoneSerializer
+    filterset_class = SessionTombstoneFilter
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return SessionTombstone.objects.none()
+        return SessionTombstone.objects.filter(owner__in=archers_visible_to(self.request.user)).order_by("at")
 
 
 class EndView(APIView):
@@ -142,6 +209,7 @@ class EndView(APIView):
     def put(self, request, session_id, end_id):
         """Create or replace one end with all its shots. The server fills in the scores. Safe to repeat."""
         session = get_session(request, session_id, write=True)
+        require_type(session)
         existing = End.objects.filter(pk=end_id).first()
         if existing is not None and existing.session_id != session.pk:
             raise ValidationError(gettext("This end id belongs to another session"))
@@ -153,11 +221,14 @@ class EndView(APIView):
             raise ValidationError({"index": gettext("Another end of this session has this index")})
         if Shot.objects.filter(pk__in=[s["id"] for s in shots]).exclude(end_id=end_id).exists():
             raise ValidationError({"shots": gettext("A shot id is already used in another end")})
+        first = not has_results(session)
         with transaction.atomic():
             end, created = End.objects.update_or_create(pk=end_id, defaults={"session": session, **data})
             end.shots.all().delete()
             Shot.objects.bulk_create([Shot(end=end, **s) for s in shots])
             touch(session)
+            if first:
+                merge_if_possible(session)
         end = End.objects.prefetch_related("shots").get(pk=end.pk)
         return Response(EndSerializer(end).data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
@@ -175,14 +246,18 @@ class VolumeEntryView(APIView):
     @extend_schema(request=VolumeEntrySerializer, responses={200: VolumeEntrySerializer, 201: VolumeEntrySerializer})
     def put(self, request, session_id, entry_id):
         session = get_session(request, session_id, write=True)
+        require_type(session)
         existing = VolumeEntry.objects.filter(pk=entry_id).first()
         if existing is not None and existing.session_id != session.pk:
             raise ValidationError(gettext("This entry id belongs to another session"))
         serializer = VolumeEntrySerializer(existing, data=request.data)
         serializer.is_valid(raise_exception=True)
+        first = not has_results(session)
         with transaction.atomic():
             entry = serializer.save(**({} if existing else {"id": entry_id, "session": session}))
             touch(session)
+            if first:
+                merge_if_possible(session)
         return Response(VolumeEntrySerializer(entry).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
 
     @extend_schema(responses={204: None})
@@ -232,6 +307,9 @@ class TeamOverviewView(APIView):
             )
         )
         sessions = TrainingSession.objects.in_bulk([m.last_session_id for m in members if m.last_session_id])
+        with_results = set(End.objects.filter(session__in=sessions).values_list("session_id", flat=True)) | set(
+            VolumeEntry.objects.filter(session__in=sessions).values_list("session_id", flat=True)
+        )
         rows = []
         for m in members:
             s = sessions.get(m.last_session_id)
@@ -245,7 +323,9 @@ class TeamOverviewView(APIView):
                     "last_session": s
                     and {
                         "id": s.pk, "started_at": s.started_at, "ended_at": s.ended_at, "updated_at": s.updated_at,
-                        "type": s.type, "live": s.ended_at is None and now - s.updated_at < LIVE_WINDOW,
+                        "type": s.type,
+                        # A session a coach opened is not live until the archer shoots in it.
+                        "live": s.ended_at is None and now - s.updated_at < LIVE_WINDOW and (s.pk in with_results or not opened_by_other(s)),
                     },
                 }
             )

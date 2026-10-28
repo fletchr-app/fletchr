@@ -40,7 +40,7 @@ def claim_profile(code, user):
     """
     from media.models import Media
     from notes.models import Note
-    from training.models import TrainingSession
+    from training.models import SessionTombstone, TrainingSession
 
     claim = ClaimCode.objects.select_for_update().select_related("profile").filter(code=normalize_code(code)).first()
     if claim is None or not claim.is_usable:
@@ -60,9 +60,16 @@ def claim_profile(code, user):
             m.user = user
             m.save(update_fields=["user"])
     TrainingSession.objects.filter(owner=profile).update(owner=user)
+    SessionTombstone.objects.filter(owner=profile).update(owner=user)
     Media.objects.filter(owner=profile).update(owner=user)  # the files keep their names, which hold the old id
     Note.objects.filter(archer=profile).update(archer=user)
     team = claim.team
+    if profile.profile.avatar and not user.profile.avatar:
+        # The coach's picture becomes the archer's (the file keeps its name); without this the delete below would remove it.
+        user.profile.avatar, user.profile.avatar_updated_at = profile.profile.avatar.name, profile.profile.avatar_updated_at
+        user.profile.save(update_fields=["avatar", "avatar_updated_at"])
+        profile.profile.avatar = ""
+        profile.profile.save(update_fields=["avatar"])
     profile.delete()  # its claim codes go with it
     return team
 
@@ -72,3 +79,18 @@ def delete_team(team):
     profiles = User.objects.filter(is_managed=True, memberships__team=team)
     profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()
     team.delete()
+
+
+def redeem_code(code, user):
+    """What registration does with the code a person typed: a claim code takes over a profile, an invite adds to a team.
+    Raises ValidationError({"invite_code": ...}); the caller rolls back the new user."""
+    from rest_framework.exceptions import ValidationError
+
+    from . import access
+
+    try:
+        if find_claim(code) is not None:
+            return claim_profile(code, user)
+        return access.redeem_invite(code, user)
+    except (access.InviteError, ClaimError) as e:
+        raise ValidationError({"invite_code": str(e)})

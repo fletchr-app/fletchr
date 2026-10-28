@@ -1,11 +1,15 @@
 // Local copy of the sessions an archer logs on this device, plus the queue of uploads still to do.
 // Pure functions only (no React, no storage), so they can be tested with `npm test`.
 
-export type SessionType = 'scoring' | 'volume' | 'technique' | 'competition';
+/** Empty for a session a coach opened: the archer chooses when adding the first results. */
+export type SessionType = '' | 'scoring' | 'volume' | 'technique' | 'competition';
 export type Environment = '' | 'indoor' | 'outdoor';
 
 /** Scoring and competition sessions are logged end by end; the others just count arrows. */
 export const usesEnds = (type: SessionType) => type === 'scoring' || type === 'competition';
+
+/** The message key of a session type, also for an empty one, so no screen shows a raw key. */
+export const sessionTypeKey = (type: string) => `sessionType.${type || 'unset'}`;
 
 /** A plotted shot has x, y and spot (the server works out its score from them); a typed one has only a score. */
 export type LogShot = {
@@ -55,6 +59,13 @@ export type LogSession = {
   /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
   owner?: number;
   owner_name?: string;
+  /** Who opened it, when that is not the archer (a coach). */
+  opened_by?: number;
+  opened_by_name?: string;
+  /** Opened without results (by a coach, or pulled from the server): never removed just because it is still empty. */
+  keep?: boolean;
+  /** This device only attaches media and notes: the results are the archer's, who has an account. */
+  noResults?: boolean;
 };
 
 /**
@@ -72,13 +83,19 @@ export type Op = {
   error?: string;
 };
 
-export type LogState = { sessions: LogSession[]; outbox: Op[]; nextRev: number; equipment: Equipment };
+export type LogState = { sessions: LogSession[]; outbox: Op[]; nextRev: number; equipment: Equipment; lastPull?: string };
 export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equipment: { bows: [], arrowSets: [] } };
 
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type'>> }
+  /** Sessions the server has and this device does not (nothing to upload), and where the pull got to. */
+  | { type: 'pulled'; sessions: LogSession[]; lastPull?: string }
+  /** The server merged `from` into `to`: this device follows. */
+  | { type: 'replaceSessionId'; from: string; to: string }
+  /** The server deleted the session. */
+  | { type: 'sessionGone'; id: string }
   | { type: 'setEquipment'; equipment: Equipment }
   | { type: 'reset' }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }
@@ -107,6 +124,49 @@ const mapSession = (state: LogState, id: string, fn: (s: LogSession) => LogSessi
   sessions: state.sessions.map((s) => (s.id === id ? fn(s) : s)),
 });
 
+const hasResults = (s: LogSession) => s.ends.length > 0 || s.volume.length > 0;
+
+/** One op per key: when two collide, the newer one stays where the first was. */
+function dedupe(outbox: Op[]): Op[] {
+  const newest = new Map<string, Op>();
+  for (const o of outbox) if (!newest.has(o.key) || newest.get(o.key)!.rev < o.rev) newest.set(o.key, o);
+  return [...new Map(outbox.map((o) => [o.key, newest.get(o.key)!])).values()];
+}
+
+function replaceSessionId(state: LogState, from: string, to: string): LogState {
+  if (from === to) return state;
+  const src = state.sessions.find((s) => s.id === from);
+  const dst = state.sessions.find((s) => s.id === to);
+  // What was queued for the old id goes to the new one. A delete of the old id must not reach the winner.
+  const moved = state.outbox
+    .filter((o) => !(o.sessionId === from && o.kind === 'session' && o.delete))
+    .map((o) => (o.sessionId === from ? { ...o, sessionId: to, key: opKey(o.kind, to, o.itemId) } : o));
+  if (!src) return { ...state, outbox: dedupe(moved) };
+  if (!dst && src.noResults) {
+    // A coach's copy of a session that now belongs to the archer's: the server view takes over.
+    return { ...state, sessions: state.sessions.filter((s) => s.id !== from), outbox: dedupe(moved.filter((o) => o.sessionId !== to)) };
+  }
+  if (!dst) return { ...state, sessions: state.sessions.map((s) => (s.id === from ? { ...s, id: to } : s)), outbox: dedupe(moved) };
+  // Both are here: the results of the old one go into the new one, after its own ends.
+  const next = (dst.ends.length ? Math.max(...dst.ends.map((e) => e.index)) + 1 : 0);
+  const renumbered = [...src.ends].sort((a, b) => a.index - b.index).map((e, i) => ({ ...e, index: next + i }));
+  const merged: LogSession = {
+    ...dst,
+    ends: [...dst.ends, ...renumbered],
+    volume: [...dst.volume, ...src.volume],
+    ended_at: dst.ended_at ?? src.ended_at,
+    location: dst.location || src.location,
+    environment: dst.environment || src.environment,
+    type: dst.type || src.type,
+    gear: dst.gear ?? src.gear,
+    details: dst.details ?? src.details,
+  };
+  const sessions = state.sessions.filter((s) => s.id !== from).map((s) => (s.id === to ? merged : s));
+  let result: LogState = { ...state, sessions, outbox: dedupe(moved) };
+  for (const e of renumbered) result = queue(result, 'end', to, e.id); // the new numbering goes up
+  return queue(result, 'session', to);
+}
+
 export function reduce(state: LogState, action: LogAction): LogState {
   switch (action.type) {
     case 'load':
@@ -119,8 +179,25 @@ export function reduce(state: LogState, action: LogAction): LogState {
       return { ...state, equipment: action.equipment };
     case 'startSession':
       return queue({ ...state, sessions: [action.session, ...state.sessions] }, 'session', action.session.id);
-    case 'updateSession':
-      return queue(mapSession(state, action.id, (s) => ({ ...s, ...action.patch })), 'session', action.id);
+    case 'updateSession': {
+      const { type, ...patch } = action.patch;
+      // The type decides how results are entered, so it can only be set while there are none.
+      const settable = type !== undefined && !state.sessions.some((s) => s.id === action.id && (s.ends.length > 0 || s.volume.length > 0));
+      return queue(mapSession(state, action.id, (s) => ({ ...s, ...patch, ...(settable ? { type } : {}) })), 'session', action.id);
+    }
+    case 'pulled': {
+      const known = new Set([...state.sessions.map((s) => s.id), ...state.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId)]);
+      const added = action.sessions.filter((s) => !known.has(s.id));
+      return { ...state, sessions: [...state.sessions, ...added], lastPull: action.lastPull ?? state.lastPull };
+    }
+    case 'sessionGone':
+      return {
+        ...state,
+        sessions: state.sessions.filter((s) => s.id !== action.id),
+        outbox: state.outbox.filter((o) => o.sessionId !== action.id),
+      };
+    case 'replaceSessionId':
+      return replaceSessionId(state, action.from, action.to);
     case 'saveEnd': {
       const { sessionId, end } = action;
       const next = mapSession(state, sessionId, (s) => ({

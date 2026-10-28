@@ -1,6 +1,17 @@
 # Changelog
 
-What changed in each release. The version number and how a release is made: `docs/releasing.md`.
+What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
+
+## 0.10.0 (2026-10-28)
+
+- **Sign in with Google (#78), Android, official server only:** a "Sign in with Google" button on the sign-in screen and "Register with Google" on the register screen (an invite or claim code is still needed to register). Google and email sign-in are separate accounts, nothing is matched by email or linked (ADR 0005). A Google account has no password: no password or email change in Settings, and export and deletion ask for a Google confirmation instead of the password. An admin can attach a Google identity to an account in the User admin. The button shows only with `VITE_GOOGLE_WEB_CLIENT_ID` set and the default server; the server needs `DJANGO_GOOGLE_CLIENT_IDS` (unset: endpoint answers 404). Needs the Google Cloud setup in `specs/design/accounts.md`.
+- **Account transfer (admin):** `transfer_account <from> <to> --dry-run` and an action in the User admin move the data of one account to a new one (sessions, equipment, media, notes, evaluations, memberships, profile with picture). A test fails when a new model pointing at a user is not handled.
+- Server: new endpoint `POST /api/auth/google/`; `has_password` and `sign_in_providers` on `/api/me/`; `sign_in` in the data export; migration `core/0008_socialidentity`; new dependencies `google-auth` and `requests`; new Capacitor plugin `@capgo/capacitor-social-login` (rebuild the APK). Texts about Google sign-in in the privacy pages need the legal review (#63).
+- **Coach opens a session for an archer (#82):** on the archer's page a coach can open a session without results to attach photos, videos and notes. The archer finds it in the training list (shown as "Session") and chooses the type when adding results. If the archer starts their own session for the same training, the server merges the two (the archer's wins); media and notes move over and the phone follows. The session type may now be empty on the server, `GET /api/sessions/gone/` lists merged and deleted ids, and a `PUT` to a deleted session answers 410. One migration (`training/0002`). Old apps show a raw key for the empty type until updated.
+- **Notes on photos:** a coach can write a note on a photo and draw on it (lines, angles, circles), as on a video frame. The photo opens in the player; the swipe view and the notes lists show the drawing. On the session and archer pages the frame link and the drawing buttons of a note now work (they did nothing before).
+- **Deleting a photo or clip deletes its notes and drawings** (before, the notes of a clip stayed). Migration `notes.0005`.
+- **Profile picture (#79):** optional, set on the profile screen (take a photo or choose one) and shown in the members list. Seen by you, the coaches and admins of your teams, and the archers of those teams for their coaches and admins. A coach can set the picture of a profile without an account. For an archer under 18 it waits for the parents' consent, like video. It is part of the data download and is deleted with "Delete my data" and the account.
+- Server: new endpoints `/api/me/avatar/`, `/api/users/<id>/avatar/` and `/api/teams/<id>/archers/<id>/avatar/`; `avatar_url` on members, the archer and the profile; migration `core/0007_profile_avatar`; new dependency Pillow.
 
 ## 0.9.2, 2026-10-26
 
@@ -55,7 +66,7 @@ Evaluations, notes on frames, and deploying from CI. This also covers 0.4.0 and 
 - **Gallery:** all photos and videos by day, with a full-screen swipeable photo viewer.
 - **Versions:** `/api/health/` returns `min_app_version`; the app warns when it is too old or the server is behind.
 - **Backups:** `deploy/backup.sh` with an optional restic copy off the server.
-- **Deploy:** pushing a release tag can update the server (`deploy/update.sh`, backup first, health check, rollback); `docs/self-hosting.md` replaces the old deployment guide.
+- **Deploy:** pushing a release tag can update the server (`deploy/update.sh`, backup first, health check, rollback); `SELFHOSTING.md` replaces the old deployment guide.
 
 Update the server with `deploy/update.sh v0.6.0`, or `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **new migrations** (`media`, `core` 0005, `notes` 0003 and 0004, `evaluations`). No new required settings.
 
@@ -69,7 +80,7 @@ Photos and videos.
 - **Server:** the `media` app with `/api/media/` (files served only through permission checks, signed links for the player, Range requests), limits of 60 s and 50 MB per video, 5 MB per photo and 2 GB per archer.
 - **Not yet:** the gallery of all media (#40), the frame-by-frame player (#41), the export and deletion of media under "Your data" (#47): until then "Delete my data" leaves photos and videos on the server (deleting the account removes them). Videos were tested with synthetic clips and one phone; battery, heat and other phones are untested.
 
-Update the server with `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **one new migration** (`media`), new optional setting `DJANGO_MEDIA_QUOTA_MB` (2048). The web server must allow request bodies of about 60 MB (plain nginx: `deploy/nginx/02-fletchr-https.conf` has it; with a panel such as Plesk, check the limit of the site: `docs/self-hosting.md`). The privacy pages and the website are unchanged.
+Update the server with `git pull` on `main` and `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`: **one new migration** (`media`), new optional setting `DJANGO_MEDIA_QUOTA_MB` (2048). The web server must allow request bodies of about 60 MB (plain nginx: `deploy/nginx/02-fletchr-https.conf` has it; with a panel such as Plesk, check the limit of the site: `SELFHOSTING.md`). The privacy pages and the website are unchanged.
 
 ## 0.2.0, 2026-10-23
 

@@ -16,7 +16,7 @@ Point `app` (and the bare domain, for the website) to the server's IP with an A 
 ```bash
 sudo apt install git                          # Docker is needed too
 git clone https://github.com/fletchr-app/fletchr.git ~/fletchr && cd ~/fletchr
-git switch main                               # the checkout on a server stays on main: releases only (docs/releasing.md)
+git switch main                               # the checkout on a server stays on main: releases only (specs/steering/releasing.md)
 ```
 
 ## 2. The web server in front
@@ -47,6 +47,8 @@ curl -s https://app.example.org/api/health/        # {"status":"ok","version":".
 ```
 
 The database and uploads are in `deploy/data/django/` (photos and videos in `media/`). Migrations run on every start. The limits are in `server/config/settings.py` (`MEDIA_MAX_*`, and the quota per archer, `DJANGO_MEDIA_QUOTA_MB`, 2048 by default). The links to media files carry a token in the address, which gunicorn's access log shows; the token works for one user and one clip for an hour.
+
+Google sign-in is not available for self-hosted servers: the Google project it needs is tied to the app's package name and signing key, so only the operator of the app in the Play Store can run it. Leave `DJANGO_GOOGLE_CLIENT_IDS` unset; the app then shows no Google button for your server. Email and password work as always.
 
 First account (signup is invite-only):
 
@@ -103,7 +105,7 @@ It makes a database backup first (`backup.sh`), moves the checkout to the tag (t
 
 ### From CI on a release tag
 
-Pushing `vX.Y.Z` (docs/releasing.md) starts `.github/workflows/deploy.yml`: the tests first, then the server image is built and pushed to GHCR, then one SSH command with the tag. The key can do nothing else. The first time a tag builds the image, set the package `fletchr-server` to public (GitHub, your organisation, Packages, the package, Package settings, Change visibility): GitHub makes new packages private, and the server pulls without a login. Once:
+Pushing `vX.Y.Z` (specs/steering/releasing.md) starts `.github/workflows/deploy.yml`: the tests first, then the server image is built and pushed to GHCR, then one SSH command with the tag. The key can do nothing else. The first time a tag builds the image, set the package `fletchr-server` to public (GitHub, your organisation, Packages, the package, Package settings, Change visibility): GitHub makes new packages private, and the server pulls without a login. Once:
 
 1. On your computer: `ssh-keygen -t ed25519 -N "" -C fletchr-ci -f fletchr-deploy`.
 2. On the server, in `~/.ssh/authorized_keys` of the user that owns `~/fletchr`, one line (`restrict` switches off the terminal and all forwarding):

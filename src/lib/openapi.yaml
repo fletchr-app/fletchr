@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.9.2
+  version: 0.10.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -243,6 +243,41 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArrowSetRevision'
+          description: ''
+  /api/auth/google/:
+    post:
+      operationId: auth_google_create
+      description: Sign in with a Google ID token. With an invite or claim code it
+        registers a new account instead (never without one).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
           description: ''
   /api/bows/:
     get:
@@ -790,6 +825,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/me/avatar/:
+    put:
+      operationId: me_avatar_update
+      description: PUT a new picture or DELETE it, for the profile in `self.profile()`.
+      tags:
+      - me
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvatarUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarResult'
+          description: ''
+    delete:
+      operationId: me_avatar_destroy
+      description: PUT a new picture or DELETE it, for the profile in `self.profile()`.
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/me/delete-account/:
     post:
       operationId: me_delete_account_create
@@ -898,7 +964,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ExportRequestRequest'
-        required: true
       security:
       - jwtAuth: []
       responses:
@@ -927,7 +992,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ExportRequestRequest'
-        required: true
       security:
       - jwtAuth: []
       responses:
@@ -1562,7 +1626,13 @@ paths:
           description: ''
     put:
       operationId: sessions_update
-      description: Create the session with this id, or update it. Safe to repeat.
+      description: |-
+        Create the session with this id, or update it. Safe to repeat.
+
+        An id that was merged into another session writes to that one; an id that was deleted gives 410.
+        The owner (and a coach of a profile without an account) writes everything. A coach who opened the
+        session for the archer changes its times and notes, not the type, ratings or equipment. After a
+        merge a coach's repeated request only fills what is still empty.
       parameters:
       - in: query
         name: owner
@@ -1607,6 +1677,8 @@ paths:
           description: ''
     delete:
       operationId: sessions_destroy
+      description: Delete the session. The id of a merged or deleted session answers
+        204 and deletes nothing.
       parameters:
       - in: path
         name: session_id
@@ -1757,6 +1829,34 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sessions/gone/:
+    get:
+      operationId: sessions_gone_list
+      description: 'Ids of sessions that are gone: `merged_into` is the session that
+        took its place, null if it was deleted.'
+      parameters:
+      - in: query
+        name: owner
+        schema:
+          type: integer
+      - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionTombstone'
+          description: ''
   /api/setups/:
     get:
       operationId: setups_list
@@ -2132,6 +2232,61 @@ paths:
       operationId: teams_archers_destroy
       description: Remove the profile with its sessions and the notes about it, for
         good.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/teams/{team_id}/archers/{user_id}/avatar/:
+    put:
+      operationId: teams_archers_avatar_update
+      description: The picture of a profile without an account, set by the coaches
+        of its team.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvatarUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarResult'
+          description: ''
+    delete:
+      operationId: teams_archers_avatar_destroy
+      description: The picture of a profile without an account, set by the coaches
+        of its team.
       parameters:
       - in: path
         name: team_id
@@ -2572,6 +2727,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+  /api/users/{user_id}/avatar/:
+    get:
+      operationId: users_avatar_retrieve
+      description: |-
+        The picture itself. The <img> element cannot send the sign-in header, so the link carries a token (one viewer,
+        one person, an hour); the sign-in header works too. Every refusal is the same 404.
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From `avatar_url`; not needed with the sign-in header
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
 components:
   schemas:
     AccountBlocked:
@@ -2629,8 +2814,17 @@ components:
           type: string
           nullable: true
           description: Who recorded it
+        avatar_allowed:
+          type: boolean
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        avatar_url:
+          type: string
+          description: Empty without a picture; opens for an hour
       required:
       - age
+      - avatar_allowed
+      - avatar_url
       - date_of_birth
       - dominant_eye
       - dominant_hand
@@ -2977,6 +3171,22 @@ components:
       - face_name
       - radius_cm
       - sets
+    AvatarResult:
+      type: object
+      properties:
+        avatar_url:
+          type: string
+      required:
+      - avatar_url
+    AvatarUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: A JPEG of about 256 px, at most 512 KB
+      required:
+      - file
     BlankEnum:
       enum:
       - ''
@@ -3359,7 +3569,11 @@ components:
         password:
           type: string
           writeOnly: true
-          minLength: 1
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
         confirm:
           type: string
           writeOnly: true
@@ -3367,12 +3581,11 @@ components:
           description: The confirmation word shown in the app
       required:
       - confirm
-      - password
     DeleteAccountResponse:
       type: object
       properties:
         deleted:
-          $ref: '#/components/schemas/DeletedCounts'
+          $ref: '#/components/schemas/DeletedAccountCounts'
         teams_left:
           type: integer
           description: Teams I was a member of; they go on without me
@@ -3391,7 +3604,11 @@ components:
         password:
           type: string
           writeOnly: true
-          minLength: 1
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
         confirm:
           type: string
           writeOnly: true
@@ -3399,7 +3616,6 @@ components:
           description: The confirmation word shown in the app
       required:
       - confirm
-      - password
     DeleteDataResponse:
       type: object
       properties:
@@ -3407,6 +3623,41 @@ components:
           $ref: '#/components/schemas/DeletedCounts'
       required:
       - deleted
+    DeletedAccountCounts:
+      type: object
+      properties:
+        sessions:
+          type: integer
+        shots:
+          type: integer
+        media:
+          type: integer
+          description: Photos and videos
+        avatar:
+          type: integer
+          description: 1 if a profile picture was removed
+        bows:
+          type: integer
+        arrow_sets:
+          type: integer
+        notes_about_me:
+          type: integer
+        evaluations:
+          type: integer
+          description: Evaluations about me, by coaches and by me
+        sign_in_methods:
+          type: integer
+          description: Google sign-ins removed with the account
+      required:
+      - arrow_sets
+      - avatar
+      - bows
+      - evaluations
+      - media
+      - notes_about_me
+      - sessions
+      - shots
+      - sign_in_methods
     DeletedCounts:
       type: object
       properties:
@@ -3417,6 +3668,9 @@ components:
         media:
           type: integer
           description: Photos and videos
+        avatar:
+          type: integer
+          description: 1 if a profile picture was removed
         bows:
           type: integer
         arrow_sets:
@@ -3428,6 +3682,7 @@ components:
           description: Evaluations about me, by coaches and by me
       required:
       - arrow_sets
+      - avatar
       - bows
       - evaluations
       - media
@@ -3671,13 +3926,17 @@ components:
         * `coach_only` - Coach Only
     ExportRequestRequest:
       type: object
+      description: 'The proof that it is me at the phone: my password, or for an account
+        made with Google (no password) a fresh Google token of that account.'
       properties:
         password:
           type: string
           writeOnly: true
-          minLength: 1
-      required:
-      - password
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
     Face:
       type: object
       properties:
@@ -3721,6 +3980,19 @@ components:
         * `wa` - wa
         * `field` - field
         * `blank` - blank
+    GoogleSignInRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: From the Google sign-in on the phone
+        invite_code:
+          type: string
+          description: 'Only to register: an invite or claim code'
+      required:
+      - id_token
     HandEnum:
       enum:
       - right
@@ -3821,10 +4093,23 @@ components:
           readOnly: true
         profile:
           $ref: '#/components/schemas/Profile'
+        has_password:
+          type: boolean
+          readOnly: true
+          description: 'False for an account made with Google: no password, no email
+            change'
+        sign_in_providers:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: Providers (google) that can sign in to this account
       required:
       - email
+      - has_password
       - id
       - profile
+      - sign_in_providers
     Media:
       type: object
       properties:
@@ -4011,7 +4296,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        avatar_url:
+          type: string
+          description: Empty if there is no picture or the viewer may not see it;
+            opens for an hour
+          readOnly: true
       required:
+      - avatar_url
       - email
       - joined_at
       - managed
@@ -4056,7 +4347,14 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
+        picture:
+          allOf:
+          - $ref: '#/components/schemas/NotePicture'
+          nullable: true
+          readOnly: true
+          description: The photo or clip of the note; empty if it is gone or you may
+            not see it
         frame:
           type: integer
           minimum: 0
@@ -4069,7 +4367,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string
@@ -4099,7 +4397,29 @@ components:
       - can_edit
       - created_at
       - id
+      - picture
       - updated_at
+    NotePicture:
+      type: object
+      properties:
+        kind:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        thumbnail_url:
+          type: string
+          description: Opens for an hour
+        file_url:
+          type: string
+          description: Opens for an hour
+      required:
+      - file_url
+      - height
+      - kind
+      - thumbnail_url
+      - width
     NoteRequest:
       type: object
       properties:
@@ -4120,7 +4440,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
         frame:
           type: integer
           minimum: 0
@@ -4133,7 +4453,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string
@@ -4389,7 +4709,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: A note on a frame of this clip; needs `frame`
+          description: A note on this photo, or on a frame of this clip (needs `frame`)
         frame:
           type: integer
           minimum: 0
@@ -4402,7 +4722,7 @@ components:
           description: Where that frame is in the clip
         drawing:
           nullable: true
-          description: Lines, angles and circles on the frame; see notes/drawing.py
+          description: Lines, angles and circles on the photo or frame; see notes/drawing.py
             for the format
         body:
           type: string
@@ -4488,7 +4808,19 @@ components:
           readOnly: true
           description: False for an archer under 18 whose parents' consent is not
             on record
+        avatar_allowed:
+          type: boolean
+          readOnly: true
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        avatar_url:
+          type: string
+          readOnly: true
+          description: Empty without a picture; opens for an hour, fetch again for
+            a new link
       required:
+      - avatar_allowed
+      - avatar_url
       - video_allowed
     ProfileRequest:
       type: object
@@ -4789,6 +5121,13 @@ components:
         owner_name:
           type: string
           readOnly: true
+        opened_by:
+          type: integer
+          nullable: true
+        opened_by_name:
+          type: string
+          nullable: true
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -4797,7 +5136,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -4852,11 +5193,11 @@ components:
       - created_at
       - ends
       - id
+      - opened_by_name
       - owner
       - owner_name
       - setup_info
       - started_at
-      - type
       - updated_at
       - volume_entries
     SessionPoint:
@@ -4950,6 +5291,13 @@ components:
         owner_name:
           type: string
           readOnly: true
+        opened_by:
+          type: integer
+          nullable: true
+        opened_by_name:
+          type: string
+          nullable: true
+          readOnly: true
         started_at:
           type: string
           format: date-time
@@ -4958,7 +5306,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -4988,14 +5338,33 @@ components:
       required:
       - ends
       - id
+      - opened_by_name
       - owner
       - owner_name
       - score_total
       - scored_arrows
       - started_at
-      - type
       - updated_at
       - volume_arrows
+    SessionTombstone:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        owner:
+          type: integer
+        merged_into:
+          type: string
+          format: uuid
+          nullable: true
+        at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - owner
     SessionTypeEnum:
       enum:
       - scoring
@@ -5023,7 +5392,9 @@ components:
           format: date-time
           nullable: true
         type:
-          $ref: '#/components/schemas/SessionTypeEnum'
+          oneOf:
+          - $ref: '#/components/schemas/SessionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         environment:
           oneOf:
           - $ref: '#/components/schemas/EnvironmentEnum'
@@ -5056,7 +5427,6 @@ components:
           type: string
       required:
       - started_at
-      - type
     Setup:
       type: object
       properties:

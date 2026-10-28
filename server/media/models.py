@@ -22,7 +22,7 @@ def thumbnail_path(media, filename):
 class Media(models.Model):
     """A photo or a video of an archer, optionally taken in one training session.
 
-    The phone converts the file before the upload (docs/video-prototype.md), so the server stores it as it
+    The phone converts the file before the upload (specs/design/video-prototype.md), so the server stores it as it
     comes and checks the limits. Who may see it follows the sessions: the archer and the coaches of their
     teams. The app creates the id, so an upload that is repeated after a dropped connection does not make a second row.
     The clip stays if its session is deleted.

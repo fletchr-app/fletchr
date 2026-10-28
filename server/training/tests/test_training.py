@@ -49,9 +49,9 @@ def test_put_creates_then_updates_the_same_session(client_for, club):
     assert TrainingSession.objects.get().location == "Outdoors"
 
 
-def test_session_needs_start_time_and_type(client_for, club):
+def test_session_needs_start_time(client_for, club):
     res = client_for(club["archer1"]).put(f"/api/sessions/{new_id()}/", {"location": "x"}, format="json")
-    assert res.status_code == 400 and {"started_at", "type"} <= set(res.data)
+    assert res.status_code == 400 and {"started_at"} <= set(res.data)
 
 
 def test_ratings_are_one_to_five(client_for, club):

@@ -4,7 +4,9 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import ClaimCode, Invite, Profile, Role, Team, TeamMember, User
+from . import access
+from .avatar import sign_link
+from .models import COACH_ROLES, ClaimCode, Invite, Profile, Role, Team, TeamMember, User
 
 
 def check_birth_date(value):
@@ -13,12 +15,24 @@ def check_birth_date(value):
     return value
 
 
+def avatar_url(request, person_id) -> str:
+    return request.build_absolute_uri(f"/api/users/{person_id}/avatar/?token={sign_link(person_id, request.user.pk)}")
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     video_allowed = serializers.BooleanField(read_only=True, help_text="False for an archer under 18 whose parents' consent is not on record")
+    avatar_allowed = serializers.BooleanField(read_only=True, help_text="False for an archer under 18 whose parents' consent is not on record")
+    avatar_url = serializers.SerializerMethodField(help_text="Empty without a picture; opens for an hour, fetch again for a new link")
 
     class Meta:
         model = Profile
-        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "video_allowed"]
+        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "video_allowed", "avatar_allowed", "avatar_url"]
+
+    def get_avatar_url(self, profile) -> str:
+        request = self.context.get("request")
+        if request is None or not profile.avatar or not profile.avatar_allowed:
+            return ""
+        return avatar_url(request, profile.user_id)
 
     def validate_date_of_birth(self, value):
         return check_birth_date(value)
@@ -26,11 +40,19 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class MeSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+    has_password = serializers.SerializerMethodField(help_text="False for an account made with Google: no password, no email change")
+    sign_in_providers = serializers.SerializerMethodField(help_text="Providers (google) that can sign in to this account")
 
     class Meta:
         model = User
-        fields = ["id", "email", "profile"]
+        fields = ["id", "email", "profile", "has_password", "sign_in_providers"]
         read_only_fields = ["id", "email"]
+
+    def get_has_password(self, user) -> bool:
+        return user.has_usable_password()
+
+    def get_sign_in_providers(self, user) -> list[str]:
+        return sorted(user.social_identities.values_list("provider", flat=True))
 
     def update(self, instance, validated_data):
         profile = validated_data.pop("profile", {})
@@ -115,9 +137,28 @@ class MemberSerializer(serializers.ModelSerializer):
     email = serializers.SerializerMethodField(help_text="Empty for an archer without an account")
     managed = serializers.BooleanField(source="user.is_managed", read_only=True, help_text="A profile kept by a coach, without an account")
 
+    avatar_url = serializers.SerializerMethodField(help_text="Empty if there is no picture or the viewer may not see it; opens for an hour")
+
     class Meta:
         model = TeamMember
-        fields = ["user_id", "name", "email", "managed", "role", "also_shoots", "joined_at"]
+        fields = ["user_id", "name", "email", "managed", "role", "also_shoots", "joined_at", "avatar_url"]
+
+    def get_avatar_url(self, member) -> str:
+        """The rule of access.can_see_avatar, for a member of a team the viewer is in: themselves, or the viewer coaches
+        the team, or the member does. The viewer's role in each team is read once per request."""
+        request = self.context.get("request")
+        profile = member.user.profile
+        if request is None or not profile.avatar or not profile.avatar_allowed:
+            return ""
+        roles = self.context.setdefault("_viewer_roles", {})
+        if member.team_id not in roles:
+            roles[member.team_id] = access.role_in(request.user, member.team_id)
+        viewer_role = roles[member.team_id]
+        if viewer_role is None:
+            return ""
+        if member.user_id == request.user.pk or viewer_role in COACH_ROLES or member.role in COACH_ROLES:
+            return avatar_url(request, member.user_id)
+        return ""
 
     def get_email(self, obj) -> str:
         return "" if obj.user.is_managed else obj.user.email
@@ -180,6 +221,8 @@ class ArcherSerializer(serializers.Serializer):
     video_allowed = serializers.BooleanField(help_text="False for an archer under 18 whose parents' consent is not on record")
     video_consent_at = serializers.DateTimeField(allow_null=True, help_text="When a coach recorded the parents' consent for video")
     video_consent_by = serializers.CharField(allow_null=True, help_text="Who recorded it")
+    avatar_allowed = serializers.BooleanField(help_text="False for an archer under 18 whose parents' consent is not on record")
+    avatar_url = serializers.CharField(help_text="Empty without a picture; opens for an hour")
 
 
 class VideoConsentSerializer(serializers.Serializer):
@@ -242,3 +285,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(help_text="The code from the mail, with or without the dash")
     new_password = serializers.CharField(write_only=True)
+
+
+class GoogleSignInSerializer(serializers.Serializer):
+    id_token = serializers.CharField(write_only=True, help_text="From the Google sign-in on the phone")
+    invite_code = serializers.CharField(required=False, allow_blank=True, help_text="Only to register: an invite or claim code")

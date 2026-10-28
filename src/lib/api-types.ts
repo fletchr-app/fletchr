@@ -87,6 +87,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/google/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Sign in with a Google ID token. With an invite or claim code it registers a new account instead (never without one). */
+        post: operations["auth_google_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bows/": {
         parameters: {
             query?: never;
@@ -282,6 +299,24 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["me_partial_update"];
+        trace?: never;
+    };
+    "/api/me/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description PUT a new picture or DELETE it, for the profile in `self.profile()`. */
+        put: operations["me_avatar_update"];
+        post?: never;
+        /** @description PUT a new picture or DELETE it, for the profile in `self.profile()`. */
+        delete: operations["me_avatar_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/me/delete-account/": {
@@ -624,9 +659,17 @@ export interface paths {
             cookie?: never;
         };
         get: operations["sessions_retrieve"];
-        /** @description Create the session with this id, or update it. Safe to repeat. */
+        /**
+         * @description Create the session with this id, or update it. Safe to repeat.
+         *
+         *     An id that was merged into another session writes to that one; an id that was deleted gives 410.
+         *     The owner (and a coach of a profile without an account) writes everything. A coach who opened the
+         *     session for the archer changes its times and notes, not the type, ratings or equipment. After a
+         *     merge a coach's repeated request only fills what is still empty.
+         */
         put: operations["sessions_update"];
         post?: never;
+        /** @description Delete the session. The id of a merged or deleted session answers 204 and deletes nothing. */
         delete: operations["sessions_destroy"];
         options?: never;
         head?: never;
@@ -661,6 +704,23 @@ export interface paths {
         put: operations["sessions_volume_update"];
         post?: never;
         delete: operations["sessions_volume_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/gone/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Ids of sessions that are gone: `merged_into` is the session that took its place, null if it was deleted. */
+        get: operations["sessions_gone_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -823,6 +883,24 @@ export interface paths {
         head?: never;
         /** @description Rename the profile, or set its dominant hand and eye and date of birth. */
         patch: operations["teams_archers_partial_update"];
+        trace?: never;
+    };
+    "/api/teams/{team_id}/archers/{user_id}/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description The picture of a profile without an account, set by the coaches of its team. */
+        put: operations["teams_archers_avatar_update"];
+        post?: never;
+        /** @description The picture of a profile without an account, set by the coaches of its team. */
+        delete: operations["teams_archers_avatar_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/teams/{team_id}/archers/{user_id}/claim-code/": {
@@ -1036,6 +1114,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/{user_id}/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The picture itself. The <img> element cannot send the sign-in header, so the link carries a token (one viewer,
+         *     one person, an hour); the sign-in header works too. Every refusal is the same 404.
+         */
+        get: operations["users_avatar_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1070,6 +1168,10 @@ export interface components {
             video_consent_at: string | null;
             /** @description Who recorded it */
             video_consent_by: string | null;
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            avatar_allowed: boolean;
+            /** @description Empty without a picture; opens for an hour */
+            avatar_url: string;
         };
         ArcherNameRequest: {
             name: string;
@@ -1226,6 +1328,16 @@ export interface components {
              */
             radius_cm: number;
             sets: components["schemas"]["ArrowSetStats"][];
+        };
+        AvatarResult: {
+            avatar_url: string;
+        };
+        AvatarUploadRequest: {
+            /**
+             * Format: binary
+             * @description A JPEG of about 256 px, at most 512 KB
+             */
+            file: string;
         };
         /** @enum {unknown} */
         BlankEnum: "";
@@ -1423,12 +1535,14 @@ export interface components {
         };
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteAccountRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
             /** @description The confirmation word shown in the app */
             confirm: string;
         };
         DeleteAccountResponse: {
-            deleted: components["schemas"]["DeletedCounts"];
+            deleted: components["schemas"]["DeletedAccountCounts"];
             /** @description Teams I was a member of; they go on without me */
             teams_left: number;
             /** @description Teams where I was the only member */
@@ -1436,18 +1550,37 @@ export interface components {
         };
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteDataRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
             /** @description The confirmation word shown in the app */
             confirm: string;
         };
         DeleteDataResponse: {
             deleted: components["schemas"]["DeletedCounts"];
         };
+        DeletedAccountCounts: {
+            sessions: number;
+            shots: number;
+            /** @description Photos and videos */
+            media: number;
+            /** @description 1 if a profile picture was removed */
+            avatar: number;
+            bows: number;
+            arrow_sets: number;
+            notes_about_me: number;
+            /** @description Evaluations about me, by coaches and by me */
+            evaluations: number;
+            /** @description Google sign-ins removed with the account */
+            sign_in_methods: number;
+        };
         DeletedCounts: {
             sessions: number;
             shots: number;
             /** @description Photos and videos */
             media: number;
+            /** @description 1 if a profile picture was removed */
+            avatar: number;
             bows: number;
             arrow_sets: number;
             notes_about_me: number;
@@ -1558,8 +1691,11 @@ export interface components {
          * @enum {string}
          */
         EvaluationVisibilityEnum: "shared" | "coach_only";
+        /** @description The proof that it is me at the phone: my password, or for an account made with Google (no password) a fresh Google token of that account. */
         ExportRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
         };
         Face: {
             slug: string;
@@ -1581,6 +1717,12 @@ export interface components {
          * @enum {string}
          */
         FaceKindEnum: "wa" | "field" | "blank";
+        GoogleSignInRequest: {
+            /** @description From the Google sign-in on the phone */
+            id_token: string;
+            /** @description Only to register: an invite or claim code */
+            invite_code?: string;
+        };
         /**
          * @description * `right` - Right
          *     * `left` - Left
@@ -1626,6 +1768,10 @@ export interface components {
             /** Format: email */
             readonly email: string;
             profile: components["schemas"]["Profile"];
+            /** @description False for an account made with Google: no password, no email change */
+            readonly has_password: boolean;
+            /** @description Providers (google) that can sign in to this account */
+            readonly sign_in_providers: string[];
         };
         Media: {
             /** Format: uuid */
@@ -1712,6 +1858,8 @@ export interface components {
             also_shoots?: boolean;
             /** Format: date-time */
             readonly joined_at: string;
+            /** @description Empty if there is no picture or the viewer may not see it; opens for an hour */
+            readonly avatar_url: string;
         };
         MembershipSettings: {
             also_shoots?: boolean;
@@ -1730,14 +1878,16 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
+            /** @description The photo or clip of the note; empty if it is gone or you may not see it */
+            readonly picture: components["schemas"]["NotePicture"] | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
@@ -1747,6 +1897,15 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        NotePicture: {
+            kind: string;
+            width: number;
+            height: number;
+            /** @description Opens for an hour */
+            thumbnail_url: string;
+            /** @description Opens for an hour */
+            file_url: string;
         };
         NoteRequest: {
             /** @description Only needed if you coach this archer in several teams */
@@ -1758,14 +1917,14 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
@@ -1895,14 +2054,14 @@ export interface components {
             end?: string | null;
             /**
              * Format: uuid
-             * @description A note on a frame of this clip; needs `frame`
+             * @description A note on this photo, or on a frame of this clip (needs `frame`)
              */
             media?: string | null;
             /** @description The frame, counted from 0 */
             frame?: number | null;
             /** @description Where that frame is in the clip */
             time_ms?: number | null;
-            /** @description Lines, angles and circles on the frame; see notes/drawing.py for the format */
+            /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
             body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
@@ -1940,6 +2099,10 @@ export interface components {
             units?: components["schemas"]["UnitsEnum"];
             /** @description False for an archer under 18 whose parents' consent is not on record */
             readonly video_allowed: boolean;
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            readonly avatar_allowed: boolean;
+            /** @description Empty without a picture; opens for an hour, fetch again for a new link */
+            readonly avatar_url: string;
         };
         ProfileRequest: {
             name?: string;
@@ -2075,11 +2238,13 @@ export interface components {
             readonly id: string;
             owner: number;
             readonly owner_name: string;
+            opened_by?: number | null;
+            readonly opened_by_name: string | null;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
@@ -2147,11 +2312,13 @@ export interface components {
             readonly id: string;
             owner: number;
             readonly owner_name: string;
+            opened_by?: number | null;
+            readonly opened_by_name: string | null;
             /** Format: date-time */
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             setup?: number | null;
@@ -2161,6 +2328,15 @@ export interface components {
             readonly scored_arrows: number;
             readonly score_total: number;
             readonly volume_arrows: number;
+        };
+        SessionTombstone: {
+            /** Format: uuid */
+            readonly id: string;
+            owner: number;
+            /** Format: uuid */
+            merged_into?: string | null;
+            /** Format: date-time */
+            at?: string;
         };
         /**
          * @description * `scoring` - Scoring
@@ -2180,7 +2356,7 @@ export interface components {
             started_at: string;
             /** Format: date-time */
             ended_at?: string | null;
-            type: components["schemas"]["SessionTypeEnum"];
+            type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
@@ -2604,6 +2780,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArrowSetRevision"][];
+                };
+            };
+        };
+    };
+    auth_google_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignInRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["GoogleSignInRequest"];
+                "multipart/form-data": components["schemas"]["GoogleSignInRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterResponse"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterResponse"];
                 };
             };
         };
@@ -3137,6 +3346,47 @@ export interface operations {
             };
         };
     };
+    me_avatar_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AvatarUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarResult"];
+                };
+            };
+        };
+    };
+    me_avatar_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     me_delete_account_create: {
         parameters: {
             query?: never;
@@ -3227,7 +3477,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["ExportRequestRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];
@@ -3254,7 +3504,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["ExportRequestRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];
@@ -3971,6 +4221,28 @@ export interface operations {
             };
         };
     };
+    sessions_gone_list: {
+        parameters: {
+            query?: {
+                owner?: number;
+                updated_after?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTombstone"][];
+                };
+            };
+        };
+    };
     setups_list: {
         parameters: {
             query?: {
@@ -4305,6 +4577,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Member"];
                 };
+            };
+        };
+    };
+    teams_archers_avatar_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AvatarUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarResult"];
+                };
+            };
+        };
+    };
+    teams_archers_avatar_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4683,6 +5002,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenRefresh"];
+                };
+            };
+        };
+    };
+    users_avatar_retrieve: {
+        parameters: {
+            query?: {
+                /** @description From `avatar_url`; not needed with the sign-in header */
+                token?: string;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
         };

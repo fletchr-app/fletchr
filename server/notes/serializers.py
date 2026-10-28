@@ -1,11 +1,14 @@
 from django.utils.translation import gettext
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from core.access import note_teams
+from core.access import archers_visible_to, note_teams
 from core.models import COACH_ROLES, Team, TeamMember, User
+from media.access import media_link, visible_media
 from media.models import Media
-from training.models import End, TrainingSession
+from training.serializers import SessionRefField
+from training.models import End
 
 from .drawing import check_drawing
 from .models import Note
@@ -18,17 +21,33 @@ class NoteTeamSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class VisibleMediaField(serializers.PrimaryKeyRelatedField):
+    """Only photos and clips the user may see; one they may not is answered like one that does not exist."""
+
+    def get_queryset(self):
+        return visible_media(self.context["request"].user)
+
+
+class NotePictureSerializer(serializers.Serializer):
+    kind = serializers.CharField()
+    width = serializers.IntegerField()
+    height = serializers.IntegerField()
+    thumbnail_url = serializers.CharField(help_text="Opens for an hour")
+    file_url = serializers.CharField(help_text="Opens for an hour")
+
+
 class NoteSerializer(serializers.ModelSerializer):
     team = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(), required=False, help_text="Only needed if you coach this archer in several teams"
     )
     archer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    session = serializers.PrimaryKeyRelatedField(queryset=TrainingSession.objects.all(), required=False, allow_null=True)
+    session = SessionRefField(required=False, allow_null=True)
     end = serializers.PrimaryKeyRelatedField(queryset=End.objects.all(), required=False, allow_null=True)
-    media = serializers.PrimaryKeyRelatedField(queryset=Media.objects.all(), required=False, allow_null=True, help_text="A note on a frame of this clip; needs `frame`")
+    media = VisibleMediaField(queryset=Media.objects.none(), required=False, allow_null=True, help_text="A note on this photo, or on a frame of this clip (needs `frame`)")
     frame = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="The frame, counted from 0")
     time_ms = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="Where that frame is in the clip")
-    drawing = serializers.JSONField(required=False, allow_null=True, help_text="Lines, angles and circles on the frame; see notes/drawing.py for the format")
+    drawing = serializers.JSONField(required=False, allow_null=True, help_text="Lines, angles and circles on the photo or frame; see notes/drawing.py for the format")
+    picture = serializers.SerializerMethodField(help_text="The photo or clip of the note; empty if it is gone or you may not see it")
     author_name = serializers.SerializerMethodField()
     archer_name = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
@@ -37,10 +56,26 @@ class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
         fields = [
-            "id", "team", "author", "author_name", "archer", "archer_name", "session", "end", "media", "frame", "time_ms", "drawing", "body",
+            "id", "team", "author", "author_name", "archer", "archer_name", "session", "end", "media", "picture", "frame", "time_ms", "drawing", "body",
             "visibility", "can_edit", "can_delete", "created_at", "updated_at",
         ]
         read_only_fields = ["author", "created_at", "updated_at"]
+
+    @extend_schema_field(NotePictureSerializer(allow_null=True))
+    def get_picture(self, note):
+        media = note.media
+        if media is None:
+            return None
+        visible = self.context.get("visible_owner_ids")
+        if visible is None:
+            visible = set(archers_visible_to(self.context["request"].user).values_list("pk", flat=True))
+        if media.owner_id not in visible:
+            return None
+        request = self.context["request"]
+        return {
+            "kind": media.kind, "width": media.width, "height": media.height,
+            "thumbnail_url": media_link(request, media, "thumbnail"), "file_url": media_link(request, media, "file"),
+        }
 
     def get_author_name(self, note) -> str:
         return (note.author.profile.name or note.author.email) if note.author else "Former coach"
@@ -68,9 +103,9 @@ class NoteSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs.get("drawing") is not None:
-            frame_note = self.instance.frame is not None if self.instance is not None else attrs.get("frame") is not None
-            if not frame_note:
-                raise serializers.ValidationError({"drawing": gettext("A drawing belongs to a frame of a clip")})
+            on_media = self.instance.media_id is not None if self.instance is not None else attrs.get("media") is not None
+            if not on_media:
+                raise serializers.ValidationError({"drawing": gettext("A drawing belongs to a photo or a frame of a clip")})
         if self.instance is not None:
             for field in IMMUTABLE:
                 if field in attrs and attrs[field] != getattr(self.instance, field):
@@ -100,9 +135,12 @@ class NoteSerializer(serializers.ModelSerializer):
         if media is not None:
             if media.owner_id != archer.id:
                 raise serializers.ValidationError({"media": gettext("This is not a photo or video of that archer")})
-            if frame is None:
+            if media.kind == Media.Kind.PHOTO:
+                if frame is not None or attrs.get("time_ms") is not None:
+                    raise serializers.ValidationError({"frame": gettext("A photo has no frames")})
+            elif frame is None:
                 raise serializers.ValidationError({"frame": gettext("Say which frame the note is about")})
-            if media.frame_count and frame >= media.frame_count:
+            elif media.frame_count and frame >= media.frame_count:
                 raise serializers.ValidationError({"frame": gettext("The clip has no such frame")})
             if session is None and media.session_id:
                 attrs["session"] = media.session  # the note belongs to the session the clip was taken in

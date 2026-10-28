@@ -9,7 +9,7 @@ import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
 import { localStore } from '@/lib/local-store';
 import { loadFiles, removeFiles, saveFiles } from '@/lib/media-files';
-import { drainMedia, type MediaFiles, type QueuedMedia, sendMedia } from '@/lib/media-queue';
+import { drainMedia, type MediaFiles, type QueuedMedia, renameSession, sendMedia } from '@/lib/media-queue';
 import { newId } from '@/lib/uuid';
 
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
@@ -105,6 +105,8 @@ const actions = {
 };
 
 effectScope(true).run(() => {
+  // Clips queued for a session the server merged into another one follow it.
+  log.onSessionRenamed((from, to) => set(renameSession(items.value, from, to)));
   let loading = 0;
   watch(
     storageKey,

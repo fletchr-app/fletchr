@@ -1,6 +1,6 @@
 # Fletchr
 
-Vue 3 + TypeScript app (Vite, Ionic Vue with its router). Mobile app only for now (Android first, iOS later), the web build is wrapped with Capacitor; no separate web product. Backend: Django REST Framework in `server/`. Plan and decisions: `docs/plan.md`. The old Expo (React Native) version is the git tag `expo-final`.
+Vue 3 + TypeScript app (Vite, Ionic Vue with its router). Mobile app only for now (Android first, iOS later), the web build is wrapped with Capacitor; no separate web product. Backend: Django REST Framework in `server/`. Design docs, decisions and plans: `specs/`. The old Expo (React Native) version is the git tag `expo-final`.
 
 ## Commands
 
@@ -28,13 +28,21 @@ Run `type-check` and `test` before declaring a task done.
 - Sessions are logged on the device first (`useLog`) and uploaded from a queue; see `src/lib/log-sync.ts`. Screens that show other people's data read from the server with `useRemote`.
 - The Android project in `android/` is committed; its build output is not. The app version comes from `package.json`.
 
+## Design history and planning
+
+- `specs/design/`: living design docs, one per feature or subsystem. Kept after landing (`status: implemented`).
+- `specs/plans/`: implementation plans, checklist-style, `YYYY-MM-DD-topic.md`.
+- `specs/adrs/`: short decision records (Context, Considered Options, Decision Outcome, Consequences), `NNNN-topic.md`.
+- `specs/steering/`: standing contributor guidance, only once a real recurring convention warrants it.
+- Every `specs/` directory has an `index.md` listing its docs; update it when adding one. The operator guide is `SELFHOSTING.md` in the root.
+
 ## Texts
 
-- All user-visible text goes through vue-i18n (`src/locales/en.ts` and `de.ts`, no literal English in templates). Server error messages go through `gettext` (`server/locale/`). Both are described in `docs/i18n.md`.
+- All user-visible text goes through vue-i18n (`src/locales/en.ts` and `de.ts`, no literal English in templates). Server error messages go through `gettext` (`server/locale/`). Both are described in `specs/steering/i18n.md`.
 - `src/lib` returns message keys or takes words as parameters, not sentences; `errors.ts` and `export-file.ts` import `t` from `@/i18n` as the exception.
 
 ## Rules
 
-- Never commit or push unless asked. Work goes on the `develop` branch; `main` is for releases only (merge, tag `vX.Y.Z`). See `docs/releasing.md`, also for the version number (`package.json`, `server/pyproject.toml` and the API schema version must match).
+- Never commit or push unless asked. Work goes on the `develop` branch; `main` is for releases only (merge, tag `vX.Y.Z`). See `specs/steering/releasing.md`, also for the version number (`package.json`, `server/pyproject.toml` and the API schema version must match).
 - Capacitor plugins are native: after `npm install @capacitor/...` run `npx cap sync android` and rebuild the APK.
 - The app on the phone is served from `https://localhost`: the server's `DJANGO_CORS_ORIGINS` must contain it (see README).

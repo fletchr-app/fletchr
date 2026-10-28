@@ -11,6 +11,8 @@ import {
   nextEndDefaults,
   reduce,
   sessionTotals,
+  sessionTypeKey,
+  usesEnds,
   sortedShots,
   shotLabel,
   type Equipment,
@@ -203,4 +205,79 @@ test('reset forgets everything on the device', () => {
     { type: 'reset' },
   );
   assert.deepEqual(s, EMPTY_LOG);
+});
+
+// --- sessions a coach opened, merged ids ---------------------------------------------------------
+
+test('an empty type has its own label and no ends', () => {
+  assert.equal(sessionTypeKey(''), 'sessionType.unset');
+  assert.equal(sessionTypeKey('volume'), 'sessionType.volume');
+  assert.equal(usesEnds(''), false);
+});
+
+test('the type can be set while there are no results, not after', () => {
+  const open: LogSession = { ...session(), type: '' };
+  const set = run({ type: 'load', state: { ...EMPTY_LOG, sessions: [open] } }, { type: 'updateSession', id: 's1', patch: { type: 'volume' } });
+  assert.equal(set.sessions[0].type, 'volume');
+  const shot1 = run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }, { type: 'updateSession', id: 's1', patch: { type: 'volume' } });
+  assert.equal(shot1.sessions[0].type, 'scoring');
+});
+
+test('pulled sessions are stored without an upload, and never over a local one or one deleted here', () => {
+  const coach: LogSession = { ...session('c1'), type: '', keep: true, opened_by: 9 };
+  let s = run({ type: 'startSession', session: session('mine') }, { type: 'deleteSession', id: 'gone' });
+  s = reduce(s, { type: 'pulled', sessions: [coach, session('mine'), session('gone')], lastPull: 't1' });
+  assert.deepEqual(s.sessions.map((x) => x.id).sort(), ['c1', 'mine']);
+  assert.equal(s.lastPull, 't1');
+  assert.deepEqual(s.outbox.map((o) => o.key), ['session:mine:', 'session:gone:']);
+  assert.equal(reduce(s, { type: 'pulled', sessions: [coach] }).sessions.length, 2, 'no duplicate');
+});
+
+test('replacing an id renames the session and rewrites the queue, keeping the session ahead of its ends', () => {
+  const s = run(
+    { type: 'startSession', session: session('old') },
+    { type: 'saveEnd', sessionId: 'old', end: end('e1', 0) },
+    { type: 'replaceSessionId', from: 'old', to: 'new' },
+  );
+  assert.deepEqual(s.sessions.map((x) => x.id), ['new']);
+  assert.deepEqual(s.outbox.map((o) => [o.key, o.sessionId]), [['session:new:', 'new'], ['end:new:e1', 'new']]);
+});
+
+test('a delete of the merged-away id is not sent to the winner', () => {
+  const s = run({ type: 'startSession', session: session('old') }, { type: 'deleteSession', id: 'old' }, { type: 'replaceSessionId', from: 'old', to: 'new' });
+  assert.deepEqual(s.outbox, []);
+});
+
+test('when the new id is local too, ends and volume move over, renumbered after the existing ends, and go up again', () => {
+  const s = run(
+    { type: 'startSession', session: { ...session('old'), type: 'scoring', location: 'Hall' } },
+    { type: 'saveEnd', sessionId: 'old', end: end('o1', 0) },
+    { type: 'saveEnd', sessionId: 'old', end: end('o2', 1) },
+    { type: 'saveVolume', sessionId: 'old', entry: { id: 'v1', distance_m: '18', arrow_count: 6 } },
+    { type: 'startSession', session: { ...session('new'), location: '' } },
+    { type: 'saveEnd', sessionId: 'new', end: end('n1', 0) },
+    { type: 'saveEnd', sessionId: 'new', end: end('n2', 4) },
+    { type: 'replaceSessionId', from: 'old', to: 'new' },
+  );
+  assert.deepEqual(s.sessions.map((x) => x.id), ['new']);
+  const merged = s.sessions[0];
+  assert.deepEqual(merged.ends.map((e) => [e.id, e.index]), [['n1', 0], ['n2', 4], ['o1', 5], ['o2', 6]]);
+  assert.deepEqual(merged.volume.map((v) => v.id), ['v1']);
+  assert.equal(merged.location, 'Hall', 'an empty field is filled');
+  const keysOut = s.outbox.map((o) => o.key);
+  assert.equal(new Set(keysOut).size, keysOut.length, 'one op per item');
+  assert.ok(['end:new:o1', 'end:new:o2', 'volume:new:v1', 'session:new:'].every((k) => keysOut.includes(k)));
+  assert.ok(s.outbox.every((o) => o.sessionId === 'new'));
+});
+
+test('a coach\'s copy of a session that went into the archer\'s is dropped', () => {
+  const copy: LogSession = { ...session('old'), type: '', owner: 5, owner_name: 'Ann', keep: true, noResults: true };
+  const s = run({ type: 'startSession', session: copy }, { type: 'replaceSessionId', from: 'old', to: 'new' });
+  assert.deepEqual(s.sessions, []);
+  assert.deepEqual(s.outbox, []);
+});
+
+test('a session the server deleted goes, with what was queued for it', () => {
+  const s = run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }, { type: 'sessionGone', id: 's1' });
+  assert.deepEqual([s.sessions, s.outbox], [[], []]);
 });

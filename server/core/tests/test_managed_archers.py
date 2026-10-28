@@ -95,7 +95,7 @@ def test_archer_info_for_the_screen(client_for, club, managed):
     assert res.data == {
         "id": managed.pk, "name": "Max Muster", "managed": True, "team_id": club["a"].pk, "team_name": "Team A",
         "dominant_hand": "", "dominant_eye": "", "age": None, "date_of_birth": None,
-        "video_allowed": True, "video_consent_at": None, "video_consent_by": None,
+        "video_allowed": True, "video_consent_at": None, "video_consent_by": None, "avatar_allowed": True, "avatar_url": "",
     }
     assert client_for(club["b_admin"]).get(f"/api/archers/{managed.pk}/").status_code == 404
     assert client_for(club["archer1"]).get(f"/api/archers/{managed.pk}/").status_code == 404
@@ -127,9 +127,6 @@ def test_nobody_else_writes_sessions_for_a_profile(client_for, club, managed):
     url = f"/api/sessions/{new_id()}/?owner={managed.pk}"
     assert client_for(club["archer1"]).put(url, SESSION, format="json").status_code == 404
     assert client_for(club["b_admin"]).put(url, SESSION, format="json").status_code == 404
-    # nor for a real account, even one the coach may read
-    real = f"/api/sessions/{new_id()}/?owner={club['archer1'].pk}"
-    assert client_for(club["coach"]).put(real, SESSION, format="json").status_code == 404
     assert not TrainingSession.objects.exists()
 
 
