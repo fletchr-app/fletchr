@@ -1,10 +1,10 @@
 # Fletchr
 
-Training log, coaching notes and evaluations for archers and coaches. One Vue 3 + TypeScript app (Ionic Vue), shipped as a mobile app first (Android now, iOS later) and wrapped with [Capacitor](https://capacitorjs.com). The web build is the dev shell and the base of the phone apps, not a product of its own for now. It talks to a self-hosted Django REST Framework server. See [docs/plan.md](docs/plan.md) for the full plan. The previous React Native (Expo) version is the git tag `expo-final`.
+Training log, coaching notes and evaluations for archers and coaches. One Vue 3 + TypeScript app (Ionic Vue), shipped as a mobile app first (Android now, iOS later) and wrapped with [Capacitor](https://capacitorjs.com). The web build is the dev shell and the base of the phone apps, not a product of its own for now. It talks to a self-hosted Django REST Framework server. The design docs, decisions and milestone plans are in [specs/](specs/). The previous React Native (Expo) version is the git tag `expo-final`.
 
 ## Branches and releases
 
-Work happens on `develop`; `main` only holds releases, tagged `vX.Y.Z`. The version number and the release steps are in [docs/releasing.md](docs/releasing.md).
+Work happens on `develop`; `main` only holds releases, tagged `vX.Y.Z`. The version number and the release steps are in [specs/steering/releasing.md](specs/steering/releasing.md).
 
 ## Layout
 
@@ -17,7 +17,10 @@ server/    Django project (DRF, SQLite), Dockerfile
 deploy/    docker-compose.yml, Caddyfile, .env.example
 shared/    files used by both server and app (target faces, scoring test cases)
 worker/    pose detection worker (milestone 5)
-docs/      plan, decisions
+specs/     design docs, plans, ADRs, steering (index.md in each)
+android/   Capacitor Android project
+public/    static files for the web build
+site/      static website for fletchr.de
 ```
 
 ## What it does
@@ -26,7 +29,7 @@ docs/      plan, decisions
 - **Teams and roles:** archer, coach, admin. Anyone signed in can create a team (Settings, Create a team) and becomes its admin; people join with invite codes, anyone can leave, admins can delete the team. Signing up itself is invite-only.
 - **Archers without an account:** a coach adds an archer by name, writes notes and logs sessions for them. The archer takes the profile over later with a claim code (confirmed in the app); sessions and notes move to their account.
 - **Coach notes:** about an archer, a session or an end. Three levels: only me (the author alone), coach only (the coaches of the team), shared with the archer.
-- **Languages:** English and German (Settings, Language; by default the phone's language). Texts: [docs/i18n.md](docs/i18n.md).
+- **Languages:** English and German (Settings, Language; by default the phone's language). Texts: [specs/steering/i18n.md](specs/steering/i18n.md).
 - **Your data:** download everything the server has about you, delete your data, delete your account (Settings, Your data).
 
 ## Run locally
@@ -70,7 +73,7 @@ The app inside the phone is served from `https://localhost`, so:
 
 Login tokens go to the Android Keystore, the local session log (anything not uploaded yet) to the app's preferences. In the browser both are in localStorage.
 
-iOS is not set up: it needs `npx cap add ios` on a Mac (or a macOS CI runner), see docs/plan.md section 6b.
+iOS is not set up: it needs `npx cap add ios` on a Mac (or a macOS CI runner), see specs/design/ios-without-an-apple-device.md.
 
 ## Server address
 
@@ -80,7 +83,7 @@ On a phone, `localhost` is the phone itself. Use your PC's LAN IP instead, e.g. 
 
 ## Run on a server
 
-On a server that already has nginx or Apache in front, only Django runs in Docker (`deploy/docker-compose.prod.yml`), next to a static site for the domain (`site/`). The step-by-step guide, with DNS, HTTPS, backups, updates and invite links, is in [docs/self-hosting.md](docs/self-hosting.md).
+On a server that already has nginx or Apache in front, only Django runs in Docker (`deploy/docker-compose.prod.yml`), next to a static site for the domain (`site/`). The step-by-step guide, with DNS, HTTPS, backups, updates and invite links, is in [SELFHOSTING.md](SELFHOSTING.md).
 
 The `docker-compose.yml` with Caddy is for local use, or for a server with nothing else on ports 80 and 443: set `SITE_ADDRESS` in `deploy/.env` to the domain and Caddy fetches the certificate itself.
 

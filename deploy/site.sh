@@ -2,7 +2,7 @@
 # Copies site/ to the web root of your domain, as the owner of that folder (for example a panel's system user), using sudo.
 # Run it as your normal user from a checkout: cd ~/fletchr && git pull && deploy/site.sh
 #
-# The web root comes from SITE_ROOT in deploy/.env.prod (docs/self-hosting.md, section 7), for example
+# The web root comes from SITE_ROOT in deploy/.env.prod (SELFHOSTING.md, section 7), for example
 #   SITE_ROOT=/var/www/vhosts/example.org/example.org
 # It shows what would change, then asks. Files in the web root that are not in site/ are deleted.
 #   --yes   do not ask (the changes are still printed)
@@ -22,7 +22,7 @@ fail() { echo "site.sh: $*" >&2; exit 1; }
 [ -f "$env_file" ] || fail "$env_file is missing"
 # Read just this one value: the file also holds secrets, and it is not a shell script.
 root="$({ grep -E '^SITE_ROOT=' "$env_file" || true; } | tail -n 1 | cut -d= -f2- | sed -e 's/^["'\'']//' -e 's/["'\'']$//')"
-[ -n "$root" ] || fail "set SITE_ROOT in $env_file (the document root of your domain, see docs/self-hosting.md, section 7)"
+[ -n "$root" ] || fail "set SITE_ROOT in $env_file (the document root of your domain, see SELFHOSTING.md, section 7)"
 root="${root%/}"
 
 case "$root" in

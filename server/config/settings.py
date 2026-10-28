@@ -142,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en"
 
 # Error messages in the languages of the app (the app sends Accept-Language). Translations: locale/<lang>/LC_MESSAGES/django.po,
-# extracted and compiled with Babel (docs/i18n.md); the compiled .mo files are committed.
+# extracted and compiled with Babel (specs/steering/i18n.md); the compiled .mo files are committed.
 LANGUAGES = [("en", "English"), ("de", "Deutsch")]
 LOCALE_PATHS = [BASE_DIR / "locale"]
 
@@ -161,7 +161,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_ROOT = DATA_DIR / "media"
 
-# Photos and videos (docs/plan.md, section 6). The phone converts them before the upload, so these limits only
+# Photos and videos (specs/design/media-and-video-player.md). The phone converts them before the upload, so these limits only
 # keep out what a converted file cannot be: a clip longer than a minute, a file of hundreds of MB.
 MEDIA_MAX_VIDEO_SECONDS = 60
 MEDIA_MAX_VIDEO_BYTES = 50 * 1024 * 1024
@@ -217,7 +217,7 @@ REST_FRAMEWORK = {
 }
 
 # The oldest app that still works with this server. `/api/health/` tells the app, which then asks the person to update.
-# Raise it only when a change breaks old apps (docs/releasing.md); a server that keeps serving them needs no raise.
+# Raise it only when a change breaks old apps (specs/steering/releasing.md); a server that keeps serving them needs no raise.
 MIN_APP_VERSION = "0.1.0"
 
 SPECTACULAR_SETTINGS = {

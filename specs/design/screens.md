@@ -1,0 +1,23 @@
+# Screens
+
+Status: implemented except where marked planned; see [the milestone plans](../plans/index.md)
+Date: 2026-10-23
+Updated: 2026-10-28
+
+**Archer**
+1. Home: this week's arrow count, last session, latest coach notes
+2. Log session: quick setup (date, distance, face, setup), then end-by-end plotting on the target face ([arrow-plotting.md](arrow-plotting.md)); number-pad entry as a fallback; volume-only mode for counting arrows
+3. Session detail: ends, totals, plot of arrow positions, photos/videos, coach notes
+4. Equipment: bows, arrow sets, setups (with history of changes)
+5. Media gallery: per session or all, video analysis player with slow motion and frame-by-frame stepping ([media-and-video-player.md](media-and-video-player.md))
+6. Stats
+7. Profile and teams
+8. Evaluations: see the coach's evaluations (a list and a detail page; trends over time are planned, #46), fill in an optional self-assessment on the same form
+
+**Coach** (same app, extra tabs)
+1. Team overview: list of archers with last session, weekly volume, trend arrow
+2. Archer detail: everything the archer sees, plus a notes timeline
+3. Notes: write a note on an archer, session or a specific video frame
+4. Evaluations: fill in an evaluation form for an archer (tap a 1 to 5 rating per criterion, optional comment and video frame per criterion, goals at the end); edit the team's form templates
+5. Team stats: archers with no arrows in the last 7 days; a ranking (coach only, off by default, see [roles-and-access.md](roles-and-access.md))
+6. Team admin: invites, roles

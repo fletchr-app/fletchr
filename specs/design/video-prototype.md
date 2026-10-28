@@ -2,7 +2,7 @@
 
 Tested 2026-10-23 on a Motorola edge 50 neo (Android 16, system WebView Chrome 155) with one 120 fps slow-motion clip
 recorded with the phone's camera app. The aim was to decide whether the frame-by-frame player and the video upload can
-stay in Capacitor (WebView) or need native code (plan section 6).
+stay in Capacitor (WebView) or need native code ([media-and-video-player.md](media-and-video-player.md)).
 
 **Decision: the player stays in the WebView. The conversion is done on the phone** (second part of this document, #70), so only a small file is uploaded and no server-side conversion is needed.
 

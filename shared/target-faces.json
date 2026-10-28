@@ -1,5 +1,5 @@
 {
- "_comment": "Target face catalogue, shared by the server (server/targets) and the app (src/lib/faces.ts). Sizes in cm. Coordinates of a shot: x to the right, y up, per spot, with 1 = outer edge of the outermost scoring ring (blank face: edge of the 40 cm circle). See docs/plan.md.",
+ "_comment": "Target face catalogue, shared by the server (server/targets) and the app (src/lib/faces.ts). Sizes in cm. Coordinates of a shot: x to the right, y up, per spot, with 1 = outer edge of the outermost scoring ring (blank face: edge of the 40 cm circle). See specs/design/arrow-plotting.md.",
  "version": 1,
  "faces": [
   {

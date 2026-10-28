@@ -1,4 +1,4 @@
-// Photos are shrunk and re-encoded on the phone before they go up (docs/plan.md, section 6): the server stores what it gets.
+// Photos are shrunk and re-encoded on the phone before they go up (specs/design/media-and-video-player.md): the server stores what it gets.
 // Drawing them again also drops everything the camera wrote into the file, the position of the shot among it.
 
 export const PHOTO_MAX_SIDE = 2048;

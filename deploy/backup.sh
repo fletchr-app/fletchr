@@ -1,5 +1,5 @@
 #!/bin/sh
-# Nightly backup of a production install; run from cron (docs/self-hosting.md, section 4).
+# Nightly backup of a production install; run from cron (SELFHOSTING.md, section 4).
 #  1. A consistent copy of the database in data/django/backups/ (the last 14 stay on the disk).
 #  2. If deploy/.env.backup exists: a restic backup of those copies and of the uploads (data/django/media) to
 #     the repository named there, encrypted, off the server. Then old snapshots go: 30 daily and 12 monthly stay.
@@ -22,7 +22,7 @@ print("backup:", target)
 PY
 
 if [ ! -f .env.backup ]; then
-    echo "No .env.backup: only the copy on this disk was made. Set up the off-site copy (docs/self-hosting.md, section 4)." >&2
+    echo "No .env.backup: only the copy on this disk was made. Set up the off-site copy (SELFHOSTING.md, section 4)." >&2
     exit 0
 fi
 command -v restic >/dev/null || { echo "restic is not installed" >&2; exit 1; }

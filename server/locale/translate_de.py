@@ -1,4 +1,4 @@
-"""Fills the German catalog (locale/de/LC_MESSAGES/django.po) from the table below, then compile with Babel (docs/i18n.md)."""
+"""Fills the German catalog (locale/de/LC_MESSAGES/django.po) from the table below, then compile with Babel (specs/steering/i18n.md)."""
 from babel.messages.pofile import read_po, write_po
 
 DE = {
