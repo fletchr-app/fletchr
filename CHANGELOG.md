@@ -2,7 +2,7 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.10.0 (2026-10-28)
 
 - **Sign in with Google (#78), Android, official server only:** a "Sign in with Google" button on the sign-in screen and "Register with Google" on the register screen (an invite or claim code is still needed to register). Google and email sign-in are separate accounts, nothing is matched by email or linked (ADR 0005). A Google account has no password: no password or email change in Settings, and export and deletion ask for a Google confirmation instead of the password. An admin can attach a Google identity to an account in the User admin. The button shows only with `VITE_GOOGLE_WEB_CLIENT_ID` set and the default server; the server needs `DJANGO_GOOGLE_CLIENT_IDS` (unset: endpoint answers 404). Needs the Google Cloud setup in `specs/design/accounts.md`.
 - **Account transfer (admin):** `transfer_account <from> <to> --dry-run` and an action in the User admin move the data of one account to a new one (sessions, equipment, media, notes, evaluations, memberships, profile with picture). A test fails when a new model pointing at a user is not handled.

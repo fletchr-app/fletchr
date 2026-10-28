@@ -230,7 +230,7 @@ MIN_APP_VERSION = "0.1.0"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.9.2",
+    "VERSION": "0.10.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",
