@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class TrainingSession(models.Model):
@@ -20,7 +21,10 @@ class TrainingSession(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="training_sessions")
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField(null=True, blank=True)
-    type = models.CharField(max_length=12, choices=Type.choices)
+    # Empty for a session a coach opened for the archer: the archer chooses when adding the first results.
+    type = models.CharField(max_length=12, choices=Type.choices, blank=True)
+    # Who created the session. Null for rows from before this field: treated as the owner.
+    opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     environment = models.CharField(max_length=7, choices=Environment.choices, blank=True)
     location = models.CharField(max_length=150, blank=True)
     weather = models.CharField(max_length=150, blank=True)
@@ -38,6 +42,16 @@ class TrainingSession(models.Model):
 
     def __str__(self):
         return f"{self.owner} {self.started_at:%Y-%m-%d}"
+
+
+class SessionTombstone(models.Model):
+    """A session id that is gone: merged into another session (`merged_into`), or deleted (null).
+    Phones read these to replace or drop their copy, and writes to a merged id go to the winner."""
+
+    id = models.UUIDField(primary_key=True, editable=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    merged_into = models.ForeignKey(TrainingSession, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    at = models.DateTimeField(default=timezone.now)
 
 
 class End(models.Model):

@@ -3,7 +3,7 @@ from django.db.models import Sum
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from training.models import TrainingSession
+from training.serializers import SessionRefField
 
 from .access import can_change
 from .files import is_jpeg, is_mp4, sign_link
@@ -61,7 +61,7 @@ class MediaWriteSerializer(serializers.Serializer):
     capture_fps = serializers.FloatField(min_value=1, max_value=1000, required=False, allow_null=True)
     frame_count = serializers.IntegerField(min_value=1, required=False, allow_null=True)
     note = serializers.CharField(required=False, allow_blank=True)
-    session = serializers.PrimaryKeyRelatedField(queryset=TrainingSession.objects.all(), required=False, allow_null=True)
+    session = SessionRefField(required=False, allow_null=True)
 
     CREATE_ONLY = ["kind", "file", "thumbnail", "taken_at", "width", "height"]
 
