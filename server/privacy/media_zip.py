@@ -18,6 +18,20 @@ def media_of(user):
     return Media.objects.filter(owner=user).order_by("taken_at", "created_at")
 
 
+AVATAR_NAME = "avatar.jpg"  # media files are named by their id, so no clash
+
+
+def avatar_of(user):
+    """The profile picture as the zip lists it: (size in bytes, when it was set), or None."""
+    profile = user.profile
+    if not profile.avatar:
+        return None
+    try:
+        return profile.avatar.size, profile.avatar_updated_at or profile.user.date_joined
+    except FileNotFoundError:
+        return None
+
+
 def file_name(media) -> str:
     return f"{media.pk}.{'mp4' if media.kind == Media.Kind.VIDEO else 'jpg'}"
 
@@ -61,15 +75,18 @@ def stream(user):
     """The chunks of the zip. The files are stored as they are: a JPEG and an MP4 do not shrink."""
     sink = _Sink()
     with zipfile.ZipFile(sink, "w", zipfile.ZIP_STORED) as archive:
-        for media in media_of(user):
-            when = media.taken_at.astimezone(datetime.timezone.utc).timetuple()[:6]
-            info = zipfile.ZipInfo(file_name(media), date_time=(max(when[0], 1980), *when[1:]))
+        entries = [(file_name(m), m.file, m.taken_at) for m in media_of(user)]
+        if avatar_of(user):
+            entries.insert(0, (AVATAR_NAME, user.profile.avatar, user.profile.avatar_updated_at or user.date_joined))
+        for name, field, stamp in entries:
+            when = stamp.astimezone(datetime.timezone.utc).timetuple()[:6]
+            info = zipfile.ZipInfo(name, date_time=(max(when[0], 1980), *when[1:]))
             info.compress_type = zipfile.ZIP_STORED
             try:
-                source = media.file.storage.open(media.file.name, "rb")
+                source = field.storage.open(field.name, "rb")
             except FileNotFoundError:
                 continue  # the row is there and the file is not: nothing to give
-            info.file_size = media.file.size
+            info.file_size = field.size
             with source, archive.open(info, "w") as target:
                 while data := source.read(CHUNK):
                     target.write(data)

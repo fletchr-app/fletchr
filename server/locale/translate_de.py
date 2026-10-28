@@ -87,7 +87,8 @@ DE = {
     "Give the clip the frame is in": "Gib das Video an, zu dem das Bild gehört",
     "This is not a drawing": "Das ist keine Zeichnung",
     "A drawing can have %(n)s shapes at most": "Eine Zeichnung kann höchstens %(n)s Formen haben",
-    "A drawing belongs to a frame of a clip": "Eine Zeichnung gehört zu einem Bild eines Videos",
+    "A drawing belongs to a photo or a frame of a clip": "Eine Zeichnung gehört zu einem Foto oder einem Bild eines Videos",
+    "A photo has no frames": "Ein Foto hat keine Einzelbilder",
     "Shooting technique": "Schießtechnik",
     "Pre-tension": "Vorspannung",
     "Raising the bow": "Anheben",
@@ -137,9 +138,14 @@ DE = {
     "Say which frame the rating is about": "Gib an, zu welchem Bild die Bewertung gehört",
     "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
     "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page.": "Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen.",
+    "No picture sent": "Es wurde kein Bild gesendet",
+    "The picture must be a JPEG": "Das Bild muss ein JPEG sein",
+    "The picture is too large, it should be about 256 px on a side": "Das Bild ist zu groß, es sollte etwa 256 px an einer Seite haben",
+    "The picture is larger than 512 KB": "Das Bild ist größer als 512 KB",
+    "A picture of an archer under 18 needs the consent of the parents": "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern",
 }
 
-PATH = "locale/de/LC_MESSAGES/django.po"
+PATH ="locale/de/LC_MESSAGES/django.po"
 with open(PATH, "rb") as f:
     catalog = read_po(f, locale="de")
 missing = [m.id for m in catalog if m.id and m.id not in DE]

@@ -64,6 +64,12 @@ def claim_profile(code, user):
     Media.objects.filter(owner=profile).update(owner=user)  # the files keep their names, which hold the old id
     Note.objects.filter(archer=profile).update(archer=user)
     team = claim.team
+    if profile.profile.avatar and not user.profile.avatar:
+        # The coach's picture becomes the archer's (the file keeps its name); without this the delete below would remove it.
+        user.profile.avatar, user.profile.avatar_updated_at = profile.profile.avatar.name, profile.profile.avatar_updated_at
+        user.profile.save(update_fields=["avatar", "avatar_updated_at"])
+        profile.profile.avatar = ""
+        profile.profile.save(update_fields=["avatar"])
     profile.delete()  # its claim codes go with it
     return team
 

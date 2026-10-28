@@ -4,8 +4,10 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
+import AppAvatar from '@/components/AppAvatar.vue'
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
+import AvatarEditor from '@/components/AvatarEditor.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import ManagedArcherActions from '@/components/ManagedArcherActions.vue'
 import NotesSection from '@/components/NotesSection.vue'
@@ -51,6 +53,15 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
 <template>
   <AppPage :title="title">
     <div class="screen">
+      <AvatarEditor
+        v-if="info.data.value?.managed && info.data.value.team_id"
+        :name="shownName"
+        :url="info.data.value.avatar_url"
+        :allowed="info.data.value.avatar_allowed"
+        :archer="{ teamId: info.data.value.team_id, userId: Number(id) }"
+        @changed="info.reload"
+      />
+      <div v-else-if="info.data.value?.avatar_url" class="d-flex justify-content-center"><AppAvatar :name="shownName" :url="info.data.value.avatar_url" :size="96" /></div>
       <div v-if="profileLine" class="muted">{{ profileLine }}</div>
       <AppButton v-if="info.data.value?.managed" :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('archer.startFor', { name: shownName }) }}</AppButton>
       <AppButton v-if="info.data.value" secondary :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}&open=1&managed=${info.data.value.managed ? 1 : 0}`">{{ $t('archer.openSession') }}</AppButton>

@@ -9,18 +9,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.access import archers_visible_to
 from core.models import User
 
-from .access import can_add_for, can_change
+from .access import can_add_for, can_change, visible_media
 from .files import read_link, serve
 from .models import Media
 from .serializers import MediaSerializer, MediaWriteSerializer
-
-
-def visible_media(user):
-    """The clips of the archers whose training `user` may see."""
-    return Media.objects.filter(owner__in=archers_visible_to(user)).select_related("owner__profile")
 
 
 def get_media(request, media_id, write=False):

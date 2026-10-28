@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 from training.serializers import SessionRefField
 
-from .access import can_change
-from .files import is_jpeg, is_mp4, sign_link
+from .access import can_change, media_link
+from .files import is_jpeg, is_mp4
 from .models import Media
 
 MB = 1024 * 1024
@@ -34,15 +34,11 @@ class MediaSerializer(serializers.ModelSerializer):
         who = media.uploaded_by
         return (who.profile.name or who.email) if who else ""
 
-    def _link(self, media, part) -> str:
-        request = self.context["request"]
-        return request.build_absolute_uri(f"/api/media/{media.pk}/{part}/?token={sign_link(media.pk, request.user.pk)}")
-
     def get_file_url(self, media) -> str:
-        return self._link(media, "file")
+        return media_link(self.context["request"], media, "file")
 
     def get_thumbnail_url(self, media) -> str:
-        return self._link(media, "thumbnail")
+        return media_link(self.context["request"], media, "thumbnail")
 
     def get_can_edit(self, media) -> bool:
         return can_change(self.context["request"].user, media)

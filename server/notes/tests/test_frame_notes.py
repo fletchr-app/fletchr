@@ -77,12 +77,11 @@ def test_the_clip_and_the_frame_cannot_change_but_the_text_can(api, club):
     assert api("coach").patch(f"/api/notes/{note}/", {"body": "Better"}, format="json").status_code == 200
 
 
-def test_the_note_stays_when_the_clip_is_deleted(api, club):
+def test_the_note_is_deleted_with_the_clip(api, club):
     clip = clip_of(club["archer1"])
     note = frame_note(api, club, clip).data["id"]
     clip.delete()
-    kept = Note.objects.get(pk=note)
-    assert kept.media is None and kept.frame == 143
+    assert not Note.objects.filter(pk=note).exists()
 
 
 def test_the_export_has_the_frame(client_for, club):
@@ -116,7 +115,7 @@ def test_the_author_can_change_and_remove_the_drawing(api, club):
     assert api("admin").patch(f"/api/notes/{note}/", {"drawing": one}, format="json").status_code == 403  # only the author edits
 
 
-def test_a_drawing_needs_a_frame(api, club):
+def test_a_drawing_needs_a_picture(api, club):
     res = api("coach").post("/api/notes/", {"archer": club["archer1"].pk, "body": "x", "drawing": DRAWING}, format="json")
     assert res.status_code == 400 and "drawing" in res.data
 
