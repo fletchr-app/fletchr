@@ -16,11 +16,15 @@ const { t } = useI18n()
 const { api, replaceTokens } = useAuth()
 
 const email = ref('')
+const hasPassword = ref(true) // false for an account made with Google: no password, the address is Google's
 
 onIonViewWillEnter(async () => {
   try {
     const { data } = await api.GET('/api/me/')
-    if (data) email.value = data.email
+    if (data) {
+      email.value = data.email
+      hasPassword.value = data.has_password
+    }
   } catch {
     // Offline: the address stays empty.
   }
@@ -75,7 +79,12 @@ const changePassword = () =>
 
 <template>
   <AppPage :title="$t('account.title')">
-    <div class="screen">
+    <div v-if="!hasPassword" class="screen">
+      <h2 class="h5 m-0">{{ $t('account.email') }}</h2>
+      <div>{{ $t('account.googleAccount', { email: email || '…' }) }}</div>
+      <div class="muted">{{ $t('account.googleNote') }}</div>
+    </div>
+    <div v-else class="screen">
       <h2 class="h5 m-0">{{ $t('account.email') }}</h2>
       <div class="muted">{{ $t('account.signInWith', { email: email || '…' }) }}</div>
       <FormField v-model="newEmail" :label="$t('account.newEmail')" type="email" inputmode="email" autocomplete="email" />

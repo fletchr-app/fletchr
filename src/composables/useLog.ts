@@ -1,3 +1,4 @@
+import type { Proof } from '@/composables/useProof';
 import { App } from '@capacitor/app';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
@@ -82,10 +83,10 @@ async function withUploadsPaused<T>(action: () => Promise<T>): Promise<T> {
   }
 }
 
-async function deleteMyData(password: string, confirm: string): Promise<{ deleted: DeletedCounts } | { error: string }> {
+async function deleteMyData(proof: Proof, confirm: string): Promise<{ deleted: DeletedCounts } | { error: string }> {
   return withUploadsPaused(async () => {
     try {
-      const { data, error } = await api.POST('/api/me/delete-data/', { body: { password, confirm } });
+      const { data, error } = await api.POST('/api/me/delete-data/', { body: { ...proof, confirm } });
       if (!data) return { error: errorMessage(error) };
       dispatch({ type: 'reset' });
       return { deleted: data.deleted };
@@ -96,10 +97,10 @@ async function deleteMyData(password: string, confirm: string): Promise<{ delete
 }
 
 /** Deletes the account too; on success you are signed out, so the screen is gone when this returns. */
-async function deleteMyAccount(password: string, confirm: string): Promise<{ error: string; teams: string[] }> {
+async function deleteMyAccount(proof: Proof, confirm: string): Promise<{ error: string; teams: string[] }> {
   return withUploadsPaused(async () => {
     try {
-      const { data, error } = await api.POST('/api/me/delete-account/', { body: { password, confirm } });
+      const { data, error } = await api.POST('/api/me/delete-account/', { body: { ...proof, confirm } });
       if (!data) {
         const blocking = (error as { teams?: { name: string }[] } | undefined)?.teams ?? [];
         return { error: errorMessage(error), teams: blocking.map((t) => t.name) };

@@ -68,6 +68,7 @@ const setPassword = () =>
     <div class="screen">
       <template v-if="!sent">
         <div>{{ $t('auth.reset.intro') }}</div>
+        <div class="muted">{{ $t('auth.reset.google') }}</div>
         <FormField v-model="email" :label="$t('auth.signIn.email')" type="email" inputmode="email" autocomplete="email" @enter="sendCode" />
         <ErrorText :message="error" />
         <AppButton :busy="busy" @click="sendCode">{{ $t('auth.reset.sendCode') }}</AppButton>
