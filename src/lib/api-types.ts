@@ -284,6 +284,24 @@ export interface paths {
         patch: operations["me_partial_update"];
         trace?: never;
     };
+    "/api/me/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description PUT a new picture or DELETE it, for the profile in `self.profile()`. */
+        put: operations["me_avatar_update"];
+        post?: never;
+        /** @description PUT a new picture or DELETE it, for the profile in `self.profile()`. */
+        delete: operations["me_avatar_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/delete-account/": {
         parameters: {
             query?: never;
@@ -825,6 +843,24 @@ export interface paths {
         patch: operations["teams_archers_partial_update"];
         trace?: never;
     };
+    "/api/teams/{team_id}/archers/{user_id}/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description The picture of a profile without an account, set by the coaches of its team. */
+        put: operations["teams_archers_avatar_update"];
+        post?: never;
+        /** @description The picture of a profile without an account, set by the coaches of its team. */
+        delete: operations["teams_archers_avatar_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teams/{team_id}/archers/{user_id}/claim-code/": {
         parameters: {
             query?: never;
@@ -1036,6 +1072,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/{user_id}/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The picture itself. The <img> element cannot send the sign-in header, so the link carries a token (one viewer,
+         *     one person, an hour); the sign-in header works too. Every refusal is the same 404.
+         */
+        get: operations["users_avatar_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1070,6 +1126,10 @@ export interface components {
             video_consent_at: string | null;
             /** @description Who recorded it */
             video_consent_by: string | null;
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            avatar_allowed: boolean;
+            /** @description Empty without a picture; opens for an hour */
+            avatar_url: string;
         };
         ArcherNameRequest: {
             name: string;
@@ -1226,6 +1286,16 @@ export interface components {
              */
             radius_cm: number;
             sets: components["schemas"]["ArrowSetStats"][];
+        };
+        AvatarResult: {
+            avatar_url: string;
+        };
+        AvatarUploadRequest: {
+            /**
+             * Format: binary
+             * @description A JPEG of about 256 px, at most 512 KB
+             */
+            file: string;
         };
         /** @enum {unknown} */
         BlankEnum: "";
@@ -1448,6 +1518,8 @@ export interface components {
             shots: number;
             /** @description Photos and videos */
             media: number;
+            /** @description 1 if a profile picture was removed */
+            avatar: number;
             bows: number;
             arrow_sets: number;
             notes_about_me: number;
@@ -1712,6 +1784,8 @@ export interface components {
             also_shoots?: boolean;
             /** Format: date-time */
             readonly joined_at: string;
+            /** @description Empty if there is no picture or the viewer may not see it; opens for an hour */
+            readonly avatar_url: string;
         };
         MembershipSettings: {
             also_shoots?: boolean;
@@ -1940,6 +2014,10 @@ export interface components {
             units?: components["schemas"]["UnitsEnum"];
             /** @description False for an archer under 18 whose parents' consent is not on record */
             readonly video_allowed: boolean;
+            /** @description False for an archer under 18 whose parents' consent is not on record */
+            readonly avatar_allowed: boolean;
+            /** @description Empty without a picture; opens for an hour, fetch again for a new link */
+            readonly avatar_url: string;
         };
         ProfileRequest: {
             name?: string;
@@ -3137,6 +3215,47 @@ export interface operations {
             };
         };
     };
+    me_avatar_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AvatarUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarResult"];
+                };
+            };
+        };
+    };
+    me_avatar_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     me_delete_account_create: {
         parameters: {
             query?: never;
@@ -4308,6 +4427,53 @@ export interface operations {
             };
         };
     };
+    teams_archers_avatar_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AvatarUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarResult"];
+                };
+            };
+        };
+    };
+    teams_archers_avatar_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     teams_archers_claim_code_create: {
         parameters: {
             query?: never;
@@ -4683,6 +4849,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenRefresh"];
+                };
+            };
+        };
+    };
+    users_avatar_retrieve: {
+        parameters: {
+            query?: {
+                /** @description From `avatar_url`; not needed with the sign-in header */
+                token?: string;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
         };

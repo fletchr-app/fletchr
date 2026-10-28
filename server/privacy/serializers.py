@@ -32,6 +32,7 @@ class DeletedCountsSerializer(serializers.Serializer):
     sessions = serializers.IntegerField()
     shots = serializers.IntegerField()
     media = serializers.IntegerField(help_text="Photos and videos")
+    avatar = serializers.IntegerField(help_text="1 if a profile picture was removed")
     bows = serializers.IntegerField()
     arrow_sets = serializers.IntegerField()
     notes_about_me = serializers.IntegerField()

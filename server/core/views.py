@@ -6,10 +6,12 @@ from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -19,7 +21,10 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from . import access, claims, mail, resets
+from media.files import serve
+
+from . import access, avatar, claims, mail, resets
+from .serializers import avatar_url
 from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
 from .serializers import (
     ArcherNameSerializer,
@@ -154,6 +159,70 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class AvatarUploadSerializer(serializers.Serializer):
+    file = serializers.ImageField(help_text="A JPEG of about 256 px, at most 512 KB")
+
+
+class AvatarResultSerializer(serializers.Serializer):
+    avatar_url = serializers.CharField()
+
+
+class AvatarEditMixin:
+    """PUT a new picture or DELETE it, for the profile in `self.profile()`."""
+
+    parser_classes = [MultiPartParser, FormParser]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "avatar"
+
+    @extend_schema(request={"multipart/form-data": AvatarUploadSerializer}, responses=AvatarResultSerializer)
+    def put(self, request, **kwargs):
+        profile = self.profile(request, **kwargs)
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise ValidationError({"file": gettext("No picture sent")})
+        avatar.set_avatar(profile, upload)
+        return Response({"avatar_url": avatar_url(request, profile.user_id)})
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, **kwargs):
+        avatar.remove_avatar(self.profile(request, **kwargs))
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MyAvatarView(AvatarEditMixin, APIView):
+    def profile(self, request):
+        return request.user.profile
+
+
+class ManagedArcherAvatarView(AvatarEditMixin, APIView):
+    """The picture of a profile without an account, set by the coaches of its team."""
+
+    def profile(self, request, team_id, user_id):
+        _, user = ManagedArcherDetailView._profile(request, team_id, user_id)
+        return user.profile
+
+
+class AvatarFileView(APIView):
+    """The picture itself. The <img> element cannot send the sign-in header, so the link carries a token (one viewer,
+    one person, an hour); the sign-in header works too. Every refusal is the same 404."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("token", str, description="From `avatar_url`; not needed with the sign-in header")],
+        responses={(200, "image/jpeg"): OpenApiTypes.BINARY},
+    )
+    def get(self, request, user_id):
+        viewer = request.user if request.user.is_authenticated else None
+        if viewer is None and "token" in request.query_params:
+            viewer_id = avatar.read_link(request.query_params["token"], user_id)
+            viewer = User.objects.filter(pk=viewer_id, is_active=True).first() if viewer_id else None
+        person = User.objects.select_related("profile").filter(pk=user_id).first()
+        if viewer is None or person is None or not access.can_see_avatar(viewer, person):  # checked again: rights change within the hour
+            raise NotFound()
+        return serve(request, person.profile.avatar, "image/jpeg")
 
 
 MAX_TEAMS_PER_USER = 5  # teams one person may administer
@@ -338,7 +407,7 @@ class MemberDetailView(APIView):
         if role == Role.ARCHER:
             member.also_shoots = False  # an archer's sessions are visible to the coaches anyway
         member.save(update_fields=["role", "also_shoots"])
-        return Response(MemberSerializer(member).data)
+        return Response(MemberSerializer(member, context={"request": request}).data)
 
     @extend_schema(responses={204: None})
     def delete(self, request, team_id, user_id):
@@ -397,7 +466,7 @@ class ManagedArcherListView(APIView):
         serializer.is_valid(raise_exception=True)
         user = User.objects.create_managed(serializer.validated_data["name"])
         member = TeamMember.objects.create(team=team, user=user, role=Role.ARCHER)
-        return Response(MemberSerializer(member).data, status=status.HTTP_201_CREATED)
+        return Response(MemberSerializer(member, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 
 class ManagedArcherDetailView(APIView):
@@ -419,7 +488,7 @@ class ManagedArcherDetailView(APIView):
         for field, value in changes.items():
             setattr(profile.profile, field, value)
         profile.profile.save(update_fields=list(changes))
-        return Response(MemberSerializer(TeamMember.objects.get(team=team, user=profile)).data)
+        return Response(MemberSerializer(TeamMember.objects.get(team=team, user=profile), context={"request": request}).data)
 
     @extend_schema(responses={204: None})
     def delete(self, request, team_id, user_id):
@@ -469,6 +538,8 @@ class ArcherView(APIView):
                 # Coaches see the age; the date itself only where they keep the profile themselves.
                 "date_of_birth": archer.profile.date_of_birth if archer.is_managed else None,
                 **consent_data(archer.profile),
+                "avatar_allowed": archer.profile.avatar_allowed,
+                "avatar_url": avatar_url(request, archer.pk) if access.can_see_avatar(request.user, archer) else "",
             }
         )
 
