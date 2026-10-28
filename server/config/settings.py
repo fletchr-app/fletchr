@@ -212,13 +212,17 @@ REST_FRAMEWORK = {
     # Deny by default; endpoints that should be public opt out explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour", "reset_request": "5/hour", "reset_confirm": "10/hour", "avatar": "30/hour"},
+    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour", "reset_request": "5/hour", "reset_confirm": "10/hour", "avatar": "30/hour", "social": "10/min"},
     # Behind nginx every request comes from the proxy's address, so the limits would be shared by everybody:
     # with one proxy, the client is the last address in X-Forwarded-For (the one nginx adds, never the one the client sends).
     # Without a proxy, 0 makes Django ignore X-Forwarded-For (unset, DRF would trust any value a client sends).
     "NUM_PROXIES": 1 if os.environ.get("DJANGO_BEHIND_PROXY") == "1" else 0,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+# Web client ID(s) of the Google project. Set only on the official server: without it Google sign-in is off and the
+# endpoint answers 404 (Google sign-in is not offered for self-hosted servers, specs/plans/2026-10-28-google-sign-in.md).
+GOOGLE_CLIENT_IDS = [x.strip() for x in os.environ.get("DJANGO_GOOGLE_CLIENT_IDS", "").split(",") if x.strip()]
 
 # The oldest app that still works with this server. `/api/health/` tells the app, which then asks the person to update.
 # Raise it only when a change breaks old apps (specs/steering/releasing.md); a server that keeps serving them needs no raise.

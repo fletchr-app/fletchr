@@ -244,6 +244,41 @@ paths:
                 items:
                   $ref: '#/components/schemas/ArrowSetRevision'
           description: ''
+  /api/auth/google/:
+    post:
+      operationId: auth_google_create
+      description: Sign in with a Google ID token. With an invite or claim code it
+        registers a new account instead (never without one).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
   /api/bows/:
     get:
       operationId: bows_list
@@ -929,7 +964,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ExportRequestRequest'
-        required: true
       security:
       - jwtAuth: []
       responses:
@@ -958,7 +992,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ExportRequestRequest'
-        required: true
       security:
       - jwtAuth: []
       responses:
@@ -3500,7 +3533,11 @@ components:
         password:
           type: string
           writeOnly: true
-          minLength: 1
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
         confirm:
           type: string
           writeOnly: true
@@ -3508,12 +3545,11 @@ components:
           description: The confirmation word shown in the app
       required:
       - confirm
-      - password
     DeleteAccountResponse:
       type: object
       properties:
         deleted:
-          $ref: '#/components/schemas/DeletedCounts'
+          $ref: '#/components/schemas/DeletedAccountCounts'
         teams_left:
           type: integer
           description: Teams I was a member of; they go on without me
@@ -3532,7 +3568,11 @@ components:
         password:
           type: string
           writeOnly: true
-          minLength: 1
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
         confirm:
           type: string
           writeOnly: true
@@ -3540,7 +3580,6 @@ components:
           description: The confirmation word shown in the app
       required:
       - confirm
-      - password
     DeleteDataResponse:
       type: object
       properties:
@@ -3548,6 +3587,41 @@ components:
           $ref: '#/components/schemas/DeletedCounts'
       required:
       - deleted
+    DeletedAccountCounts:
+      type: object
+      properties:
+        sessions:
+          type: integer
+        shots:
+          type: integer
+        media:
+          type: integer
+          description: Photos and videos
+        avatar:
+          type: integer
+          description: 1 if a profile picture was removed
+        bows:
+          type: integer
+        arrow_sets:
+          type: integer
+        notes_about_me:
+          type: integer
+        evaluations:
+          type: integer
+          description: Evaluations about me, by coaches and by me
+        sign_in_methods:
+          type: integer
+          description: Google sign-ins removed with the account
+      required:
+      - arrow_sets
+      - avatar
+      - bows
+      - evaluations
+      - media
+      - notes_about_me
+      - sessions
+      - shots
+      - sign_in_methods
     DeletedCounts:
       type: object
       properties:
@@ -3816,13 +3890,17 @@ components:
         * `coach_only` - Coach Only
     ExportRequestRequest:
       type: object
+      description: 'The proof that it is me at the phone: my password, or for an account
+        made with Google (no password) a fresh Google token of that account.'
       properties:
         password:
           type: string
           writeOnly: true
-          minLength: 1
-      required:
-      - password
+        id_token:
+          type: string
+          writeOnly: true
+          description: Instead of the password, for an account that signs in with
+            Google
     Face:
       type: object
       properties:
@@ -3866,6 +3944,19 @@ components:
         * `wa` - wa
         * `field` - field
         * `blank` - blank
+    GoogleSignInRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: From the Google sign-in on the phone
+        invite_code:
+          type: string
+          description: 'Only to register: an invite or claim code'
+      required:
+      - id_token
     HandEnum:
       enum:
       - right
@@ -3966,10 +4057,23 @@ components:
           readOnly: true
         profile:
           $ref: '#/components/schemas/Profile'
+        has_password:
+          type: boolean
+          readOnly: true
+          description: 'False for an account made with Google: no password, no email
+            change'
+        sign_in_providers:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: Providers (google) that can sign in to this account
       required:
       - email
+      - has_password
       - id
       - profile
+      - sign_in_providers
     Media:
       type: object
       properties:

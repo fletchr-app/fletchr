@@ -140,6 +140,13 @@ DE = {
     "The picture is too large, it should be about 256 px on a side": "Das Bild ist zu groß, es sollte etwa 256 px an einer Seite haben",
     "The picture is larger than 512 KB": "Das Bild ist größer als 512 KB",
     "A picture of an archer under 18 needs the consent of the parents": "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern",
+    "Google sign-in failed. Please try again.": "Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch einmal.",
+    "This account cannot sign in.": "Mit diesem Konto kann man sich nicht anmelden.",
+    "There is no account for this Google sign-in yet. Register with your invite code.": "Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit deinem Einladungscode.",
+    "Google did not confirm your email address.": "Google hat deine E-Mail-Adresse nicht bestätigt.",
+    "This email address already has an account. Ask an admin to connect it with your Google sign-in.": "Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu verbinden.",
+    "This account signs in with Google and has no password.": "Dieses Konto meldet sich mit Google an und hat kein Passwort.",
+    "Confirm with Google first": "Bestätige zuerst mit Google",
 }
 
 PATH ="locale/de/LC_MESSAGES/django.po"

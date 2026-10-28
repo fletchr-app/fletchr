@@ -210,6 +210,21 @@ class ClaimCode(models.Model):
         return f"{self.code} -> {self.profile} in {self.team}"
 
 
+class SocialIdentity(models.Model):
+    """The way a provider (Google, later Apple) knows an account: its subject ID. No token, no email, no name."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="social_identities")
+    provider = models.CharField(max_length=20)
+    subject = models.CharField(max_length=255, help_text="The `sub` of the provider's ID token. Never changes for a person")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["provider", "subject"], name="one_account_per_identity")]
+
+    def __str__(self):
+        return f"{self.provider} {self.subject} -> {self.user}"
+
+
 class PasswordReset(models.Model):
     """A code mailed to someone who forgot their password. Only a hash of the code is kept."""
 
