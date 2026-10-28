@@ -127,9 +127,6 @@ def test_nobody_else_writes_sessions_for_a_profile(client_for, club, managed):
     url = f"/api/sessions/{new_id()}/?owner={managed.pk}"
     assert client_for(club["archer1"]).put(url, SESSION, format="json").status_code == 404
     assert client_for(club["b_admin"]).put(url, SESSION, format="json").status_code == 404
-    # nor for a real account, even one the coach may read
-    real = f"/api/sessions/{new_id()}/?owner={club['archer1'].pk}"
-    assert client_for(club["coach"]).put(real, SESSION, format="json").status_code == 404
     assert not TrainingSession.objects.exists()
 
 

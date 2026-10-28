@@ -3,7 +3,7 @@ import createClient from 'openapi-fetch';
 import { test } from 'vitest';
 
 import type { paths } from './api-types.ts';
-import { drainMedia, mediaForm, type MediaSendResult, type QueuedMedia, sendMedia } from './media-queue.ts';
+import { drainMedia, mediaForm, type MediaSendResult, type QueuedMedia, renameSession, sendMedia } from './media-queue.ts';
 
 const item = (id: string, extra: Partial<QueuedMedia> = {}): QueuedMedia => ({
   id, kind: 'photo', owner: null, session: null, taken_at: '2026-10-24T10:00:00Z', width: 800, height: 600, ...extra,
@@ -140,4 +140,10 @@ test('a 400 about the session means: send it without', async () => {
   const bad = clientWith(() => json(400, { session: ['Invalid pk'] })).api;
   assert.equal((await sendMedia(bad, item('a', { session: 's1' }), files)).kind, 'withoutSession');
   assert.equal((await sendMedia(bad, item('a'), files)).kind, 'failed', 'no session was sent, so it cannot be the cause');
+});
+
+test('queued clips follow a session that the server merged into another', () => {
+  const items = [item('a', { session: 'old' }), item('b', { session: 'other' }), item('c')];
+  assert.deepEqual(renameSession(items, 'old', 'new').map((i) => i.session), ['new', 'other', null]);
+  assert.equal(renameSession(items, 'missing', 'new'), items);
 });

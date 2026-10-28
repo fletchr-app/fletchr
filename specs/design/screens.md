@@ -2,7 +2,7 @@
 
 Status: implemented except where marked planned; see [the milestone plans](../plans/index.md)
 Date: 2026-10-23
-Updated: 2026-10-28
+Updated: 2026-10-29
 
 **Archer**
 1. Home: this week's arrow count, last session, latest coach notes
@@ -21,3 +21,4 @@ Updated: 2026-10-28
 4. Evaluations: fill in an evaluation form for an archer (tap a 1 to 5 rating per criterion, optional comment and video frame per criterion, goals at the end); edit the team's form templates
 5. Team stats: archers with no arrows in the last 7 days; a ranking (coach only, off by default, see [roles-and-access.md](roles-and-access.md))
 6. Team admin: invites, roles
+7. Open a session for an archer (archer page): environment and place only, then photos, videos and notes can be attached. The archer finds it in their training list, shown as "Session", and chooses the type when adding results

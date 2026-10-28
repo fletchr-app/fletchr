@@ -26,6 +26,11 @@ export type QueuedMedia = {
 
 export type MediaFiles = { file: Blob; thumbnail: Blob };
 
+/** The queued items that belong to session `from` belong to `to` now (the server merged the sessions). */
+export function renameSession(items: QueuedMedia[], from: string, to: string): QueuedMedia[] {
+  return items.some((i) => i.session === from) ? items.map((i) => (i.session === from ? { ...i, session: to } : i)) : items;
+}
+
 export type MediaSendResult = SendResult | { kind: 'withoutSession' };
 
 export function mediaForm(item: QueuedMedia, files: MediaFiles, withSession: boolean): FormData {

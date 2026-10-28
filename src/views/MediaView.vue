@@ -24,6 +24,7 @@ import DrawnPicture from '@/components/DrawnPicture.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -56,6 +57,12 @@ const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId } = useAuth()
 const media = useMedia()
+const { renamed } = useLog()
+// The server merged this session into another one: continue there.
+watch(
+  () => (sessionId ? renamed.value[sessionId] : undefined),
+  (to) => to && void router.replace({ path: '/media', query: { ...route.query, session: to } }),
+)
 const { videosWifiOnly } = useUploadSettings()
 const me = computed(() => Number(userId.value))
 const owner = computed(() => ownerParam ?? me.value)

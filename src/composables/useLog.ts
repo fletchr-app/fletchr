@@ -1,4 +1,5 @@
 import { App } from '@capacitor/app';
+import { Network } from '@capacitor/network';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
@@ -12,6 +13,7 @@ import {
   type Environment,
   type Gear,
   type LogAction,
+  type LogSession,
   type LogEnd,
   type LogState,
   type SessionDetails,
@@ -19,7 +21,7 @@ import {
   reduce,
   type SessionType,
 } from '@/lib/log-model';
-import { drain, fetchEquipment, send } from '@/lib/log-sync';
+import { drain, fetchEquipment, pull, send } from '@/lib/log-sync';
 import { newId } from '@/lib/uuid';
 
 const RETRY_INTERVAL_MS = 20_000;
@@ -41,9 +43,36 @@ let flushing = false;
 let paused = false;
 let inflight: Promise<void> | null = null;
 
+// Sessions the server merged into others: old id to new id. Screens that hold an old id follow it, and so does the media queue.
+const renamed = ref<Readonly<Record<string, string>>>({});
+const renameListeners: ((from: string, to: string) => void)[] = [];
+
 function dispatch(action: LogAction) {
   current = reduce(current, action);
   state.value = current;
+  if (action.type === 'replaceSessionId' && action.from !== action.to) {
+    renamed.value = { ...renamed.value, [action.from]: action.to };
+    renameListeners.forEach((listener) => listener(action.from, action.to));
+  }
+}
+
+let pulling = false;
+
+/** What a coach opened for you, and which of your sessions the server merged or deleted. Before the uploads, so they go to the right id. */
+async function pullNow() {
+  if (pulling || paused || !loaded.value || status.value !== 'signedIn' || userId.value === null) return;
+  pulling = true;
+  try {
+    const actions = await pull(api, Number(userId.value), current.lastPull);
+    if (actions && !paused) actions.forEach(dispatch);
+  } finally {
+    pulling = false;
+  }
+}
+
+async function sync() {
+  await pullNow();
+  await flush();
 }
 
 const loaded = computed(() => storageKey.value !== null && loadedKey.value === storageKey.value);
@@ -121,7 +150,9 @@ async function refreshEquipment() {
   if (fetched) dispatch({ type: 'setEquipment', equipment: fetched });
 }
 
-function startSession(type: SessionType, environment: Environment, location: string, gear?: Gear, archer?: { id: number; name: string }): string {
+function startSession(
+  type: SessionType, environment: Environment, location: string, gear?: Gear, archer?: { id: number; name: string }, extra?: Partial<LogSession>,
+): string {
   const id = newId();
   dispatch({
     type: 'startSession',
@@ -129,6 +160,7 @@ function startSession(type: SessionType, environment: Environment, location: str
       id, started_at: new Date().toISOString(), ended_at: null, type, environment, location, ends: [], volume: [],
       ...(gear ? { gear } : {}),
       ...(archer ? { owner: archer.id, owner_name: archer.name } : {}),
+      ...extra,
     },
   });
   return id;
@@ -143,6 +175,8 @@ const actions = {
   startSession,
   sessionWaiting,
   refreshEquipment,
+  setType: (id: string, type: SessionType) => dispatch({ type: 'updateSession', id, patch: { type } }),
+  onSessionRenamed: (listener: (from: string, to: string) => void) => void renameListeners.push(listener),
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
@@ -189,6 +223,8 @@ effectScope(true).run(() => {
 
   // Upload whenever something new is queued, again every so often while something is waiting, and on return to the app.
   watch([() => state.value.outbox, loaded, status], () => void flush(), { immediate: true });
+  // Ask the server what changed there when the account is ready, when the app comes back and when the connection returns.
+  watch([loaded, status, userId], () => void sync(), { immediate: true });
   let timer: ReturnType<typeof setInterval> | undefined;
   watch(
     waiting,
@@ -198,12 +234,13 @@ effectScope(true).run(() => {
     },
     { immediate: true },
   );
-  void App.addListener('appStateChange', ({ isActive }) => isActive && void flush());
+  void App.addListener('appStateChange', ({ isActive }) => isActive && void sync());
+  void Network.addListener('networkStatusChange', ({ connected }) => connected && void sync());
 
   watch([loaded, status, userId], () => void refreshEquipment(), { immediate: true });
 });
 
 export function useLog() {
-  return { loaded, sessions, equipment, waiting, failed, goneSessions, ...actions };
+  return { loaded, sessions, equipment, renamed, waiting, failed, goneSessions, ...actions };
 }
 
