@@ -27,7 +27,7 @@ def test_the_account_and_everything_of_it_is_deleted(client_for, club):
     res = delete(client_for, club["archer1"])
     assert res.status_code == 200, res.data
     assert res.data == {
-        "deleted": {"sessions": 1, "shots": 6, "media": 0, "bows": 1, "arrow_sets": 1, "notes_about_me": 1, "evaluations": 0},
+        "deleted": {"sessions": 1, "shots": 6, "media": 0, "avatar": 0, "bows": 1, "arrow_sets": 1, "notes_about_me": 1, "evaluations": 0},
         "teams_left": 1,
         "teams_deleted": 0,
     }

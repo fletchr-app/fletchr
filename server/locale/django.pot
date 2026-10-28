@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 21:43+0100\n"
+"POT-Creation-Date: 2026-10-28 21:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,23 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:129
+#: core/avatar.py:36 core/avatar.py:41
+msgid "The picture must be a JPEG"
+msgstr ""
+
+#: core/avatar.py:38
+msgid "The picture is too large, it should be about 256 px on a side"
+msgstr ""
+
+#: core/avatar.py:56
+msgid "A picture of an archer under 18 needs the consent of the parents"
+msgstr ""
+
+#: core/avatar.py:58
+msgid "The picture is larger than 512 KB"
+msgstr ""
+
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:134
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -63,84 +79,88 @@ msgid ""
 "email password."
 msgstr ""
 
-#: core/serializers.py:12
+#: core/serializers.py:14
 msgid "Enter a date of birth in the past"
 msgstr ""
 
-#: core/serializers.py:52
+#: core/serializers.py:66
 msgid "An account with this email already exists"
 msgstr ""
 
-#: core/serializers.py:85
+#: core/serializers.py:99
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:98
+#: core/serializers.py:112
 msgid "Give a name or show_ranking"
 msgstr ""
 
-#: core/serializers.py:141 core/serializers.py:156
+#: core/serializers.py:174 core/serializers.py:189
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:204 privacy/serializers.py:19 privacy/serializers.py:66
+#: core/serializers.py:239 privacy/serializers.py:19 privacy/serializers.py:67
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:214
+#: core/serializers.py:249
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:228
+#: core/serializers.py:263
 msgid "This address is not available"
 msgstr ""
 
-#: core/views.py:249
+#: core/views.py:184
+msgid "No picture sent"
+msgstr ""
+
+#: core/views.py:318
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:295
+#: core/views.py:364
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:304
+#: core/views.py:373
 msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:330
+#: core/views.py:399
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:336 core/views.py:350
+#: core/views.py:405 core/views.py:419
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:347
+#: core/views.py:416
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:361 core/views.py:378
+#: core/views.py:430 core/views.py:447
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:386
+#: core/views.py:455
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:511
+#: core/views.py:582
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:523
+#: core/views.py:594
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:535
+#: core/views.py:606
 msgid "This account no longer exists"
 msgstr ""
 

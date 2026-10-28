@@ -6,6 +6,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 - **Notes on photos:** a coach can write a note on a photo and draw on it (lines, angles, circles), as on a video frame. The photo opens in the player; the swipe view and the notes lists show the drawing. On the session and archer pages the frame link and the drawing buttons of a note now work (they did nothing before).
 - **Deleting a photo or clip deletes its notes and drawings** (before, the notes of a clip stayed). Migration `notes.0005`.
+- **Profile picture (#79):** optional, set on the profile screen (take a photo or choose one) and shown in the members list. Seen by you, the coaches and admins of your teams, and the archers of those teams for their coaches and admins. A coach can set the picture of a profile without an account. For an archer under 18 it waits for the parents' consent, like video. It is part of the data download and is deleted with "Delete my data" and the account.
+- Server: new endpoints `/api/me/avatar/`, `/api/users/<id>/avatar/` and `/api/teams/<id>/archers/<id>/avatar/`; `avatar_url` on members, the archer and the profile; migration `core/0007_profile_avatar`; new dependency Pillow.
 
 ## 0.9.2, 2026-10-26
 

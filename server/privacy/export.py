@@ -11,6 +11,7 @@ from notes.models import Note
 from training.models import TrainingSession
 from training.serializers import SessionSerializer
 
+from . import media_zip
 from .media_zip import file_name, media_of
 
 FORMAT_VERSION = 1
@@ -118,6 +119,8 @@ def export_user_data(user) -> dict:
             "dominant_eye": profile.dominant_eye,
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
+            "avatar": media_zip.AVATAR_NAME if profile.avatar else None,  # the name in the zip of the files
+            "avatar_updated_at": profile.avatar_updated_at,
             "video_consent_at": profile.video_consent_at,
             "video_consent_by": (profile.video_consent_by.profile.name or profile.video_consent_by.email) if profile.video_consent_by else None,
         },

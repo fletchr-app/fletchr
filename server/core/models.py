@@ -5,8 +5,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.db import models
-from django.db.models.signals import post_save
+from django.db import models, transaction
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -70,6 +70,10 @@ def age_in_years(born, today=None):
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
+def avatar_path(profile, filename):
+    return f"avatars/{profile.user_id}/{uuid.uuid4().hex[:12]}.jpg"
+
+
 class Profile(models.Model):
     class Hand(models.TextChoices):
         RIGHT = "right"
@@ -88,6 +92,9 @@ class Profile(models.Model):
     # Video of an archer under 18 needs the consent of the parents. A coach records that it was given.
     video_consent_at = models.DateTimeField(null=True, blank=True)
     video_consent_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    # A JPEG of at most 512 px (core/avatar.py). A new name on every change, so a cached link never shows an old picture.
+    avatar = models.FileField(upload_to=avatar_path, blank=True, max_length=200)
+    avatar_updated_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name or self.user.email
@@ -100,6 +107,19 @@ class Profile(models.Model):
     def video_allowed(self) -> bool:
         """Adults, and archers whose age is not known (nothing says they are young), may be filmed; archers under 18 need consent on record."""
         return self.age is None or self.age >= 18 or self.video_consent_at is not None
+
+    @property
+    def avatar_allowed(self) -> bool:
+        """A picture shows a face, so for an archer under 18 it waits for the consent on record (until the legal review, #63, says otherwise)."""
+        return self.video_allowed
+
+
+@receiver(post_delete, sender=Profile)
+def remove_avatar_file(sender, instance, **kwargs):
+    """The file goes when the row goes, however it is deleted (account, team with managed profiles, admin)."""
+    if instance.avatar:
+        field = instance.avatar
+        transaction.on_commit(lambda: field.storage.delete(field.name))  # not if the deletion is rolled back
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
