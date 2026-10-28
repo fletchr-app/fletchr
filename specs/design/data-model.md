@@ -2,14 +2,15 @@
 
 Status: implemented, except where marked planned (checked against the models 2026-10-28)
 Date: 2026-10-23
-Updated: 2026-10-28
+Updated: 2026-10-29
 
 - **profiles**: id, name, dominant hand/eye, date of birth (optional), preferred units, video consent (`video_consent_at`, `video_consent_by`). A profile picture is planned, there is no field yet
 - **teams** (with `show_ranking`), **team_members** (team_id, profile_id, role: archer | coach | admin, also-shoots flag)
 - **bows**: owner, name, type (recurve, compound, barebow, longbow, traditional), riser, limbs, draw weight, draw length, brace height, tiller, plunger, sight, stabilisers, release/tab, notes, active flag
 - **arrow_sets**: owner, shaft model, spine, length, point weight, nock, fletching, count
 - **setups**: a bow + arrow set combination with a snapshot of its settings, so old sessions keep the setup as it was then
-- **sessions**: archer, date/time, location, indoor/outdoor, weather/wind, type (scoring, volume, technique, competition), setup_id, physical/mental rating (1 to 5), goals, notes
+- **sessions**: archer, date/time, location, indoor/outdoor, weather/wind, type (scoring, volume, technique, competition; empty for a session a coach opened, the archer chooses it with the first results and it cannot change once there are any), opened_by (the user who created it; empty on old rows, meaning the owner), setup_id, physical/mental rating (1 to 5), goals, notes
+- **session tombstones**: id of a session that is gone, owner, `merged_into` (the session that took its place, empty if it was deleted), time. They let a phone replace or drop its copy, and make a write to a merged id land in the winning session. See [offline-sync.md](offline-sync.md)
 - **target faces**: not a table. A built-in catalogue in `shared/target-faces.json` (see [arrow-plotting.md](arrow-plotting.md)), read by the server and bundled in the app, so it works offline. Per face: slug, name, ring diameters and values, X ring, spot layout, compound flag. Sessions refer to a face by its slug
 - **ends**: session_id, index, distance, target_face_id, arrows per end
 - **shots**: end_id, x/y position (per spot: centre = 0,0, x to the right, y up, the outer edge of the outermost scoring ring = 1, so any face size works), spot index for multi-spot faces, score value and is_x derived from the position, is_miss, optional arrow number (to find a bad arrow in the set), manual-override flag

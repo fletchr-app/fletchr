@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Coach opens a session for an archer (#82):** on the archer's page a coach can open a session without results to attach photos, videos and notes. The archer finds it in the training list (shown as "Session") and chooses the type when adding results. If the archer starts their own session for the same training, the server merges the two (the archer's wins); media and notes move over and the phone follows. The session type may now be empty on the server, `GET /api/sessions/gone/` lists merged and deleted ids, and a `PUT` to a deleted session answers 410. One migration (`training/0002`). Old apps show a raw key for the empty type until updated.
+
 ## 0.9.2, 2026-10-26
 
 - **Placing arrows:** while the finger is down, the whole view zooms in around the spot, and a cross a bit above the finger marks it, so the finger no longer covers it. The spot is the one the unzoomed view would mark. No server changes, no migrations.

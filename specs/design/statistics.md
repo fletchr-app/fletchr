@@ -2,7 +2,7 @@
 
 Status: implemented, except the points marked planned; per-feature state in [milestone 3](../plans/2026-10-23-milestone-3-deeper-stats.md)
 Date: 2026-10-23
-Updated: 2026-10-28
+Updated: 2026-10-29
 
 - Arrow volume per day/week/month, by distance
 - Average arrow score and score per end, trend over time, per distance and face
@@ -15,5 +15,7 @@ Updated: 2026-10-28
 - Comparison by setup (e.g. before/after a limb change). The group trend has no setup picker in the app yet (the endpoint has the filter)
 - Self-ratings vs. score correlation
 - Coach: same charts per archer, plus team comparison and "who hasn't trained this week"
+
+Sessions without results (a coach opened one, nothing shot yet) add nothing to any of these: every statistic is built from shots and volume entries. In the team overview such a session counts as the archer's last session, but is not shown as live until something was shot in it.
 
 Stats are computed on the server (`/api/stats/` and friends) so every client shows identical numbers.
