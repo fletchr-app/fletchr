@@ -2,6 +2,11 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Notes on photos:** a coach can write a note on a photo and draw on it (lines, angles, circles), as on a video frame. The photo opens in the player; the swipe view and the notes lists show the drawing. On the session and archer pages the frame link and the drawing buttons of a note now work (they did nothing before).
+- **Deleting a photo or clip deletes its notes and drawings** (before, the notes of a clip stayed). Migration `notes.0005`.
+
 ## 0.9.2, 2026-10-26
 
 - **Placing arrows:** while the finger is down, the whole view zooms in around the spot, and a cross a bit above the finger marks it, so the finger no longer covers it. The spot is the one the unzoomed view would mark. No server changes, no migrations.

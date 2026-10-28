@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 17:26+0100\n"
+"POT-Creation-Date: 2026-10-28 21:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -319,11 +319,11 @@ msgstr ""
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:217 notes/serializers.py:112
+#: evaluations/serializers.py:217 notes/serializers.py:149
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:220 notes/serializers.py:102
+#: evaluations/serializers.py:220 notes/serializers.py:136
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
@@ -331,7 +331,7 @@ msgstr ""
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:224 notes/serializers.py:106
+#: evaluations/serializers.py:224 notes/serializers.py:143
 msgid "The clip has no such frame"
 msgstr ""
 
@@ -359,50 +359,50 @@ msgstr ""
 msgid "Evaluations were made with this form, so it stays"
 msgstr ""
 
-#: media/serializers.py:70
+#: media/serializers.py:66
 msgid "This session belongs to another archer"
 msgstr ""
 
-#: media/serializers.py:82
+#: media/serializers.py:78
 msgid "A video must be an MP4 file"
 msgstr ""
 
-#: media/serializers.py:84
+#: media/serializers.py:80
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:88
+#: media/serializers.py:84
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr ""
 
-#: media/serializers.py:91
+#: media/serializers.py:87
 msgid "A photo must be a JPEG file"
 msgstr ""
 
-#: media/serializers.py:93
+#: media/serializers.py:89
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:97
+#: media/serializers.py:93
 msgid "The preview must be a small JPEG file"
 msgstr ""
 
-#: media/serializers.py:100
+#: media/serializers.py:96
 msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
-#: media/views.py:32
+#: media/views.py:26
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:76 notes/views.py:82 training/views.py:121
+#: media/views.py:70 notes/views.py:83 training/views.py:121
 msgid "Give the id of the archer"
 msgstr ""
 
-#: media/views.py:83
+#: media/views.py:77
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A "
 "coach can record it on the archer's page."
@@ -418,47 +418,51 @@ msgstr ""
 msgid "A drawing can have %(n)s shapes at most"
 msgstr ""
 
-#: notes/serializers.py:60
+#: notes/serializers.py:94
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:73
-msgid "A drawing belongs to a frame of a clip"
+#: notes/serializers.py:107
+msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr ""
 
-#: notes/serializers.py:77
+#: notes/serializers.py:111
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:82
+#: notes/serializers.py:116
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:88
+#: notes/serializers.py:122
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:92
+#: notes/serializers.py:126
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:94
+#: notes/serializers.py:128
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:96
+#: notes/serializers.py:130
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:98
+#: notes/serializers.py:132
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:104
+#: notes/serializers.py:139
+msgid "A photo has no frames"
+msgstr ""
+
+#: notes/serializers.py:141
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:110
+#: notes/serializers.py:147
 msgid "This clip is from another session"
 msgstr ""
 

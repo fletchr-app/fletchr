@@ -6,11 +6,13 @@ import { RouterLink } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
+import DrawnPicture from '@/components/DrawnPicture.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
+import { drawnShapes } from '@/lib/media-notes'
 import { clock } from '@/lib/player'
 
 type Note = components['schemas']['Note']
@@ -22,8 +24,9 @@ const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
   { value: 'shared', label: t('notes.shared') },
 ])
 
-const props = defineProps<{ note: Note; ends: { id: string; index: number }[] }>()
-const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [note: Note] }>()
+// `picture`: show the photo of a photo note with its drawing (not where the photo is on screen already).
+const props = defineProps<{ note: Note; ends: { id: string; index: number }[]; picture?: boolean }>()
+const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [note: Note]; open: [note: Note] }>()
 
 const { api } = useAuth()
 const editing = ref(false)
@@ -31,6 +34,7 @@ const body = ref(props.note.body)
 const visibility = ref<Visibility>(props.note.visibility ?? 'coach_only')
 const confirmDelete = ref(false)
 const error = ref<string | null>(null)
+const isPhoto = computed(() => props.note.picture?.kind === 'photo')
 const endIndex = computed(() => props.ends.find((e) => e.id === props.note.end)?.index)
 
 async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
@@ -70,10 +74,13 @@ const remove = () =>
       <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>
     <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
+    <button v-if="picture && isPhoto && note.picture" type="button" class="photo" :aria-label="$t('notes.openPhoto')" @click="emit('open', note)">
+      <DrawnPicture :src="note.picture.thumbnail_url" :width="note.picture.width" :height="note.picture.height" :shapes="drawnShapes([note])" />
+    </button>
     <IonButton v-if="note.frame !== null && note.frame !== undefined && !editing" fill="outline" size="small" class="m-0 align-self-start" @click="emit('jump', note.frame)">
       {{ $t('notes.frameLink', { n: note.frame + 1, time: clock((note.time_ms ?? 0) / 1000) }) }}
     </IonButton>
-    <IonButton v-if="note.can_edit && note.frame !== null && note.frame !== undefined && !editing" fill="clear" size="small" class="m-0 align-self-start" @click="emit('editDrawing', note)">
+    <IonButton v-if="note.can_edit && note.media && !editing" fill="clear" size="small" class="m-0 align-self-start" @click="emit('editDrawing', note)">
       {{ note.drawing ? $t('notes.editDrawing') : $t('notes.addDrawing') }}
     </IonButton>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
@@ -84,3 +91,13 @@ const remove = () =>
     </div>
   </div>
 </template>
+
+<style scoped>
+.photo {
+  width: 100%;
+  max-width: 240px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+</style>
