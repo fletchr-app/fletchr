@@ -79,3 +79,18 @@ def delete_team(team):
     profiles = User.objects.filter(is_managed=True, memberships__team=team)
     profiles.exclude(memberships__team__in=Team.objects.exclude(pk=team.pk)).delete()
     team.delete()
+
+
+def redeem_code(code, user):
+    """What registration does with the code a person typed: a claim code takes over a profile, an invite adds to a team.
+    Raises ValidationError({"invite_code": ...}); the caller rolls back the new user."""
+    from rest_framework.exceptions import ValidationError
+
+    from . import access
+
+    try:
+        if find_claim(code) is not None:
+            return claim_profile(code, user)
+        return access.redeem_invite(code, user)
+    except (access.InviteError, ClaimError) as e:
+        raise ValidationError({"invite_code": str(e)})

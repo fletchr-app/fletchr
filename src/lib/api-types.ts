@@ -87,6 +87,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/google/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Sign in with a Google ID token. With an invite or claim code it registers a new account instead (never without one). */
+        post: operations["auth_google_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bows/": {
         parameters: {
             query?: never;
@@ -1518,12 +1535,14 @@ export interface components {
         };
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteAccountRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
             /** @description The confirmation word shown in the app */
             confirm: string;
         };
         DeleteAccountResponse: {
-            deleted: components["schemas"]["DeletedCounts"];
+            deleted: components["schemas"]["DeletedAccountCounts"];
             /** @description Teams I was a member of; they go on without me */
             teams_left: number;
             /** @description Teams where I was the only member */
@@ -1531,12 +1550,29 @@ export interface components {
         };
         /** @description Password plus a confirmation word that is typed out, so it cannot be done by accident. */
         DeleteDataRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
             /** @description The confirmation word shown in the app */
             confirm: string;
         };
         DeleteDataResponse: {
             deleted: components["schemas"]["DeletedCounts"];
+        };
+        DeletedAccountCounts: {
+            sessions: number;
+            shots: number;
+            /** @description Photos and videos */
+            media: number;
+            /** @description 1 if a profile picture was removed */
+            avatar: number;
+            bows: number;
+            arrow_sets: number;
+            notes_about_me: number;
+            /** @description Evaluations about me, by coaches and by me */
+            evaluations: number;
+            /** @description Google sign-ins removed with the account */
+            sign_in_methods: number;
         };
         DeletedCounts: {
             sessions: number;
@@ -1655,8 +1691,11 @@ export interface components {
          * @enum {string}
          */
         EvaluationVisibilityEnum: "shared" | "coach_only";
+        /** @description The proof that it is me at the phone: my password, or for an account made with Google (no password) a fresh Google token of that account. */
         ExportRequestRequest: {
-            password: string;
+            password?: string;
+            /** @description Instead of the password, for an account that signs in with Google */
+            id_token?: string;
         };
         Face: {
             slug: string;
@@ -1678,6 +1717,12 @@ export interface components {
          * @enum {string}
          */
         FaceKindEnum: "wa" | "field" | "blank";
+        GoogleSignInRequest: {
+            /** @description From the Google sign-in on the phone */
+            id_token: string;
+            /** @description Only to register: an invite or claim code */
+            invite_code?: string;
+        };
         /**
          * @description * `right` - Right
          *     * `left` - Left
@@ -1723,6 +1768,10 @@ export interface components {
             /** Format: email */
             readonly email: string;
             profile: components["schemas"]["Profile"];
+            /** @description False for an account made with Google: no password, no email change */
+            readonly has_password: boolean;
+            /** @description Providers (google) that can sign in to this account */
+            readonly sign_in_providers: string[];
         };
         Media: {
             /** Format: uuid */
@@ -2735,6 +2784,39 @@ export interface operations {
             };
         };
     };
+    auth_google_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignInRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["GoogleSignInRequest"];
+                "multipart/form-data": components["schemas"]["GoogleSignInRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterResponse"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterResponse"];
+                };
+            };
+        };
+    };
     bows_list: {
         parameters: {
             query?: {
@@ -3395,7 +3477,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["ExportRequestRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];
@@ -3422,7 +3504,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["ExportRequestRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["ExportRequestRequest"];

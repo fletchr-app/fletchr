@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("health/", views.health),
     path("register/", views.RegisterView.as_view()),
+    path("auth/google/", views.GoogleSignInView.as_view()),
     path("invites/redeem/", views.RedeemInviteView.as_view()),
     path("codes/preview/", views.CodePreviewView.as_view()),
     path("claims/redeem/", views.RedeemClaimView.as_view()),

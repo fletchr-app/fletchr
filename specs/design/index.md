@@ -4,6 +4,7 @@ Living architecture/design docs, one per feature or subsystem. Kept around after
 (`status: implemented`), not deleted.
 
 - [roles-and-access.md](roles-and-access.md): roles, teams, claim codes, data export and deletion, access control.
+- [accounts.md](accounts.md): sign-in methods (email, Google), accounts without a password, admin attach, Google Cloud setup.
 - [data-model.md](data-model.md): Django models and what each stores.
 - [screens.md](screens.md): archer and coach screens.
 - [arrow-plotting.md](arrow-plotting.md): end-by-end plotting on the face, built-in faces, scoring rules.

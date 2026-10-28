@@ -105,6 +105,7 @@ def delete_account(user) -> dict:
         claims.delete_team(team)
     # An invite nobody used yet should not outlive the person who made it.
     Invite.objects.filter(created_by=user, used_at__isnull=True).delete()
+    counts["sign_in_methods"] = user.social_identities.count()  # they go with the account
     pk = user.pk
     user.delete()
     logger.info("User %s deleted their account: %s", pk, counts)

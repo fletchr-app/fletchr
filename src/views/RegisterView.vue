@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -9,7 +10,8 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCodePreview } from '@/composables/useCodePreview'
 
-const { register } = useAuth()
+const { t } = useI18n()
+const { register, googleAvailable, signInWithGoogle } = useAuth()
 const { preview, check } = useCodePreview()
 const route = useRoute()
 const form = reactive({ invite_code: typeof route.query.code === 'string' ? route.query.code : '', name: '', email: '', password: '' })
@@ -36,6 +38,31 @@ async function submit() {
   busy.value = false
 }
 
+// Same rules as the email path: the code decides; a code for a profile a coach keeps asks for confirmation first.
+async function submitGoogle() {
+  busy.value = true
+  error.value = null
+  if (!form.invite_code.trim()) {
+    error.value = t('auth.google.codeFirst')
+    busy.value = false
+    return
+  }
+  if (preview.value?.kind !== 'claim') {
+    const found = await check(form.invite_code)
+    if ('error' in found) {
+      error.value = found.error
+      busy.value = false
+      return
+    }
+    if (found.preview.kind === 'claim') {
+      busy.value = false // shown below, to confirm
+      return
+    }
+  }
+  error.value = (await signInWithGoogle(form.invite_code)).error
+  busy.value = false
+}
+
 function change() {
   preview.value = null
   error.value = null
@@ -57,6 +84,7 @@ function change() {
       <AppButton :busy="busy" @click="submit">
         {{ preview?.kind === 'claim' ? $t('auth.register.createAndLink', { profile: preview.profile_name }) : $t('auth.register.createAccount') }}
       </AppButton>
+      <AppButton v-if="googleAvailable" secondary :busy="busy" @click="submitGoogle">{{ $t('auth.google.register') }}</AppButton>
     </div>
   </AppPage>
 </template>

@@ -7,12 +7,14 @@ import { useI18n } from 'vue-i18n'
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
+import { useProof } from '@/composables/useProof'
 import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 import { saveJson } from '@/lib/export-file'
 
 const { t } = useI18n()
 const { api } = useAuth()
+const { hasPassword, proof } = useProof()
 const password = ref('')
 const busy = ref(false)
 const error = ref<string | null>(null)
@@ -25,7 +27,12 @@ async function download() {
   error.value = null
   done.value = false
   try {
-    const { data, error: failure } = await api.POST('/api/me/export/', { body: { password: password.value } })
+    const body = await proof(password.value)
+    if (!body) {
+      busy.value = false
+      return // cancelled the Google chooser
+    }
+    const { data, error: failure } = await api.POST('/api/me/export/', { body })
     if (!data) error.value = errorMessage(failure)
     else {
       await saveJson(`fletchr-data-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
@@ -44,7 +51,12 @@ async function downloadMedia() {
   error.value = null
   mediaNote.value = null
   try {
-    const { data, error: failure } = await api.POST('/api/me/export/media/', { body: { password: password.value } })
+    const body = await proof(password.value)
+    if (!body) {
+      mediaBusy.value = false
+      return // cancelled the Google chooser
+    }
+    const { data, error: failure } = await api.POST('/api/me/export/media/', { body })
     if (!data) error.value = errorMessage(failure)
     else if (data.files === 0) mediaNote.value = t('privacy.noMedia')
     else {
@@ -64,7 +76,8 @@ async function downloadMedia() {
   <div class="d-flex flex-column gap-3">
     <h2 class="h5 m-0">{{ $t('privacy.exportTitle') }}</h2>
     <p class="m-0">{{ $t('privacy.exportText') }}</p>
-    <FormField v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" @enter="download" />
+    <FormField v-if="hasPassword" v-model="password" :label="$t('privacy.password')" type="password" autocomplete="current-password" @enter="download" />
+    <p v-else class="m-0">{{ $t('privacy.googleProof') }}</p>
     <ErrorText :message="error" />
     <div v-if="done" class="fw-semibold">{{ $t('privacy.exported') }}</div>
     <AppButton :busy="busy" @click="download">{{ $t('privacy.exportButton') }}</AppButton>

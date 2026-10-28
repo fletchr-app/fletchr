@@ -40,11 +40,19 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class MeSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+    has_password = serializers.SerializerMethodField(help_text="False for an account made with Google: no password, no email change")
+    sign_in_providers = serializers.SerializerMethodField(help_text="Providers (google) that can sign in to this account")
 
     class Meta:
         model = User
-        fields = ["id", "email", "profile"]
+        fields = ["id", "email", "profile", "has_password", "sign_in_providers"]
         read_only_fields = ["id", "email"]
+
+    def get_has_password(self, user) -> bool:
+        return user.has_usable_password()
+
+    def get_sign_in_providers(self, user) -> list[str]:
+        return sorted(user.social_identities.values_list("provider", flat=True))
 
     def update(self, instance, validated_data):
         profile = validated_data.pop("profile", {})
@@ -277,3 +285,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(help_text="The code from the mail, with or without the dash")
     new_password = serializers.CharField(write_only=True)
+
+
+class GoogleSignInSerializer(serializers.Serializer):
+    id_token = serializers.CharField(write_only=True, help_text="From the Google sign-in on the phone")
+    invite_code = serializers.CharField(required=False, allow_blank=True, help_text="Only to register: an invite or claim code")

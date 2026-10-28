@@ -4,13 +4,14 @@ from django.conf import settings
 from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -23,7 +24,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from media.files import serve
 
-from . import access, avatar, claims, mail, resets
+from . import access, avatar, claims, mail, resets, social
 from .serializers import avatar_url
 from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
 from .serializers import (
@@ -34,6 +35,7 @@ from .serializers import (
     ClaimCodeSerializer,
     CodePreviewSerializer,
     EmailChangeSerializer,
+    GoogleSignInSerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
@@ -78,19 +80,39 @@ class RegisterView(APIView):
         user.profile.name = data["name"]
         user.profile.save()
         try:
-            # A code from a coach for a profile they keep (an archer without an account), or an invite.
-            if claims.find_claim(data["invite_code"]) is not None:
-                claims.claim_profile(data["invite_code"], user)
-            else:
-                access.redeem_invite(data["invite_code"], user)
-        except (access.InviteError, claims.ClaimError) as e:
-            # Roll back the user so a bad code doesn't leave an account behind.
-            transaction.set_rollback(True)
-            raise ValidationError({"invite_code": str(e)})
+            claims.redeem_code(data["invite_code"], user)  # a claim code or an invite
+        except ValidationError:
+            transaction.set_rollback(True)  # so a bad code doesn't leave an account behind
+            raise
         refresh = RefreshToken.for_user(user)
         return Response(
             {"refresh": str(refresh), "access": str(refresh.access_token), "user": MeSerializer(user).data},
             status=status.HTTP_201_CREATED,
+        )
+
+
+class GoogleSignInView(APIView):
+    """Sign in with a Google ID token. With an invite or claim code it registers a new account instead (never without one)."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "social"
+
+    @extend_schema(request=GoogleSignInSerializer, responses={200: RegisterResponseSerializer, 201: RegisterResponseSerializer})
+    def post(self, request):
+        if not social.enabled(social.GOOGLE):
+            raise Http404()  # this server does not offer Google sign-in
+        serializer = GoogleSignInSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            user, created = social.sign_in(social.GOOGLE, social.verify_google(data["id_token"]), data.get("invite_code", "").strip())
+        except social.SocialError as e:
+            return Response({"code": e.code, "detail": e.message}, status=e.status)
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {"refresh": str(refresh), "access": str(refresh.access_token), "user": MeSerializer(user).data},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
 
@@ -225,6 +247,16 @@ class AvatarFileView(APIView):
         return serve(request, person.profile.avatar, "image/jpeg")
 
 
+class PasswordNotSet(APIException):
+    status_code = 400
+
+
+def refuse_without_password(user):
+    """An account made with Google has no password and no email of its own to change."""
+    if not user.has_usable_password():
+        raise PasswordNotSet({"code": "password_not_set", "detail": gettext("This account signs in with Google and has no password.")})
+
+
 MAX_TEAMS_PER_USER = 5  # teams one person may administer
 
 
@@ -237,6 +269,7 @@ class ChangePasswordView(APIView):
     @extend_schema(request=PasswordChangeSerializer, responses=TokenPairSerializer)
     @transaction.atomic
     def post(self, request):
+        refuse_without_password(request.user)
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = request.user
@@ -290,6 +323,7 @@ class ChangeEmailView(APIView):
 
     @extend_schema(request=EmailChangeSerializer, responses=MeSerializer)
     def post(self, request):
+        refuse_without_password(request.user)
         serializer = EmailChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = request.user

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 21:57+0100\n"
+"POT-Creation-Date: 2026-10-28 22:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,7 +41,7 @@ msgstr ""
 msgid "The picture is larger than 512 KB"
 msgstr ""
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:134
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:156
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -83,84 +83,140 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr ""
 
-#: core/serializers.py:66
+#: core/serializers.py:74
 msgid "An account with this email already exists"
 msgstr ""
 
-#: core/serializers.py:99
+#: core/serializers.py:107
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:112
+#: core/serializers.py:120
 msgid "Give a name or show_ranking"
 msgstr ""
 
-#: core/serializers.py:174 core/serializers.py:189
+#: core/serializers.py:182 core/serializers.py:197
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:239 privacy/serializers.py:19 privacy/serializers.py:67
+#: core/serializers.py:247 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:249
+#: core/serializers.py:257
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:263
+#: core/serializers.py:271
 msgid "This address is not available"
 msgstr ""
 
-#: core/views.py:184
+#: core/social.py:50 core/social.py:53 core/social.py:55
+msgid "Google sign-in failed. Please try again."
+msgstr ""
+
+#: core/social.py:72
+msgid "This account cannot sign in."
+msgstr ""
+
+#: core/social.py:82
+msgid ""
+"There is no account for this Google sign-in yet. Register with your "
+"invite code."
+msgstr ""
+
+#: core/social.py:84
+msgid "Google did not confirm your email address."
+msgstr ""
+
+#: core/social.py:86
+msgid ""
+"This email address already has an account. Ask an admin to connect it "
+"with your Google sign-in."
+msgstr ""
+
+#: core/transfer.py:125
+msgid "Source and target are the same account"
+msgstr ""
+
+#: core/transfer.py:128
+#, python-format
+msgid "%(email)s is a profile without an account or an admin of the site"
+msgstr ""
+
+#: core/transfer.py:130
+#, python-format
+msgid "%(email)s is deactivated"
+msgstr ""
+
+#: core/transfer.py:134
+#, python-format
+msgid ""
+"%(email)s already has data (%(what)s). Only an account without data can "
+"receive one."
+msgstr ""
+
+#: core/transfer.py:153
+#, python-format
+msgid ""
+"Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
+"of them first."
+msgstr ""
+
+#: core/views.py:206
 msgid "No picture sent"
 msgstr ""
 
-#: core/views.py:318
+#: core/views.py:257
+msgid "This account signs in with Google and has no password."
+msgstr ""
+
+#: core/views.py:352
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:364
+#: core/views.py:398
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:373
+#: core/views.py:407
 msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:399
+#: core/views.py:433
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:405 core/views.py:419
+#: core/views.py:439 core/views.py:453
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:416
+#: core/views.py:450
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:430 core/views.py:447
+#: core/views.py:464 core/views.py:481
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:455
+#: core/views.py:489
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:582
+#: core/views.py:616
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:594
+#: core/views.py:628
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:606
+#: core/views.py:640
 msgid "This account no longer exists"
 msgstr ""
 
@@ -486,7 +542,11 @@ msgstr ""
 msgid "This clip is from another session"
 msgstr ""
 
-#: privacy/serializers.py:14
+#: privacy/serializers.py:24
+msgid "Confirm with Google first"
+msgstr ""
+
+#: privacy/serializers.py:36
 #, python-format
 msgid "Type the words \"%(word)s\" to confirm"
 msgstr ""

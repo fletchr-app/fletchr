@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 21:57+0100\n"
+"POT-Creation-Date: 2026-10-28 22:08+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -42,7 +42,7 @@ msgstr "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der E
 msgid "The picture is larger than 512 KB"
 msgstr "Das Bild ist größer als 512 KB"
 
-#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:134
+#: core/claims.py:47 core/claims.py:50 core/resets.py:57 core/views.py:156
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
@@ -93,80 +93,130 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr "Gib ein Geburtsdatum in der Vergangenheit ein"
 
-#: core/serializers.py:66
+#: core/serializers.py:74
 msgid "An account with this email already exists"
 msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
 
-#: core/serializers.py:99
+#: core/serializers.py:107
 msgid "A team needs a name"
 msgstr "Ein Team braucht einen Namen"
 
-#: core/serializers.py:112
+#: core/serializers.py:120
 msgid "Give a name or show_ranking"
 msgstr "Gib einen Namen oder show_ranking an"
 
-#: core/serializers.py:174 core/serializers.py:189
+#: core/serializers.py:182 core/serializers.py:197
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:239 privacy/serializers.py:19 privacy/serializers.py:67
+#: core/serializers.py:247 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:249
+#: core/serializers.py:257
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:263
+#: core/serializers.py:271
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
-#: core/views.py:184
+#: core/social.py:50 core/social.py:53 core/social.py:55
+msgid "Google sign-in failed. Please try again."
+msgstr "Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch einmal."
+
+#: core/social.py:72
+msgid "This account cannot sign in."
+msgstr "Mit diesem Konto kann man sich nicht anmelden."
+
+#: core/social.py:82
+msgid "There is no account for this Google sign-in yet. Register with your invite code."
+msgstr "Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit deinem Einladungscode."
+
+#: core/social.py:84
+msgid "Google did not confirm your email address."
+msgstr "Google hat deine E-Mail-Adresse nicht bestätigt."
+
+#: core/social.py:86
+msgid "This email address already has an account. Ask an admin to connect it with your Google sign-in."
+msgstr ""
+"Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu "
+"verbinden."
+
+#: core/transfer.py:125
+msgid "Source and target are the same account"
+msgstr "Quelle und Ziel sind dasselbe Konto"
+
+#: core/transfer.py:128
+#, python-format
+msgid "%(email)s is a profile without an account or an admin of the site"
+msgstr "%(email)s ist ein Profil ohne Konto oder ein Admin der Seite"
+
+#: core/transfer.py:130
+#, python-format
+msgid "%(email)s is deactivated"
+msgstr "%(email)s ist deaktiviert"
+
+#: core/transfer.py:134
+#, python-format
+msgid "%(email)s already has data (%(what)s). Only an account without data can receive one."
+msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen."
+
+#: core/transfer.py:153
+#, python-format
+msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
+msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
+
+#: core/views.py:206
 msgid "No picture sent"
 msgstr "Es wurde kein Bild gesendet"
 
-#: core/views.py:318
+#: core/views.py:257
+msgid "This account signs in with Google and has no password."
+msgstr "Dieses Konto meldet sich mit Google an und hat kein Passwort."
+
+#: core/views.py:352
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:364
+#: core/views.py:398
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
-#: core/views.py:373
+#: core/views.py:407
 msgid "Only team admins can change the team"
 msgstr "Nur Team-Admins können das Team ändern"
 
-#: core/views.py:399
+#: core/views.py:433
 msgid "Only team admins can change roles"
 msgstr "Nur Team-Admins können Rollen ändern"
 
-#: core/views.py:405 core/views.py:419
+#: core/views.py:439 core/views.py:453
 msgid "A team needs at least one admin"
 msgstr "Ein Team braucht mindestens einen Admin"
 
-#: core/views.py:416
+#: core/views.py:450
 msgid "Only team admins can remove members"
 msgstr "Nur Team-Admins können Mitglieder entfernen"
 
-#: core/views.py:430 core/views.py:447
+#: core/views.py:464 core/views.py:481
 msgid "Only team admins can manage invites"
 msgstr "Nur Team-Admins können Einladungen verwalten"
 
-#: core/views.py:455
+#: core/views.py:489
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:582
+#: core/views.py:616
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:594
+#: core/views.py:628
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:606
+#: core/views.py:640
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
@@ -493,7 +543,11 @@ msgstr "Gib an, zu welchem Bild die Notiz gehört"
 msgid "This clip is from another session"
 msgstr "Dieses Video ist aus einem anderen Training"
 
-#: privacy/serializers.py:14
+#: privacy/serializers.py:24
+msgid "Confirm with Google first"
+msgstr "Bestätige zuerst mit Google"
+
+#: privacy/serializers.py:36
 #, python-format
 msgid "Type the words \"%(word)s\" to confirm"
 msgstr "Tippe zur Bestätigung \"%(word)s\" ein"

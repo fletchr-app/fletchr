@@ -1,10 +1,22 @@
 # Sign in with Google, admin account transfer (#78)
 
-Status: planned, decisions made 2026-10-28, open questions below, not started
+Status: implemented 2026-10-28 (server, app, transfer, docs); needs the Google Cloud setup and a test on a phone, see "Done and open"
 Date: 2026-10-28
 
 Decision record: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md) (separate accounts, no linking, no email matching). Avatar part of the transfer: [profile picture plan](2026-10-28-profile-picture.md) (#79).
 
+## Done and open
+
+Questions Q1 to Q4 were taken as planned (log line for the `sub`, no password or email change for a Google account, same-role membership merged and different roles refused, emails as identifiers with `--id` as an option).
+
+- [x] Server part A: `redeem_code` extracted, `SocialIdentity` + migration `0008`, `core/social.py`, `POST /api/auth/google/` (throttle `social`, 404 when `DJANGO_GOOGLE_CLIENT_IDS` is unset), password-less rules, admin inline, export and deletion, German texts, tests with the verifier mocked.
+- [x] Beyond the plan: export, "delete my data", "delete account" and the media export asked for the password, which a Google account does not have. They now take a fresh Google token (`id_token`) instead (`PasswordProofMixin`, app: `useProof`).
+- [x] App part A: plugin `@capgo/capacitor-social-login` 8.7.5 (Facebook and other providers off in `capacitor.config.ts`, checked: no `com.facebook` classes in the debug APK), `src/lib/social-login.ts`, `useAuth.signInWithGoogle`, buttons, account screen, reset hint, locales, Vitest. `npx cap sync android` done, the debug APK builds.
+- [x] Server part B: `core/transfer.py`, guard test, `transfer_account` command, admin action. The admin page has a plain select for the target, not an autocomplete.
+- [x] Docs: `specs/design/accounts.md` (new), `SELFHOSTING.md`, `deploy/.env.prod.example`, privacy pages (de, en), delete-account pages, `CHANGELOG.md`.
+- [ ] Google Cloud project, consent screen, web and Android OAuth clients, SHA-1 keys (Tim, by hand, see `specs/design/accounts.md`).
+- [ ] Test on a phone with the checks below (nothing here has run on a device; the plugin result shape was read from its type definitions).
+- [ ] Legal review of the new privacy wording (#63). Google Play data safety form.
 ## Scope
 
 - `POST /api/auth/google/` verifies a Google ID token and returns the normal JWT pair. Android first. iOS is blocked until Sign in with Apple exists (own issue, see the end).
