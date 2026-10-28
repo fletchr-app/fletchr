@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 21:58+0100\n"
+"POT-Creation-Date: 2026-10-28 22:05+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -133,6 +133,34 @@ msgstr ""
 msgid ""
 "This email address already has an account. Ask an admin to connect it "
 "with your Google sign-in."
+msgstr ""
+
+#: core/transfer.py:125
+msgid "Source and target are the same account"
+msgstr ""
+
+#: core/transfer.py:128
+#, python-format
+msgid "%(email)s is a profile without an account or an admin of the site"
+msgstr ""
+
+#: core/transfer.py:130
+#, python-format
+msgid "%(email)s is deactivated"
+msgstr ""
+
+#: core/transfer.py:134
+#, python-format
+msgid ""
+"%(email)s already has data (%(what)s). Only an account without data can "
+"receive one."
+msgstr ""
+
+#: core/transfer.py:153
+#, python-format
+msgid ""
+"Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
+"of them first."
 msgstr ""
 
 #: core/views.py:206
@@ -514,11 +542,11 @@ msgstr ""
 msgid "This clip is from another session"
 msgstr ""
 
-#: privacy/serializers.py:21
+#: privacy/serializers.py:24
 msgid "Confirm with Google first"
 msgstr ""
 
-#: privacy/serializers.py:33
+#: privacy/serializers.py:36
 #, python-format
 msgid "Type the words \"%(word)s\" to confirm"
 msgstr ""

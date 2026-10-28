@@ -147,6 +147,11 @@ DE = {
     "This email address already has an account. Ask an admin to connect it with your Google sign-in.": "Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu verbinden.",
     "This account signs in with Google and has no password.": "Dieses Konto meldet sich mit Google an und hat kein Passwort.",
     "Confirm with Google first": "Bestätige zuerst mit Google",
+    "Source and target are the same account": "Quelle und Ziel sind dasselbe Konto",
+    "%(email)s is a profile without an account or an admin of the site": "%(email)s ist ein Profil ohne Konto oder ein Admin der Seite",
+    "%(email)s is deactivated": "%(email)s ist deaktiviert",
+    "%(email)s already has data (%(what)s). Only an account without data can receive one.": "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen.",
+    "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first.": "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon.",
 }
 
 PATH ="locale/de/LC_MESSAGES/django.po"

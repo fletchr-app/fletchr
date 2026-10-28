@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Transfer data of {{ source.email }}</h1>
+<p>Moves the sessions, equipment, photos and videos, notes, evaluations, team memberships and profile (with the picture) of
+<b>{{ source.email }}</b> to another account, then deactivates {{ source.email }}. The target must have no data of its own.
+This cannot be undone: have a backup.</p>
+{% if error %}<p class="errornote">Refused, nothing changes: {{ error }}</p>{% endif %}
+{% if report %}
+<h2>Dry run: this would move to {{ target.email }}</h2>
+<table>
+{% for key, n in report.moved.items %}<tr><td>{{ key }}</td><td>{{ n }}</td></tr>{% endfor %}
+<tr><td>team memberships moved</td><td>{{ report.memberships_moved }}</td></tr>
+<tr><td>team memberships already there</td><td>{{ report.memberships_merged }}</td></tr>
+<tr><td>profile picture</td><td>{% if report.avatar %}yes{% else %}none{% endif %}</td></tr>
+</table>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="hidden" name="source" value="{{ source.pk }}">
+  <input type="submit" name="preview" value="Show what would move (dry run)">
+  {% if report %}<input type="submit" name="confirm" value="Move it now" class="default" style="background:#ba2121">{% endif %}
+</form>
+{% endblock %}
