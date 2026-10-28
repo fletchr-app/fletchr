@@ -2,6 +2,11 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Profile picture (#79):** optional, set on the profile screen (take a photo or choose one) and shown in the members list. Seen by you, the coaches and admins of your teams, and the archers of those teams for their coaches and admins. A coach can set the picture of a profile without an account. For an archer under 18 it waits for the parents' consent, like video. It is part of the data download and is deleted with "Delete my data" and the account.
+- Server: new endpoints `/api/me/avatar/`, `/api/users/<id>/avatar/` and `/api/teams/<id>/archers/<id>/avatar/`; `avatar_url` on members, the archer and the profile; migration `core/0007_profile_avatar`; new dependency Pillow.
+
 ## 0.9.2, 2026-10-26
 
 - **Placing arrows:** while the finger is down, the whole view zooms in around the spot, and a cross a bit above the finger marks it, so the finger no longer covers it. The spot is the one the unzoomed view would mark. No server changes, no migrations.

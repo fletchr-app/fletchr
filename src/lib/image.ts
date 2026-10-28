@@ -3,6 +3,8 @@
 
 export const PHOTO_MAX_SIDE = 2048;
 export const THUMBNAIL_MAX_SIDE = 320;
+export const AVATAR_SIDE = 256;
+const AVATAR_QUALITY = 0.85;
 const PHOTO_QUALITY = 0.85;
 const THUMBNAIL_QUALITY = 0.75;
 
@@ -14,7 +16,9 @@ export function fitWithin(width: number, height: number, max: number): { width: 
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
-async function render(source: ImageBitmap, width: number, height: number, quality: number): Promise<Blob> {
+type Crop = { x: number; y: number; side: number };
+
+async function render(source: ImageBitmap, width: number, height: number, quality: number, crop?: Crop): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -22,8 +26,27 @@ async function render(source: ImageBitmap, width: number, height: number, qualit
   if (!context) throw new Error('No canvas');
   context.fillStyle = '#fff'; // JPEG has no transparency
   context.fillRect(0, 0, width, height);
-  context.drawImage(source, 0, 0, width, height);
+  if (crop) context.drawImage(source, crop.x, crop.y, crop.side, crop.side, 0, 0, width, height);
+  else context.drawImage(source, 0, 0, width, height);
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not encode the picture'))), 'image/jpeg', quality));
+}
+
+/** The largest square in the middle of a picture. */
+export function centreSquare(width: number, height: number): Crop {
+  const side = Math.min(width, height);
+  return { x: Math.floor((width - side) / 2), y: Math.floor((height - side) / 2), side };
+}
+
+/** The profile picture: the middle square of the photo, at most AVATAR_SIDE px, as a JPEG without anything the camera wrote into the file. */
+export async function prepareAvatar(source: Blob): Promise<Blob> {
+  const bitmap = await createImageBitmap(source, { imageOrientation: 'from-image' });
+  try {
+    const crop = centreSquare(bitmap.width, bitmap.height);
+    const side = Math.min(crop.side, AVATAR_SIDE);
+    return await render(bitmap, side, side, AVATAR_QUALITY, crop);
+  } finally {
+    bitmap.close();
+  }
 }
 
 /** A JPEG that is at most PHOTO_MAX_SIDE on its long side, and a small one for lists. */

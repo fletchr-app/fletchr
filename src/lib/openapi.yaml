@@ -790,6 +790,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/me/avatar/:
+    put:
+      operationId: me_avatar_update
+      description: PUT a new picture or DELETE it, for the profile in `self.profile()`.
+      tags:
+      - me
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvatarUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarResult'
+          description: ''
+    delete:
+      operationId: me_avatar_destroy
+      description: PUT a new picture or DELETE it, for the profile in `self.profile()`.
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/me/delete-account/:
     post:
       operationId: me_delete_account_create
@@ -2150,6 +2181,61 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/teams/{team_id}/archers/{user_id}/avatar/:
+    put:
+      operationId: teams_archers_avatar_update
+      description: The picture of a profile without an account, set by the coaches
+        of its team.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvatarUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarResult'
+          description: ''
+    delete:
+      operationId: teams_archers_avatar_destroy
+      description: The picture of a profile without an account, set by the coaches
+        of its team.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/teams/{team_id}/archers/{user_id}/claim-code/:
     post:
       operationId: teams_archers_claim_code_create
@@ -2572,6 +2658,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+  /api/users/{user_id}/avatar/:
+    get:
+      operationId: users_avatar_retrieve
+      description: |-
+        The picture itself. The <img> element cannot send the sign-in header, so the link carries a token (one viewer,
+        one person, an hour); the sign-in header works too. Every refusal is the same 404.
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        description: From `avatar_url`; not needed with the sign-in header
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
 components:
   schemas:
     AccountBlocked:
@@ -2629,8 +2745,17 @@ components:
           type: string
           nullable: true
           description: Who recorded it
+        avatar_allowed:
+          type: boolean
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        avatar_url:
+          type: string
+          description: Empty without a picture; opens for an hour
       required:
       - age
+      - avatar_allowed
+      - avatar_url
       - date_of_birth
       - dominant_eye
       - dominant_hand
@@ -2977,6 +3102,22 @@ components:
       - face_name
       - radius_cm
       - sets
+    AvatarResult:
+      type: object
+      properties:
+        avatar_url:
+          type: string
+      required:
+      - avatar_url
+    AvatarUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: A JPEG of about 256 px, at most 512 KB
+      required:
+      - file
     BlankEnum:
       enum:
       - ''
@@ -3417,6 +3558,9 @@ components:
         media:
           type: integer
           description: Photos and videos
+        avatar:
+          type: integer
+          description: 1 if a profile picture was removed
         bows:
           type: integer
         arrow_sets:
@@ -3428,6 +3572,7 @@ components:
           description: Evaluations about me, by coaches and by me
       required:
       - arrow_sets
+      - avatar
       - bows
       - evaluations
       - media
@@ -4011,7 +4156,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        avatar_url:
+          type: string
+          description: Empty if there is no picture or the viewer may not see it;
+            opens for an hour
+          readOnly: true
       required:
+      - avatar_url
       - email
       - joined_at
       - managed
@@ -4488,7 +4639,19 @@ components:
           readOnly: true
           description: False for an archer under 18 whose parents' consent is not
             on record
+        avatar_allowed:
+          type: boolean
+          readOnly: true
+          description: False for an archer under 18 whose parents' consent is not
+            on record
+        avatar_url:
+          type: string
+          readOnly: true
+          description: Empty without a picture; opens for an hour, fetch again for
+            a new link
       required:
+      - avatar_allowed
+      - avatar_url
       - video_allowed
     ProfileRequest:
       type: object

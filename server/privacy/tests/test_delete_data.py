@@ -51,7 +51,7 @@ def test_it_deletes_the_training_and_the_equipment_and_says_how_much(client_for,
     note = Note.objects.create(team=club["a"], author=club["coach"], archer=club["archer1"], body="x", visibility="shared")
     res = delete(client_for, club["archer1"])
     assert res.status_code == 200, res.data
-    assert res.data == {"deleted": {"sessions": 1, "shots": 6, "media": 0, "bows": 1, "arrow_sets": 1, "notes_about_me": 1, "evaluations": 0}}
+    assert res.data == {"deleted": {"sessions": 1, "shots": 6, "media": 0, "avatar": 0, "bows": 1, "arrow_sets": 1, "notes_about_me": 1, "evaluations": 0}}
     assert set(counts(club["archer1"]).values()) == {0}
     assert not Note.objects.filter(pk=note.pk).exists()
 

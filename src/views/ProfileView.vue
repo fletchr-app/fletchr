@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
+import AvatarEditor from '@/components/AvatarEditor.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
@@ -19,13 +20,14 @@ const name = ref('')
 const hand = ref('')
 const eye = ref('')
 const birth = ref('')
+const avatarUrl = ref('')
+const avatarAllowed = ref(true)
 const busy = ref(false)
 const error = ref<string | null>(null)
 const done = ref(false)
 const SIDES = computed(() => [{ value: '', label: t('account.notSet') }, { value: 'right', label: t('account.right') }, { value: 'left', label: t('account.left') }])
 
-onIonViewWillEnter(async () => {
-  done.value = false
+async function load() {
   try {
     const { data } = await api.GET('/api/me/')
     if (data) {
@@ -33,10 +35,17 @@ onIonViewWillEnter(async () => {
       hand.value = data.profile.dominant_hand ?? ''
       eye.value = data.profile.dominant_eye ?? ''
       birth.value = data.profile.date_of_birth ?? ''
+      avatarUrl.value = data.profile.avatar_url
+      avatarAllowed.value = data.profile.avatar_allowed
     }
   } catch {
     // Offline: the form stays empty.
   }
+}
+
+onIonViewWillEnter(() => {
+  done.value = false
+  return load()
 })
 
 async function save() {
@@ -68,6 +77,7 @@ async function save() {
 <template>
   <AppPage :title="$t('profile.title')">
     <div class="screen">
+      <AvatarEditor :name="name" :url="avatarUrl" :allowed="avatarAllowed" @changed="load" />
       <FormField v-model="name" :label="$t('account.name')" capitalize="words" autocomplete="name" />
       <ChipGroup v-model="hand" :label="$t('account.hand')" :options="SIDES" />
       <ChipGroup v-model="eye" :label="$t('account.eye')" :options="SIDES" />

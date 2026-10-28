@@ -73,3 +73,19 @@ def redeem_invite(code, user):
     invite.used_at = timezone.now()
     invite.save(update_fields=["used_by", "used_at"])
     return invite.team
+
+
+def can_see_avatar(viewer, person):
+    """The person's picture is for themselves, for the coaches and admins of their teams, and for the archers of those
+    teams (their coaches' pictures). Hidden for an archer under 18 without consent on record. MemberSerializer applies
+    the same rule per team: keep them together."""
+    profile = person.profile
+    if not profile.avatar or not profile.avatar_allowed:
+        return False
+    if viewer.pk == person.pk:
+        return True
+    mine, theirs = TeamMember.objects.filter(user=viewer), TeamMember.objects.filter(user=person)
+    return (
+        mine.filter(role__in=COACH_ROLES, team__in=theirs.values("team")).exists()
+        or theirs.filter(role__in=COACH_ROLES, team__in=mine.values("team")).exists()
+    )

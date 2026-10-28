@@ -167,6 +167,10 @@ MEDIA_MAX_VIDEO_SECONDS = 60
 MEDIA_MAX_VIDEO_BYTES = 50 * 1024 * 1024
 MEDIA_MAX_PHOTO_BYTES = 5 * 1024 * 1024
 MEDIA_MAX_THUMBNAIL_BYTES = 300 * 1024
+# The profile picture: what is stored (px on the longer side and bytes), and the largest picture accepted (px).
+AVATAR_MAX_BYTES = 512 * 1024
+AVATAR_MAX_SIDE = 512
+AVATAR_MAX_INPUT_SIDE = 1024
 # What one archer may keep on the server (the disk is finite); DJANGO_MEDIA_QUOTA_MB changes it.
 MEDIA_QUOTA_BYTES = int(os.environ.get("DJANGO_MEDIA_QUOTA_MB", "2048")) * 1024 * 1024
 # The links the app gets for its <video> and <img> elements stop working after this time.
@@ -208,7 +212,7 @@ REST_FRAMEWORK = {
     # Deny by default; endpoints that should be public opt out explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour", "reset_request": "5/hour", "reset_confirm": "10/hour"},
+    "DEFAULT_THROTTLE_RATES": {"invite": "20/hour", "sensitive": "5/hour", "team_create": "5/hour", "reset_request": "5/hour", "reset_confirm": "10/hour", "avatar": "30/hour"},
     # Behind nginx every request comes from the proxy's address, so the limits would be shared by everybody:
     # with one proxy, the client is the last address in X-Forwarded-For (the one nginx adds, never the one the client sends).
     # Without a proxy, 0 makes Django ignore X-Forwarded-For (unset, DRF would trust any value a client sends).
