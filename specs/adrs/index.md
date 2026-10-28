@@ -8,3 +8,4 @@ Short decision records for choices that had genuine considered-and-rejected alte
 - [0002-vue-capacitor-instead-of-expo.md](0002-vue-capacitor-instead-of-expo.md): Vue 3 + Capacitor instead of Expo. *accepted*
 - [0003-phone-converts-videos-before-upload.md](0003-phone-converts-videos-before-upload.md): the phone converts videos, the server does not. *accepted*
 - [0004-merging-sessions.md](0004-merging-sessions.md): the server merges a coach's empty session with the archer's, by a rule on pairs. *accepted*
+- [0005-sign-in-methods-are-separate.md](0005-sign-in-methods-are-separate.md): Google and email accounts are separate, no linking, no email matching. *proposed*

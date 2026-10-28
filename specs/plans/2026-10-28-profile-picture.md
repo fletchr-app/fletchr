@@ -1,16 +1,16 @@
 # Profile picture, visible to coaches (#79)
 
-Status: planned, not started
+Status: planned, decisions made 2026-10-28, not started
 Date: 2026-10-28
 
 ## Scope
 
 - One JPEG per profile, square, about 256 px, made on the phone. Server limit 512 KB.
 - `PUT` and `DELETE` on `/api/me/avatar/`; the file is served at `/api/users/<id>/avatar/` behind a signed link, like media.
-- Set on the profile screen (take a photo or choose from the gallery). `AppAvatar` (picture or initials) on the profile screen and in the members list.
-- Visible to the person and to the coaches and admins of the teams they are in. Everybody else gets 404, and `avatar_url` is empty for them.
+- Set on the profile screen (take a photo or choose from the gallery); a coach can set it for a profile without an account (decision 3). `AppAvatar` (picture or initials) on the profile screen and in the members list.
+- Visible to the person, to the coaches and admins of the teams they are in, and to the archers of those teams for their coaches and admins. Everybody else gets 404, and `avatar_url` is empty for them. Held back for archers under 18 until consent is on record (decision 4, #63).
 - Export (JSON and zip), "Delete my data" and account deletion cover the file. Privacy pages and in-app texts say so.
-- Out of scope: archers seeing each other's pictures (#80), pictures on other screens (archer page, notes, Home), a picture for a profile without an account (see decision 3).
+- Out of scope: archers seeing each other's pictures (#80), pictures on other screens (archer page, notes, Home).
 
 ## What is there already (checked in the code)
 
@@ -28,11 +28,11 @@ Date: 2026-10-28
 
 ## Decisions
 
-1. **Who sees a coach's picture.** The issue says "the archer and the coaches and admins of the teams they are in (same rule as the name)". In the code the name rule (`members_visible_to`) also shows coaches and admins to the archers of their team. Recommendation: implement the issue's rule as written (self, or the viewer is coach/admin in a team the person is in), so an archer sees initials for their coach. **Open question 1:** should archers see the pictures of their coaches and admins? It is one more condition in the check and one more test; it is not #80 (archers among each other).
-2. **Rule in code.** One function `core.access.can_see_avatar(viewer, person)`: `viewer == person` or a team exists where the viewer has a role in `COACH_ROLES` and the person is a member (any role). It is used by the file view. In `MemberSerializer` the team is known (`member.team`), so the check there is "self, or viewer is coach in this team", with the viewer's role read once per request (no query per row).
-3. **Profiles without an account.** Recommendation: no picture for them in this issue. A coach can already add photos for such an archer, but a portrait set by the coach is a different thing, often of a child, and #63 is still open. If wanted later: `PUT /api/teams/<t>/archers/<id>/avatar/`, and `claim_profile` must keep the file (move it to the new user's profile). **Open question 2.**
-4. **Under 18.** Today photos of a minor need no consent; only video does (`Profile.video_allowed`). Recommendation: treat the avatar like a photo for now (no gate), add the question to #63, and keep the check in one place (`set_avatar`) so a gate on `video_allowed` (or a new `photo_allowed`) is one line plus a test. Unsure: whether a face picture shown to coaches needs parental consent under Art. 8 GDPR (age 16 in Germany, verify) or under the German art copyright act (KUG, right to one's own picture); that is for the legal review. **Open question 3:** ship without a gate, or hold the feature for minors until #63 answers?
-5. **Server re-encode with Pillow.** The app strips metadata, but any client with a token can PUT a JPEG with GPS EXIF, or a file that only starts with `FF D8 FF`. The privacy pages say metadata is removed. Recommendation: add Pillow, open the upload with `Image.open` (format must be `JPEG`, `Image.MAX_IMAGE_PIXELS` low, e.g. 4 MP), refuse anything larger than 1024 px on a side, and save it again as JPEG (quality 85, no `exif`, no ICC) at most 512 px. Cheap for 256 px pictures, and the stored file is then known to be a clean JPEG. Cost: a compiled dependency in the Docker image (check that the `python:3.14` image gets a wheel). Without Pillow: keep `is_jpeg`, check the size, and accept that the metadata claim only holds for the app. **Open question 4:** add Pillow (and later use it for media photos too)?
+1. **Who sees a picture. Decided (Tim): yes.** Archers also see the pictures of the coaches and admins of their teams (the name rule, `members_visible_to`), not of other archers (#80). The issue text said coaches only; update it.
+2. **Rule in code.** One function `core.access.can_see_avatar(viewer, person)`: `viewer == person`, or a team exists where the viewer has a role in `COACH_ROLES` and the person is a member (any role), or a team exists where the person has a role in `COACH_ROLES` and the viewer is a member. It is used by the file view. In `MemberSerializer` the team is known (`member.team`), so the check there is "self, or viewer is coach in this team, or this member is coach/admin in the team", with the viewer's role read once per request (no query per row).
+3. **Profiles without an account. Decided (Tim): yes, a coach may set the picture.** `PUT`/`DELETE /api/teams/<t>/archers/<id>/avatar/` (coach or admin of the team, profile must be managed), same `set_avatar`/`remove_avatar`, same under-18 gate (decision 4), so for a child it works only once consent is on record. The app shows the same action sheet on the managed archer's screen. `claim_profile` must keep the file (it is the same user row if the claim re-uses it, check; if the claim copies data to a new user, move the file and clear the old one). Deleting the team deletes the file (signal). Tests: coach of the team 200, coach of another team 404, archer 403/404, non-managed profile 404, claim keeps the picture.
+4. **Under 18. Decided (Tim): hold until #63.** A picture can be set (by the person or a coach) and is shown only if `Profile.avatar_allowed`: age unknown or 18 or older, or consent on record. For now the property has the same logic as `video_allowed` and reads `video_consent_at` (no new consent field; #63 may split it into `photo_allowed` or rename it). Checked in `set_avatar` (400 with a message that consent is needed) and in `can_see_avatar`/`avatar_url` (so a date of birth entered later hides an existing picture without deleting it; the file stays until the person removes it or deletes their data). The app shows the reason under the picture button and hides the button. Unsure, for the legal review: whether a face picture shown to coaches needs parental consent under Art. 8 GDPR (age 16 in Germany, verify) or the KUG (German right to one's own picture); the 18 limit is the cautious choice. Add the question to #63.
+5. **Server re-encode with Pillow. Decided (Tim): yes, if needed. It is needed:** it is the only way the "metadata removed" statement on the privacy pages holds for every client and not only the app. The app strips metadata, but any client with a token can PUT a JPEG with GPS EXIF, or a file that only starts with `FF D8 FF`. The privacy pages say metadata is removed. Recommendation: add Pillow, open the upload with `Image.open` (format must be `JPEG`, `Image.MAX_IMAGE_PIXELS` low, e.g. 4 MP), refuse anything larger than 1024 px on a side, and save it again as JPEG (quality 85, no `exif`, no ICC) at most 512 px. Cheap for 256 px pictures, and the stored file is then known to be a clean JPEG. Cost: a compiled dependency in the Docker image (check that the `python:3.14` image gets a wheel). Without Pillow: keep `is_jpeg`, check the size, and accept that the metadata claim only holds for the app. Later use it for media photos too (separate issue).
 6. **Storage.** `Profile.avatar = FileField(upload_to=avatar_path, blank=True, max_length=200)` and `Profile.avatar_updated_at = DateTimeField(null=True, blank=True)`. Path `avatars/<user_id>/<random 12 hex>.jpg`: a new name on every replace, so a cached file never shows the old picture under the new name, and a deleted user's id in a path does not matter. Not an `ImageField` (that pulls in Pillow for the model even if decision 5 says no).
 7. **Quota.** The avatar does not count against `MEDIA_QUOTA_BYTES`: one file, at most 512 KB, replaced not added.
 8. **Signed link.** `files.sign_link`/`read_link` take a media id; add `sign_avatar_link(person_id, viewer_id)` / `read_avatar_link(token, person_id)` with their own salt (`avatar-link`) and the same `MEDIA_LINK_SECONDS`. The file view checks `can_see_avatar` again with the viewer from the token (rights can change within the hour) and answers 404 for a bad token, no right, or no picture.
@@ -70,7 +70,8 @@ Date: 2026-10-28
 
 Server (`server/core/tests/test_avatar.py`, `server/privacy/tests/`):
 - Access to the file: self 200; coach and admin of a shared team 200; archer of the same team 404; coach of another team 404; no token and no header 404; token of another viewer or another person 404; token older than `MEDIA_LINK_SECONDS` 404; access ends when the viewer leaves the team (old token, 404).
-- Decision 1 if answered yes: archer sees their coach's picture, not another archer's.
+- Archer sees their coach's and admin's picture, not another archer's.
+- Under 18 without consent: PUT 400, `avatar_url` empty and file 404 for everybody (also for an existing picture after the date of birth is set); with consent on record it works.
 - `avatar_url` in `MemberSerializer`: set for a coach viewer, empty for an archer viewer (other archers), set for oneself, empty when there is no picture; also in the responses of `MemberDetailView` and the managed-archer views (context passed).
 - Upload limits: not a JPEG (PNG, text with `FF D8 FF` in front) 400; over 512 KB 400; with Pillow: EXIF with GPS is gone after the upload, a large picture is scaled down, a decompression bomb is refused.
 - Replace removes the old file (after commit: `django_capture_on_commit_callbacks(execute=True)`); delete removes the file and clears the fields; delete without a picture 204.
@@ -91,7 +92,7 @@ App (Vitest): `centreSquare` (landscape, portrait, square, 1 px), `initials`. `p
 
 ## Order
 
-1. Answer the open questions (1 to 4).
+1. Open questions are answered (see Decisions 1, 3, 4, 5).
 2. Server: model, migration, `core/avatar.py`, signal, access check, views, serializers; tests for access, limits, files.
 3. Privacy: services, export, zip; their tests.
 4. `npm run types:api`; app: `image.ts`, `avatar.ts` with tests, `AppAvatar`, profile screen, members list, locales.
