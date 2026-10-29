@@ -24,6 +24,16 @@ class ArrowSetSerializer(RevisionFieldsMixin, serializers.ModelSerializer):
         read_only_fields = ["owner", "created_at"]
 
 
+class BowPutSerializer(BowSerializer):
+    """The body of `PUT /api/bows/<uid>/`: the bow as the app has it, and the uid the app gave to the revision this makes."""
+
+    revision_uid = serializers.UUIDField(required=False)
+
+
+class ArrowSetPutSerializer(ArrowSetSerializer):
+    revision_uid = serializers.UUIDField(required=False)
+
+
 class BowRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = BowRevision

@@ -127,12 +127,20 @@ class SessionWriteSerializer(serializers.ModelSerializer):
 
     bow_revision = serializers.PrimaryKeyRelatedField(queryset=BowRevision.objects.all(), required=False, allow_null=True)
     arrow_set_revision = serializers.PrimaryKeyRelatedField(queryset=ArrowSetRevision.objects.all(), required=False, allow_null=True)
+    # The same choice by uid, for a revision the app made offline and has no integer id for. Equipment is uploaded before sessions.
+    bow_revision_uid = serializers.SlugRelatedField(
+        slug_field="uid", source="bow_revision", queryset=BowRevision.objects.all(), required=False, allow_null=True, write_only=True
+    )
+    arrow_set_revision_uid = serializers.SlugRelatedField(
+        slug_field="uid", source="arrow_set_revision", queryset=ArrowSetRevision.objects.all(), required=False, allow_null=True, write_only=True
+    )
 
     class Meta:
         model = TrainingSession
         fields = [
             "started_at", "ended_at", "type", "environment", "location", "weather",
-            "bow_revision", "arrow_set_revision", "physical_rating", "mental_rating", "goals", "notes",
+            "bow_revision", "arrow_set_revision", "bow_revision_uid", "arrow_set_revision_uid",
+            "physical_rating", "mental_rating", "goals", "notes",
         ]
 
     def validate_bow_revision(self, revision):
@@ -144,6 +152,16 @@ class SessionWriteSerializer(serializers.ModelSerializer):
         if revision is not None and revision.arrow_set.owner_id != self.context["request"].user.id:
             raise serializers.ValidationError(gettext("Not your arrow set"))
         return revision
+
+    validate_bow_revision_uid = validate_bow_revision
+    validate_arrow_set_revision_uid = validate_arrow_set_revision
+
+    def to_internal_value(self, data):
+        # Both ways of naming a revision in one request is a mistake, not something to pick from.
+        for name in ("bow_revision", "arrow_set_revision"):
+            if name in data and f"{name}_uid" in data and (data[name] is not None or data[f"{name}_uid"] is not None):
+                raise serializers.ValidationError({f"{name}_uid": gettext("Send the revision either by id or by uid, not both")})
+        return super().to_internal_value(data)
 
     def validate_type(self, value):
         # The type decides how results are entered, so it can't change under existing ones (resending it is fine).

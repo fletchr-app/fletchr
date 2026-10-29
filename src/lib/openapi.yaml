@@ -244,6 +244,50 @@ paths:
                 items:
                   $ref: '#/components/schemas/ArrowSetRevision'
           description: ''
+  /api/arrow-sets/{uid}/:
+    put:
+      operationId: arrow_sets_update_2
+      description: |-
+        Create or update an item by the uid the app gave it. Safe to repeat: the same values add no revision.
+
+        The body may carry `revision_uid`, the uid the app gave the revision these values make; it is used if the values
+        are new. Only the owner can write: an item of somebody else is answered like one that does not exist.
+      parameters:
+      - in: path
+        name: uid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - arrow-sets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArrowSetPutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArrowSetPutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArrowSetPutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrowSet'
+          description: ''
   /api/auth/google/:
     post:
       operationId: auth_google_create
@@ -459,6 +503,50 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BowRevision'
+          description: ''
+  /api/bows/{uid}/:
+    put:
+      operationId: bows_update_2
+      description: |-
+        Create or update an item by the uid the app gave it. Safe to repeat: the same values add no revision.
+
+        The body may carry `revision_uid`, the uid the app gave the revision these values make; it is used if the values
+        are new. Only the owner can write: an item of somebody else is answered like one that does not exist.
+      parameters:
+      - in: path
+        name: uid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bows
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BowPutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BowPutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BowPutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bow'
           description: ''
   /api/claims/redeem/:
     post:
@@ -3004,6 +3092,53 @@ components:
       - revision_number
       - revision_uid
       - uid
+    ArrowSetPutRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        revision_uid:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        shaft_model:
+          type: string
+          maxLength: 150
+        spine:
+          type: string
+          maxLength: 50
+        length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          nullable: true
+          description: Arrow length in inches
+        point_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: Point weight in grain
+        nock:
+          type: string
+          maxLength: 150
+        fletching:
+          type: string
+          maxLength: 150
+        count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        notes:
+          type: string
+      required:
+      - name
     ArrowSetRequest:
       type: object
       properties:
@@ -3326,6 +3461,69 @@ components:
       - revision_uid
       - type
       - uid
+    BowPutRequest:
+      type: object
+      description: 'The body of `PUT /api/bows/<uid>/`: the bow as the app has it,
+        and the uid the app gave to the revision this makes.'
+      properties:
+        is_active:
+          type: boolean
+        revision_uid:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/BowTypeEnum'
+        riser:
+          type: string
+          maxLength: 150
+        limbs:
+          type: string
+          maxLength: 150
+        draw_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw weight in lb
+        draw_length:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+          description: Draw length in inches
+        brace_height:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Brace height in mm
+        tiller:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+          description: Tiller in mm (top minus bottom)
+        plunger:
+          type: string
+          maxLength: 150
+        sight:
+          type: string
+          maxLength: 150
+        stabilisers:
+          type: string
+          maxLength: 150
+        release_tab:
+          type: string
+          maxLength: 150
+        notes:
+          type: string
+      required:
+      - name
+      - type
     BowRequest:
       type: object
       properties:
@@ -5464,6 +5662,16 @@ components:
           nullable: true
         arrow_set_revision:
           type: integer
+          nullable: true
+        bow_revision_uid:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        arrow_set_revision_uid:
+          type: string
+          format: uuid
+          writeOnly: true
           nullable: true
         physical_rating:
           type: integer
