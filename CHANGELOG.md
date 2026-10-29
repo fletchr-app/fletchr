@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Results are no longer lost when a session was deleted elsewhere:** if the server has deleted a session (for example on another phone) while ends or volume of it were still waiting to upload, the app keeps it and asks: "Keep as a new session" uploads it again under a new id, "Discard these results" drops it. Before, it was dropped without a word (#84).
+
 ## 0.11.0 (2026-10-29)
 
 - **Training in the past:** a session can be started with a date and time (not in the future, at most 31 days back). A start in the past asks for a duration and creates a finished session, so a coach can add yesterday's training and attach photos and notes. "Reopen" is hidden for sessions that started more than 4 hours ago. The server refuses an end before the start (#89).

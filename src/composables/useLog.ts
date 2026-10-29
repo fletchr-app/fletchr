@@ -51,9 +51,10 @@ const renameListeners: ((from: string, to: string) => void)[] = [];
 function dispatch(action: LogAction) {
   current = reduce(current, action);
   state.value = current;
-  if (action.type === 'replaceSessionId' && action.from !== action.to) {
-    renamed.value = { ...renamed.value, [action.from]: action.to };
-    renameListeners.forEach((listener) => listener(action.from, action.to));
+  const rename = action.type === 'replaceSessionId' ? { from: action.from, to: action.to } : action.type === 'keepGoneAsNew' ? { from: action.id, to: action.newId } : null;
+  if (rename && rename.from !== rename.to) {
+    renamed.value = { ...renamed.value, [rename.from]: rename.to };
+    renameListeners.forEach((listener) => listener(rename.from, rename.to));
   }
 }
 
@@ -79,6 +80,8 @@ async function sync() {
 const loaded = computed(() => storageKey.value !== null && loadedKey.value === storageKey.value);
 const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length);
 const failed = computed(() => state.value.outbox.filter((o) => o.error));
+// Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
+const conflicts = computed(() => state.value.sessions.filter((s) => s.gone));
 const sessions = computed(() => (loaded.value ? state.value.sessions : []));
 const equipment = computed(() => state.value.equipment);
 // Sessions deleted on this device. The server's list of sessions can still show them until the delete has been sent and
@@ -195,6 +198,11 @@ const actions = {
     void flush();
   },
   discardFailed: () => dispatch({ type: 'discardFailed' }),
+  keepGoneAsNew: (id: string) => {
+    dispatch({ type: 'keepGoneAsNew', id, newId: newId() });
+    void flush();
+  },
+  discardGone: (id: string) => dispatch({ type: 'discardGone', id }),
   deleteMyData,
   deleteMyAccount,
 };
@@ -242,6 +250,6 @@ effectScope(true).run(() => {
 });
 
 export function useLog() {
-  return { loaded, sessions, equipment, renamed, waiting, failed, goneSessions, ...actions };
+  return { loaded, sessions, equipment, renamed, waiting, failed, conflicts, goneSessions, ...actions };
 }
 

@@ -64,6 +64,9 @@ export default {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',
     failed: '{n} item was refused by the server: {error} | {n} items were refused by the server: {error}',
     giveUp: 'Give up on these uploads',
+    gone: 'The session of {date} was deleted on the server, but results of it had not been uploaded yet. They are still on this device.',
+    keepAsNew: 'Keep as a new session',
+    discard: 'Discard these results',
   },
   consent: {
     title: 'Video consent',

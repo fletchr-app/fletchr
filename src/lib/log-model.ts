@@ -66,6 +66,8 @@ export type LogSession = {
   keep?: boolean;
   /** This device only attaches media and notes: the results are the archer's, who has an account. */
   noResults?: boolean;
+  /** The server deleted it while results of it were still waiting to upload. Kept until the archer chooses (`keepGoneAsNew` or `discardGone`). */
+  gone?: boolean;
 };
 
 /**
@@ -94,8 +96,12 @@ export type LogAction =
   | { type: 'pulled'; sessions: LogSession[]; lastPull?: string }
   /** The server merged `from` into `to`: this device follows. */
   | { type: 'replaceSessionId'; from: string; to: string }
-  /** The server deleted the session. */
+  /** The server deleted the session. One with results still waiting to upload is kept and marked `gone`; any other is dropped. */
   | { type: 'sessionGone'; id: string }
+  /** Upload a `gone` session again as a new session (`newId`), with all its results. */
+  | { type: 'keepGoneAsNew'; id: string; newId: string }
+  /** Drop a `gone` session and its results. */
+  | { type: 'discardGone'; id: string }
   | { type: 'setEquipment'; equipment: Equipment }
   | { type: 'reset' }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }
@@ -190,12 +196,24 @@ export function reduce(state: LogState, action: LogAction): LogState {
       const added = action.sessions.filter((s) => !known.has(s.id));
       return { ...state, sessions: [...state.sessions, ...added], lastPull: action.lastPull ?? state.lastPull };
     }
-    case 'sessionGone':
-      return {
-        ...state,
-        sessions: state.sessions.filter((s) => s.id !== action.id),
-        outbox: state.outbox.filter((o) => o.sessionId !== action.id),
-      };
+    case 'sessionGone': {
+      const unsent = state.outbox.some((o) => o.sessionId === action.id && !o.delete && (o.kind === 'end' || o.kind === 'volume'));
+      const outbox = state.outbox.filter((o) => o.sessionId !== action.id);
+      if (unsent && state.sessions.some((s) => s.id === action.id)) return mapSession({ ...state, outbox }, action.id, (s) => ({ ...s, gone: true }));
+      return { ...state, sessions: state.sessions.filter((s) => s.id !== action.id), outbox };
+    }
+    case 'keepGoneAsNew': {
+      const src = state.sessions.find((s) => s.id === action.id && s.gone);
+      if (!src) return state;
+      const { gone: _gone, ...rest } = src;
+      let next: LogState = { ...state, sessions: state.sessions.map((s) => (s.id === action.id ? { ...rest, id: action.newId } : s)) };
+      next = queue(next, 'session', action.newId);
+      for (const e of src.ends) next = queue(next, 'end', action.newId, e.id);
+      for (const v of src.volume) next = queue(next, 'volume', action.newId, v.id);
+      return next;
+    }
+    case 'discardGone':
+      return { ...state, sessions: state.sessions.filter((s) => !(s.id === action.id && s.gone)), outbox: state.outbox.filter((o) => o.sessionId !== action.id) };
     case 'replaceSessionId':
       return replaceSessionId(state, action.from, action.to);
     case 'saveEnd': {
