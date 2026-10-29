@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -71,6 +73,8 @@ ARROW_SET_FIELDS = tracked_fields(ArrowSetFields)
 
 
 class Bow(BowFields):
+    # Made by the server or by the app; an id that exists before the server has seen the item (offline sync, #84).
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bows")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -82,6 +86,9 @@ class Bow(BowFields):
 
 class BowRevision(BowFields):
     """A past or current state of a bow. A new one is written whenever a tracked field really changes."""
+
+    # Made by the server or by the app; an id that exists before the server has seen the item (offline sync, #84).
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     bow = models.ForeignKey(Bow, on_delete=models.CASCADE, related_name="revisions")
     number = models.PositiveIntegerField()
@@ -96,6 +103,8 @@ class BowRevision(BowFields):
 
 
 class ArrowSet(ArrowSetFields):
+    # Made by the server or by the app; an id that exists before the server has seen the item (offline sync, #84).
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="arrow_sets")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -106,6 +115,8 @@ class ArrowSet(ArrowSetFields):
 
 
 class ArrowSetRevision(ArrowSetFields):
+    # Made by the server or by the app; an id that exists before the server has seen the item (offline sync, #84).
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     arrow_set = models.ForeignKey(ArrowSet, on_delete=models.CASCADE, related_name="revisions")
     number = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)

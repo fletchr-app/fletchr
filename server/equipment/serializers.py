@@ -7,32 +7,33 @@ from .models import ARROW_SET_FIELDS, BOW_FIELDS, ArrowSet, ArrowSetRevision, Bo
 class RevisionFieldsMixin(serializers.Serializer):
     revision = serializers.IntegerField(source="current_revision_id", read_only=True)
     revision_number = serializers.IntegerField(source="current_revision.number", read_only=True)
+    revision_uid = serializers.UUIDField(source="current_revision.uid", read_only=True)
 
 
 class BowSerializer(RevisionFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Bow
-        fields = ["id", "owner", "is_active", "created_at", "revision", "revision_number", *BOW_FIELDS]
+        fields = ["id", "uid", "owner", "is_active", "created_at", "revision", "revision_number", "revision_uid", *BOW_FIELDS]
         read_only_fields = ["owner", "created_at"]
 
 
 class ArrowSetSerializer(RevisionFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = ArrowSet
-        fields = ["id", "owner", "is_active", "created_at", "revision", "revision_number", *ARROW_SET_FIELDS]
+        fields = ["id", "uid", "owner", "is_active", "created_at", "revision", "revision_number", "revision_uid", *ARROW_SET_FIELDS]
         read_only_fields = ["owner", "created_at"]
 
 
 class BowRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = BowRevision
-        fields = ["id", "bow", "number", "created_at", *BOW_FIELDS]
+        fields = ["id", "uid", "bow", "number", "created_at", *BOW_FIELDS]
 
 
 class ArrowSetRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArrowSetRevision
-        fields = ["id", "arrow_set", "number", "created_at", *ARROW_SET_FIELDS]
+        fields = ["id", "uid", "arrow_set", "number", "created_at", *ARROW_SET_FIELDS]
 
 
 class SetupSerializer(serializers.ModelSerializer):

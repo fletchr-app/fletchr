@@ -1216,12 +1216,16 @@ export interface components {
         };
         ArrowSet: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             readonly owner: number;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             readonly revision: number;
             readonly revision_number: number;
+            /** Format: uuid */
+            readonly revision_uid: string;
             name: string;
             shaft_model?: string;
             spine?: string;
@@ -1264,6 +1268,8 @@ export interface components {
         };
         ArrowSetRevision: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             arrow_set: number;
             /** Format: int64 */
             number: number;
@@ -1349,12 +1355,16 @@ export interface components {
         };
         Bow: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             readonly owner: number;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             readonly revision: number;
             readonly revision_number: number;
+            /** Format: uuid */
+            readonly revision_uid: string;
             name: string;
             type: components["schemas"]["BowTypeEnum"];
             riser?: string;
@@ -1419,6 +1429,8 @@ export interface components {
         };
         BowRevision: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             bow: number;
             /** Format: int64 */
             number: number;
@@ -1866,6 +1878,8 @@ export interface components {
         };
         Note: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             /** @description Only needed if you coach this archer in several teams */
             team?: number;
             readonly author: number | null;
