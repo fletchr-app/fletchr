@@ -17,6 +17,11 @@ Updated: 2026-10-29
 
 - **Moving queued media (#91)**: media on the phone can be moved to another session (or out of one) before it is uploaded; the queue item's `session` changes. A move while the upload runs is the one case that needs care: the request already carries the old session. `afterUpload` compares the sent item with the current one; if the session changed, the item stays in the queue as `uploaded` (its files are removed only when it leaves the queue) and the next request is a `PUT` with `session` (and `note`) only, no files. `drainMedia` sends it in the same run.
 
+## Equipment made offline
+
+- **`PUT /api/bows/<uid>/` and `/api/arrow-sets/<uid>/`** create or update an item by the uid the app gave it, and are safe to repeat: the same values add no revision. The body is the item plus an optional `revision_uid`, the uid the app gave the revision these values make; it is used when the values are new, so the app can name a revision before the server has seen it. The owner is the caller; an item of somebody else (a coach included) is answered 404 and left as it was. A `revision_uid` that belongs to another item is a 400. The integer routes are unchanged.
+- **Sessions name equipment by uid**: the session `PUT` accepts `bow_revision_uid` and `arrow_set_revision_uid` besides the integer ids (not both for one revision), `null` clears. Equipment goes up before sessions, so the revision exists when the session names it (the upload order of the plan).
+
 ## Where the data is kept
 
 - **Owner and keys**: a store belongs to an owner (`src/lib/store-owner.ts`): an account on a server today, a person without an account later (#93). The key is `<store>:<server>:<userId>` for an account, which is what the log (`log:`) and the media queue (`media:`) always used, and `<store>:local:<id>` for a local owner. Another account on the same phone never sees the data, and it stays on the device when you sign out.

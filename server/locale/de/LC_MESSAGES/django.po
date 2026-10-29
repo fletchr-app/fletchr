@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 07:48+0100\n"
+"POT-Creation-Date: 2026-10-29 22:07+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -36,7 +36,9 @@ msgstr "Das Bild ist zu groß, es sollte etwa 256 px an einer Seite haben"
 
 #: core/avatar.py:56
 msgid "A picture of an archer under 18 needs the consent of the parents"
-msgstr "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern"
+msgstr ""
+"Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der "
+"Eltern"
 
 #: core/avatar.py:58
 msgid "The picture is larger than 512 KB"
@@ -47,10 +49,12 @@ msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
 #: core/claims.py:55
-msgid "You are a coach in this team. A profile of an archer can only be taken over by an archer."
+msgid ""
+"You are a coach in this team. A profile of an archer can only be taken "
+"over by an archer."
 msgstr ""
-"Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
-"werden."
+"Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von "
+"einem Schützen übernommen werden."
 
 #: core/mail.py:31
 msgid "Fletchr: reset your password"
@@ -63,15 +67,16 @@ msgid ""
 "\n"
 "Your code: %(code)s\n"
 "\n"
-"Type it in the app. It works for one hour. If this was not you, ignore this mail: your password "
-"stays as it is."
+"Type it in the app. It works for one hour. If this was not you, ignore "
+"this mail: your password stays as it is."
 msgstr ""
-"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n"
+"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos "
+"zurückzusetzen.\n"
 "\n"
 "Dein Code: %(code)s\n"
 "\n"
-"Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein "
-"Passwort bleibt, wie es ist."
+"Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, "
+"ignoriere diese Mail: Dein Passwort bleibt, wie es ist."
 
 #: core/mail.py:45
 msgid "Fletchr: your password was changed"
@@ -81,13 +86,15 @@ msgstr "Fletchr: Dein Passwort wurde geändert"
 msgid ""
 "The password of your Fletchr account was changed just now.\n"
 "\n"
-"If this was you, there is nothing to do. If not, set a new password in the app (Sign in, then "
-"Forgot password?) and check who else knows your email password."
+"If this was you, there is nothing to do. If not, set a new password in "
+"the app (Sign in, then Forgot password?) and check who else knows your "
+"email password."
 msgstr ""
 "Das Passwort deines Fletchr-Kontos wurde gerade geändert.\n"
 "\n"
-"Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein neues Passwort "
-"(Anmelden, dann Passwort vergessen?) und prüfe, wer sonst dein E-Mail-Passwort kennt."
+"Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein "
+"neues Passwort (Anmelden, dann Passwort vergessen?) und prüfe, wer sonst "
+"dein E-Mail-Passwort kennt."
 
 #: core/serializers.py:14
 msgid "Enter a date of birth in the past"
@@ -123,25 +130,33 @@ msgstr "Diese Adresse ist nicht verfügbar"
 
 #: core/social.py:50 core/social.py:53 core/social.py:55
 msgid "Google sign-in failed. Please try again."
-msgstr "Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch einmal."
+msgstr ""
+"Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch "
+"einmal."
 
 #: core/social.py:72
 msgid "This account cannot sign in."
 msgstr "Mit diesem Konto kann man sich nicht anmelden."
 
 #: core/social.py:82
-msgid "There is no account for this Google sign-in yet. Register with your invite code."
-msgstr "Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit deinem Einladungscode."
+msgid ""
+"There is no account for this Google sign-in yet. Register with your "
+"invite code."
+msgstr ""
+"Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit "
+"deinem Einladungscode."
 
 #: core/social.py:84
 msgid "Google did not confirm your email address."
 msgstr "Google hat deine E-Mail-Adresse nicht bestätigt."
 
 #: core/social.py:86
-msgid "This email address already has an account. Ask an admin to connect it with your Google sign-in."
+msgid ""
+"This email address already has an account. Ask an admin to connect it "
+"with your Google sign-in."
 msgstr ""
-"Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu "
-"verbinden."
+"Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit "
+"deiner Google-Anmeldung zu verbinden."
 
 #: core/transfer.py:127
 msgid "Source and target are the same account"
@@ -159,13 +174,21 @@ msgstr "%(email)s ist deaktiviert"
 
 #: core/transfer.py:136
 #, python-format
-msgid "%(email)s already has data (%(what)s). Only an account without data can receive one."
-msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen."
+msgid ""
+"%(email)s already has data (%(what)s). Only an account without data can "
+"receive one."
+msgstr ""
+"%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines"
+" übernehmen."
 
 #: core/transfer.py:155
 #, python-format
-msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
-msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
+msgid ""
+"Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
+"of them first."
+msgstr ""
+"Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). "
+"Ändere zuerst eine davon."
 
 #: core/views.py:206
 msgid "No picture sent"
@@ -209,28 +232,40 @@ msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
 #: core/views.py:616
-msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
-msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
+msgid ""
+"Only coaches can choose this: archers' sessions are always visible to "
+"their coaches"
+msgstr ""
+"Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre "
+"Trainer immer sichtbar"
 
 #: core/views.py:628
-msgid "You are the only admin. Make someone else an admin first, or delete the team."
-msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
+msgid ""
+"You are the only admin. Make someone else an admin first, or delete the "
+"team."
+msgstr ""
+"Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder "
+"lösche das Team."
 
 #: core/views.py:640
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
-#: equipment/serializers.py:51 training/serializers.py:140
+#: equipment/serializers.py:62 training/serializers.py:148
 msgid "Not your bow"
 msgstr "Das ist nicht dein Bogen"
 
-#: equipment/serializers.py:56 training/serializers.py:145
+#: equipment/serializers.py:67 training/serializers.py:153
 msgid "Not your arrow set"
 msgstr "Das ist nicht dein Pfeilsatz"
 
-#: equipment/views.py:58
+#: equipment/views.py:62
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr "Das wurde in einem Training benutzt. Deaktiviere es, statt es zu löschen."
+
+#: equipment/views.py:117
+msgid "This revision belongs to something else"
+msgstr "Diese Version gehört zu etwas anderem"
 
 #: evaluations/defaults.py:8
 msgid "Pre-tension"
@@ -470,23 +505,26 @@ msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 msgid "There is no room left for this archer's photos and videos"
 msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 
-#: media/views.py:26
+#: media/views.py:27
 msgid "Only the archer or whoever added it can change a photo or video"
-msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
+msgstr ""
+"Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video "
+"ändern"
 
-#: media/views.py:70 notes/views.py:83 training/views.py:153
+#: media/views.py:77 notes/views.py:83 training/views.py:153
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
-#: media/views.py:77
+#: media/views.py:84
 msgid ""
-"Video of an archer under 18 needs the consent of the parents first. A coach can record it on the "
-"archer's page."
+"Video of an archer under 18 needs the consent of the parents first. A "
+"coach can record it on the archer's page."
 msgstr ""
-"Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann "
-"sie auf der Seite des Schützen eintragen."
+"Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der "
+"Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen."
 
-#: notes/drawing.py:18 notes/drawing.py:25 notes/drawing.py:28 notes/drawing.py:33 notes/drawing.py:38
+#: notes/drawing.py:18 notes/drawing.py:25 notes/drawing.py:28
+#: notes/drawing.py:33 notes/drawing.py:38
 msgid "This is not a drawing"
 msgstr "Das ist keine Zeichnung"
 
@@ -554,8 +592,12 @@ msgstr "Tippe zur Bestätigung \"%(word)s\" ein"
 
 #: privacy/views.py:64
 #, python-format
-msgid "You are the only admin of %(teams)s. Make someone else an admin there first."
-msgstr "Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen zum Admin."
+msgid ""
+"You are the only admin of %(teams)s. Make someone else an admin there "
+"first."
+msgstr ""
+"Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen "
+"zum Admin."
 
 #: training/serializers.py:36
 msgid "Give both x and y, or neither"
@@ -585,7 +627,9 @@ msgstr "Schuss %(n)s: Diese Scheibe hat keinen Spot %(spot)s"
 #: training/serializers.py:87
 #, python-format
 msgid "Shot %(n)s: this face has no scores, place the arrow on it"
-msgstr "Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die Scheibe"
+msgstr ""
+"Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die "
+"Scheibe"
 
 #: training/serializers.py:92
 #, python-format
@@ -597,15 +641,21 @@ msgstr "Schuss %(n)s: %(value)s ist kein Wert auf dieser Scheibe"
 msgid "Shot %(n)s: this face has no X ring"
 msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 
-#: training/serializers.py:151
-msgid "The type can't change once there are results"
-msgstr "Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr geändert werden"
+#: training/serializers.py:163
+msgid "Send the revision either by id or by uid, not both"
+msgstr "Sende die Version entweder mit der ID oder mit der UID, nicht mit beidem"
 
-#: training/serializers.py:156
+#: training/serializers.py:169
+msgid "The type can't change once there are results"
+msgstr ""
+"Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr "
+"geändert werden"
+
+#: training/serializers.py:174
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/serializers.py:161
+#: training/serializers.py:179
 msgid "The end can't be before the start"
 msgstr "Das Ende darf nicht vor dem Beginn liegen"
 

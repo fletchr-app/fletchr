@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 07:48+0100\n"
+"POT-Creation-Date: 2026-10-29 22:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -220,16 +220,20 @@ msgstr ""
 msgid "This account no longer exists"
 msgstr ""
 
-#: equipment/serializers.py:51 training/serializers.py:140
+#: equipment/serializers.py:62 training/serializers.py:148
 msgid "Not your bow"
 msgstr ""
 
-#: equipment/serializers.py:56 training/serializers.py:145
+#: equipment/serializers.py:67 training/serializers.py:153
 msgid "Not your arrow set"
 msgstr ""
 
-#: equipment/views.py:58
+#: equipment/views.py:62
 msgid "This has been used in a session. Deactivate it instead of deleting it."
+msgstr ""
+
+#: equipment/views.py:117
+msgid "This revision belongs to something else"
 msgstr ""
 
 #: evaluations/defaults.py:8
@@ -470,15 +474,15 @@ msgstr ""
 msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
-#: media/views.py:26
+#: media/views.py:27
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:70 notes/views.py:83 training/views.py:153
+#: media/views.py:77 notes/views.py:83 training/views.py:153
 msgid "Give the id of the archer"
 msgstr ""
 
-#: media/views.py:77
+#: media/views.py:84
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A "
 "coach can record it on the archer's page."
@@ -598,15 +602,19 @@ msgstr ""
 msgid "Shot %(n)s: this face has no X ring"
 msgstr ""
 
-#: training/serializers.py:151
+#: training/serializers.py:163
+msgid "Send the revision either by id or by uid, not both"
+msgstr ""
+
+#: training/serializers.py:169
 msgid "The type can't change once there are results"
 msgstr ""
 
-#: training/serializers.py:156
+#: training/serializers.py:174
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/serializers.py:161
+#: training/serializers.py:179
 msgid "The end can't be before the start"
 msgstr ""
 
