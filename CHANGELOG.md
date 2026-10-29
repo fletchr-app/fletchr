@@ -2,7 +2,7 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.12.0 (2026-10-29)
 
 - **Equipment works without a connection:** bows and arrow sets are kept on the phone. You can add, change and delete them offline, and use new ones in a session straight away; they go up when there is a connection, before the sessions that use them. The list and the forms open from the copy on the phone, and the history shows the server's list when it can be reached. A change the server refuses (say, deleting a bow that was used in a session) shows in the upload banner, with "Give up" bringing the item back as the server has it. Needs a server with #98 (#84).
 
