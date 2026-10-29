@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 22:08+0100\n"
+"POT-Creation-Date: 2026-10-29 07:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,28 +135,28 @@ msgid ""
 "with your Google sign-in."
 msgstr ""
 
-#: core/transfer.py:125
+#: core/transfer.py:127
 msgid "Source and target are the same account"
-msgstr ""
-
-#: core/transfer.py:128
-#, python-format
-msgid "%(email)s is a profile without an account or an admin of the site"
 msgstr ""
 
 #: core/transfer.py:130
 #, python-format
+msgid "%(email)s is a profile without an account or an admin of the site"
+msgstr ""
+
+#: core/transfer.py:132
+#, python-format
 msgid "%(email)s is deactivated"
 msgstr ""
 
-#: core/transfer.py:134
+#: core/transfer.py:136
 #, python-format
 msgid ""
 "%(email)s already has data (%(what)s). Only an account without data can "
 "receive one."
 msgstr ""
 
-#: core/transfer.py:153
+#: core/transfer.py:155
 #, python-format
 msgid ""
 "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
@@ -604,6 +604,10 @@ msgstr ""
 
 #: training/serializers.py:156
 msgid "Arrows go with a bow: choose the bow too"
+msgstr ""
+
+#: training/serializers.py:161
+msgid "The end can't be before the start"
 msgstr ""
 
 #: training/views.py:65 training/views.py:147

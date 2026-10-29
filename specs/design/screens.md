@@ -6,7 +6,7 @@ Updated: 2026-10-29
 
 **Archer**
 1. Home: this week's arrow count, last session, latest coach notes
-2. Log session: quick setup (date, distance, face, setup), then end-by-end plotting on the target face ([arrow-plotting.md](arrow-plotting.md)); number-pad entry as a fallback; volume-only mode for counting arrows
+2. Log session: quick setup (start date and time, default now; for a start in the past also a duration, which makes a finished session; distance, face, setup), then end-by-end plotting on the target face ([arrow-plotting.md](arrow-plotting.md)); number-pad entry as a fallback; volume-only mode for counting arrows
 3. Session detail: ends, totals, plot of arrow positions, photos/videos, coach notes
 4. Equipment: bows, arrow sets, setups (with history of changes)
 5. Media gallery: per session or all, video analysis player with slow motion and frame-by-frame stepping ([media-and-video-player.md](media-and-video-player.md))

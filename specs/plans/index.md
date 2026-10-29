@@ -10,4 +10,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-10-28-coach-opens-session.md](2026-10-28-coach-opens-session.md): coach opens a session for an archer, empty type, two-way sync, merge (#82). **implemented**
 - [2026-10-28-photo-notes-drawing.md](2026-10-28-photo-notes-drawing.md): notes and drawing on photos (#81). **implemented, not yet checked on a phone**
 - [2026-10-28-google-sign-in.md](2026-10-28-google-sign-in.md): sign in with Google, admin account transfer (#78, avatar part #79). **implemented, needs Google Cloud setup and a phone test**
-- [2026-10-29-backdated-sessions.md](2026-10-29-backdated-sessions.md): a training in the past, start time and duration when starting a session (#89). **planned**
+- [2026-10-29-backdated-sessions.md](2026-10-29-backdated-sessions.md): a training in the past, start time and duration when starting a session (#89). **implemented** (editing the start of an existing session is left out)

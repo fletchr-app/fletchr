@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Training in the past:** a session can be started with a date and time (not in the future, at most 31 days back). A start in the past asks for a duration and creates a finished session, so a coach can add yesterday's training and attach photos and notes. "Reopen" is hidden for sessions that started more than 4 hours ago. The server refuses an end before the start (#89).
+
 ## 0.10.1 (2026-10-29)
 
 - **Server logging:** the `core`, `privacy` and `training` loggers now write INFO lines to the console (`docker compose logs django`). Before, the "Social sign-in refused" line with the Google `sub` (needed to attach a Google identity in the admin) was dropped.

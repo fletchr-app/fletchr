@@ -1,6 +1,6 @@
 # Training in the past: date and time when starting a session (#89)
 
-Status: planned (Q1 to Q5 need Tim's answers)
+Status: implemented
 Date: 2026-10-29
 
 ## Scope

@@ -31,6 +31,7 @@ DE = {
     "This account no longer exists": "Dieses Konto gibt es nicht mehr",
     "Not your bow": "Das ist nicht dein Bogen",
     "Not your arrow set": "Das ist nicht dein Pfeilsatz",
+    "The end can't be before the start": "Das Ende darf nicht vor dem Beginn liegen",
     "This has been used in a session. Deactivate it instead of deleting it.": "Das wurde in einem Training benutzt. Deaktiviere es, statt es zu löschen.",
     "A note cannot be empty": "Eine Notiz darf nicht leer sein",
     "This cannot be changed after the note is written": "Das lässt sich nach dem Schreiben der Notiz nicht mehr ändern",
