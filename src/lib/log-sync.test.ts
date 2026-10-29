@@ -293,6 +293,16 @@ test('410 on a session PUT drops the session', async () => {
   assert.deepEqual(h.queued(), []);
 });
 
+test('410 on a session PUT keeps the session when ends of it were not uploaded', async () => {
+  const h = harness(() => json(410, { detail: 'gone' }));
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a', 'b']) });
+  await h.run();
+  assert.deepEqual(h.state().sessions.map((s) => [s.id, s.gone, s.ends.length]), [['s1', true, 1]]);
+  assert.deepEqual(h.queued(), []);
+  assert.equal(h.calls.length, 1); // nothing more is sent for it
+});
+
 const summary = (id: string, extra = {}) => ({
   id, owner: 7, owner_name: 'Me', opened_by: 3, opened_by_name: 'Coach', started_at: '2026-10-18T09:00:00Z', ended_at: null, type: '', environment: '', location: 'Hall',
   updated_at: '2026-10-18T09:05:00Z', ends: 0, scored_arrows: 0, score_total: 0, volume_arrows: 0, ...extra,

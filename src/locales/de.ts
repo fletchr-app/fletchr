@@ -68,6 +68,9 @@ export default {
     waiting: '{n} Eintrag wartet auf den Upload. Auf diesem Gerät gespeichert, wird er hochgeladen, sobald eine Verbindung besteht. | {n} Einträge warten auf den Upload. Auf diesem Gerät gespeichert, werden sie hochgeladen, sobald eine Verbindung besteht.',
     failed: '{n} Eintrag wurde vom Server abgelehnt: {error} | {n} Einträge wurden vom Server abgelehnt: {error}',
     giveUp: 'Diese Uploads aufgeben',
+    gone: 'Das Training vom {date} wurde auf dem Server gelöscht, aber Ergebnisse davon waren noch nicht hochgeladen. Sie sind noch auf diesem Gerät.',
+    keepAsNew: 'Als neues Training behalten',
+    discard: 'Diese Ergebnisse verwerfen',
   },
   consent: {
     title: 'Einwilligung für Video',
