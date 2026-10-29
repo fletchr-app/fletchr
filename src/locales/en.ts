@@ -503,6 +503,7 @@ export default {
     active: 'Active (shown when logging sessions)',
     history: 'History',
     created: 'created',
+    nameRequired: 'Give it a name.',
     couldNotLoadEquipment: 'Could not load your equipment',
     couldNotLoadData: 'Could not load your data',
     bowType: {

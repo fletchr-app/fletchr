@@ -507,6 +507,7 @@ export default {
     active: 'Aktiv (wird beim Eintragen von Trainings angeboten)',
     history: 'Verlauf',
     created: 'angelegt',
+    nameRequired: 'Gib einen Namen ein.',
     couldNotLoadEquipment: 'Deine Ausrüstung konnte nicht geladen werden',
     couldNotLoadData: 'Deine Daten konnten nicht geladen werden',
     bowType: {

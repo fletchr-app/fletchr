@@ -4,6 +4,7 @@ import { Network } from '@capacitor/network';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
+import { useEquipment } from '@/composables/useEquipment';
 import { useKeyedStore } from '@/composables/useKeyedStore';
 import { t } from '@/i18n';
 import type { components } from '@/lib/api-types';
@@ -12,17 +13,19 @@ import { dataStore } from '@/lib/local-store';
 import {
   EMPTY_LOG,
   type Environment,
+  type Equipment,
   type Gear,
   type LogAction,
   type LogSession,
   type LogEnd,
   type LogState,
+  type Op,
   type SessionDetails,
   type LogVolume,
   reduce,
   type SessionType,
 } from '@/lib/log-model';
-import { drain, fetchEquipment, pull, send } from '@/lib/log-sync';
+import { drain, pull, send, waitsForEquipment } from '@/lib/log-sync';
 import { storeKey } from '@/lib/store-owner';
 import { newId } from '@/lib/uuid';
 
@@ -94,7 +97,16 @@ const failed = computed(() => state.value.outbox.filter((o) => o.error));
 // Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
 const conflicts = computed(() => state.value.sessions.filter((s) => s.gone));
 const sessions = computed(() => (loaded.value ? state.value.sessions : []));
-const equipment = computed(() => state.value.equipment);
+const eq = useEquipment();
+// The equipment on the device. A copy that an older version of the app kept in the log is used until the first one is made or read.
+const equipment = computed<Equipment>(() => {
+  const old = state.value.equipment;
+  if (!eq.empty.value || (old.bows.length === 0 && old.arrowSets.length === 0)) return eq.equipment.value;
+  return {
+    bows: old.bows.map((b) => ({ ...b, key: b.key ?? String(b.id) })),
+    arrowSets: old.arrowSets.map((a) => ({ ...a, key: a.key ?? String(a.id) })),
+  };
+});
 // Sessions deleted on this device. The server's list of sessions can still show them until the delete has been sent and
 // the list is fetched again; ones whose delete is still queued stay hidden after a restart too.
 const deletedHere = ref<ReadonlySet<string>>(new Set());
@@ -105,7 +117,9 @@ const goneSessions = computed(
 async function flush() {
   if (flushing || paused || !loaded.value || status.value !== 'signedIn') return;
   flushing = true;
-  const run = drain(() => current, dispatch, (s, op) => send(api, s, op), () => paused);
+  // A session that names equipment the server has not seen yet waits for it (the whole queue does, to keep its order).
+  const sendOp = async (s: LogState, op: Op) => (waitsForEquipment(s, op, eq.revisionPending) ? ({ kind: 'retry' } as const) : send(api, s, op));
+  const run = drain(() => current, dispatch, sendOp, () => paused);
   inflight = run;
   try {
     await run;
@@ -159,13 +173,6 @@ async function deleteMyAccount(proof: Proof, confirm: string): Promise<{ error: 
   });
 }
 
-// Your equipment is copied to the device whenever it is online, so a session can start at the range without a connection.
-async function refreshEquipment() {
-  if (!loaded.value || status.value !== 'signedIn' || userId.value === null) return;
-  const fetched = await fetchEquipment(api, Number(userId.value));
-  if (fetched) dispatch({ type: 'setEquipment', equipment: fetched });
-}
-
 function startSession(
   type: SessionType, environment: Environment, location: string, gear?: Gear, archer?: { id: number; name: string }, extra?: Partial<LogSession>,
 ): string {
@@ -190,7 +197,6 @@ function sessionWaiting(id: string): boolean {
 const actions = {
   startSession,
   sessionWaiting,
-  refreshEquipment,
   setType: (id: string, type: SessionType) => dispatch({ type: 'updateSession', id, patch: { type } }),
   onSessionRenamed: (listener: (from: string, to: string) => void) => void renameListeners.push(listener),
   onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),
@@ -238,7 +244,8 @@ effectScope(true).run(() => {
   void App.addListener('appStateChange', ({ isActive }) => isActive && void sync());
   void Network.addListener('networkStatusChange', ({ connected }) => connected && void sync());
 
-  watch([loaded, status, userId], () => void refreshEquipment(), { immediate: true });
+  // Sessions that waited for their equipment go up once it has.
+  eq.onUploaded(() => void flush());
 });
 
 export function useLog() {

@@ -5,8 +5,8 @@ import { useI18n } from 'vue-i18n'
 import ChipGroup from '@/components/ChipGroup.vue'
 import type { Equipment } from '@/lib/log-model'
 
-const props = defineProps<{ equipment: Equipment; bowId: number | null; arrowSetId: number | null }>()
-const emit = defineEmits<{ change: [bowId: number | null, arrowSetId: number | null] }>()
+const props = defineProps<{ equipment: Equipment; bowKey: string | null; arrowSetKey: string | null }>()
+const emit = defineEmits<{ change: [bowKey: string | null, arrowSetKey: string | null] }>()
 
 const { t } = useI18n()
 const none = computed(() => ({ value: '', label: t('gear.none') }))
@@ -20,16 +20,16 @@ const none = computed(() => ({ value: '', label: t('gear.none') }))
   <template v-else>
     <ChipGroup
       :label="$t('gear.bow')"
-      :options="[none, ...equipment.bows.map((b) => ({ value: String(b.id), label: b.name }))]"
-      :model-value="bowId === null ? '' : String(bowId)"
-      @update:model-value="(v) => emit('change', v === '' ? null : Number(v), v === '' ? null : props.arrowSetId)"
+      :options="[none, ...equipment.bows.map((b) => ({ value: b.key, label: b.name }))]"
+      :model-value="bowKey ?? ''"
+      @update:model-value="(v) => emit('change', v === '' ? null : v, v === '' ? null : props.arrowSetKey)"
     />
     <ChipGroup
-      v-if="bowId !== null && equipment.arrowSets.length > 0"
+      v-if="bowKey !== null && equipment.arrowSets.length > 0"
       :label="$t('gear.arrowSet')"
-      :options="[none, ...equipment.arrowSets.map((a) => ({ value: String(a.id), label: a.name }))]"
-      :model-value="arrowSetId === null ? '' : String(arrowSetId)"
-      @update:model-value="(v) => emit('change', props.bowId, v === '' ? null : Number(v))"
+      :options="[none, ...equipment.arrowSets.map((a) => ({ value: a.key, label: a.name }))]"
+      :model-value="arrowSetKey ?? ''"
+      @update:model-value="(v) => emit('change', props.bowKey, v === '' ? null : v)"
     />
   </template>
 </template>

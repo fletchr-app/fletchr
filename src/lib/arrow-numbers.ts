@@ -1,5 +1,5 @@
 // Numbered arrows: which number to suggest next, how many numbers a set has, how a numbered arrow is shown.
-import type { Equipment, LogSession, LogShot } from './log-model.ts';
+import { chosenKeys, type Equipment, type LogSession, type LogShot } from './log-model.ts';
 
 /** When the arrow set has no count (or none is chosen) the row offers this many numbers; an end holds at most 12 arrows. */
 export const DEFAULT_SET_SIZE = 12;
@@ -7,8 +7,8 @@ export const MAX_ARROW_NUMBER = 99;
 
 /** How many numbers the row offers: the count of the session's arrow set, else the default. */
 export function setSize(session: Pick<LogSession, 'gear'>, equipment: Equipment): number {
-  const id = session.gear?.arrow_set_id;
-  const count = id == null ? null : equipment.arrowSets.find((a) => a.id === id)?.count;
+  const key = chosenKeys(equipment, session.gear).arrowSetKey;
+  const count = key === null ? null : equipment.arrowSets.find((a) => a.key === key)?.count;
   return count && count >= 1 ? Math.min(count, MAX_ARROW_NUMBER) : DEFAULT_SET_SIZE;
 }
 

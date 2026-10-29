@@ -10,6 +10,7 @@ import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
+import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
 import { useUnits } from '@/composables/useUnits'
@@ -35,14 +36,15 @@ const archer = route.query.for ? { id: Number(route.query.for), name: String(rou
 // For an archer with an account (managed=0) the results stay the archer's.
 const open = route.query.open === '1'
 const managed = route.query.managed === '1'
-const { startSession, sessions, equipment, refreshEquipment } = useLog()
+const { startSession, sessions, equipment } = useLog()
+const { refresh: refreshEquipment } = useEquipment()
 const { numbering, setNumbering } = useNumberArrows()
 const { distanceField, distanceUnit, parseDistance } = useUnits()
 const type = ref<SessionType>('scoring')
 const environment = ref<Environment>('indoor')
 const location = ref('')
 // Until you choose, the equipment you used last is selected.
-const picked = ref<{ bowId: number | null; arrowSetId: number | null } | null>(null)
+const picked = ref<{ bowKey: string | null; arrowSetKey: string | null } | null>(null)
 const choice = computed(() => picked.value ?? defaultChoice(equipment.value, sessions.value))
 
 // Pick up equipment added since the last time: only works with a connection, otherwise the copy on the device is used.
@@ -76,8 +78,8 @@ function start() {
   const ends = usesEnds(type.value)
   if (ends && metres === null) return (error.value = t('newSession.enterDistance'))
   if (ends && !(Number(arrows.value) >= 1 && Number(arrows.value) <= 12)) return (error.value = t('newSession.arrowsRange'))
-  const { bowId, arrowSetId } = choice.value
-  const gear = archer || bowId === null ? undefined : gearFor(equipment.value, bowId, arrowSetId)
+  const { bowKey, arrowSetKey } = choice.value
+  const gear = archer || bowKey === null ? undefined : gearFor(equipment.value, bowKey, arrowSetKey)
   const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear, archer, when)}`
   void router.replace(overview)
   // Straight to the first end, with the overview behind it.
@@ -109,7 +111,7 @@ function start() {
         </IonSelect>
         <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       </template>
-      <GearPicker v-if="!archer && !open" :equipment="equipment" :bow-id="choice.bowId" :arrow-set-id="choice.arrowSetId" @change="(b, a) => (picked = { bowId: b, arrowSetId: a })" />
+      <GearPicker v-if="!archer && !open" :equipment="equipment" :bow-key="choice.bowKey" :arrow-set-key="choice.arrowSetKey" @change="(b, a) => (picked = { bowKey: b, arrowSetKey: a })" />
       <ErrorText :message="error" />
       <AppButton @click="start">{{ open ? $t('newSession.openStart') : past ? $t('newSession.save') : $t('newSession.start') }}</AppButton>
     </div>
