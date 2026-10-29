@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.10.1
+  version: 0.11.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -1078,6 +1078,24 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: taken_after
+        schema:
+          type: string
+          format: date-time
+        description: Taken at or after this time
+      - in: query
+        name: taken_before
+        schema:
+          type: string
+          format: date-time
+        description: Taken before this time
+      - in: query
+        name: without_session
+        schema:
+          type: boolean
+        description: 'true: only photos and videos that are in no session; false:
+          only those in a session'
       tags:
       - media
       security:
@@ -1114,8 +1132,9 @@ paths:
           description: ''
     put:
       operationId: media_update
-      description: 'Upload the clip with this id, or change its note and session.
-        Safe to repeat: the files of a clip that exists are not replaced.'
+      description: 'Upload the clip with this id, or change its note and session (`session`
+        empty: take it out of its session). Safe to repeat: the files of a clip that
+        exists are not replaced. Moving a clip moves the notes on it with it.'
       parameters:
       - in: path
         name: media_id

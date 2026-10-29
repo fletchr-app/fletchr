@@ -72,6 +72,21 @@ def test_finishing_a_session(api):
     assert res.data["ended_at"] == "2026-10-18T11:00:00Z"
 
 
+def test_a_session_in_the_past_can_be_created_finished(client_for, club):
+    client = client_for(club["archer1"])
+    body = {**SESSION, "started_at": "2026-10-28T17:00:00Z", "ended_at": "2026-10-28T19:00:00Z"}
+    assert client.put(f"/api/sessions/{new_id()}/", body, format="json").status_code == 201
+    assert TrainingSession.objects.get().ended_at.isoformat().startswith("2026-10-28T19:00")
+
+
+def test_the_end_cannot_be_before_the_start(client_for, club, api):
+    client = client_for(club["archer1"])
+    body = {**SESSION, "ended_at": "2026-10-18T08:00:00Z"}
+    assert client.put(f"/api/sessions/{new_id()}/", body, format="json").status_code == 400
+    assert client.put(api["url"], body, format="json").status_code == 400
+    assert TrainingSession.objects.get(pk=api["sid"]).ended_at is None
+
+
 def test_delete_session_removes_everything_under_it(api):
     put_end(api, end_body([shot()]))
     api["client"].put(f"{api['url']}volume/{new_id()}/", {"distance_m": "18", "arrow_count": 30}, format="json")

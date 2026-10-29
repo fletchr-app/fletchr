@@ -9,7 +9,7 @@ import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
 import { localStore } from '@/lib/local-store';
 import { loadFiles, removeFiles, saveFiles } from '@/lib/media-files';
-import { drainMedia, type MediaFiles, type QueuedMedia, renameSession, sendMedia } from '@/lib/media-queue';
+import { afterUpload, drainMedia, type MediaFiles, moveQueued, type QueuedMedia, renameSession, sendMedia } from '@/lib/media-queue';
 import { newId } from '@/lib/uuid';
 
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
@@ -48,15 +48,17 @@ async function flush() {
   try {
     await drainMedia({
       items: () => items.value,
-      done: (id) => {
-        set(items.value.filter((i) => i.id !== id));
-        void removeFiles(id);
+      done: (sent) => {
+        set(afterUpload(items.value, sent));
+        // An item that was moved during its upload stays (without its files) until the server knows the session.
+        if (!items.value.some((i) => i.id === sent.id)) void removeFiles(sent.id);
         uploaded.value++;
       },
       fail: (id, message) => set(items.value.map((i) => (i.id === id ? { ...i, error: message } : i))),
       dropSession: (id) => set(items.value.map((i) => (i.id === id ? { ...i, session: null } : i))),
       blocked: (item) => (item.session !== null && log.sessionWaiting(item.session)) || waitsForWifi(item),
       send: async (item) => {
+        if (item.uploaded) return sendMedia(api, item, null);
         let files: MediaFiles;
         try {
           files = await loadFiles(item.id, item.kind === 'video' ? 'video/mp4' : 'image/jpeg');
@@ -96,6 +98,8 @@ const actions = {
   /** Videos that wait because the phone is on mobile data. */
   waitingForWifi: () => items.value.filter((i) => !i.error && waitsForWifi(i)).length,
   remove,
+  /** Queued items go to another session (null: none); an item that is being uploaded right now follows after its upload. */
+  move: (ids: string[], session: string | null) => set(moveQueued(items.value, ids, session)),
   retryFailed: () => {
     set(items.value.map(({ error: _, ...rest }) => rest));
     void flush();

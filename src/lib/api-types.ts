@@ -463,7 +463,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["media_retrieve"];
-        /** @description Upload the clip with this id, or change its note and session. Safe to repeat: the files of a clip that exists are not replaced. */
+        /** @description Upload the clip with this id, or change its note and session (`session` empty: take it out of its session). Safe to repeat: the files of a clip that exists are not replaced. Moving a clip moves the notes on it with it. */
         put: operations["media_update"];
         post?: never;
         delete: operations["media_destroy"];
@@ -3579,6 +3579,12 @@ export interface operations {
                 kind?: "photo" | "video";
                 owner?: number;
                 session?: string;
+                /** @description Taken at or after this time */
+                taken_after?: string;
+                /** @description Taken before this time */
+                taken_before?: string;
+                /** @description true: only photos and videos that are in no session; false: only those in a session */
+                without_session?: boolean;
             };
             header?: never;
             path?: never;

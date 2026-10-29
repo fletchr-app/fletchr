@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 22:08+0100\n"
+"POT-Creation-Date: 2026-10-29 07:48+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -143,26 +143,26 @@ msgstr ""
 "Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu "
 "verbinden."
 
-#: core/transfer.py:125
+#: core/transfer.py:127
 msgid "Source and target are the same account"
 msgstr "Quelle und Ziel sind dasselbe Konto"
 
-#: core/transfer.py:128
+#: core/transfer.py:130
 #, python-format
 msgid "%(email)s is a profile without an account or an admin of the site"
 msgstr "%(email)s ist ein Profil ohne Konto oder ein Admin der Seite"
 
-#: core/transfer.py:130
+#: core/transfer.py:132
 #, python-format
 msgid "%(email)s is deactivated"
 msgstr "%(email)s ist deaktiviert"
 
-#: core/transfer.py:134
+#: core/transfer.py:136
 #, python-format
 msgid "%(email)s already has data (%(what)s). Only an account without data can receive one."
 msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen."
 
-#: core/transfer.py:153
+#: core/transfer.py:155
 #, python-format
 msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
 msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
@@ -604,6 +604,10 @@ msgstr "Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr geänd
 #: training/serializers.py:156
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
+
+#: training/serializers.py:161
+msgid "The end can't be before the start"
+msgstr "Das Ende darf nicht vor dem Beginn liegen"
 
 #: training/views.py:65 training/views.py:147
 msgid "Only the archer can change a session"

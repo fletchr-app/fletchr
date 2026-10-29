@@ -141,3 +141,26 @@ def test_a_wrong_drawing_is_refused(api, club, bad):
 def test_no_drawing_is_fine(api, club):
     clip = clip_of(club["archer1"])
     assert frame_note(api, club, clip).data["drawing"] is None
+
+
+def move_clip(api, clip, session):
+    return api("archer1").put(f"/api/media/{clip.pk}/", {"session": session}, format="multipart")
+
+
+def test_the_notes_move_with_the_clip(api, club):
+    one, two = make_session(club["archer1"]), make_session(club["archer1"])
+    clip = clip_of(club["archer1"], session=one)
+    note = frame_note(api, club, clip).data["id"]
+    assert move_clip(api, clip, str(two.pk)).status_code == 200
+    assert Note.objects.get(pk=note).session_id == two.pk
+    assert move_clip(api, clip, "").status_code == 200
+    assert Note.objects.get(pk=note).session_id is None
+    assert frame_note(api, club, clip).data["session"] is None
+
+
+def test_the_notes_of_another_clip_stay(api, club):
+    one, two = make_session(club["archer1"]), make_session(club["archer1"])
+    moved, stays = clip_of(club["archer1"], session=one), clip_of(club["archer1"], session=one)
+    other = frame_note(api, club, stays).data["id"]
+    move_clip(api, moved, str(two.pk))
+    assert Note.objects.get(pk=other).session_id == one.pk

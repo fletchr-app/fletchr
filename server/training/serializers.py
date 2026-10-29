@@ -154,6 +154,11 @@ class SessionWriteSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get("arrow_set_revision") is not None and attrs.get("bow_revision") is None:
             raise serializers.ValidationError({"arrow_set_revision": gettext("Arrows go with a bow: choose the bow too")})
+        # A partial update may send only one of the two; the other one is the stored value.
+        started = attrs.get("started_at", self.instance.started_at if self.instance else None)
+        ended = attrs.get("ended_at", self.instance.ended_at if self.instance else None)
+        if started is not None and ended is not None and ended < started:
+            raise serializers.ValidationError({"ended_at": gettext("The end can't be before the start")})
         return attrs
 
     def _with_setup(self, validated_data):
