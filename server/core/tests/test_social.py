@@ -216,3 +216,10 @@ def test_deleting_the_account_removes_the_identity(client_for, token_of, google_
     res = client_for(google_user).post("/api/me/delete-account/", {"id_token": "sub-g", "confirm": "DELETE ACCOUNT"}, format="json")
     assert res.status_code == 200 and res.data["deleted"]["sign_in_methods"] == 1
     assert not SocialIdentity.objects.exists()
+
+
+def test_core_logger_passes_info():
+    # The admin reads the `sub` from this line; it must not be filtered out by the logging config.
+    import logging
+
+    assert logging.getLogger("core").getEffectiveLevel() <= logging.INFO

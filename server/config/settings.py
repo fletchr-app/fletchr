@@ -220,6 +220,16 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# Our own loggers (core, privacy, training) write INFO lines to the console, so `docker compose logs django` shows them.
+# Without this, Python only prints warnings and the "Social sign-in refused" line the admin needs (the `sub`) is dropped.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(levelname)s %(name)s: %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "loggers": {name: {"handlers": ["console"], "level": "INFO"} for name in ("core", "privacy", "training")},
+}
+
 # Web client ID(s) of the Google project. Set only on the official server: without it Google sign-in is off and the
 # endpoint answers 404 (Google sign-in is not offered for self-hosted servers, specs/plans/2026-10-28-google-sign-in.md).
 GOOGLE_CLIENT_IDS = [x.strip() for x in os.environ.get("DJANGO_GOOGLE_CLIENT_IDS", "").split(",") if x.strip()]
@@ -230,7 +240,7 @@ MIN_APP_VERSION = "0.1.0"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.10.0",
+    "VERSION": "0.10.1",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",
