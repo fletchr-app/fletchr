@@ -6,7 +6,7 @@ import type { Equipment, LogEnd, LogShot } from './log-model.ts';
 
 const shot = (arrow_number?: number): LogShot => ({ id: String(Math.random()), value: 9, is_x: false, is_miss: false, ...(arrow_number ? { arrow_number } : {}) });
 const end = (index: number, numbers: (number | undefined)[]): LogEnd => ({ id: `e${index}`, index, distance_m: '18.0', face: 'wa-40', arrows_per_end: 3, shots: numbers.map(shot) });
-const equipment: Equipment = { bows: [], arrowSets: [{ id: 5, name: 'X10', revision: 1, revision_number: 1, count: 8 }, { id: 6, name: 'Old', revision: 1, revision_number: 1, count: null }] };
+const equipment: Equipment = { bows: [], arrowSets: [{ key: '5', id: 5, name: 'X10', revision: 1, revision_number: 1, count: 8 }, { key: '6', id: 6, name: 'Old', revision: 1, revision_number: 1, count: null }] };
 const gear = (arrow_set_id: number | null) => ({ gear: { bow_id: 1, bow_revision: 1, bow_label: '', arrow_set_id, arrow_set_revision: null, arrow_label: '' } });
 
 test('the numbers offered come from the arrow set, else twelve', () => {

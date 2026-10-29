@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Equipment works without a connection:** bows and arrow sets are kept on the phone. You can add, change and delete them offline, and use new ones in a session straight away; they go up when there is a connection, before the sessions that use them. The list and the forms open from the copy on the phone, and the history shows the server's list when it can be reached. A change the server refuses (say, deleting a bow that was used in a session) shows in the upload banner, with "Give up" bringing the item back as the server has it. Needs a server with #98 (#84).
+
 - **Sign-out asks first when something has not been uploaded:** the dialog says how many items are still on the phone; they stay there under your account and go up when you sign in again (#84).
 - **Deleting your account also removes the photos and videos still waiting to upload,** and their files on the phone. Before, they stayed behind (#84).
 - **Training log and upload queue are stored in files:** on Android the log and the queue of photos and videos were kept in the same SharedPreferences file as the settings, which was rewritten on every save. They now have one file each in the app's data folder. What is already on the phone moves over when the app first reads it; the old copy is removed only after the file was read back (#84).

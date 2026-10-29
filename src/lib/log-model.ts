@@ -33,11 +33,17 @@ export type Gear = {
   arrow_set_id: number | null;
   arrow_set_revision: number | null;
   arrow_label: string;
+  /** The uid of the chosen items and of their revisions: the way to name equipment that was made on the phone and has no integer id yet. */
+  bow_key?: string | null;
+  arrow_set_key?: string | null;
+  bow_revision_uid?: string | null;
+  arrow_set_revision_uid?: string | null;
 };
 
 /** A copy of your active equipment from the last time the app was online, so a session can start without a connection. */
-export type CachedBow = { id: number; name: string; type: string; revision: number; revision_number: number };
-export type CachedArrowSet = { id: number; name: string; revision: number; revision_number: number; count: number | null };
+/** `key` tells the items apart: the uid of the item, or its integer id as text in a copy made before there were uids. The integer ids are missing for items made on the phone that the server has not seen yet. */
+export type CachedBow = { key: string; id: number | null; name: string; type: string; revision: number | null; revision_uid?: string; revision_number: number };
+export type CachedArrowSet = { key: string; id: number | null; name: string; revision: number | null; revision_uid?: string; revision_number: number; count: number | null };
 export type Equipment = { bows: CachedBow[]; arrowSets: CachedArrowSet[] };
 
 /** What the archer notes about a session (weather as written by `encodeWeather`, ratings 1 to 5). */
@@ -321,31 +327,41 @@ export function nextEndDefaults(session: LogSession) {
 
 // --- equipment ----------------------------------------------------------------------------------
 
-/** The gear for a choice of bow and arrow set, using their current revisions from the stored equipment. */
-export function gearFor(equipment: Equipment, bowId: number | null, arrowSetId: number | null): Gear {
-  const bow = equipment.bows.find((b) => b.id === bowId);
-  const arrows = equipment.arrowSets.find((a) => a.id === arrowSetId);
+/** The gear for a choice of bow and arrow set (their keys), using their current revisions from the stored equipment. */
+export function gearFor(equipment: Equipment, bowKey: string | null, arrowSetKey: string | null): Gear {
+  const bow = equipment.bows.find((b) => b.key === bowKey);
+  const arrows = equipment.arrowSets.find((a) => a.key === arrowSetKey);
   return {
     bow_id: bow?.id ?? null,
     bow_revision: bow?.revision ?? null,
     bow_label: bow ? `${bow.name} (r${bow.revision_number})` : '',
+    bow_key: bow?.key ?? null,
+    bow_revision_uid: bow?.revision_uid ?? null,
     // Arrows go with a bow: a server cannot make a setup of arrows alone.
     arrow_set_id: bow ? (arrows?.id ?? null) : null,
     arrow_set_revision: bow ? (arrows?.revision ?? null) : null,
     arrow_label: bow && arrows ? `${arrows.name} (r${arrows.revision_number})` : '',
+    arrow_set_key: bow ? (arrows?.key ?? null) : null,
+    arrow_set_revision_uid: bow ? (arrows?.revision_uid ?? null) : null,
   };
 }
 
+/** Which items of the stored equipment a session's gear is about: by key, or by integer id for gear saved before there were keys. */
+export function chosenKeys(equipment: Equipment, gear: Gear | null | undefined): { bowKey: string | null; arrowSetKey: string | null } {
+  const bow = equipment.bows.find((b) => (gear?.bow_key != null && b.key === gear.bow_key) || (gear?.bow_id != null && b.id === gear.bow_id));
+  const arrows = equipment.arrowSets.find(
+    (a) => (gear?.arrow_set_key != null && a.key === gear.arrow_set_key) || (gear?.arrow_set_id != null && a.id === gear.arrow_set_id),
+  );
+  return { bowKey: bow?.key ?? null, arrowSetKey: arrows?.key ?? null };
+}
+
 /** What to preselect when starting a session: what was used last, else the only one there is. */
-export function defaultChoice(equipment: Equipment, sessions: LogSession[]): { bowId: number | null; arrowSetId: number | null } {
-  const last = sessions.find((s) => s.gear?.bow_id != null)?.gear;
-  const bowId = equipment.bows.some((b) => b.id === last?.bow_id) ? last!.bow_id : equipment.bows.length === 1 ? equipment.bows[0].id : null;
-  const arrowSetId = equipment.arrowSets.some((a) => a.id === last?.arrow_set_id)
-    ? last!.arrow_set_id
-    : equipment.arrowSets.length === 1
-      ? equipment.arrowSets[0].id
-      : null;
-  return { bowId, arrowSetId };
+export function defaultChoice(equipment: Equipment, sessions: LogSession[]): { bowKey: string | null; arrowSetKey: string | null } {
+  const last = chosenKeys(equipment, sessions.find((s) => s.gear?.bow_id != null || s.gear?.bow_key != null)?.gear);
+  return {
+    bowKey: last.bowKey ?? (equipment.bows.length === 1 ? equipment.bows[0].key : null),
+    arrowSetKey: last.arrowSetKey ?? (equipment.arrowSets.length === 1 ? equipment.arrowSets[0].key : null),
+  };
 }
 
 export const gearLine = (gear: Gear | null | undefined) => [gear?.bow_label, gear?.arrow_label].filter(Boolean).join(' · ');

@@ -2,16 +2,18 @@
 import { computed } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
+import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 
 const log = useLog()
 const media = useMedia()
+const equipment = useEquipment()
 const conflicts = log.conflicts
-const waiting = computed(() => log.waiting.value + media.waiting.value.length)
-const failed = computed(() => [...log.failed.value.map((o) => o.error), ...media.failed.value.map((m) => m.error)])
-const retryFailed = () => (log.retryFailed(), media.retryFailed())
-const discardFailed = () => (log.discardFailed(), media.discardFailed())
+const waiting = computed(() => log.waiting.value + media.waiting.value.length + equipment.waiting.value)
+const failed = computed(() => [...log.failed.value.map((o) => o.error), ...media.failed.value.map((m) => m.error), ...equipment.failed.value.map((o) => o.error)])
+const retryFailed = () => (log.retryFailed(), media.retryFailed(), equipment.retryFailed())
+const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipment.discardFailed())
 </script>
 
 <!-- Shows what has not reached the server yet. Nothing is lost while it waits: it is all saved on the device. -->
