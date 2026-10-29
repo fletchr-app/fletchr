@@ -10,8 +10,10 @@ import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
+import UnattachedHint from '@/components/UnattachedHint.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import VolumeLog from '@/components/VolumeLog.vue'
+import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { gearLine, nextEndDefaults, type SessionType, sessionTotals, sessionTypeKey, usesEnds } from '@/lib/log-model'
 import { canReopen } from '@/lib/session-time'
@@ -21,6 +23,8 @@ const router = useRouter()
 const { t } = useI18n()
 const { loaded, sessions, waiting, failed, finishSession, deleteSession, setType, renamed } = useLog()
 const confirmDelete = ref(false)
+const { userId } = useAuth()
+const archer = computed(() => session.value?.owner ?? Number(userId.value))
 
 const sessionId = route.params.id as string
 // Photos of this session; for an archer without an account, the coach adds them for that archer.
@@ -81,6 +85,7 @@ function newEnd() {
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
       <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
@@ -107,6 +112,7 @@ function newEnd() {
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       </div>
+      <UnattachedHint compact :owner="archer" :session="session" :name="session.owner_name" class="text-center" />
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
@@ -126,6 +132,7 @@ function newEnd() {
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       </div>
+      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
       <VolumeLog :session="session" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

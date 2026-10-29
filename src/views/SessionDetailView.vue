@@ -8,6 +8,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import NotesSection from '@/components/NotesSection.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
+import UnattachedHint from '@/components/UnattachedHint.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { useUnits } from '@/composables/useUnits'
@@ -52,6 +53,7 @@ const mediaLink = computed(() => ({
       <ErrorText :message="error" />
       <SessionDetailsText :details="session.details" />
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+      <UnattachedHint :owner="data.owner" :session="data" :name="session.owner_name" />
       <SessionPlots :session="session" />
       <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
       <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />

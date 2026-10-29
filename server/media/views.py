@@ -1,4 +1,5 @@
 import django_filters
+from django.db import transaction
 from django.utils.translation import gettext
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -28,6 +29,12 @@ def get_media(request, media_id, write=False):
 
 
 class MediaFilter(django_filters.FilterSet):
+    without_session = django_filters.BooleanFilter(
+        field_name="session", lookup_expr="isnull", help_text="true: only photos and videos that are in no session; false: only those in a session"
+    )
+    taken_after = django_filters.IsoDateTimeFilter(field_name="taken_at", lookup_expr="gte", help_text="Taken at or after this time")
+    taken_before = django_filters.IsoDateTimeFilter(field_name="taken_at", lookup_expr="lt", help_text="Taken before this time")
+
     class Meta:
         model = Media
         fields = ["owner", "session", "kind"]
@@ -58,7 +65,7 @@ class MediaDetailView(APIView):
         responses={200: MediaSerializer, 201: MediaSerializer},
     )
     def put(self, request, media_id):
-        """Upload the clip with this id, or change its note and session. Safe to repeat: the files of a clip that exists are not replaced."""
+        """Upload the clip with this id, or change its note and session (`session` empty: take it out of its session). Safe to repeat: the files of a clip that exists are not replaced. Moving a clip moves the notes on it with it."""
         existing = Media.objects.filter(pk=media_id).first()
         if existing is not None:
             existing = get_media(request, media_id, write=True)
@@ -83,9 +90,13 @@ class MediaDetailView(APIView):
             media.save()
         else:
             media = existing
-            for name, value in data.items():
-                setattr(media, name, value)
-            media.save()
+            moved = "session" in data and data["session"] != media.session
+            with transaction.atomic():
+                for name, value in data.items():
+                    setattr(media, name, value)
+                media.save()
+                if moved:  # the notes on the clip belong to the session it is in; the end was one of the old session
+                    media.coach_notes.update(session=media.session, end=None)
         media = visible_media(request.user).get(pk=media.pk)
         return Response(MediaSerializer(media, context={"request": request}).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
 

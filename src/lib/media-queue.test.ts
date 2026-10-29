@@ -3,7 +3,7 @@ import createClient from 'openapi-fetch';
 import { test } from 'vitest';
 
 import type { paths } from './api-types.ts';
-import { drainMedia, mediaForm, type MediaSendResult, type QueuedMedia, renameSession, sendMedia } from './media-queue.ts';
+import { afterUpload, drainMedia, mediaForm, type MediaSendResult, moveQueued, type QueuedMedia, renameSession, sendMedia } from './media-queue.ts';
 
 const item = (id: string, extra: Partial<QueuedMedia> = {}): QueuedMedia => ({
   id, kind: 'photo', owner: null, session: null, taken_at: '2026-10-24T10:00:00Z', width: 800, height: 600, ...extra,
@@ -17,7 +17,7 @@ function harness(results: Record<string, MediaSendResult[]>, start: QueuedMedia[
   const run = () =>
     drainMedia({
       items: () => queue,
-      done: (id) => ((queue = queue.filter((i) => i.id !== id)), log.push(`done ${id}`)),
+      done: (sent) => ((queue = afterUpload(queue, sent)), log.push(`done ${sent.id}`)),
       fail: (id, message) => ((queue = queue.map((i) => (i.id === id ? { ...i, error: message } : i))), log.push(`fail ${id}`)),
       dropSession: (id) => ((queue = queue.map((i) => (i.id === id ? { ...i, session: null } : i))), log.push(`drop ${id}`)),
       send: async (i) => (results[i.id] ?? [{ kind: 'ok' }]).shift()!,
@@ -79,13 +79,63 @@ test('stop pauses before the next item', async () => {
   const sent: string[] = [];
   await drainMedia({
     items: () => queue,
-    done: (id) => (queue = queue.filter((i) => i.id !== id)),
+    done: (sent) => (queue = afterUpload(queue, sent)),
     fail: () => {},
     dropSession: () => {},
     send: async (i) => (sent.push(i.id), { kind: 'ok' }),
     stop: () => sent.length === 1,
   });
   assert.deepEqual(sent, ['a']);
+});
+
+test('moveQueued changes the session of the chosen items only', () => {
+  const moved = moveQueued([item('a'), item('b', { session: 's1' }), item('c')], ['a', 'b'], 's2');
+  assert.deepEqual(moved.map((i) => i.session), ['s2', 's2', null]);
+  assert.equal(moveQueued([item('a', { session: 's1' })], ['a'], null)[0]!.session, null);
+});
+
+test('afterUpload removes an item that stayed as it was sent', () => {
+  assert.deepEqual(afterUpload([item('a', { session: 's1' }), item('b')], item('a', { session: 's1' })).map((i) => i.id), ['b']);
+});
+
+test('afterUpload keeps an item that was moved while it was uploading, as one that only needs its session sent', () => {
+  const after = afterUpload([item('a', { session: 's2' })], item('a', { session: 's1' }));
+  assert.deepEqual(after, [item('a', { session: 's2', uploaded: true })]);
+  assert.equal(afterUpload([item('a', { session: null })], item('a', { session: 's1' }))[0]!.uploaded, true, 'taken out of the session');
+  assert.deepEqual(afterUpload(afterUpload([item('a', { session: 's2' })], item('a', { session: 's1' })), item('a', { session: 's2', uploaded: true })), [], 'sent, and it is done');
+});
+
+test('afterUpload ignores an item that was removed meanwhile', () => {
+  const rest = [item('b')];
+  assert.equal(afterUpload(rest, item('a')), rest);
+});
+
+test('the form of an uploaded item has the session and the note, and no files', () => {
+  const form = mediaForm(item('a', { session: 's2', uploaded: true, note: 'x' }), null, true);
+  assert.deepEqual([...form.keys()].sort(), ['note', 'session']);
+  assert.equal(form.get('session'), 's2');
+  assert.equal(mediaForm(item('a', { uploaded: true }), null, true).get('session'), '', 'no session: the server clears it');
+  assert.equal(mediaForm(item('a', { session: 's1', uploaded: true }), null, false).get('session'), '', 'a session that is gone');
+});
+
+test('a clip moved while it uploads gets a second, session-only request', async () => {
+  let queue = [item('a', { session: 's1' })];
+  const forms: string[][] = [];
+  const run = () =>
+    drainMedia({
+      items: () => queue,
+      done: (sent) => (queue = afterUpload(queue, sent)),
+      fail: () => {},
+      dropSession: () => {},
+      send: async (i) => {
+        forms.push([...mediaForm(i, i.uploaded ? null : files, true).keys()]);
+        if (!i.uploaded) queue = moveQueued(queue, ['a'], 's2'); // moved while the request runs
+        return { kind: 'ok' };
+      },
+    });
+  await run(); // the moved item stays after the first request and goes again in the same run
+  assert.deepEqual(queue, []);
+  assert.deepEqual(forms.map((f) => f.includes('file')), [true, false]);
 });
 
 // --- against the API client ---
@@ -146,4 +196,12 @@ test('queued clips follow a session that the server merged into another', () => 
   const items = [item('a', { session: 'old' }), item('b', { session: 'other' }), item('c')];
   assert.deepEqual(renameSession(items, 'old', 'new').map((i) => i.session), ['new', 'other', null]);
   assert.equal(renameSession(items, 'missing', 'new'), items);
+});
+
+test('an uploaded item sends only the session, and a session that is gone is dropped', async () => {
+  const sent = clientWith(() => json(200));
+  await sendMedia(sent.api, item('a', { session: 's2', uploaded: true }), null);
+  assert.deepEqual([...sent.calls[0]!.form!.keys()], ['session']);
+  const bad = clientWith(() => json(400, { session: ['gone'] }));
+  assert.equal((await sendMedia(bad.api, item('a', { session: 's2', uploaded: true }), null)).kind, 'withoutSession');
 });

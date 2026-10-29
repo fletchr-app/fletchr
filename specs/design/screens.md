@@ -22,3 +22,5 @@ Updated: 2026-10-29
 5. Team stats: archers with no arrows in the last 7 days; a ranking (coach only, off by default, see [roles-and-access.md](roles-and-access.md))
 6. Team admin: invites, roles
 7. Open a session for an archer (archer page): environment and place only, then photos, videos and notes can be attached. The archer finds it in their training list, shown as "Session", and chooses the type when adding results
+
+Media page (#91): "Select" turns the grid into a selection (check marks, "Move to session", and in a session also "Remove from session"); on an archer's page the chips "All" and "Not in a session" limit the list. Session screens show a hint when the archer has photos or videos near the session's time that are in no session.
