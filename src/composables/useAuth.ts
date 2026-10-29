@@ -9,6 +9,7 @@ import { userIdOf } from '@/lib/jwt';
 import { useServer } from '@/composables/useServer';
 import { googleErrorKey } from '@/lib/google-errors';
 import { GOOGLE_WEB_CLIENT_ID, googleIdToken } from '@/lib/social-login';
+import type { StoreOwner } from '@/lib/store-owner';
 
 export type RegisterBody = components['schemas']['RegisterRequest'];
 
@@ -35,6 +36,11 @@ const api = new Proxy({} as ApiClient, {
 const status = computed<AuthStatus>(() => (!state.value.loaded ? 'loading' : state.value.tokens ? 'signedIn' : 'signedOut'));
 /** Id of the signed-in user, read from the access token so it is known offline. */
 const userId = computed(() => (state.value.tokens ? userIdOf(state.value.tokens.access) : null));
+
+/** Whose data the stores on the device hold: the signed-in account on this server. Null while signed out. */
+const storeOwner = computed<StoreOwner | null>(() =>
+  userId.value !== null ? { kind: 'account', server: url.value, userId: String(userId.value) } : null,
+);
 
 /** Resolves once the stored tokens have been read, so the first route is not chosen too early. */
 export function authReady(): Promise<void> {
@@ -114,5 +120,5 @@ function replaceTokens(tokens: { access: string; refresh: string }) {
 }
 
 export function useAuth() {
-  return { status, api, userId, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
+  return { status, api, userId, storeOwner, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
 }

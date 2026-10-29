@@ -6,7 +6,6 @@ import { useAuth } from '@/composables/useAuth';
 import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useLog } from '@/composables/useLog';
 import { useUploadSettings } from '@/composables/useUploadSettings';
-import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
 import { loadFiles, removeFiles, saveFiles } from '@/lib/media-files';
 import { storeKey } from '@/lib/store-owner';
@@ -16,14 +15,11 @@ import { newId } from '@/lib/uuid';
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, userId, status } = useAuth();
-const { url } = useServer();
+const { api, storeOwner, status } = useAuth();
 const log = useLog();
 const { videosWifiOnly } = useUploadSettings();
 
-const storageKey = computed(() =>
-  userId.value !== null ? storeKey('media', { kind: 'account', server: url.value, userId: String(userId.value) }) : null,
-);
+const storageKey = computed(() => (storeOwner.value ? storeKey('media', storeOwner.value) : null));
 const items = shallowRef<QueuedMedia[]>([]);
 /** Counts up whenever an upload finished, so a screen that shows the server's list can fetch it again. */
 const uploaded = ref(0);
@@ -116,6 +112,8 @@ const actions = {
 effectScope(true).run(() => {
   // Clips queued for a session the server merged into another one follow it.
   log.onSessionRenamed((from, to) => set(renameSession(items.value, from, to)));
+  // Photos and videos still waiting would bring back data of an account that no longer exists, and the files stay on the phone.
+  log.onAccountDeleted(() => items.value.forEach((i) => remove(i.id)));
   watch([items, loaded, status], () => void flush(), { immediate: true });
   let timer: ReturnType<typeof setInterval> | undefined;
   watch(
