@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Sign-out asks first when something has not been uploaded:** the dialog says how many items are still on the phone; they stay there under your account and go up when you sign in again (#84).
+- **Deleting your account also removes the photos and videos still waiting to upload,** and their files on the phone. Before, they stayed behind (#84).
 - **Training log and upload queue are stored in files:** on Android the log and the queue of photos and videos were kept in the same SharedPreferences file as the settings, which was rewritten on every save. They now have one file each in the app's data folder. What is already on the phone moves over when the app first reads it; the old copy is removed only after the file was read back (#84).
 - **Results are no longer lost when a session was deleted elsewhere:** if the server has deleted a session (for example on another phone) while ends or volume of it were still waiting to upload, the app keeps it and asks: "Keep as a new session" uploads it again under a new id, "Discard these results" drops it. Before, it was dropped without a word (#84).
 

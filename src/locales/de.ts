@@ -737,6 +737,7 @@ export default {
     save: 'Speichern',
     reset: 'Auf Standard zurücksetzen',
     signOut: 'Abmelden',
+    signOutWaiting: '{n} Eintrag wurde noch nicht hochgeladen. Er bleibt auf diesem Handy und wird hochgeladen, wenn du dich wieder anmeldest. | {n} Einträge wurden noch nicht hochgeladen. Sie bleiben auf diesem Handy und werden hochgeladen, wenn du dich wieder anmeldest.',
     about: 'Über Fletchr',
   },
   about: {

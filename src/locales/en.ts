@@ -733,6 +733,7 @@ export default {
     save: 'Save',
     reset: 'Reset to default',
     signOut: 'Sign out',
+    signOutWaiting: '{n} item has not been uploaded. It stays on this phone and goes up when you sign in again. | {n} items have not been uploaded. They stay on this phone and go up when you sign in again.',
     about: 'About Fletchr',
   },
   about: {

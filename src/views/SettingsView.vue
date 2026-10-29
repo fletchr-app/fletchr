@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption } from '@ionic/vue'
+import { alertController, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption } from '@ionic/vue'
 import { computed } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -8,15 +8,36 @@ import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
+import { useLog } from '@/composables/useLog'
+import { useMedia } from '@/composables/useMedia'
 import { useServer } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useUnits } from '@/composables/useUnits'
 import { useUploadSettings } from '@/composables/useUploadSettings'
+import { t } from '@/i18n'
 import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
 const { signOut } = useAuth()
+const log = useLog()
+const media = useMedia()
+
+// What has not reached the server stays on the phone under this account, but the person should know before leaving.
+async function confirmSignOut() {
+  const unsent = log.waiting.value + log.failed.value.length + media.items.value.length
+  if (unsent === 0) return void signOut()
+  const alert = await alertController.create({
+    header: t('settings.signOut'),
+    message: t('settings.signOutWaiting', { n: unsent }, unsent),
+    buttons: [
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('settings.signOut'), role: 'confirm' },
+    ],
+  })
+  await alert.present()
+  if ((await alert.onDidDismiss()).role === 'confirm') await signOut()
+}
 const APP_VERSION = __APP_VERSION__
 const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
@@ -88,7 +109,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         </IonItem>
       </IonList>
 
-      <AppButton class="mt-3" secondary @click="signOut">{{ $t('settings.signOut') }}</AppButton>
+      <AppButton class="mt-3" secondary @click="confirmSignOut">{{ $t('settings.signOut') }}</AppButton>
     </div>
   </AppPage>
 </template>

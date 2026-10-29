@@ -5,7 +5,6 @@ import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
 import { useKeyedStore } from '@/composables/useKeyedStore';
-import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
 import type { components } from '@/lib/api-types';
 import { errorMessage } from '@/lib/errors';
@@ -31,13 +30,10 @@ const RETRY_INTERVAL_MS = 20_000;
 
 export type DeletedCounts = components['schemas']['DeletedCounts'];
 
-const { api, userId, status, signOut } = useAuth();
-const { url } = useServer();
+const { api, userId, storeOwner, status, signOut } = useAuth();
 
 // Each user on each server has their own local log.
-const storageKey = computed(() =>
-  userId.value !== null ? storeKey('log', { kind: 'account', server: url.value, userId: String(userId.value) }) : null,
-);
+const storageKey = computed(() => (storeOwner.value ? storeKey('log', storeOwner.value) : null));
 
 const state = shallowRef<LogState>(EMPTY_LOG);
 // This is the current truth, so the upload loop sees its own updates immediately.
@@ -50,6 +46,8 @@ let inflight: Promise<void> | null = null;
 // Sessions the server merged into others: old id to new id. Screens that hold an old id follow it, and so does the media queue.
 const renamed = ref<Readonly<Record<string, string>>>({});
 const renameListeners: ((from: string, to: string) => void)[] = [];
+// Things that belong to the account and must go with it (the queued photos and videos).
+const accountDeletedListeners: (() => void)[] = [];
 
 function dispatch(action: LogAction) {
   current = reduce(current, action);
@@ -152,6 +150,7 @@ async function deleteMyAccount(proof: Proof, confirm: string): Promise<{ error: 
       }
       dispatch({ type: 'reset' });
       if (storageKey.value) await dataStore.remove(storageKey.value).catch(() => {});
+      accountDeletedListeners.forEach((listener) => listener()); // before signing out, while the queue is still this account's
       await signOut(); // the account is gone: back to the sign-in screen
       return { error: '', teams: [] };
     } catch {
@@ -194,6 +193,7 @@ const actions = {
   refreshEquipment,
   setType: (id: string, type: SessionType) => dispatch({ type: 'updateSession', id, patch: { type } }),
   onSessionRenamed: (listener: (from: string, to: string) => void) => void renameListeners.push(listener),
+  onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
