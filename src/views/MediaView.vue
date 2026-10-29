@@ -13,7 +13,7 @@ import {
   IonToolbar,
   onIonViewWillEnter,
 } from '@ionic/vue'
-import { closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
+import { checkmarkCircle, closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -21,11 +21,14 @@ import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import DrawnPicture from '@/components/DrawnPicture.vue'
+import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import SessionPicker from '@/components/SessionPicker.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
@@ -67,11 +70,23 @@ const { videosWifiOnly } = useUploadSettings()
 const me = computed(() => Number(userId.value))
 const owner = computed(() => ownerParam ?? me.value)
 
-const { data, error, loading, reload } = useRemote(async () => {
-  const query = sessionId ? { session: sessionId } : { owner: owner.value }
-  const { data: list, response } = await api.GET('/api/media/', { params: { query } })
-  return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
-})
+// An archer's page can be limited to what is in no session.
+const picking = !!route.query.pick
+const filter = ref<'all' | 'none'>(route.query.unattached ? 'none' : 'all')
+const unattachedOnly = computed(() => !sessionId && filter.value === 'none')
+const filters = computed(() => [
+  { value: 'all' as const, label: t('media.all') },
+  { value: 'none' as const, label: t('media.notInSession') },
+])
+
+const { data, error, loading, reload } = useRemote(
+  async () => {
+    const query = sessionId ? { session: sessionId } : { owner: owner.value, ...(unattachedOnly.value ? { without_session: true } : {}) }
+    const { data: list, response } = await api.GET('/api/media/', { params: { query } })
+    return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
+  },
+  { watch: [filter] },
+)
 
 // Video of an archer under 18 needs the consent of the parents on record. Unknown (offline) counts as allowed: the server decides.
 const consent = useRemote(async () => {
@@ -90,7 +105,9 @@ onIonViewWillEnter(() => {
 watch(media.uploaded, reload)
 
 // Previews of what is still on the phone.
-const queued = computed(() => media.items.value.filter((i) => (sessionId ? i.session === sessionId : (i.owner ?? me.value) === owner.value)))
+const queued = computed(() =>
+  media.items.value.filter((i) => (sessionId ? i.session === sessionId : (i.owner ?? me.value) === owner.value && (!unattachedOnly.value || i.session === null))),
+)
 const previews = ref<Record<string, string>>({})
 watch(
   queued,
@@ -373,12 +390,69 @@ const taken = (item: Shown | null) => {
   const when = item?.remote?.taken_at ?? item?.queued?.taken_at
   return when ? new Date(when).toLocaleString() : ''
 }
+
+// Moving into a session, one photo from its full-screen view or several selected in the grid.
+const { move } = useMoveMedia()
+const selecting = ref(false)
+const selected = ref<ReadonlySet<string>>(new Set())
+const pickerItems = ref<Shown[] | null>(null)
+const moveMessage = ref<{ text: string; failed: boolean } | null>(null)
+const canMove = (item: Shown) => !picking && !item.preparing && (!!item.queued || item.remote?.can_edit === true)
+const sessionOf = (item: Shown) => (item.queued ? item.queued.session : (item.remote?.session ?? null))
+const takenOf = (item: Shown) => (item.queued?.taken_at ?? item.remote?.taken_at)!
+const selectedItems = computed(() => shown.value.filter((i) => selected.value.has(i.key) && canMove(i)))
+const canMoveViewing = computed(() => !!viewing.value && canMove(viewing.value))
+function endSelecting() {
+  selecting.value = false
+  selected.value = new Set()
+}
+function toggle(item: Shown) {
+  if (!canMove(item)) return
+  const next = new Set(selected.value)
+  if (!next.delete(item.key)) next.add(item.key)
+  selected.value = next
+}
+function tap(item: Shown) {
+  if (selecting.value) toggle(item)
+  else open(item)
+}
+const pickerOwner = computed(() => {
+  const first = pickerItems.value?.[0]
+  return first?.remote?.owner ?? first?.queued?.owner ?? me.value
+})
+const pickerTakenAt = computed(() => (pickerItems.value ?? []).map(takenOf).sort()[0] ?? new Date().toISOString())
+const pickerCurrent = computed(() => {
+  const sessions = new Set((pickerItems.value ?? []).map(sessionOf))
+  return sessions.size === 1 ? ([...sessions][0] ?? null) : null
+})
+const pickerRemovable = computed(() => (pickerItems.value ?? []).some((i) => sessionOf(i) !== null))
+async function moveTo(session: string | null) {
+  const items = pickerItems.value ?? []
+  pickerItems.value = null
+  const { moved, failed } = await move(items.map((i): MoveItem => ({ id: i.queued?.id ?? i.remote!.id, queued: !!i.queued })), session)
+  moveMessage.value = failed > 0 ? { text: t('media.moveFailed', { n: failed }, failed), failed: true } : { text: t('media.moved', { n: moved }, moved), failed: false }
+  close()
+  endSelecting()
+  reload()
+}
+function removeSelected() {
+  pickerItems.value = selectedItems.value
+  void moveTo(null)
+}
 </script>
 
 <template>
   <AppPage :title="title">
     <div class="screen">
       <AppButton :busy="adding" @click="chooseSource">{{ $t('media.add') }}</AppButton>
+      <AppButton v-if="!picking && shown.some(canMove)" secondary @click="selecting ? endSelecting() : (selecting = true)">{{ selecting ? $t('common.cancel') : $t('media.select') }}</AppButton>
+      <div v-if="selecting" class="d-flex flex-column gap-2">
+        <div class="muted">{{ $t('media.selected', { n: selectedItems.length }, selectedItems.length) }}</div>
+        <AppButton :busy="selectedItems.length === 0" @click="pickerItems = selectedItems">{{ $t('media.moveToSession') }}</AppButton>
+        <AppButton v-if="sessionId" secondary :busy="selectedItems.length === 0" @click="removeSelected">{{ $t('media.removeFromSession') }}</AppButton>
+      </div>
+      <ChipGroup v-if="!sessionId && !picking" v-model="filter" :options="filters" />
+      <div v-if="moveMessage" :class="moveMessage.failed ? 'text-danger' : 'muted'">{{ moveMessage.text }}</div>
       <div v-if="!videoAllowed" class="muted">{{ $t('media.needsConsent') }}</div>
       <div v-else-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
       <ErrorText :message="addError" />
@@ -390,8 +464,9 @@ const taken = (item: Shown | null) => {
       <template v-for="section in sections" :key="section.key">
         <h3 v-if="section.title" class="day">{{ section.title }}</h3>
         <div class="grid">
-        <button v-for="item in section.items" :key="item.key" type="button" class="cell" @click="open(item)">
+        <button v-for="item in section.items" :key="item.key" type="button" class="cell" :class="{ chosen: selected.has(item.key) }" @click="tap(item)">
             <img v-if="item.src" :src="item.src" alt="" />
+            <IonIcon v-if="selecting && selected.has(item.key)" :icon="checkmarkCircle" class="check" />
             <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
             <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
             <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
@@ -410,6 +485,17 @@ const taken = (item: Shown | null) => {
         </div>
       </template>
     </div>
+    <SessionPicker
+      v-if="pickerItems"
+      open
+      :owner="pickerOwner"
+      :taken-at="pickerTakenAt"
+      :current="pickerCurrent"
+      :server-items="pickerItems.some((i) => !!i.remote)"
+      :removable="pickerRemovable"
+      @close="pickerItems = null"
+      @pick="moveTo"
+    />
     <IonModal :is-open="viewing !== null" class="viewer" @did-present="placeStrip" @did-dismiss="close">
       <IonHeader>
         <IonToolbar>
@@ -431,6 +517,7 @@ const taken = (item: Shown | null) => {
           <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
           <AppButton v-if="notesButton" secondary @click="openNotes">{{ $t('media.openNotes') }}{{ notesCount > 0 ? ` (${notesCount})` : '' }}</AppButton>
+          <AppButton v-if="canMoveViewing" secondary @click="pickerItems = [viewing!]">{{ viewing && sessionOf(viewing) ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}</AppButton>
           <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? (notesCount > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</AppButton>
         </div>
       </IonFooter>
@@ -457,6 +544,18 @@ const taken = (item: Shown | null) => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.chosen img {
+  opacity: 0.55;
+}
+.check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 26px;
+  color: var(--ion-color-primary);
+  background: #fff;
+  border-radius: 50%;
 }
 .veil {
   position: absolute;

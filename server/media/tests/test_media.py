@@ -345,3 +345,64 @@ def test_ranges(api, header, status, expected, content_range):
     assert res.get("Content-Range") == content_range
     if status != 416:
         assert int(res["Content-Length"]) == len(expected)
+
+
+# --- moving into a session (#91) ---------------------------------------------------------------
+
+
+def test_a_clip_moves_into_another_session_and_out_again(api, club):
+    one, two = make_session(club["archer1"]), make_session(club["archer1"])
+    clip = upload(api, session=str(one.pk))["id"]
+    assert put(api("archer1"), {"session": str(two.pk)}, clip).data["session"] == two.pk
+    assert api("archer1").get(f"/api/media/{clip}/").data["session"] == two.pk
+    assert put(api("archer1"), {"session": ""}, clip).data["session"] is None
+    assert api("archer1").get(f"/api/media/{clip}/").data["session"] is None
+
+
+def test_a_clip_cannot_move_into_a_session_of_another_archer(api, club):
+    mine, other = make_session(club["archer1"]), make_session(club["archer2"])
+    clip = upload(api, session=str(mine.pk))["id"]
+    res = put(api("archer1"), {"session": str(other.pk)}, clip)
+    assert res.status_code == 400 and "session" in res.data
+    assert Media.objects.get(pk=clip).session_id == mine.pk
+
+
+def test_who_may_move_a_clip(api, club, join):
+    session = make_session(club["archer1"])
+    own = upload(api)["id"]
+    assert put(api("coach"), {"session": str(session.pk)}, own).status_code == 403
+    added = put(api("coach"), video(), owner=club["archer1"]).data["id"]
+    assert put(api("coach"), {"session": str(session.pk)}, added).data["session"] == session.pk
+    assert put(api("archer1"), {"session": ""}, added).data["session"] is None
+    managed = User.objects.create_managed("Max")
+    join(managed, club["a"], Role.ARCHER)
+    theirs = put(api("coach"), video(), owner=managed).data["id"]
+    other = make_session(managed)
+    assert put(api("coach"), {"session": str(other.pk)}, theirs).data["session"] == other.pk
+
+
+def test_moving_several_clips_is_one_request_each(api, club):
+    mine, other = make_session(club["archer1"]), make_session(club["archer2"])
+    clips = [upload(api)["id"] for _ in range(3)]
+    results = [put(api("archer1"), {"session": str(s.pk)}, c).status_code for c, s in zip(clips, [mine, other, mine])]
+    assert results == [200, 400, 200]
+    assert sorted(Media.objects.values_list("session_id", flat=True), key=str) == sorted([mine.pk, mine.pk, None], key=str)
+
+
+def test_the_list_asks_for_clips_without_a_session(api, club):
+    session = make_session(club["archer1"])
+    inside = upload(api, session=str(session.pk))["id"]
+    outside = upload(api)["id"]
+    upload(api, "archer2")
+    url = f"/api/media/?owner={club['archer1'].pk}"
+    assert {m["id"] for m in api("coach").get(f"{url}&without_session=true").data} == {outside}
+    assert {m["id"] for m in api("coach").get(f"{url}&without_session=false").data} == {inside}
+    assert len(api("coach").get(url).data) == 2
+
+
+def test_the_list_can_be_limited_to_a_time(api, club):
+    early = upload(api, taken_at="2026-10-24T09:00:00Z")["id"]
+    late = upload(api, taken_at="2026-10-24T11:00:00Z")["id"]
+    assert {m["id"] for m in api("archer1").get("/api/media/?taken_after=2026-10-24T09:00:00Z").data} == {early, late}
+    assert {m["id"] for m in api("archer1").get("/api/media/?taken_after=2026-10-24T09:30:00Z").data} == {late}
+    assert {m["id"] for m in api("archer1").get("/api/media/?taken_before=2026-10-24T11:00:00Z").data} == {early}

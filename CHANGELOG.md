@@ -5,6 +5,7 @@ What changed in each release. The version number and how a release is made: `spe
 ## Unreleased
 
 - **Training in the past:** a session can be started with a date and time (not in the future, at most 31 days back). A start in the past asks for a duration and creates a finished session, so a coach can add yesterday's training and attach photos and notes. "Reopen" is hidden for sessions that started more than 4 hours ago. The server refuses an end before the start (#89).
+- **Move photos and videos between sessions:** in the photo view and the player ("Move to session", "Remove from session"), or several at once with "Select" in the grid. The archer's page can list what is "Not in a session", and a session screen offers the photos and videos taken around its time. The notes on a clip move with it. Media still waiting to upload can be moved too, also while it uploads. The delete confirmation of a session says that its photos and videos stay (#91).
 
 ## 0.10.1 (2026-10-29)
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
-import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline, trashOutline } from 'ionicons/icons'
+import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline, swapHorizontalOutline, trashOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -10,8 +10,10 @@ import DrawingLayer from '@/components/DrawingLayer.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
+import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
+import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
@@ -423,6 +425,19 @@ async function remove() {
   router.back()
 }
 watch(currentId, () => (confirmDelete.value = false))
+
+// Into a session, or out of it. The notes on the clip go with it (the server moves them).
+const { move: moveMedia } = useMoveMedia()
+const pickerOpen = ref(false)
+const moveError = ref<string | null>(null)
+async function moveTo(session: string | null) {
+  pickerOpen.value = false
+  moveError.value = null
+  const { failed } = await moveMedia([{ id: currentId.value, queued: false }], session)
+  if (failed > 0) moveError.value = t('media.moveFailed', { n: failed }, failed)
+  reload()
+  notes.reload()
+}
 </script>
 
 <template>
@@ -520,10 +535,25 @@ watch(currentId, () => (confirmDelete.value = false))
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
       <ErrorText :message="deleteError" class="px-3" />
+      <ErrorText :message="moveError" class="px-3" />
+      <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
+        <IonIcon :icon="swapHorizontalOutline" /> {{ clip.session ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}
+      </button>
       <button v-if="clip?.can_edit" type="button" class="remove" @click="remove">
         <IonIcon :icon="trashOutline" /> {{ confirmDelete ? ((notes.data.value?.length ?? 0) > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}
       </button>
     </div>
+    <SessionPicker
+      v-if="clip"
+      :open="pickerOpen"
+      :owner="clip.owner"
+      :taken-at="clip.taken_at"
+      :current="clip.session ?? null"
+      server-items
+      :removable="!!clip.session"
+      @close="pickerOpen = false"
+      @pick="moveTo"
+    />
     <MediaNotesSheet
       :open="notesOpen"
       :title="isPhoto ? $t('media.notesPhoto') : $t('media.notes')"

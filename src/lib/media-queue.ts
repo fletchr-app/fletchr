@@ -20,6 +20,8 @@ export type QueuedMedia = {
   capture_fps?: number;
   frame_count?: number;
   note?: string;
+  /** The files are on the server already; only `session` (and `note`) still have to go. Set when the item was moved during its upload. */
+  uploaded?: true;
   /** Set when the server refused it. */
   error?: string;
 };
@@ -31,10 +33,32 @@ export function renameSession(items: QueuedMedia[], from: string, to: string): Q
   return items.some((i) => i.session === from) ? items.map((i) => (i.session === from ? { ...i, session: to } : i)) : items;
 }
 
+/** The queued items with these ids belong to `session` now (null: to none). */
+export function moveQueued(items: QueuedMedia[], ids: string[], session: string | null): QueuedMedia[] {
+  return items.map((i) => (ids.includes(i.id) ? { ...i, session } : i));
+}
+
+/**
+ * The upload of `sent` went through. Whatever was sent has reached the server, but the item may have been moved while the
+ * request was running: then it stays, as an item that only has to tell the server its session.
+ */
+export function afterUpload(items: QueuedMedia[], sent: QueuedMedia): QueuedMedia[] {
+  const current = items.find((i) => i.id === sent.id);
+  if (!current) return items;
+  if (current.uploaded || current.session === sent.session) return items.filter((i) => i.id !== sent.id);
+  return items.map((i) => (i.id === sent.id ? { ...i, uploaded: true } : i));
+}
+
 export type MediaSendResult = SendResult | { kind: 'withoutSession' };
 
-export function mediaForm(item: QueuedMedia, files: MediaFiles, withSession: boolean): FormData {
+export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSession: boolean): FormData {
   const form = new FormData();
+  if (item.uploaded || !files) {
+    // The clip is on the server: the session (empty: none) and the note are all that can change.
+    form.append('session', withSession ? (item.session ?? '') : '');
+    if (item.note !== undefined) form.append('note', item.note);
+    return form;
+  }
   form.append('kind', item.kind);
   form.append('taken_at', item.taken_at);
   form.append('width', String(item.width));
@@ -49,7 +73,7 @@ export function mediaForm(item: QueuedMedia, files: MediaFiles, withSession: boo
 }
 
 /** Upload one item. Repeating it is safe: the server knows the id. */
-export async function sendMedia(api: ApiClient, item: QueuedMedia, files: MediaFiles): Promise<MediaSendResult> {
+export async function sendMedia(api: ApiClient, item: QueuedMedia, files: MediaFiles | null): Promise<MediaSendResult> {
   try {
     const { response, error } = await api.PUT('/api/media/{media_id}/', {
       params: { path: { media_id: item.id }, query: item.owner ? { owner: item.owner } : undefined },
@@ -68,7 +92,8 @@ export async function sendMedia(api: ApiClient, item: QueuedMedia, files: MediaF
 
 export type MediaDrain = {
   items: () => QueuedMedia[];
-  done: (id: string) => void;
+  /** `item` is what was sent; the queue may have changed since (it may have been moved to another session). */
+  done: (item: QueuedMedia) => void;
   fail: (id: string, message: string) => void;
   dropSession: (id: string) => void;
   send: (item: QueuedMedia) => Promise<MediaSendResult>;
@@ -92,7 +117,7 @@ export async function drainMedia({ items, done, fail, dropSession, send, blocked
       continue;
     }
     const result = await send(item);
-    if (result.kind === 'ok') done(item.id);
+    if (result.kind === 'ok') done(item);
     else if (result.kind === 'failed') fail(item.id, result.message);
     else if (result.kind === 'withoutSession') dropSession(item.id);
     else return;
