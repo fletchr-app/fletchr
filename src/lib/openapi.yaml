@@ -2936,6 +2936,10 @@ components:
         id:
           type: integer
           readOnly: true
+        uid:
+          type: string
+          format: uuid
+          readOnly: true
         owner:
           type: integer
           readOnly: true
@@ -2950,6 +2954,10 @@ components:
           readOnly: true
         revision_number:
           type: integer
+          readOnly: true
+        revision_uid:
+          type: string
+          format: uuid
           readOnly: true
         name:
           type: string
@@ -2994,6 +3002,8 @@ components:
       - owner
       - revision
       - revision_number
+      - revision_uid
+      - uid
     ArrowSetRequest:
       type: object
       properties:
@@ -3043,6 +3053,10 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
+        uid:
+          type: string
+          format: uuid
           readOnly: true
         arrow_set:
           type: integer
@@ -3097,6 +3111,7 @@ components:
       - id
       - name
       - number
+      - uid
     ArrowSetRevisionRequest:
       type: object
       properties:
@@ -3229,6 +3244,10 @@ components:
         id:
           type: integer
           readOnly: true
+        uid:
+          type: string
+          format: uuid
+          readOnly: true
         owner:
           type: integer
           readOnly: true
@@ -3243,6 +3262,10 @@ components:
           readOnly: true
         revision_number:
           type: integer
+          readOnly: true
+        revision_uid:
+          type: string
+          format: uuid
           readOnly: true
         name:
           type: string
@@ -3300,7 +3323,9 @@ components:
       - owner
       - revision
       - revision_number
+      - revision_uid
       - type
+      - uid
     BowRequest:
       type: object
       properties:
@@ -3364,6 +3389,10 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
+        uid:
+          type: string
+          format: uuid
           readOnly: true
         bow:
           type: integer
@@ -3432,6 +3461,7 @@ components:
       - name
       - number
       - type
+      - uid
     BowRevisionRequest:
       type: object
       properties:
@@ -4339,6 +4369,10 @@ components:
         id:
           type: integer
           readOnly: true
+        uid:
+          type: string
+          format: uuid
+          readOnly: true
         team:
           type: integer
           description: Only needed if you coach this archer in several teams
@@ -4417,6 +4451,7 @@ components:
       - created_at
       - id
       - picture
+      - uid
       - updated_at
     NotePicture:
       type: object

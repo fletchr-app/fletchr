@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -15,6 +17,8 @@ class Note(models.Model):
         COACH_ONLY = "coach_only"
         SHARED = "shared"
 
+    # Made by the server or by the app; an id that exists before the server has seen the note (offline sync, #84).
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     team = models.ForeignKey("core.Team", on_delete=models.CASCADE, related_name="notes")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="written_notes")
     archer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notes_about")
