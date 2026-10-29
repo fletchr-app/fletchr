@@ -14,6 +14,7 @@ import SyncBanner from '@/components/SyncBanner.vue'
 import VolumeLog from '@/components/VolumeLog.vue'
 import { useLog } from '@/composables/useLog'
 import { gearLine, nextEndDefaults, type SessionType, sessionTotals, sessionTypeKey, usesEnds } from '@/lib/log-model'
+import { canReopen } from '@/lib/session-time'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,6 +54,8 @@ function entry(settings: { distance_m: string; face: string; arrows_per_end: num
   const query = { distance: settings.distance_m, face: settings.face, arrows: String(settings.arrows_per_end) }
   void router.push({ path: `/training/${session.value!.id}/end`, query })
 }
+// A session of an earlier day stays finished: open, it would show as live and get a capped window on the server.
+const canToggle = computed(() => !session.value?.ended_at || canReopen(session.value))
 // Finishing goes back to the home screen; reopening stays here.
 function finish() {
   const s = session.value!
@@ -79,7 +82,7 @@ function newEnd() {
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
-      <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
+      <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
         {{ confirmDelete ? $t('session.deleteConfirm') : $t('session.delete') }}
       </AppButton>
@@ -107,7 +110,7 @@ function newEnd() {
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
-        <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopen') : $t('session.finish') }}</AppButton>
+        <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopen') : $t('session.finish') }}</AppButton>
       </div>
     </div>
     <div v-else class="screen">
@@ -124,7 +127,7 @@ function newEnd() {
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       </div>
       <VolumeLog :session="session" />
-      <AppButton secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
+      <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
         {{ confirmDelete ? $t('session.deleteConfirm') : $t('session.delete') }}
       </AppButton>
