@@ -4,11 +4,12 @@ import { Network } from '@capacitor/network';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
+import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
 import type { components } from '@/lib/api-types';
 import { errorMessage } from '@/lib/errors';
-import { localStore } from '@/lib/local-store';
+import { dataStore } from '@/lib/local-store';
 import {
   EMPTY_LOG,
   type Environment,
@@ -23,6 +24,7 @@ import {
   type SessionType,
 } from '@/lib/log-model';
 import { drain, fetchEquipment, pull, send } from '@/lib/log-sync';
+import { storeKey } from '@/lib/store-owner';
 import { newId } from '@/lib/uuid';
 
 const RETRY_INTERVAL_MS = 20_000;
@@ -33,10 +35,11 @@ const { api, userId, status, signOut } = useAuth();
 const { url } = useServer();
 
 // Each user on each server has their own local log.
-const storageKey = computed(() => (userId.value !== null ? `log:${url.value}:${userId.value}` : null));
+const storageKey = computed(() =>
+  userId.value !== null ? storeKey('log', { kind: 'account', server: url.value, userId: String(userId.value) }) : null,
+);
 
 const state = shallowRef<LogState>(EMPTY_LOG);
-const loadedKey = ref<string | null>(null);
 // This is the current truth, so the upload loop sees its own updates immediately.
 let current: LogState = EMPTY_LOG;
 let flushing = false;
@@ -77,7 +80,17 @@ async function sync() {
   await flush();
 }
 
-const loaded = computed(() => storageKey.value !== null && loadedKey.value === storageKey.value);
+// The log of the signed-in account is loaded from the device and saved again after each change. It keeps showing nothing
+// until it is loaded (`loaded`), and the app of another account never sees it.
+const { loaded } = effectScope(true).run(() =>
+  useKeyedStore<LogState>({
+    key: storageKey,
+    empty: EMPTY_LOG,
+    read: () => state.value,
+    apply: (value) => dispatch({ type: 'load', state: value }),
+    changes: state,
+  }),
+)!;
 const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length);
 const failed = computed(() => state.value.outbox.filter((o) => o.error));
 // Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
@@ -138,7 +151,7 @@ async function deleteMyAccount(proof: Proof, confirm: string): Promise<{ error: 
         return { error: errorMessage(error), teams: blocking.map((t) => t.name) };
       }
       dispatch({ type: 'reset' });
-      if (storageKey.value) await localStore.remove(storageKey.value).catch(() => {});
+      if (storageKey.value) await dataStore.remove(storageKey.value).catch(() => {});
       await signOut(); // the account is gone: back to the sign-in screen
       return { error: '', teams: [] };
     } catch {
@@ -209,27 +222,6 @@ const actions = {
 
 // The log lives as long as the app: its watchers are never stopped.
 effectScope(true).run(() => {
-  let loading = 0;
-  watch(
-    storageKey,
-    async (key) => {
-      if (!key) return;
-      const mine = ++loading;
-      const loadedState = await localStore
-        .get(key)
-        .then((raw) => (raw ? (JSON.parse(raw) as LogState) : EMPTY_LOG))
-        .catch(() => EMPTY_LOG);
-      if (mine !== loading) return;
-      dispatch({ type: 'load', state: loadedState });
-      loadedKey.value = key;
-    },
-    { immediate: true },
-  );
-
-  watch([state, loaded, storageKey], () => {
-    if (loaded.value && storageKey.value) localStore.set(storageKey.value, JSON.stringify(state.value)).catch(() => {});
-  });
-
   // Upload whenever something new is queued, again every so often while something is waiting, and on return to the app.
   watch([() => state.value.outbox, loaded, status], () => void flush(), { immediate: true });
   // Ask the server what changed there when the account is ready, when the app comes back and when the connection returns.

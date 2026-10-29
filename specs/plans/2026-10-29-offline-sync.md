@@ -51,6 +51,8 @@ Today a 410 removes the session and its queued ends silently (problem 6). Fix it
 
 ## Phase 1: local-store foundation (ships alone)
 
+Progress: the store owner key, the file store with the Preferences migration, `useKeyedStore` and its use in `useLog` and `useMedia` are done (first PR). Still open: the equipment and notes stores, `useAuth.storeOwner`, sign-out handling, `deleteMyAccount` removing the media key, and the server `uid` migrations.
+
 Goal: every entity store is keyed by a **store owner**, not by a server user; stores are files, not one SharedPreferences blob; notes and equipment have app-made ids and a device store. No two-way sync, no tombstones.
 
 App:

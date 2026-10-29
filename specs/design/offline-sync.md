@@ -16,3 +16,11 @@ Updated: 2026-10-29
 - **Coach writes**: a coach who opened a session may change its times and notes (not type, ratings or equipment). After a merge their repeated `PUT` only fills empty fields. The results stay the archer's.
 
 - **Moving queued media (#91)**: media on the phone can be moved to another session (or out of one) before it is uploaded; the queue item's `session` changes. A move while the upload runs is the one case that needs care: the request already carries the old session. `afterUpload` compares the sent item with the current one; if the session changed, the item stays in the queue as `uploaded` (its files are removed only when it leaves the queue) and the next request is a `PUT` with `session` (and `note`) only, no files. `drainMedia` sends it in the same run.
+
+## Where the data is kept
+
+- **Owner and keys**: a store belongs to an owner (`src/lib/store-owner.ts`): an account on a server today, a person without an account later (#93). The key is `<store>:<server>:<userId>` for an account, which is what the log (`log:`) and the media queue (`media:`) always used, and `<store>:local:<id>` for a local owner. Another account on the same phone never sees the data, and it stays on the device when you sign out.
+- **Files**: on a phone the log and the media queue are one JSON file each in `Directory.Data/stores/` (`src/lib/file-store.ts`, `dataStore` in `local-store.ts`), not in Preferences, where every key shares one SharedPreferences file on Android. A save writes a `.tmp` file and moves it over the old one; if the system refuses to rename onto an existing file the old one is removed first, and a leftover `.tmp` is read when the file is missing. A burst of changes writes only the newest value. The browser keeps using localStorage. Small settings (theme, language, units) stay in Preferences.
+- **Moving from Preferences**: the first read of a key that has no file reads the old Preferences value, writes the file, reads it back, and only then removes the Preferences value.
+- **Unreadable data**: a stored value that is not valid JSON is copied to `<key>.unreadable` before the store starts empty, so the next save cannot destroy the only copy. Nothing shows this yet.
+
