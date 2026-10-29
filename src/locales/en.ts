@@ -64,6 +64,9 @@ export default {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',
     failed: '{n} item was refused by the server: {error} | {n} items were refused by the server: {error}',
     giveUp: 'Give up on these uploads',
+    gone: 'The session of {date} was deleted on the server, but results of it had not been uploaded yet. They are still on this device.',
+    keepAsNew: 'Keep as a new session',
+    discard: 'Discard these results',
   },
   consent: {
     title: 'Video consent',
@@ -500,6 +503,7 @@ export default {
     active: 'Active (shown when logging sessions)',
     history: 'History',
     created: 'created',
+    nameRequired: 'Give it a name.',
     couldNotLoadEquipment: 'Could not load your equipment',
     couldNotLoadData: 'Could not load your data',
     bowType: {
@@ -730,6 +734,7 @@ export default {
     save: 'Save',
     reset: 'Reset to default',
     signOut: 'Sign out',
+    signOutWaiting: '{n} item has not been uploaded. It stays on this phone and goes up when you sign in again. | {n} items have not been uploaded. They stay on this phone and go up when you sign in again.',
     about: 'About Fletchr',
   },
   about: {

@@ -87,6 +87,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/arrow-sets/{uid}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Create or update an item by the uid the app gave it. Safe to repeat: the same values add no revision.
+         *
+         *     The body may carry `revision_uid`, the uid the app gave the revision these values make; it is used if the values
+         *     are new. Only the owner can write: an item of somebody else is answered like one that does not exist.
+         */
+        put: operations["arrow_sets_update_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/google/": {
         parameters: {
             query?: never;
@@ -145,6 +167,28 @@ export interface paths {
         };
         get: operations["bows_revisions_list"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bows/{uid}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Create or update an item by the uid the app gave it. Safe to repeat: the same values add no revision.
+         *
+         *     The body may carry `revision_uid`, the uid the app gave the revision these values make; it is used if the values
+         *     are new. Only the owner can write: an item of somebody else is answered like one that does not exist.
+         */
+        put: operations["bows_update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1216,12 +1260,39 @@ export interface components {
         };
         ArrowSet: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             readonly owner: number;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             readonly revision: number;
             readonly revision_number: number;
+            /** Format: uuid */
+            readonly revision_uid: string;
+            name: string;
+            shaft_model?: string;
+            spine?: string;
+            /**
+             * Format: decimal
+             * @description Arrow length in inches
+             */
+            length?: string | null;
+            /**
+             * Format: int64
+             * @description Point weight in grain
+             */
+            point_weight?: number | null;
+            nock?: string;
+            fletching?: string;
+            /** Format: int64 */
+            count?: number | null;
+            notes?: string;
+        };
+        ArrowSetPutRequest: {
+            is_active?: boolean;
+            /** Format: uuid */
+            revision_uid?: string;
             name: string;
             shaft_model?: string;
             spine?: string;
@@ -1264,6 +1335,8 @@ export interface components {
         };
         ArrowSetRevision: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             arrow_set: number;
             /** Format: int64 */
             number: number;
@@ -1349,12 +1422,51 @@ export interface components {
         };
         Bow: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             readonly owner: number;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             readonly revision: number;
             readonly revision_number: number;
+            /** Format: uuid */
+            readonly revision_uid: string;
+            name: string;
+            type: components["schemas"]["BowTypeEnum"];
+            riser?: string;
+            limbs?: string;
+            /**
+             * Format: decimal
+             * @description Draw weight in lb
+             */
+            draw_weight?: string | null;
+            /**
+             * Format: decimal
+             * @description Draw length in inches
+             */
+            draw_length?: string | null;
+            /**
+             * Format: decimal
+             * @description Brace height in mm
+             */
+            brace_height?: string | null;
+            /**
+             * Format: decimal
+             * @description Tiller in mm (top minus bottom)
+             */
+            tiller?: string | null;
+            plunger?: string;
+            sight?: string;
+            stabilisers?: string;
+            release_tab?: string;
+            notes?: string;
+        };
+        /** @description The body of `PUT /api/bows/<uid>/`: the bow as the app has it, and the uid the app gave to the revision this makes. */
+        BowPutRequest: {
+            is_active?: boolean;
+            /** Format: uuid */
+            revision_uid?: string;
             name: string;
             type: components["schemas"]["BowTypeEnum"];
             riser?: string;
@@ -1419,6 +1531,8 @@ export interface components {
         };
         BowRevision: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             bow: number;
             /** Format: int64 */
             number: number;
@@ -1866,6 +1980,8 @@ export interface components {
         };
         Note: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             /** @description Only needed if you coach this archer in several teams */
             team?: number;
             readonly author: number | null;
@@ -2362,6 +2478,10 @@ export interface components {
             weather?: string;
             bow_revision?: number | null;
             arrow_set_revision?: number | null;
+            /** Format: uuid */
+            bow_revision_uid?: string | null;
+            /** Format: uuid */
+            arrow_set_revision_uid?: string | null;
             physical_rating?: number | null;
             mental_rating?: number | null;
             goals?: string;
@@ -2784,6 +2904,41 @@ export interface operations {
             };
         };
     };
+    arrow_sets_update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArrowSetPutRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ArrowSetPutRequest"];
+                "multipart/form-data": components["schemas"]["ArrowSetPutRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrowSet"];
+                };
+            };
+        };
+    };
     auth_google_create: {
         parameters: {
             query?: never;
@@ -2984,6 +3139,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BowRevision"][];
+                };
+            };
+        };
+    };
+    bows_update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BowPutRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BowPutRequest"];
+                "multipart/form-data": components["schemas"]["BowPutRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bow"];
                 };
             };
         };

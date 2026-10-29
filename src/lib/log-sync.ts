@@ -2,10 +2,25 @@
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
 import type { components } from './api-types.ts';
-import type { Equipment, LogAction, LogSession, LogState, Op } from './log-model.ts';
+import type { Gear, LogAction, LogSession, LogState, Op } from './log-model.ts';
 
 /** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. */
 export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'failed'; message: string };
+
+/** Names the equipment by the uids of its revisions when the copy has them (equipment made on the phone has no integer id), else by integer id as before. */
+function gearBody(gear: Gear) {
+  if (gear.bow_revision_uid || gear.arrow_set_revision_uid) {
+    return { bow_revision_uid: gear.bow_revision_uid ?? null, arrow_set_revision_uid: gear.arrow_set_revision_uid ?? null };
+  }
+  return { bow_revision: gear.bow_revision, arrow_set_revision: gear.arrow_set_revision };
+}
+
+/** A session that names equipment the server has not seen yet waits: equipment goes up before the sessions that use it. */
+export function waitsForEquipment(state: LogState, op: Op, revisionPending: (uid: string) => boolean): boolean {
+  if (op.kind !== 'session' || op.delete) return false;
+  const gear = state.sessions.find((s) => s.id === op.sessionId)?.gear;
+  return [gear?.bow_revision_uid, gear?.arrow_set_revision_uid].some((uid) => !!uid && revisionPending(uid));
+}
 
 /** Upload one queued item, with its body taken from the current local data. */
 export async function send(api: ApiClient, state: LogState, op: Op): Promise<SendResult> {
@@ -28,7 +43,7 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           ...(session.details ?? {}),
           // Left out when nothing was chosen, so the server keeps what it has; null clears it.
           ...(session.gear
-            ? { bow_revision: session.gear.bow_revision, arrow_set_revision: session.gear.arrow_set_revision }
+            ? gearBody(session.gear)
             : session.gear === null
               ? { bow_revision: null, arrow_set_revision: null }
               : {}),
@@ -104,24 +119,6 @@ export async function drain(
     } else if (result.kind === 'gone') dispatch({ type: 'sessionGone', id: op.sessionId });
     else if (result.kind === 'failed') dispatch({ type: 'opFailed', key: op.key, rev: op.rev, error: result.message });
     else return;
-  }
-}
-
-/** Your active bows and arrow sets with their current revisions, or null if the server cannot be reached. */
-export async function fetchEquipment(api: ApiClient, userId: number): Promise<Equipment | null> {
-  try {
-    const query = { owner: userId, is_active: true };
-    const [bows, arrowSets] = await Promise.all([
-      api.GET('/api/bows/', { params: { query } }),
-      api.GET('/api/arrow-sets/', { params: { query } }),
-    ]);
-    if (!bows.data || !arrowSets.data) return null;
-    return {
-      bows: bows.data.map((b) => ({ id: b.id, name: b.name, type: b.type, revision: b.revision, revision_number: b.revision_number })),
-      arrowSets: arrowSets.data.map((a) => ({ id: a.id, name: a.name, revision: a.revision, revision_number: a.revision_number, count: a.count ?? null })),
-    };
-  } catch {
-    return null;
   }
 }
 

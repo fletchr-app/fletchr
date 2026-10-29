@@ -3,33 +3,34 @@ import { Network } from '@capacitor/network';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
+import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useLog } from '@/composables/useLog';
 import { useUploadSettings } from '@/composables/useUploadSettings';
-import { useServer } from '@/composables/useServer';
 import { t } from '@/i18n';
-import { localStore } from '@/lib/local-store';
 import { loadFiles, removeFiles, saveFiles } from '@/lib/media-files';
+import { storeKey } from '@/lib/store-owner';
 import { afterUpload, drainMedia, type MediaFiles, moveQueued, type QueuedMedia, renameSession, sendMedia } from '@/lib/media-queue';
 import { newId } from '@/lib/uuid';
 
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, userId, status } = useAuth();
-const { url } = useServer();
+const { api, storeOwner, status } = useAuth();
 const log = useLog();
 const { videosWifiOnly } = useUploadSettings();
 
-const storageKey = computed(() => (userId.value !== null ? `media:${url.value}:${userId.value}` : null));
+const storageKey = computed(() => (storeOwner.value ? storeKey('media', storeOwner.value) : null));
 const items = shallowRef<QueuedMedia[]>([]);
-const loadedKey = ref<string | null>(null);
 /** Counts up whenever an upload finished, so a screen that shows the server's list can fetch it again. */
 const uploaded = ref(0);
 let flushing = false;
 /** Not on mobile data. Where the connection type is not known (the browser) uploads are not held back. */
 const onWifi = ref(true);
 
-const loaded = computed(() => storageKey.value !== null && loadedKey.value === storageKey.value);
+// Another account (or none): what is in memory belongs to the one before. Its queue stays on the device under its own key.
+const { loaded } = effectScope(true).run(() =>
+  useKeyedStore<QueuedMedia[]>({ key: storageKey, empty: [], read: () => items.value, apply: set, changes: items, resetOnKeyChange: true }),
+)!;
 const waiting = computed(() => items.value.filter((i) => !i.error));
 const failed = computed(() => items.value.filter((i) => i.error));
 
@@ -111,29 +112,8 @@ const actions = {
 effectScope(true).run(() => {
   // Clips queued for a session the server merged into another one follow it.
   log.onSessionRenamed((from, to) => set(renameSession(items.value, from, to)));
-  let loading = 0;
-  watch(
-    storageKey,
-    async (key) => {
-      // Another account (or none): what is in memory belongs to the one before. Its queue stays on the device under its own key.
-      set([]);
-      loadedKey.value = null;
-      if (!key) return;
-      const mine = ++loading;
-      const stored = await localStore
-        .get(key)
-        .then((raw) => (raw ? (JSON.parse(raw) as QueuedMedia[]) : []))
-        .catch(() => []);
-      if (mine !== loading) return;
-      set(stored);
-      loadedKey.value = key;
-    },
-    { immediate: true },
-  );
-  watch([items, loaded, storageKey], () => {
-    if (loaded.value && storageKey.value) localStore.set(storageKey.value, JSON.stringify(items.value)).catch(() => {});
-  });
-
+  // Photos and videos still waiting would bring back data of an account that no longer exists, and the files stay on the phone.
+  log.onAccountDeleted(() => items.value.forEach((i) => remove(i.id)));
   watch([items, loaded, status], () => void flush(), { immediate: true });
   let timer: ReturnType<typeof setInterval> | undefined;
   watch(

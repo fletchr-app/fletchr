@@ -68,6 +68,9 @@ export default {
     waiting: '{n} Eintrag wartet auf den Upload. Auf diesem Gerät gespeichert, wird er hochgeladen, sobald eine Verbindung besteht. | {n} Einträge warten auf den Upload. Auf diesem Gerät gespeichert, werden sie hochgeladen, sobald eine Verbindung besteht.',
     failed: '{n} Eintrag wurde vom Server abgelehnt: {error} | {n} Einträge wurden vom Server abgelehnt: {error}',
     giveUp: 'Diese Uploads aufgeben',
+    gone: 'Das Training vom {date} wurde auf dem Server gelöscht, aber Ergebnisse davon waren noch nicht hochgeladen. Sie sind noch auf diesem Gerät.',
+    keepAsNew: 'Als neues Training behalten',
+    discard: 'Diese Ergebnisse verwerfen',
   },
   consent: {
     title: 'Einwilligung für Video',
@@ -504,6 +507,7 @@ export default {
     active: 'Aktiv (wird beim Eintragen von Trainings angeboten)',
     history: 'Verlauf',
     created: 'angelegt',
+    nameRequired: 'Gib einen Namen ein.',
     couldNotLoadEquipment: 'Deine Ausrüstung konnte nicht geladen werden',
     couldNotLoadData: 'Deine Daten konnten nicht geladen werden',
     bowType: {
@@ -734,6 +738,7 @@ export default {
     save: 'Speichern',
     reset: 'Auf Standard zurücksetzen',
     signOut: 'Abmelden',
+    signOutWaiting: '{n} Eintrag wurde noch nicht hochgeladen. Er bleibt auf diesem Handy und wird hochgeladen, wenn du dich wieder anmeldest. | {n} Einträge wurden noch nicht hochgeladen. Sie bleiben auf diesem Handy und werden hochgeladen, wenn du dich wieder anmeldest.',
     about: 'Über Fletchr',
   },
   about: {

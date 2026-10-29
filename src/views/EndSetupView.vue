@@ -13,7 +13,7 @@ import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
 import { useUnits } from '@/composables/useUnits'
 import { FACES } from '@/lib/faces'
-import { gearFor, nextEndDefaults } from '@/lib/log-model'
+import { chosenKeys, gearFor, nextEndDefaults } from '@/lib/log-model'
 
 // Before each end: distance, face, arrows per end and equipment. "Start" opens the arrow entry.
 // Shown before the first end of a session, and from the "change" link on the session page.
@@ -58,9 +58,9 @@ function begin() {
       <GearPicker
       v-if="!session.owner"
         :equipment="equipment"
-        :bow-id="session.gear?.bow_id ?? null"
-        :arrow-set-id="session.gear?.arrow_set_id ?? null"
-        @change="(bowId, arrowSetId) => setGear(session!.id, gearFor(equipment, bowId, arrowSetId))"
+        :bow-key="chosenKeys(equipment, session.gear).bowKey"
+        :arrow-set-key="chosenKeys(equipment, session.gear).arrowSetKey"
+        @change="(bowKey, arrowSetKey) => setGear(session!.id, gearFor(equipment, bowKey, arrowSetKey))"
       />
       <div class="faint">{{ $t('end.hint') }}</div>
       <ErrorText :message="error" />

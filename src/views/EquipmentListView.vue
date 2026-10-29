@@ -1,60 +1,36 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList, IonListHeader, onIonViewWillEnter } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import SyncBanner from '@/components/SyncBanner.vue'
+import { useEquipment } from '@/composables/useEquipment'
 
-import ErrorText from '@/components/ErrorText.vue'
-import { useAuth } from '@/composables/useAuth'
-import { useLog } from '@/composables/useLog'
-import type { components } from '@/lib/api-types'
+// The copy on the device, so the list also works without a connection.
+const { bows, arrowSets, refresh } = useEquipment()
 
-type Bow = components['schemas']['Bow']
-type ArrowSet = components['schemas']['ArrowSet']
-
-const { api } = useAuth()
-const { refreshEquipment } = useLog()
-const { t } = useI18n()
-const bows = ref<Bow[]>([])
-const arrowSets = ref<ArrowSet[]>([])
-const error = ref<string | null>(null)
-
-// The list stays alive underneath the bow and arrow set forms, so it reloads each time it is shown again.
-onIonViewWillEnter(() =>
-  (async () => {
-    // The list also contains the equipment of archers you coach, so ask for your own.
-    const me = (await api.GET('/api/me/')).data
-    if (!me) return (error.value = t('equipment.couldNotLoadData'))
-    const query = { owner: me.id }
-    const [b, a] = await Promise.all([api.GET('/api/bows/', { params: { query } }), api.GET('/api/arrow-sets/', { params: { query } })])
-    bows.value = b.data ?? []
-    arrowSets.value = a.data ?? []
-    error.value = b.data && a.data ? null : t('equipment.couldNotLoadEquipment')
-    void refreshEquipment() // the copy on the device, which the session screens offer
-  })().catch(() => (error.value = t('common.serverNotReachable'))),
-)
+// The list stays alive underneath the bow and arrow set forms, so it asks the server again each time it is shown.
+onIonViewWillEnter(() => void refresh())
 </script>
 
 <template>
   <AppPage :title="$t('equipment.title')">
     <div class="screen">
-      <ErrorText :message="error" />
+      <SyncBanner />
       <IonList inset>
         <IonListHeader>{{ $t('equipment.bows') }}</IonListHeader>
-        <IonItem v-for="bow in bows" :key="bow.id" :router-link="`/equipment/bows/${bow.id}`" detail lines="full" :style="{ opacity: bow.is_active === false ? 0.5 : 1 }">
+        <IonItem v-for="bow in bows" :key="bow.uid" :router-link="`/equipment/bows/${bow.uid}`" detail lines="full" :style="{ opacity: bow.is_active === false ? 0.5 : 1 }">
           <IonLabel>
-            <h3>{{ bow.name }}{{ bow.is_active === false ? ` (${$t('equipment.inactive')})` : '' }}</h3>
-            <p>{{ bow.type ? `${$t(`equipment.bowType.${bow.type}`)} · ` : '' }}{{ $t('equipment.revision', { n: bow.revision_number }) }}</p>
+            <h3>{{ bow.values.name }}{{ bow.is_active === false ? ` (${$t('equipment.inactive')})` : '' }}</h3>
+            <p>{{ bow.values.type ? `${$t(`equipment.bowType.${bow.values.type}`)} · ` : '' }}{{ $t('equipment.revision', { n: bow.revisions[0]?.number ?? 1 }) }}</p>
           </IonLabel>
         </IonItem>
         <IonItem router-link="/equipment/bows/new" detail lines="none"><IonLabel color="primary">{{ $t('equipment.addBow') }}</IonLabel></IonItem>
       </IonList>
       <IonList inset>
         <IonListHeader>{{ $t('equipment.arrowSets') }}</IonListHeader>
-        <IonItem v-for="set in arrowSets" :key="set.id" :router-link="`/equipment/arrow-sets/${set.id}`" detail lines="full" :style="{ opacity: set.is_active === false ? 0.5 : 1 }">
+        <IonItem v-for="set in arrowSets" :key="set.uid" :router-link="`/equipment/arrow-sets/${set.uid}`" detail lines="full" :style="{ opacity: set.is_active === false ? 0.5 : 1 }">
           <IonLabel>
-            <h3>{{ set.name }}{{ set.is_active === false ? ` (${$t('equipment.inactive')})` : '' }}</h3>
-            <p>{{ [set.shaft_model, set.spine].filter(Boolean).join(' ') ? `${[set.shaft_model, set.spine].filter(Boolean).join(' ')} · ` : '' }}{{ $t('equipment.revision', { n: set.revision_number }) }}</p>
+            <h3>{{ set.values.name }}{{ set.is_active === false ? ` (${$t('equipment.inactive')})` : '' }}</h3>
+            <p>{{ [set.values.shaft_model, set.values.spine].filter(Boolean).join(' ') ? `${[set.values.shaft_model, set.values.spine].filter(Boolean).join(' ')} · ` : '' }}{{ $t('equipment.revision', { n: set.revisions[0]?.number ?? 1 }) }}</p>
           </IonLabel>
         </IonItem>
         <IonItem router-link="/equipment/arrow-sets/new" detail lines="none"><IonLabel color="primary">{{ $t('equipment.addArrowSet') }}</IonLabel></IonItem>
