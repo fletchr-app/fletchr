@@ -32,6 +32,7 @@ import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
+import { useNotes } from '@/composables/useNotes'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -39,7 +40,7 @@ import type { components } from '@/lib/api-types'
 import { fitted, type Shape } from '@/lib/drawing'
 import { prepareImage } from '@/lib/image'
 import { type EventLink, linkOf, preselected } from '@/lib/schedule'
-import { drawnShapes } from '@/lib/media-notes'
+import { drawnShapes, waitingOnMedia } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
@@ -65,6 +66,7 @@ const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId, isLocal } = useAuth()
 const noteLibrary = useNoteLibrary()
+const notesQueue = useNotes()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -383,11 +385,18 @@ async function loadNotes(item: Shown) {
 }
 const shapesOf = (item: Shown): Shape[] => (item.remote ? drawnShapes(photoNotes.value[item.remote.id] ?? []) : [])
 const notesButton = computed(() => {
-  const remote = viewing.value?.remote
+  const item = viewing.value
+  // A photo that waits for its upload: you can write notes on your own, they go up after it.
+  if (item?.queued) return !item.queued.owner || item.queued.owner === Number(userId.value)
+  const remote = item?.remote
   if (!remote) return false
   return (photoNotes.value[remote.id]?.length ?? 0) > 0 || writable.value[remote.owner] === true
 })
-const notesCount = computed(() => photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0)
+const notesCount = computed(() => {
+  const queued = viewing.value?.queued
+  if (queued) return waitingOnMedia(notesQueue.notes.value, queued.id).length
+  return photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0
+})
 // Each slide is as large as the strip; a photo with a drawing is sized to fit, the drawing lies over exactly the photo.
 const stripBox = ref({ width: 0, height: 0 })
 let stripWatch: ResizeObserver | null = null
@@ -409,11 +418,11 @@ watch(viewing, (item) => item && void loadNotes(item))
 // "Notes" opens the photo in the player, where the notes and the pencil are. Back lands on the same photo here again.
 let comeBackTo: string | null = null
 function openNotes() {
-  const remote = viewing.value!.remote!
+  const id = (viewing.value!.queued ?? viewing.value!.remote!).id
   comeBackTo = viewKey.value
   const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
   close()
-  void router.push({ path: `/media/${remote.id}`, query })
+  void router.push({ path: `/media/${id}`, query })
 }
 function reopen() {
   const item = comeBackTo && photos.value.find((p) => p.key === comeBackTo)

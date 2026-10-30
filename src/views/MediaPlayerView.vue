@@ -22,7 +22,7 @@ import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } fro
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
-import { drawnShapes, notesOnPicture } from '@/lib/media-notes'
+import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
 import { clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
@@ -102,19 +102,28 @@ const notes = useRemote(
   async () => (queuedItem.value ? [] : ((await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null)),
   { watch: [currentId] },
 )
-// A note written here goes up in the background; when it has, the server's list has it.
-watch(useNotes().uploaded, notes.reload)
+// A note written here goes up in the background; when it has, the server's list has it. Until then it is in the
+// notes queue: its frame and drawing show with the picture, the text in the sheet.
+const queuedNotes = useNotes()
+watch(queuedNotes.uploaded, notes.reload)
+// Once the photo or clip is up, the server has the say about its notes.
+watch(() => !!queuedItem.value, notes.reload)
+const waiting = computed(() => waitingOnMedia(queuedNotes.notes.value, currentId.value))
 const teams = useRemote(
   async () => (clip.value && !queuedItem.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
   { watch: [clip, () => !!queuedItem.value] },
 )
 // A coach of the archer may write notes; so may the archer, for themselves.
-const canNote = computed(() => !!clip.value && !queuedItem.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
+// Without the server, only you can write, about your own: whose teams you coach in is not known on the phone.
+const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || (!queuedItem.value && !!teams.data.value?.length)))
 const frameNotes = computed(() =>
   (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
 )
 const photoNotes = computed(() => notesOnPicture(notes.data.value ?? [], null))
 const listed = computed(() => (isPhoto.value ? photoNotes.value : frameNotes.value))
+// What the button shows and where the tape is marked: the notes of the server and those that wait.
+const noteCount = computed(() => listed.value.length + (isPhoto.value ? notesOnPicture(waiting.value, null).length : waiting.value.filter((n) => n.frame !== null && n.frame !== undefined).length))
+const marks = computed(() => [...frameNotes.value, ...waiting.value].filter((n) => n.frame !== null && n.frame !== undefined))
 // The note to show under the picture: at this frame, or the newest on a photo.
 const noteHere = computed(() => (isPhoto.value ? photoNotes.value[photoNotes.value.length - 1] : frameNotes.value.find((n) => n.frame === frame.value)))
 const notesOpen = ref(false)
@@ -186,7 +195,7 @@ watch(
   },
   { immediate: true },
 )
-const savedHere = computed(() => drawnShapes(notesOnPicture(notes.data.value ?? [], isPhoto.value ? null : frame.value)))
+const savedHere = computed(() => drawnShapes(notesOnPicture([...(notes.data.value ?? []), ...waiting.value], isPhoto.value ? null : frame.value)))
 const shownShapes = computed(() => (drawing.value ? drawing.value.shapes : [...savedHere.value, ...attached.value]))
 // The picture is shown whole in the stage; the drawing layer has exactly its shape.
 const stage = ref<HTMLElement | null>(null)
@@ -515,7 +524,7 @@ async function moveTo(session: string | null) {
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
         <div v-if="!drawing" ref="tape" class="tape" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
           <div class="ticks" :style="ticksStyle">
-            <span v-for="n in frameNotes" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
+            <span v-for="n in marks" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
           </div>
         </div>
         <DrawingToolbar
@@ -537,8 +546,8 @@ async function moveTo(session: string | null) {
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.draw')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
+          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
+            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
           </button>
         </div>
       </template>
@@ -557,15 +566,15 @@ async function moveTo(session: string | null) {
         <div v-else class="controls">
           <button type="button" :disabled="!hasPrevious" :aria-label="$t('media.previousPhoto')" @click="goTo(-1)"><IonIcon :icon="playSkipBack" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.drawPhoto')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
+          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
+            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
           </button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextPhoto')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
         </div>
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
-      <div v-if="queuedItem" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
+      <div v-if="queuedItem && !canNote" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
       <MediaEvent v-if="clip && !queuedItem" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
