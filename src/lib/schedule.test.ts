@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { type AgendaItem, eventTitle, preselected, suggestEvents } from './schedule.ts';
+import { type AgendaItem, eventTitle, fromLocalInput, groupByDay, itemKey, preselected, suggestEvents, toLocalInput } from './schedule.ts';
 
 const item = (id: string, start: string, end: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
   id, virtual: true, slot: 's', date: '2026-10-21', team: 1, team_name: 'Team A', kind: 'training', name: '', start, end, location: '', time_zone: 'Europe/Berlin', cancelled: false, ...extra,
@@ -47,4 +47,22 @@ test('only exactly one suggestion is preselected', () => {
 test('an event is titled by its name, else by its kind', () => {
   assert.equal(eventTitle({ name: 'Squad', kind: 'training' }), 'Squad');
   assert.equal(eventTitle({ name: '', kind: 'camp' }), 'event.kind.camp');
+});
+
+test('a time goes to a datetime-local field and back on the device clock', () => {
+  const iso = new Date(2026, 9, 21, 18, 30).toISOString();
+  assert.equal(toLocalInput(iso), '2026-10-21T18:30');
+  assert.equal(fromLocalInput('2026-10-21T18:30'), iso);
+  assert.equal(fromLocalInput(''), null);
+});
+
+test('the agenda is grouped by day in order', () => {
+  const day = (id: string, h: number, d = 21) => item(id, new Date(2026, 9, d, h).toISOString(), new Date(2026, 9, d, h + 1).toISOString());
+  const days = groupByDay([day('c', 9, 22), day('a', 18), day('b', 9)]);
+  assert.deepEqual(days.map((g) => [g.day, g.items.map((i) => i.id)]), [['2026-10-21', ['a', 'b']], ['2026-10-22', ['c']]]);
+});
+
+test('only an occurrence that is no row yet is named by slot and date', () => {
+  assert.deepEqual(itemKey(squad), { slot: 's', date: '2026-10-21' });
+  assert.deepEqual(itemKey({ ...squad, virtual: false }), {});
 });

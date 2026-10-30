@@ -56,3 +56,30 @@ export const preselected = (suggestions: readonly AgendaItem[]): AgendaItem | nu
 
 /** The text to show a link by: its name, or the message key of its kind when it has none (the caller translates). */
 export const eventTitle = (link: Pick<EventLink, 'name' | 'kind'>) => link.name || `event.kind.${link.kind ?? 'training'}`;
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** An instant as the value of a `datetime-local` field: the device's local date and time, to the minute. */
+export function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** The instant (UTC, with `Z`) of the value of a `datetime-local` field; null if it is not a date and time. */
+export function fromLocalInput(value: string): string | null {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** The agenda by day on this device's clock, in order; each day with its items. */
+export function groupByDay(items: readonly AgendaItem[]): { day: string; items: AgendaItem[] }[] {
+  const days = new Map<string, AgendaItem[]>();
+  for (const item of items) {
+    const day = toLocalInput(item.start).slice(0, 10);
+    days.set(day, [...(days.get(day) ?? []), item]);
+  }
+  return [...days].sort(([a], [b]) => a.localeCompare(b)).map(([day, list]) => ({ day, items: list }));
+}
+
+/** The body that names an agenda item in a write: an occurrence that is no row yet is named by its slot and date. */
+export const itemKey = (item: AgendaItem) => (item.virtual ? { slot: item.slot ?? undefined, date: item.date ?? undefined } : {});
