@@ -19,4 +19,4 @@ Living architecture/design docs, one per feature or subsystem. Kept around after
 - [ios-without-an-apple-device.md](ios-without-an-apple-device.md): building and testing iOS without a Mac.
 - [schedule-and-events.md](schedule-and-events.md): team schedule, training events as labels for sessions, notes and media (#104).
 - [session-visibility.md](session-visibility.md): who sees a session (`me` or `coaches`), the shared ordered audience scale, one server filter. **planned**
-- [local-mode.md](local-mode.md): using the app without an account, upload of local data at sign-in, sign-out (#93). **partly implemented (#113), upload planned**
+- [local-mode.md](local-mode.md): using the app without an account, upload of local data at sign-in, sign-out (#93). **partly implemented (#113, #115), upload planned**

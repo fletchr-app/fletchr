@@ -1,48 +1,68 @@
-# Local mode, part 2: sign-in with local data, sign-out, note edit (#93)
+# Local mode: use the app without an account or server (#93)
 
-Status: planned
+Status: first version implemented (#113) and first launch and sign-out changed to the decided model (#115, Step 0), not run on a phone. Planned: note edit (Step 1), upload on sign-in (Step 2), sign-out wording (Step 3), session visibility (own plan, needed by Step 2)
 Date: 2026-10-30
-Design: [local-mode.md](../design/local-mode.md). Builds on the merged [2026-10-30-local-only-mode.md](2026-10-30-local-only-mode.md) (PR #113). The upload needs [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md) first.
+Design: [local-mode.md](../design/local-mode.md). The upload needs [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md) first. This file replaces the separate `2026-10-30-local-only-mode.md` (the record of #113), now the "Done" section below.
 
-## Scope
+## Scope and decisions
 
-- Done in #113, not repeated here: the `local` state, routes (`'in'`, `'account'`, `'out'`), hidden server screens, statistics and heatmap on the phone (`src/lib/stats.ts`, `shared/stats-vectors.json`), scoring vectors for all 16 faces, `LocalMediaView`, JSON export and import (`LocalDataView`, `src/lib/local-export.ts`), playing queued video (#112).
-- Remaining: (0) change #113's first launch and sign-out to the decided model (below), (1) edit the text of a note in local mode, (2) upload of local data when signing in or registering, with one confirmation, (3) sign-out, (4) session visibility on the server, which the upload needs.
-- **Decided (Tim, 2026-10-30), replacing #113's model**: the app opens on the home screen in local mode on first launch, with no welcome screen and no choice on the sign-in screen; sign-in and register are reached from Settings; sign-out returns to an empty local mode on the home screen.
-- Out of scope: several local owners; storage limits for videos; registration without a code (decided: not needed); copying account data into the local owner on sign-out (rejected); Android backup configuration (open, reported in #113).
+- Archers who only log their own training use the app without an account or server; sessions, equipment, notes, photos and videos, statistics and the heatmap work from the device.
+- **Decided (Tim, 2026-10-30)**:
+  - First version: local data plus JSON export and import as the backup; the upload to an account came later (Step 2).
+  - Statistics and heatmap are computed on the device, tied to the server by shared fixtures; scoring is tied the same way for every face. If app and server disagree, the app is fixed.
+  - The app opens on the home screen in local mode on first launch, with no welcome screen and no choice on the sign-in screen; sign-in and register are reached from Settings. Sign-out and account deletion return to an empty local mode on the home screen.
+  - One local owner per phone. Registration stays tied to an invite or claim code (local mode needs no account).
+  - Upload on sign-in: one confirmation (counts, account email, "Share existing sessions with your coaches?" without preselection, Upload / Keep on this phone only / Cancel). For a registration it comes before the request is sent, for a sign-in after the credentials are accepted. No export prompt before the upload. Videos go up on Wi-Fi only. No storage limit for videos.
+  - Copying the account's data into the local owner on sign-out is rejected (it would bring back items deleted elsewhere).
+- Out of scope: several local owners; a storage limit for local videos; registration without a code.
 
-Markers: **[fact]** checked in the code, **[check]** verify before relying on it, **(proposed)** my choice where the decisions leave a gap.
+Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify before relying on it, **(proposed)** my choice where the decisions leave a gap.
 
-## What is there (checked in develop after #113)
+## Done
 
-- `useAuth().status` is `loading | signedOut | signedIn | local`. `local` is chosen with "Use without an account" on the sign-in screen; the flag (`local-mode`) and the owner id (`local-owner-id`) are in Preferences (`src/lib/local-mode.ts`, `useLocalMode`) **[fact]**.
-- Setting tokens turns the flag off (`watch` on `state.tokens` in `useAuth`) and keeps the id and all data under `<store>:local:<id>`; nothing is uploaded **[fact]**. This is the "Keep on this phone only" behaviour of the design, and the place where the confirmation has to go in front.
+### #113: local mode (merged)
+
+- **State and routes**: `useAuth().status` is `loading | signedOut | signedIn | local`; `useLocalMode` and `src/lib/local-mode.ts` keep the flag (`local-mode`) and the owner id (`local-owner-id`) in Preferences. `meta.auth` is `'in'` (signed in or local), `'account'` (signed in only, local goes to `/`) or `'out'` (open to local so "Sign in or register" works). Server-only screens are `'account'`. Settings, Home, Training, the sync banner and the server-fed components have a local variant.
+- **Scoring**: `shared/scoring-vectors.json` covered 10 of 16 faces; the six others (wa-80, wa-60, wa-40-triple-triangle, wa-40-triple-vertical-compound, wa-field-60, wa-field-40) got vectors written from the ring diameters, and a coverage test on both sides fails for any face, ring, X or miss without one. No difference between `scoring.ts` and `scoring.py` was found.
+- **Statistics and heatmap**: `src/lib/stats.ts` ports `training/stats.py`, `arrow_stats.py` and `PositionsView`; `shared/stats-vectors.json` (8 cases) is read by pytest and Vitest. The fixture found two differences, both fixed in the app: Python's `round` is half-even (`pyRound` in `py-math.ts`), and Python 3.12+ `sum` of floats uses an error term (`pySum`, also used by `centred.ts`).
+- **Notes, photos and videos**: from the device. `LocalMediaView` (`/local-media/:id`) shows a photo with drawings and notes, or plays the video in the browser's player. A note can be deleted and its drawing changed, its text cannot be edited (Step 1). The frame-by-frame player and notes on a frame need the server. Queued video play in the media screen came with #112.
+- **Backup**: `LocalDataView` (`/settings/data`) exports and imports one JSON file (`src/lib/local-export.ts`: `buildExport`, `parseExport`, `planImport`; format `fletchr-local` v1) with sessions, equipment and notes, no photo and video files.
+- **Android backup**: reported, not changed (see Open).
+- Docs written in #113: `offline-sync.md`, `statistics.md`, `arrow-plotting.md`, `screens.md`, `accounts.md`, CHANGELOG.
+
+### #115: Step 0, first launch and sign-out (merged)
+
+- [x] `useAuth`: a `watch` on `status` calls `enterLocal()` when it becomes `signedOut` (also at start-up); `status` stays `loading` until both the tokens and the local flag are loaded, so `signedOut` is only seen once both are missing. `signOut()` and account deletion call `enterLocal()`; the account's data stays under its key.
+- [x] Router: unchanged. `'out'` is open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable if the flag is lost).
+- [x] `SignInView`: the "Use without an account" choice is removed; in local mode it shows a text and "Back to my training log".
+- [x] A 401 on token refresh also lands in local mode on Home.
+- [x] Tests: `local-mode.test.ts` (first launch, sign-in and sign-out keep the same owner and data).
+
+### Deviations from the first plan
+
+- Local mode state lives in `useLocalMode`, not in `useAuth`, because the server check in `useServer` must stay quiet in local mode and `useAuth` builds on it.
+- The stats fixture has no `setup` filter case for positions: the heatmap screen does not use it.
+- `NewSessionView` needed no change (no agenda without a server).
+
+## What is there (for the remaining steps)
+
+- Setting tokens turns the flag off (`watch` on `state.tokens` in `useAuth`) and keeps the id and all data under `<store>:local:<id>`; nothing is uploaded **[fact]**. This is the "Keep on this phone only" behaviour of the design and the place where the confirmation goes in front.
 - Notes and media name their archer by number; without an account it is `LOCAL_ARCHER` = 0 **[fact]** (`src/lib/local-mode.ts`). The upload maps it to the account's id.
-- Media queue files are keyed by item id, not by owner, so they need no move **[fact, from the earlier check]**. `dataStore` has no `keys` or `move` **[fact]**.
-- `local-export.ts` has `buildExport`, `parseExport` and `planImport(file, device)` (items the device already has are kept, it returns what to add and counts) for log, equipment and notes, without media files **[fact]**. `planImport` can be the merge for those three stores (the account's data as `device`); the media queue needs its own merge **[fact]**.
-- `useKeyedStore` has no `flush()` and no hold flag, and `dataStore` has no `keys` or `move` **[fact]**; both are new work in step 2.
-- `AuthSession` adds the Authorization header only when it holds a token, so a request with an explicit header before `setTokens` keeps it **[fact]**; `/api/me/` with the new access token works.
-- `signInWithGoogle(inviteCode?)`: with a code it can create an account, without one it only signs in (`no_account` otherwise) **[fact]**. So the app knows beforehand: a code means register (confirm before), none means sign-in (confirm after). Tokens are set inside the function, so the confirmation needs to move in front of `setTokens` there too.
-- The "videos wait for Wi-Fi" line exists in `MediaView` only (`waitingForWifi`); `SyncBanner` does not show it **[fact]**.
-- `note-store.ts` has `add` and `remove`, no edit; a note's text cannot be changed in local mode, only deleted **[fact]**.
-- Wi-Fi-only video upload exists (`videosWifiOnly`, default on) **[fact]**; the setting is hidden in local mode, shown again in an account.
+- The outbox keeps one op per item (`queue` replaces by key) and fills in local mode: it is the list the upload starts from **[fact]**.
+- Media queue files are keyed by item id, not by owner, so they need no move **[fact]**. `dataStore` has no `keys` or `move`, and `useKeyedStore` has no `flush()` and no hold flag **[fact]**; both are new work in Step 2.
+- `local-export.ts`: `planImport(file, device)` keeps items the device already has and returns what to add and counts, for log, equipment and notes, without media files **[fact]**. It can be the merge for those three stores (the account's data as `device`); the media queue needs its own merge **[fact]**.
+- `AuthSession` adds the Authorization header only when it holds a token, so a request with an explicit header before `setTokens` keeps it; `/api/me/` with the new access token works **[fact]**.
+- `signInWithGoogle(inviteCode?)`: with a code it can create an account, without one it only signs in (`no_account` otherwise) **[fact]**. So the app knows beforehand: a code means register (confirm before), none means sign-in (confirm after). Tokens are set inside the function, so the confirmation moves in front of `setTokens` there too.
+- "Videos wait for Wi-Fi" is shown in `MediaView` only (`waitingForWifi`); `SyncBanner` does not show it **[fact]**. The Wi-Fi-only upload exists (`videosWifiOnly`, default on); the setting is hidden in local mode.
+- `note-store.ts` has `add` and `remove`, no edit **[fact]**.
 - Registration needs an invite or claim code **[fact]** (`RegisterSerializer.invite_code`).
-- Sign-out of an account lands on the sign-in screen **[fact]**.
 
 ## Order
 
 - [ ] 1. Session visibility plan, merged and released (the upload needs `visibility` on the server).
 - [ ] 2. Step 1 (note edit), independent, can go any time.
-- [ ] 3. Step 2 (upload on sign-in) with step 3 (wording of sign-out).
-- [ ] Until step 2 ships, signing in with local data leaves it hidden under the local key, as #113 does. Say so on the sign-in screen (it does already).
-
-## Step 0: first launch and sign-out as decided (small, before step 2)
-
-- [x] `useLocalMode` / `useAuth`: a phone with no tokens and no stored flag starts in `local` (today it is `signedOut` until "Use without an account" is chosen). Made on first read: `enterLocal()` runs once when `status` would be `signedOut` and the server has not been asked for a sign-in **[check]** how `loaded` and `localLoaded` order at start-up.
-- [x] `signOut` and account deletion: call `enterLocal()` so the app ends in local mode on `/`, not on `/sign-in`. The account's data stays under its key.
-- [x] Router: `'out'` stays open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable now if the flag is lost).
-- [x] `SignInView`: the "Use without an account" choice is no longer needed there; remove it or keep it as a link back **(proposed: remove)**. `SettingsView` in local already has "Sign in or register".
-- [x] Tests: `local-mode.test.ts` for the first-start path; sign-out ends in `local`.
+- [ ] 3. Step 2 (upload on sign-in) with Step 3 (wording of sign-out).
+- Until Step 2 ships, signing in with local data leaves it hidden under the local key, as now. The sign-in screen says so.
 
 ## Step 1: edit a note in local mode (small)
 
@@ -59,17 +79,16 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 - [ ] Confirmation (`alertController`, like the sign-out prompt in `SettingsView`): account email and counts, radio "Share your existing sessions with your coaches?" Yes / No, keep private (no preselection; Upload stays disabled until one is chosen), buttons Upload / Keep on this phone only / Cancel.
   - Upload: flush and hold the local stores (`useKeyedStore` needs a new `flush()` and a hold flag), read the account's stores from `dataStore` (they may exist from earlier use), merge, write, read back, then remove the local keys, then commit the tokens; the account stores load the merged data and the queues drain in the existing order.
   - Keep on this phone only: commit; local keys untouched (today's behaviour).
-  - Cancel: for `signIn` drop the tokens and revoke the refresh token (as `signOut`); for `register` nothing was sent. Stay as before.
-- [ ] After Upload the local owner is empty; "Use without an account" later finds an empty local mode (the id is kept).
-- [ ] `LocalDataView` text: say that signing in offers to upload (it says today that nothing is uploaded) **[check]** the wording in `en.ts`/`de.ts` (`local.*`, `auth.signIn.*`).
+  - Cancel: for `signIn` drop the tokens and revoke the refresh token (as `signOut`); for `register` nothing was sent. Stay in local mode.
+- [ ] After Upload the local owner is empty; the id is kept.
+- [ ] Texts that say "nothing is uploaded" (`SignInView`, `LocalDataView`, `local.*`, `auth.signIn.*` in `en.ts`/`de.ts`) say that signing in offers to upload **[check]** the wording.
 - [ ] Server: `PUT` of sessions and media accepts `visibility` (from the visibility plan); nothing else.
-- [ ] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner` does not show waiting videos (only `MediaView`); after the upload they would wait unseen, so add "n videos wait for Wi-Fi" to the banner (small). Joining a team (`JoinTeamView`) does not wait for the queue.
+- [ ] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner`: "n videos wait for Wi-Fi" (small), since after the upload they would wait unseen. Joining a team (`JoinTeamView`) does not wait for the queue.
 - [ ] Tests (Vitest): counts; `prepareUpload` sets visibility for both answers and maps `LOCAL_ARCHER`; each merge keeps both sides and the queue order; an empty local owner gives no prompt; a failed write leaves the local keys in place.
 
 ## Step 3: sign-out
 
 - [ ] `SettingsView`: sign-out always asks; the text says the screens will be empty and the account's data comes back at the next sign-in, plus the existing count of waiting items when there are any (`settings.signOutWaiting`).
-- [ ] Where it lands: the home screen in local mode (step 0).
 - [ ] Test: sign-out leaves the account keys in place.
 
 ## i18n (each step, `en.ts` and `de.ts`)
@@ -82,25 +101,29 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 
 - [ ] Vitest for every new `src/lib` file (`local-claim.ts`) and the changed reducer (`note-store` edit).
 - [ ] pytest: the visibility matrix from the visibility plan covers uploads with `me`.
-- [ ] Phone: log a past session, a bow, photos, a video, a note in local mode; register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out; sign in again, data is back without a prompt.
+- [ ] Phone (also for what is already built): fresh install opens on Home; log a past session, a bow, photos, a video, a note; export and import round trip, file chooser and share sheet; video playback; Preferences persistence; back button. After Step 2: register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out, app is empty; sign in again, data is back without a prompt.
 - [ ] `npm run type-check`, `npm test`, `cd server && uv run pytest`.
 
 ## Docs
 
 - [ ] `specs/design/local-mode.md`: status per step.
-- [ ] `specs/design/offline-sync.md`: the upload merge in "Where the data is kept" and the line "Not built" in the local-mode section.
+- [ ] `specs/design/offline-sync.md`: the upload merge in "Where the data is kept" and the "Not built" line in the local-mode section.
 - [ ] `specs/design/accounts.md`: sign-in with local data.
 - [ ] `CHANGELOG.md`.
 
 ## Risks
 
-- **The upload merge** runs on the only copy of the data. A bug loses everything. Copy, read back, then delete; never delete on a failed or partial write; test on a phone with a real amount of data. No export prompt before the upload (decided).
+- **The upload merge** runs on the only copy of the data. A bug loses everything. Copy, read back, then delete; never delete on a failed or partial write; test on a phone with a real amount of data.
 - **Stores keep saving during the claim**: a debounced save of the local store after its key was removed would bring it back. Needs the hold flag.
-- **Scores change at upload** if `scoring.ts` and the server disagree for a face. Vectors now cover all 16 faces (#113) **[fact]**.
+- **Two implementations** of scoring and statistics (app and server) can drift. The shared vectors are the guard; a server change without updating them breaks the build.
+- **Rounding and time zones** in the statistics port: Python `round` is half-even and `Math.round` half-up (exact-tie check in `pyRound`); week and month boundaries use the viewer's zone through `Intl`, DST has one fixture case. `Math.hypot` against Python's `math.hypot` could differ in the last bit; it only matters at a tie in the fourth decimal and none occurs in the fixture.
+- **Data loss on uninstall**: the export is the only copy the app controls until the upload exists, and it has no photo and video files.
 - **Old local data and a later server version**: the queue replays ops written months earlier. Server checks that changed meanwhile mark items failed; the banner shows them.
 - **Duplicate equipment** when the same bow was entered on two phones. Accepted.
-- **Data loss on uninstall** (accepted, export exists).
+- **Smaller local player**: `MediaPlayerView` (frame-by-frame, notes on a frame) is tied to the server API; the local one is smaller.
 
 ## Open (for the user)
 
-- None. Decided: no preselection for the share question, no export prompt before the upload, first launch and sign-out as in step 0.
+- **Android backup of app storage**: `allowBackup="true"` with no backup rules, so Auto Backup's defaults apply to the stores, the owner id and the queued media files (details in `offline-sync.md`, "Without an account"). Options: leave it, exclude the media folder, or turn it off. Not changed.
+- Not run on a phone: file chooser, share sheet, video playback, Preferences persistence, back button. German texts need a review.
+- The visibility defaults are in the visibility plan (assumed, confirm): no `followers` level, new accounts default to `coaches`, existing sessions migrate to `coaches`.
