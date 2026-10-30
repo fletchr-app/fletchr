@@ -7,11 +7,13 @@ import AppPage from '@/components/AppPage.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
 import { useUnits } from '@/composables/useUnits'
 import { getFace } from '@/lib/faces'
 import { density } from '@/lib/heat'
 import { ringFill, ringLine } from '@/lib/plot'
+import { computeStats, fromLog, positionsOf } from '@/lib/stats'
 
 type Period = 'all' | 'days30' | 'days90' | 'year'
 
@@ -24,7 +26,8 @@ const owner = route.params.id as string | undefined
 const name = route.query.name as string | undefined
 const title = name ? t('heatmap.titleFor', { name }) : t('heatmap.title')
 const { formatDistance } = useUnits()
-const { api } = useAuth()
+const { api, isLocal } = useAuth()
+const { sessions: onDevice } = useLog()
 
 const timeZone = () => {
   try {
@@ -44,7 +47,11 @@ const since = (period: Period) => {
 
 // The faces and distances the archer has shot are the choices.
 const stats = useRemote(
-  async () => (await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: 1 } } })).data ?? null,
+  async () =>
+    isLocal.value
+      ? computeStats(fromLog(onDevice.value).sessions, new Date().toISOString(), timeZone(), 1)
+      : ((await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: 1 } } })).data ?? null),
+  { watch: [onDevice] },
 )
 const choices = computed(() => (stats.data.value?.scores ?? []).map((g) => ({ value: `${g.face}|${g.distance_m}`, label: `${g.face_name} · ${formatDistance(g.distance_m)}` })))
 const wanted = ref<string | null>(route.query.face && route.query.distance ? `${route.query.face as string}|${route.query.distance as string}` : null)
@@ -59,6 +66,7 @@ const positions = useRemote(
   async () => {
     if (!choice.value) return null
     const [face, distance] = choice.value.split('|') as [string, string]
+    if (isLocal.value) return positionsOf(fromLog(onDevice.value).sessions, { face, distance_m: distance, from: since(period.value), tz: timeZone() })
     return (
       await api.GET('/api/stats/positions/', {
         params: { query: { owner: owner ? Number(owner) : undefined, face, distance_m: Number(distance), from: since(period.value), tz: timeZone() } },

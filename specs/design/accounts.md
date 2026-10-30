@@ -11,6 +11,10 @@ Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-
 - A new Google account gets the verified email of the token, a name from the token, an unusable password and the team of the code. It cannot set a password or change its email (`has_password` is false in `/api/me/`; the endpoints answer `password_not_set`). Reset sends no mail for it. Export, "delete my data" and "delete account" take a fresh Google token (`id_token`) instead of the password.
 - Code: `server/core/social.py` (one verifier per provider, `sign_in` for all), app: `src/lib/social-login.ts`, `useAuth().signInWithGoogle`, `useProof`.
 
+## Without an account (#93)
+
+The app can be used without an account or server: the sign-in screen offers "Use without an account". It is a third state next to signed in and signed out (`local`), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in later keeps the local data on the phone, hidden and not uploaded; uploading it to the account is not built yet.
+
 ## Admin: a person changes how they sign in
 
 Cheap, nothing moves: change the email in the User admin (a password account), or add the Google identity in the "Social identities" inline of the User admin. The `sub` comes from the server log after the person tried to sign in:

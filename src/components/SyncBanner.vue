@@ -2,11 +2,13 @@
 import { computed } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
+import { useAuth } from '@/composables/useAuth'
 import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
 
+const { isLocal } = useAuth()
 const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
@@ -25,7 +27,8 @@ const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipme
 
 <!-- Shows what has not reached the server yet. Nothing is lost while it waits: it is all saved on the device. -->
 <template>
-  <div v-if="waiting > 0 || failed.length > 0 || conflicts.length > 0" class="d-flex flex-column gap-2 p-3 rounded border">
+  <!-- Nothing is uploaded without an account, so nothing is waiting. -->
+  <div v-if="!isLocal && (waiting > 0 || failed.length > 0 || conflicts.length > 0)" class="d-flex flex-column gap-2 p-3 rounded border">
     <div v-for="s in conflicts" :key="s.id" class="d-flex flex-column gap-2">
       <div class="text-danger">{{ $t('sync.gone', { date: new Date(s.started_at).toLocaleDateString() }) }}</div>
       <AppButton secondary @click="log.keepGoneAsNew(s.id)">{{ $t('sync.keepAsNew') }}</AppButton>

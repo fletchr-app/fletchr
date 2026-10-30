@@ -113,6 +113,8 @@ export type LogAction =
   | { type: 'discardGone'; id: string }
   | { type: 'setEquipment'; equipment: Equipment }
   | { type: 'reset' }
+  /** Sessions from an exported file (local mode): those the device does not have are added, the others are left as they are. */
+  | { type: 'imported'; sessions: LogSession[] }
   | { type: 'saveEnd'; sessionId: string; end: LogEnd }
   | { type: 'deleteEnd'; sessionId: string; endId: string }
   | { type: 'saveVolume'; sessionId: string; entry: LogVolume }
@@ -232,6 +234,17 @@ export function reduce(state: LogState, action: LogAction): LogState {
     case 'reset':
       // Everything on this device: sessions, the upload queue and the stored equipment.
       return EMPTY_LOG;
+    case 'imported': {
+      const known = new Set(state.sessions.map((s) => s.id));
+      let next = state;
+      for (const session of action.sessions.filter((s) => !known.has(s.id))) {
+        next = { ...next, sessions: [...next.sessions, session].sort((a, b) => b.started_at.localeCompare(a.started_at)) };
+        next = queue(next, 'session', session.id);
+        for (const e of session.ends) next = queue(next, 'end', session.id, e.id);
+        for (const v of session.volume) next = queue(next, 'volume', session.id, v.id);
+      }
+      return next;
+    }
     case 'setEquipment':
       return { ...state, equipment: action.equipment };
     case 'startSession':

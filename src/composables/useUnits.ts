@@ -11,7 +11,7 @@ const units = ref<Units>('metric')
 let started = false
 
 export function useUnits() {
-  const { api, status } = useAuth()
+  const { api, status, isLocal } = useAuth()
 
   function setUnits(next: Units) {
     units.value = next
@@ -36,6 +36,7 @@ export function useUnits() {
   /** The user's choice: used at once, saved on the profile when there is a connection. */
   async function saveUnits(next: Units) {
     setUnits(next)
+    if (isLocal.value) return // no profile to send it to
     await localStore.set(PENDING, '1')
     void sync()
   }

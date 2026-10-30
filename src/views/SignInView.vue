@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import BrandMark from '@/components/BrandMark.vue'
@@ -10,7 +10,8 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useServer } from '@/composables/useServer'
 
-const { signIn, googleAvailable, signInWithGoogle } = useAuth()
+const { signIn, googleAvailable, signInWithGoogle, enterLocal, isLocal } = useAuth()
+const router = useRouter()
 const { url } = useServer()
 const email = ref('')
 const password = ref('')
@@ -21,6 +22,11 @@ async function submit() {
   busy.value = true
   error.value = await signIn(email.value, password.value)
   busy.value = false
+}
+
+async function useLocal() {
+  await enterLocal()
+  void router.replace('/')
 }
 
 async function google() {
@@ -41,6 +47,12 @@ async function google() {
       <AppButton v-if="googleAvailable" secondary :busy="busy" @click="google">{{ $t('auth.google.signIn') }}</AppButton>
       <RouterLink to="/reset-password">{{ $t('auth.signIn.forgot') }}</RouterLink>
       <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
+      <div class="d-flex flex-column gap-2 pt-3 border-top">
+        <div class="fw-semibold">{{ $t('local.useWithout') }}</div>
+        <div class="muted">{{ isLocal ? $t('local.signInText') : $t('local.useWithoutText') }}</div>
+        <AppButton v-if="isLocal" secondary router-link="/">{{ $t('local.backToApp') }}</AppButton>
+        <AppButton v-else secondary @click="useLocal">{{ $t('local.useWithoutButton') }}</AppButton>
+      </div>
       <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings/server">{{ $t('auth.signIn.change') }}</RouterLink></div>
     </div>
   </AppPage>

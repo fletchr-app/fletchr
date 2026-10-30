@@ -1,6 +1,7 @@
 import { App } from '@capacitor/app';
 import { computed, effectScope, ref, watch, watchEffect } from 'vue';
 
+import { useLocalMode } from '@/composables/useLocalMode';
 import { compatibility } from '@/lib/version';
 
 // Default server address comes from VITE_SERVER_URL (.env), so one build can point at a local server
@@ -47,8 +48,12 @@ type ServerInfo = { version: string | null; minApp: string | null };
 const info = ref<ServerInfo | null>(null);
 let asked: AbortController | null = null;
 
+// Without an account the app does not talk to a server at all.
+const local = useLocalMode();
+
 function askServer() {
   asked?.abort();
+  if (!local.loaded.value || local.on.value) return;
   const controller = (asked = new AbortController());
   fetch(`${url.value}/api/health/`, { signal: controller.signal })
     .then((res) => (res.ok ? res.json() : null))
@@ -58,7 +63,7 @@ function askServer() {
     .catch(() => {});
 }
 effectScope(true).run(() => {
-  watch(url, () => ((info.value = null), askServer()), { immediate: true });
+  watch([url, local.loaded, local.on], () => ((info.value = null), askServer()), { immediate: true });
   void App.addListener('appStateChange', ({ isActive }) => isActive && askServer());
 });
 

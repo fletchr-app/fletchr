@@ -41,3 +41,15 @@ test('old saved data without notes loads, and reset forgets them', () => {
   assert.deepEqual(reduce(EMPTY_NOTES, { type: 'load', state: {} as NotesState }), EMPTY_NOTES);
   assert.deepEqual(run({ type: 'add', note: note('a') }, { type: 'reset' }), EMPTY_NOTES);
 });
+
+test('a note on the device can be edited, and goes with its photo', () => {
+  const drawing = { v: 1 as const, shapes: [{ t: 'line' as const, p: [[0, 0], [1, 1]] as [number, number][] }] };
+  const s = run({ type: 'add', note: note('a', { media: 'm1' }) }, { type: 'add', note: note('b', { media: 'm2' }) }, { type: 'edit', uid: 'a', patch: { body: 'Better', drawing } });
+  assert.deepEqual([s.notes[0].body, s.notes[0].drawing], ['Better', drawing]);
+  assert.deepEqual(reduce(s, { type: 'removeAboutMedia', media: 'm1' }).notes.map((n) => n.uid), ['b']);
+});
+
+test('imported notes are added once, the device keeps its own version of a note it has', () => {
+  const s = run({ type: 'add', note: note('a', { body: 'mine' }) }, { type: 'imported', notes: [note('a', { body: 'file' }), note('c')] });
+  assert.deepEqual(s.notes.map((n) => [n.uid, n.body]), [['a', 'mine'], ['c', 'Watch the bow arm']]);
+});

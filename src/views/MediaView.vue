@@ -64,7 +64,7 @@ const ownerParam = route.query.owner ? Number(route.query.owner) : null
 const name = route.query.name as string | undefined
 const title = name ? t('media.titleFor', { name }) : t('media.title')
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const noteLibrary = useNoteLibrary()
 const notesQueue = useNotes()
 const media = useMedia()
@@ -89,6 +89,7 @@ const filters = computed(() => [
 
 const { data, error, loading, reload } = useRemote(
   async () => {
+    if (isLocal.value) return [] // everything is on the phone: the queue below is the list
     const query = sessionId ? { session: sessionId } : { owner: owner.value, ...(unattachedOnly.value ? { without_session: true } : {}) }
     const { data: list, response } = await api.GET('/api/media/', { params: { query } })
     return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
@@ -98,6 +99,7 @@ const { data, error, loading, reload } = useRemote(
 
 // Video of an archer under 18 needs the consent of the parents on record. Unknown (offline) counts as allowed: the server decides.
 const consent = useRemote(async () => {
+  if (isLocal.value) return true
   if (ownerParam && ownerParam !== me.value) return (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: ownerParam } } })).data?.video_allowed ?? null
   return (await api.GET('/api/me/')).data?.profile.video_allowed ?? null
 })
@@ -163,7 +165,7 @@ const sections = computed(() => [
   ...(waiting.value.length > 0 ? [{ key: 'waiting', title: '', items: waiting.value }] : []),
   ...days.value.map((d) => ({ key: d.day, title: dayTitle(d.day, locale.value), items: d.items as unknown as Shown[] })),
 ])
-const videoWaits = computed(() => media.items.value.some((i) => i.kind === 'video') && videosWifiOnly.value)
+const videoWaits = computed(() => !isLocal.value && media.items.value.some((i) => i.kind === 'video') && videosWifiOnly.value)
 
 function tileOf(key: string) {
   return preparing.value.find((p) => p.key === key)
@@ -334,6 +336,8 @@ async function loadFull(item: Shown) {
 }
 function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
+  // Without an account the photo or video opens from its file, with notes and drawings.
+  if (isLocal.value && item.queued) return void router.push(`/local-media/${item.queued.id}`)
   const clipId = item.remote?.kind === 'video' ? item.remote.id : item.queued?.kind === 'video' ? item.queued.id : null
   if (clipId) {
     // The player page knows which clips are next to this one by the same query as this page. A clip that waits plays from the phone.
@@ -531,7 +535,7 @@ function removeSelected() {
             <img v-if="item.src" :src="item.src" alt="" />
             <IonIcon v-if="selecting && selected.has(item.key)" :icon="checkmarkCircle" class="check" />
             <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
-            <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
+            <IonIcon v-if="item.queued && !item.queued.error && !isLocal" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
             <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
             <span v-if="item.preparing && !item.preparing.error" class="veil" :title="$t('media.preparing')">
               <IonSpinner name="crescent" />
