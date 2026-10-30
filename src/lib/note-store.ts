@@ -37,6 +37,12 @@ export type NoteAction =
   | { type: 'reset' }
   | { type: 'add'; note: QueuedNote }
   | { type: 'remove'; uid: string }
+  /** Without an account the notes stay here, so their text and drawing can be changed (#93). */
+  | { type: 'edit'; uid: string; patch: Partial<Pick<QueuedNote, 'body' | 'drawing'>> }
+  /** The photo or clip is deleted: so are the notes about it. */
+  | { type: 'removeAboutMedia'; media: string }
+  /** Notes from an exported file: new ones are added, those the device has already are left as they are. */
+  | { type: 'imported'; notes: QueuedNote[] }
   | { type: 'failed'; uid: string; error: string }
   | { type: 'retryFailed' }
   | { type: 'discardFailed' };
@@ -51,6 +57,14 @@ export function reduce(state: NotesState, action: NoteAction): NotesState {
       return state.notes.some((n) => n.uid === action.note.uid) ? state : { notes: [...state.notes, action.note] };
     case 'remove':
       return { notes: state.notes.filter((n) => n.uid !== action.uid) };
+    case 'edit':
+      return { notes: state.notes.map((n) => (n.uid === action.uid ? { ...n, ...action.patch } : n)) };
+    case 'removeAboutMedia':
+      return { notes: state.notes.filter((n) => n.media !== action.media) };
+    case 'imported': {
+      const known = new Set(state.notes.map((n) => n.uid));
+      return { notes: [...state.notes, ...action.notes.filter((n) => !known.has(n.uid))] };
+    }
     case 'failed':
       return { notes: state.notes.map((n) => (n.uid === action.uid ? { ...n, error: action.error } : n)) };
     case 'retryFailed':

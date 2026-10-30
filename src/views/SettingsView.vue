@@ -21,7 +21,7 @@ import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
-const { signOut } = useAuth()
+const { signOut, isLocal } = useAuth()
 const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
@@ -68,6 +68,16 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         <IonListHeader>{{ $t('settings.training') }}</IonListHeader>
         <IonItem router-link="/equipment" detail lines="none"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
       </IonList>
+      <template v-if="isLocal">
+        <IonList inset>
+          <IonListHeader>{{ $t('settings.account') }}</IonListHeader>
+          <IonItem lines="full" class="ion-text-wrap"><IonLabel class="ion-text-wrap">{{ $t('local.settingsNote') }}</IonLabel></IonItem>
+          <IonItem router-link="/settings/data" detail lines="full"><IonLabel>{{ $t('local.dataRow') }}</IonLabel></IonItem>
+          <IonItem router-link="/sign-in" detail lines="none"><IonLabel>{{ $t('local.signInRow') }}</IonLabel></IonItem>
+        </IonList>
+        <div class="muted px-3">{{ $t('local.signInText') }}</div>
+      </template>
+      <template v-else>
       <IonList inset>
         <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
         <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
@@ -80,6 +90,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.signInRow') }}</IonLabel></IonItem>
         <IonItem router-link="/privacy" detail lines="none"><IonLabel>{{ $t('settings.yourData') }}</IonLabel></IonItem>
       </IonList>
+      </template>
 
       <IonList inset>
         <IonListHeader>{{ $t('settings.app') }}</IonListHeader>
@@ -98,13 +109,13 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
             <IonSelectOption v-for="u in UNITS" :key="u" :value="u">{{ $t(`settings.units${u === 'metric' ? 'Metric' : 'Imperial'}`) }}</IonSelectOption>
           </IonSelect>
         </IonItem>
-        <IonItem lines="full">
+        <IonItem v-if="!isLocal" lines="full">
           <IonSelect :value="videosWifiOnly ? 'wifi' : 'any'" :label="$t('settings.videoUpload')" interface="action-sheet" @ion-change="setVideosWifiOnly($event.detail.value === 'wifi')">
             <IonSelectOption value="wifi">{{ $t('settings.videoWifi') }}</IonSelectOption>
             <IonSelectOption value="any">{{ $t('settings.videoAny') }}</IonSelectOption>
           </IonSelect>
         </IonItem>
-        <IonItem router-link="/settings/server" detail lines="full">
+        <IonItem v-if="!isLocal" router-link="/settings/server" detail lines="full">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
           <IonNote slot="end" class="server-note">{{ serverName }}</IonNote>
         </IonItem>
@@ -114,7 +125,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         </IonItem>
       </IonList>
 
-      <AppButton class="mt-3" secondary @click="confirmSignOut">{{ $t('settings.signOut') }}</AppButton>
+      <AppButton v-if="!isLocal" class="mt-3" secondary @click="confirmSignOut">{{ $t('settings.signOut') }}</AppButton>
     </div>
   </AppPage>
 </template>

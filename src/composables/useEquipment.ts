@@ -15,6 +15,7 @@ import {
   reduce,
   revisionPending,
   sessionEquipment,
+  type StoredItem,
   type StoredRevision,
   type Values,
 } from '@/lib/equipment-store';
@@ -26,7 +27,7 @@ import { newId } from '@/lib/uuid';
 // read from the server whenever the app is online. The session screens choose from this copy.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, userId, storeOwner, status } = useAuth();
+const { api, userId, storeOwner, status, isLocal } = useAuth();
 
 const storageKey = computed(() => (storeOwner.value ? storeKey('equipment', storeOwner.value) : null));
 const state = shallowRef<EquipmentState>(EMPTY_EQUIPMENT);
@@ -58,8 +59,8 @@ const bows = computed(() => (loaded.value ? itemsOf(state.value, 'bow') : []));
 const arrowSets = computed(() => (loaded.value ? itemsOf(state.value, 'arrowSet') : []));
 /** The active items in the shape of the session screens. */
 const equipment = computed(() => sessionEquipment(loaded.value ? state.value : EMPTY_EQUIPMENT));
-const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length);
-const failed = computed(() => state.value.outbox.filter((o) => o.error));
+const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error).length));
+const failed = computed(() => (isLocal.value ? [] : state.value.outbox.filter((o) => o.error)));
 /** Nothing known yet: a copy from before there was a store may still be better than an empty list. */
 const empty = computed(() => state.value.items.length === 0);
 
@@ -134,6 +135,9 @@ async function revisionsOf(kind: EquipmentKind, uid: string): Promise<StoredRevi
 
 const actions = {
   save,
+  /** Everything the store holds, for the export of a person without an account. */
+  allItems: () => state.value.items,
+  importItems: (items: StoredItem[]) => dispatch({ type: 'imported', items }),
   remove: (kind: EquipmentKind, uid: string) => dispatch({ type: 'remove', kind, uid }),
   find: (kind: EquipmentKind, uid: string) => findItem(state.value, kind, uid),
   revisionsOf,

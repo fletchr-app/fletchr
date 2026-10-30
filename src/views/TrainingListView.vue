@@ -15,17 +15,17 @@ import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 15000
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const { sessions: local, goneSessions } = useLog()
-const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null, {
+const remote = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
-  keepPolling: () => true,
+  keepPolling: () => !isLocal.value,
 })
 
 // Trainings of your team with notes or photos of yours and no session of yours: they show between the sessions.
-const events = useRemote(async () => (await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null, {
+const events = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
-  keepPolling: () => true,
+  keepPolling: () => !isLocal.value,
 })
 
 // Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.

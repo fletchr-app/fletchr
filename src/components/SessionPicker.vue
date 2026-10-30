@@ -30,7 +30,7 @@ const WINDOW_DAYS = 30
 type Row = { id: string; started_at: string; ended_at: string | null; type: string; location: string }
 
 const { t } = useI18n()
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const log = useLog()
 const days = ref(WINDOW_DAYS)
 const remote = ref<Row[]>([])
@@ -51,6 +51,7 @@ const rows = computed(() => {
 })
 
 async function load() {
+  if (isLocal.value) return // the sessions on the phone are all there are
   const taken = new Date(props.takenAt).getTime()
   failed.value = false
   try {

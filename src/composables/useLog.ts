@@ -34,7 +34,7 @@ const RETRY_INTERVAL_MS = 20_000;
 
 export type DeletedCounts = components['schemas']['DeletedCounts'];
 
-const { api, userId, storeOwner, status, signOut } = useAuth();
+const { api, userId, storeOwner, status, signOut, isLocal } = useAuth();
 
 // Each user on each server has their own local log.
 const storageKey = computed(() => (storeOwner.value ? storeKey('log', storeOwner.value) : null));
@@ -103,8 +103,9 @@ const { loaded } = effectScope(true).run(() =>
     changes: state,
   }),
 )!;
-const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length);
-const failed = computed(() => state.value.outbox.filter((o) => o.error));
+// Without an account nothing is uploaded, so nothing is waiting (the outbox keeps the list for the upload of a later account).
+const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error).length));
+const failed = computed(() => (isLocal.value ? [] : state.value.outbox.filter((o) => o.error)));
 // Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
 const conflicts = computed(() => state.value.sessions.filter((s) => s.gone));
 const sessions = computed(() => (loaded.value ? state.value.sessions : []));
@@ -244,6 +245,8 @@ const actions = {
   discardGone: (id: string) => dispatch({ type: 'discardGone', id }),
   deleteMyData,
   deleteMyAccount,
+  /** Sessions from an exported file (local mode): new ones are added, those the device has are left as they are. */
+  importSessions: (sessions: LogSession[]) => dispatch({ type: 'imported', sessions }),
 };
 
 // The log lives as long as the app: its watchers are never stopped.

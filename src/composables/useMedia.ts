@@ -15,7 +15,7 @@ import { newId } from '@/lib/uuid';
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, storeOwner, status } = useAuth();
+const { api, storeOwner, status, isLocal } = useAuth();
 const log = useLog();
 const { videosWifiOnly } = useUploadSettings();
 
@@ -31,8 +31,9 @@ const onWifi = ref(true);
 const { loaded } = effectScope(true).run(() =>
   useKeyedStore<QueuedMedia[]>({ key: storageKey, empty: [], read: () => items.value, apply: set, changes: items, resetOnKeyChange: true }),
 )!;
-const waiting = computed(() => items.value.filter((i) => !i.error));
-const failed = computed(() => items.value.filter((i) => i.error));
+// Without an account nothing is uploaded, so nothing is waiting.
+const waiting = computed(() => (isLocal.value ? [] : items.value.filter((i) => !i.error)));
+const failed = computed(() => (isLocal.value ? [] : items.value.filter((i) => i.error)));
 
 function set(next: QueuedMedia[]) {
   items.value = next;

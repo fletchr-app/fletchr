@@ -16,3 +16,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-10-30-trainer-session.md](2026-10-30-trainer-session.md): team schedule and training events, a shared label for sessions, notes and media (#104). **phases 1 to 5 implemented**, phase 6 (offline) open
 - [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md): `visibility` on sessions, archer's default, visibility matrix for every coach route. **planned** (lands before local mode)
 - [2026-10-30-local-mode.md](2026-10-30-local-mode.md): app without an account, stats on the phone, upload of local data with one confirmation, sign-out (#93). **planned**
+- [2026-10-30-local-only-mode.md](2026-10-30-local-only-mode.md): use the app without an account or server, statistics on the device, JSON export and import (#93). **implemented, not yet checked on a phone** (the upload on sign-in is not built)

@@ -22,3 +22,16 @@ for (const v of read('scoring-vectors.json').vectors as Vector[]) {
     assert.deepEqual(score(faces[v.face], v.x, v.y), v.expect);
   });
 }
+
+// A face added to the catalogue without vectors must fail here, in the app and on the server alike.
+test('the vectors cover every ring of every scored face, and a miss', () => {
+  const vectors = read('scoring-vectors.json').vectors as Vector[];
+  for (const [slug, face] of Object.entries(faces)) {
+    const mine = vectors.filter((v) => v.face === slug);
+    assert.ok(mine.length > 0, `no vectors for ${slug}`);
+    if (face.rings.length === 0) continue;
+    for (const ring of face.rings) assert.ok(mine.some((v) => v.expect.value === ring.value), `${slug}: no vector for ${ring.value}`);
+    assert.ok(mine.some((v) => v.expect.is_miss), `${slug}: no vector for a miss`);
+    if (face.x_diameter_cm) assert.ok(mine.some((v) => v.expect.is_x), `${slug}: no vector for an X`);
+  }
+});
