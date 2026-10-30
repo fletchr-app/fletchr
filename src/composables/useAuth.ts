@@ -9,11 +9,13 @@ import { userIdOf } from '@/lib/jwt';
 import { useServer } from '@/composables/useServer';
 import { googleErrorKey } from '@/lib/google-errors';
 import { GOOGLE_WEB_CLIENT_ID, googleIdToken } from '@/lib/social-login';
+import { useLocalMode } from '@/composables/useLocalMode';
 import type { StoreOwner } from '@/lib/store-owner';
 
 export type RegisterBody = components['schemas']['RegisterRequest'];
 
-type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
+/** `local`: no account and no server, everything stays on the phone (#93). */
+type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'local';
 
 const { url, isOverride } = useServer();
 
@@ -33,14 +35,39 @@ const api = new Proxy({} as ApiClient, {
   get: (_, key) => Reflect.get(session.value.api, key),
 });
 
-const status = computed<AuthStatus>(() => (!state.value.loaded ? 'loading' : state.value.tokens ? 'signedIn' : 'signedOut'));
+// Local mode: the flag and the owner id are kept on the device. Signing in turns the flag off (the id and the data stay).
+const local = useLocalMode();
+const localOn = local.on;
+const localId = local.id;
+const localLoaded = local.loaded;
+
+const status = computed<AuthStatus>(() =>
+  !state.value.loaded || !localLoaded.value ? 'loading' : state.value.tokens ? 'signedIn' : localOn.value ? 'local' : 'signedOut',
+);
+const isLocal = computed(() => status.value === 'local');
+
 /** Id of the signed-in user, read from the access token so it is known offline. */
 const userId = computed(() => (state.value.tokens ? userIdOf(state.value.tokens.access) : null));
 
-/** Whose data the stores on the device hold: the signed-in account on this server. Null while signed out. */
+/** Whose data the stores on the device hold: the signed-in account on this server, or the local owner. Null while signed out. */
 const storeOwner = computed<StoreOwner | null>(() =>
-  userId.value !== null ? { kind: 'account', server: url.value, userId: String(userId.value) } : null,
+  userId.value !== null
+    ? { kind: 'account', server: url.value, userId: String(userId.value) }
+    : isLocal.value && localId.value
+      ? { kind: 'local', id: localId.value }
+      : null,
 );
+
+watch(
+  () => state.value.tokens,
+  (tokens) => {
+    if (tokens && localOn.value) void local.leave();
+  },
+  { immediate: true },
+);
+
+/** Use the app without an account or server. Data of an earlier local use comes back. */
+const enterLocal = local.enter;
 
 /** Resolves once the stored tokens have been read, so the first route is not chosen too early. */
 export function authReady(): Promise<void> {
@@ -120,5 +147,5 @@ function replaceTokens(tokens: { access: string; refresh: string }) {
 }
 
 export function useAuth() {
-  return { status, api, userId, storeOwner, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
+  return { status, isLocal, enterLocal, api, userId, storeOwner, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
 }

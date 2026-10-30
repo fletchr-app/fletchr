@@ -12,13 +12,12 @@ import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const REFRESH_MS = 10000
-const always = () => true
 
 // Coach notes about an archer, or about one of their sessions. Coaches see all notes of their team and can
 // write new ones (coach only unless they choose otherwise); an archer sees the notes shared with them.
 const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[]; event?: EventLink | null }>(), { ends: () => [] })
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 // Your own training: you write private notes for yourself, no team involved.
 const own = computed(() => props.archerId === Number(userId.value))
 const router = useRouter()
@@ -32,10 +31,10 @@ const draw = (note: { id: number; media?: string | null; frame?: number | null }
   if (link) void router.push(`${link}${link.includes('?') ? '&' : '?'}draw=${note.id}`)
 }
 const notes = useRemote(
-  async () => (await api.GET('/api/notes/', { params: { query: { archer: props.archerId, session: props.sessionId } } })).data ?? null,
-  { pollMs: REFRESH_MS, keepPolling: always },
+  async () => (isLocal.value ? [] : (await api.GET('/api/notes/', { params: { query: { archer: props.archerId, session: props.sessionId } } })).data ?? null),
+  { pollMs: REFRESH_MS, keepPolling: () => !isLocal.value },
 )
-const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)
+const teams = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)))
 // A note written here goes up in the background; when it has, the server's list has it.
 const { uploaded, pendingFor } = useNotes()
 watch(uploaded, notes.reload)

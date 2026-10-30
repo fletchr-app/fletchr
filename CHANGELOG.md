@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Use the app without an account** (#93): "Use without an account" on the sign-in screen. Sessions, equipment, notes (also with drawings on photos), photos and videos, statistics and the heatmap all work on the phone, and the app sends nothing to a server. Teams, coaches and evaluations need an account. Settings has "Backup: export and import" (one JSON file with sessions, equipment and notes; photo and video files are not in it) and "Sign in or register": signing in later keeps the data on the phone but does not upload it (uploading is planned). Statistics are computed on the phone and are tested against the server's with a shared file (`shared/stats-vectors.json`); the scoring vectors now cover every ring of every target face.
+
 ## 0.14.0 (2026-10-30)
 
 - **Your photos and videos are listed without a connection** (#84): the phone keeps the list of your photos and videos and their small pictures, and the media screen shows them when there is no connection (with a line that says so). Full photos and videos still need a connection. Deleted ones disappear from the phone at the next sync. The small pictures use some storage (tens of MB for a thousand photos).
