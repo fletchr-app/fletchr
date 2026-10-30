@@ -52,7 +52,11 @@ const renameListeners: ((from: string, to: string) => void)[] = [];
 // Things that belong to the account and must go with it (the queued photos and videos).
 const accountDeletedListeners: (() => void)[] = [];
 
+// Counts finished uploads: a pull that was fetched while one finished may lack that item, so it is dropped (see `pullNow`).
+let uploads = 0;
+
 function dispatch(action: LogAction) {
+  if (action.type === 'opDone') uploads += 1;
   current = reduce(current, action);
   state.value = current;
   const rename = action.type === 'replaceSessionId' ? { from: action.from, to: action.to } : action.type === 'keepGoneAsNew' ? { from: action.id, to: action.newId } : null;
@@ -64,13 +68,19 @@ function dispatch(action: LogAction) {
 
 let pulling = false;
 
-/** What a coach opened for you, and which of your sessions the server merged or deleted. Before the uploads, so they go to the right id. */
+/**
+ * Your sessions as the server has them (new ones, changes from another phone, what a coach opened), and which ones the
+ * server merged or deleted. Before the uploads, so they go to the right id. What was fetched is dropped when an upload
+ * finished meanwhile (the server's list may predate it and would look like a deleted end); the next sync fetches again.
+ */
 async function pullNow() {
   if (pulling || paused || !loaded.value || status.value !== 'signedIn' || userId.value === null) return;
   pulling = true;
+  const before = uploads;
   try {
-    const actions = await pull(api, Number(userId.value), current.lastPull);
-    if (actions && !paused) actions.forEach(dispatch);
+    const deleting = new Set(current.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId));
+    const actions = await pull(api, Number(userId.value), current.lastPull, deleting);
+    if (actions && !paused && uploads === before) actions.forEach(dispatch);
   } finally {
     pulling = false;
   }

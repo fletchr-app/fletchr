@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Sessions come to the phone from the server** (#84): the phone now takes all your sessions with their ends and volume, not only those a coach opened. A new phone, or one after a reinstall, shows your whole history and can edit it. Results you enter on one phone arrive on the other at the next sync; an end deleted on one phone disappears on the other. Anything on a phone that has not been uploaded yet is never overwritten (the queued change goes up and wins). The first sync on a phone with a long history needs one request per session and can take a while.
+
 - **Notes about your own training in the app** (#84): on a session of yours, on your photos and clips you can write a private note for yourself (no team, nobody else reads it). They are saved on the phone first like other notes. The list on a session says "My notes" instead of "Coach notes". A session on your phone has a new "Notes" link for this.
 
 ## 0.13.0 (2026-10-30)

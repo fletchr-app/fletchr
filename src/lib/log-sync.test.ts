@@ -290,21 +290,49 @@ const summary = (id: string, extra = {}) => ({
   updated_at: '2026-10-18T09:05:00Z', ends: 0, scored_arrows: 0, score_total: 0, volume_arrows: 0, ...extra,
 });
 
+const detail = (id: string, extra = {}) => ({
+  ...summary(id), weather: '', goals: '', notes: '', physical_rating: null, mental_rating: null, setup_info: null, ends: [], volume_entries: [], ...extra,
+});
+const serverEnd = { id: 'e1', index: 0, distance_m: '18', face: '40cm', arrows_per_end: 3, shots: [{ id: 'x1', value: 9, is_x: false, is_miss: false }] };
+
 test('pull turns the list and the tombstones into actions', async () => {
   const h = harness((call) => {
     if (call.path === '/api/sessions/gone/') return json(200, [{ id: 'old', owner: 7, merged_into: 'new', at: '2026-10-18T10:00:00Z' }, { id: 'dead', owner: 7, merged_into: null, at: '2026-10-18T09:30:00Z' }]);
-    if (call.path === '/api/sessions/') return json(200, [summary('open1'), summary('mine', { opened_by: 7 }), summary('shot', { ends: 2 }), summary('plain', { opened_by: null })]);
-    return json(200, { ...summary('open1'), weather: 'wind', goals: 'anchor', notes: '', physical_rating: null, mental_rating: 4 });
+    if (call.path === '/api/sessions/') return json(200, [summary('open1'), summary('mine', { opened_by: 7, updated_at: '2026-10-18T09:10:00Z' }), summary('queued')]);
+    if (call.path === '/api/sessions/open1/') return json(200, detail('open1', { goals: 'anchor', mental_rating: 4 }));
+    return json(200, detail('mine', { opened_by: 7, type: 'scoring', ends: [serverEnd], updated_at: '2026-10-18T09:10:00Z' }));
   });
-  const actions = await pull(apiOf(h), 7, '2026-10-17T00:00:00Z');
+  const actions = await pull(apiOf(h), 7, '2026-10-17T00:00:00Z', new Set(['queued']));
   assert.ok(actions);
   assert.match(h.calls[0].search + h.calls[1].search, /updated_after=2026-10-17/);
   assert.deepEqual(actions.slice(0, 2), [{ type: 'replaceSessionId', from: 'old', to: 'new' }, { type: 'sessionGone', id: 'dead' }]);
   const pulled = actions[2];
   assert.equal(pulled.type, 'pulled');
   if (pulled.type !== 'pulled') return;
-  assert.deepEqual(pulled.sessions.map((s) => [s.id, s.type, s.keep, s.opened_by_name, s.details?.goals]), [['open1', '', true, 'Coach', 'anchor']]);
+  // All sessions of mine with their results, oldest change first; the one with a queued delete is not fetched.
+  assert.deepEqual(pulled.sessions.map((s) => [s.id, s.type, s.keep, s.opened_by_name, s.details?.goals, s.ends.length]), [
+    ['open1', '', true, 'Coach', 'anchor', 0],
+    ['mine', 'scoring', true, 'Coach', undefined, 1],
+  ]);
+  assert.equal(pulled.sessions[1].owner_name, undefined);
+  assert.equal(pulled.sessions[1].ends[0].shots[0].value, 9);
   assert.equal(pulled.lastPull, '2026-10-18T10:00:00Z');
+});
+
+test('a pull that breaks off keeps what it got and goes on from there next time', async () => {
+  const h = harness((call) => {
+    if (call.path === '/api/sessions/gone/') return json(200, []);
+    if (call.path === '/api/sessions/') return json(200, [summary('a', { updated_at: '2026-10-18T09:01:00Z' }), summary('b', { updated_at: '2026-10-18T09:02:00Z' })]);
+    if (call.path === '/api/sessions/a/') return json(200, detail('a', { updated_at: '2026-10-18T09:01:00Z' }));
+    return json(500);
+  });
+  const actions = await pull(apiOf(h), 7);
+  assert.ok(actions);
+  const pulled = actions[0];
+  assert.equal(pulled.type, 'pulled');
+  if (pulled.type !== 'pulled') return;
+  assert.deepEqual(pulled.sessions.map((s) => s.id), ['a']);
+  assert.equal(pulled.lastPull, '2026-10-18T09:01:00Z');
 });
 
 test('pull gives nothing when the server cannot be reached', async () => {
