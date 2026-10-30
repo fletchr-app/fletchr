@@ -15,6 +15,14 @@ export function notesOnPicture<T extends MediaNote>(notes: T[], frame: number | 
 /** All shapes of these notes, in order. */
 export const drawnShapes = (notes: Pick<MediaNote, 'drawing'>[]): Shape[] => notes.flatMap((n) => readDrawing(n.drawing).shapes)
 
+/**
+ * The notes of this photo or clip that wait to upload, as the picture needs them (frame, drawing, time). They have no
+ * server id yet, so they get negative ones that no server note has.
+ */
+export function waitingOnMedia(queued: Pick<MediaNote, 'media' | 'frame' | 'drawing' | 'created_at'>[], mediaId: string): MediaNote[] {
+  return queued.filter((n) => n.media === mediaId).map((n, i) => ({ id: -(i + 1), media: n.media, frame: n.frame, drawing: n.drawing, created_at: n.created_at }));
+}
+
 /** Where a note opens: its photo, or its clip at its frame. Null for a note without media. */
 export function noteLink(note: Pick<MediaNote, 'media' | 'frame'>): string | null {
   if (!note.media) return null
