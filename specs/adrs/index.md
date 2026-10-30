@@ -10,3 +10,4 @@ Short decision records for choices that had genuine considered-and-rejected alte
 - [0004-merging-sessions.md](0004-merging-sessions.md): the server merges a coach's empty session with the archer's, by a rule on pairs. *accepted*
 - [0005-sign-in-methods-are-separate.md](0005-sign-in-methods-are-separate.md): Google and email accounts are separate, no linking, no email matching. *accepted*
 - [0008-events-are-labels.md](0008-events-are-labels.md): a team training is a label on sessions, notes and media, not a shared session. *accepted*
+- [0009-ordered-audience-scale.md](0009-ordered-audience-scale.md): one ordered scale `me` < `coaches` < `team` < `everyone`, a field per subject, one server filter. *accepted*
