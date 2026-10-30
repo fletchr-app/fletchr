@@ -2,7 +2,7 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.14.0 (2026-10-30)
 
 - **Your photos and videos are listed without a connection** (#84): the phone keeps the list of your photos and videos and their small pictures, and the media screen shows them when there is no connection (with a line that says so). Full photos and videos still need a connection. Deleted ones disappear from the phone at the next sync. The small pictures use some storage (tens of MB for a thousand photos).
 
