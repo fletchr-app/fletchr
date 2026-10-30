@@ -57,6 +57,33 @@ export async function loadThumbnail(id: string): Promise<Blob> {
   return read(id, 'thumb', 'image/jpeg');
 }
 
+// Thumbnails of the photos and videos the server has (media-library.ts). Not the queue's folder: these are copies and can be fetched again.
+const CACHE = 'media-cache';
+const cachePath = (id: string) => `${CACHE}/${id}.thumb`;
+
+export async function saveCachedThumbnail(id: string, thumbnail: Blob): Promise<void> {
+  await Filesystem.writeFile({ path: cachePath(id), data: await toBase64(thumbnail), directory: Directory.Data, recursive: true });
+}
+
+/** A link the page can show as an image, or null if the thumbnail is not on the phone. */
+export async function cachedThumbnailSrc(id: string): Promise<string | null> {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const { uri } = await Filesystem.getUri({ path: cachePath(id), directory: Directory.Data });
+      const response = await fetch(Capacitor.convertFileSrc(uri));
+      return response.ok ? Capacitor.convertFileSrc(uri) : null;
+    }
+    const { data } = await Filesystem.readFile({ path: cachePath(id), directory: Directory.Data });
+    return URL.createObjectURL(typeof data === 'string' ? fromBase64(data, 'image/jpeg') : data);
+  } catch {
+    return null;
+  }
+}
+
+export async function removeCachedThumbnails(ids: string[]): Promise<void> {
+  for (const id of ids) await Filesystem.deleteFile({ path: cachePath(id), directory: Directory.Data }).catch(() => {});
+}
+
 export async function removeFiles(id: string): Promise<void> {
   for (const part of ['file', 'thumb'] as const) {
     await Filesystem.deleteFile({ path: path(id, part), directory: Directory.Data }).catch(() => {});

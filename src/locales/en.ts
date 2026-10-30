@@ -151,6 +151,7 @@ export default {
     serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it. Ask whoever runs the server to update it.',
   },
   media: {
+    offlineList: 'No connection. This is what the phone has kept: small pictures only, videos and full photos need a connection.',
     draw: 'Draw on this frame',
     drawPhoto: 'Draw on this photo',
     undo: 'Undo',

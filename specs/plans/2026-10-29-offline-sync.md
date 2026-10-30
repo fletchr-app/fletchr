@@ -142,7 +142,9 @@ Server:
 - [x] `npm run types:api`.
 
 App:
-- [ ] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
+Progress: the media pull is the eleventh PR. It is a separate store (`useMediaLibrary`, `library:` key) and not part of `useMedia`: the queue holds what is waiting, the library what the server has, and `MediaView` shows the queue first and the library when offline. List and thumbnails only (decided with Tim). The notes pull and the player for queued clips follow as their own PRs.
+
+- [x] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
 - [ ] Play before upload, per #83: player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
 - [ ] `useNotes` pull: notes changed since, plus tombstones (the notes queue is in Phase 1b).
 - [ ] Conflict rule, media and notes: last write wins per item; a queued item is not overwritten by a pull; a tombstone removes the local copy unless it has a pending op, then it is a conflict (like Phase 3).
