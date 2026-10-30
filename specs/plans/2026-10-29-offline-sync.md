@@ -144,10 +144,12 @@ Server:
 App:
 Progress: the media pull is the eleventh PR. It is a separate store (`useMediaLibrary`, `library:` key) and not part of `useMedia`: the queue holds what is waiting, the library what the server has, and `MediaView` shows the queue first and the library when offline. List and thumbnails only (decided with Tim). The notes pull and the player for queued clips follow as their own PRs.
 
+Progress, notes: the copy is in `note-library.ts` and `useNoteLibrary`. Queued notes are never in the copy, so a pull cannot overwrite them; a delete on another device removes the note at the next pull. Screens use `library.list(query)`: server first, the copy when the server cannot be reached.
+
 - [x] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
-- [ ] Play before upload, per #83: player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
-- [ ] `useNotes` pull: notes changed since, plus tombstones (the notes queue is in Phase 1b).
-- [ ] Conflict rule, media and notes: last write wins per item; a queued item is not overwritten by a pull; a tombstone removes the local copy unless it has a pending op, then it is a conflict (like Phase 3).
+- [x] Play before upload, per #83 (first of three PRs: play queued items; notes and drawings on them; keep uploaded clips with a size cap, decided with Tim): player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
+- [x] Notes pull: notes about you and by you changed since, plus tombstones (`useNoteLibrary`, a separate store like the media library, twelfth PR). Read only offline: editing and deleting stay online (decided with Tim).
+- [x] Conflict rule, media and notes: last write wins per item; a queued item is not overwritten by a pull; a tombstone removes the local copy unless it has a pending op, then it is a conflict (like Phase 3).
 
 Tests: server (repeated note `PUT` creates once; note on another archer's media refused; tombstone on delete; `updated_after`), app (`note-store` queue order, wait on media, conflict on tombstone with pending edit).
 

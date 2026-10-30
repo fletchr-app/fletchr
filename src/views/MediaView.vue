@@ -31,6 +31,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -63,6 +64,7 @@ const name = route.query.name as string | undefined
 const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId, isLocal } = useAuth()
+const noteLibrary = useNoteLibrary()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -334,10 +336,11 @@ function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
   // Without an account the photo or video opens from its file, with notes and drawings.
   if (isLocal.value && item.queued) return void router.push(`/local-media/${item.queued.id}`)
-  if (item.remote?.kind === 'video') {
-    // The player page knows which clips are next to this one by the same query as this page.
+  const clipId = item.remote?.kind === 'video' ? item.remote.id : item.queued?.kind === 'video' ? item.queued.id : null
+  if (clipId) {
+    // The player page knows which clips are next to this one by the same query as this page. A clip that waits plays from the phone.
     const query = { ...(sessionId ? { session: sessionId } : { owner: String(owner.value) }), ...(route.query.pick ? { pick: route.query.pick as string } : {}) }
-    return void router.push({ path: `/media/${item.remote.id}`, query })
+    return void router.push({ path: `/media/${clipId}`, query })
   }
   viewKey.value = item.key
   confirmDelete.value = false
@@ -367,7 +370,7 @@ async function loadNotes(item: Shown) {
   if (!remote) return
   try {
     if (photoNotes.value[remote.id] === undefined) {
-      const { data: list } = await api.GET('/api/notes/', { params: { query: { media: remote.id } } })
+      const list = await noteLibrary.list({ media: remote.id })
       if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
     }
     if (writable.value[remote.owner] === undefined) {

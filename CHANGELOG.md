@@ -6,6 +6,10 @@ What changed in each release. The version number and how a release is made: `spe
 
 - **Use the app without an account** (#93): "Use without an account" on the sign-in screen. Sessions, equipment, notes (also with drawings on photos), photos and videos, statistics and the heatmap all work on the phone, and the app sends nothing to a server. Teams, coaches and evaluations need an account. Settings has "Backup: export and import" (one JSON file with sessions, equipment and notes; photo and video files are not in it) and "Sign in or register": signing in later keeps the data on the phone but does not upload it (uploading is planned). Statistics are computed on the phone and are tested against the server's with a shared file (`shared/stats-vectors.json`); the scoring vectors now cover every ring of every target face.
 
+- **A clip that has not been uploaded yet can be played** (#83, #84): tapping it in the media screen opens the player on the file on the phone, frame by frame like any clip. Delete and move to a session work too. Notes and drawings on it wait until it is up.
+
+- **Your notes can be read without a connection** (#84): the phone keeps the notes about you (your own and those coaches shared with you) and, for coaches, the notes you wrote. The notes on a session, under a photo in the media screen and "from your coaches" on Home show them when there is no connection (with a line that says so). Changing and deleting a note still needs a connection. Needs a server with 0.14.0.
+
 ## 0.14.0 (2026-10-30)
 
 - **Your photos and videos are listed without a connection** (#84): the phone keeps the list of your photos and videos and their small pictures, and the media screen shows them when there is no connection (with a line that says so). Full photos and videos still need a connection. Deleted ones disappear from the phone at the next sync. The small pictures use some storage (tens of MB for a thousand photos).
