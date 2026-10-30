@@ -14,13 +14,16 @@ import MediaEvent from '@/components/MediaEvent.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
+import { useMedia } from '@/composables/useMedia'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
+import { loadFiles } from '@/lib/media-files'
 import { drawnShapes, notesOnPicture } from '@/lib/media-notes'
+import { clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
 // One uploaded photo or clip. A clip is looked at frame by frame: the video above, a tape below it that is dragged
@@ -45,13 +48,31 @@ let startFrame = route.query.frame !== undefined ? Number(route.query.frame) : n
 const currentId = ref(route.params.id as string)
 const everything = ref<{ id: string; kind: string }[]>([])
 
+// A photo or clip that has not been uploaded yet plays from its file on the phone. Once it is up, the server's copy
+// takes over the next time it is loaded; what is on screen goes on from the file.
+const media = useMedia()
+const queuedItem = computed(() => media.items.value.find((i) => i.id === currentId.value))
+let localUrls: string[] = []
+function releaseLocal() {
+  localUrls.forEach((u) => URL.revokeObjectURL(u))
+  localUrls = []
+}
+async function localClip(item: NonNullable<typeof queuedItem.value>) {
+  const files = await loadFiles(item.id, item.kind === 'video' ? 'video/mp4' : 'image/jpeg')
+  releaseLocal()
+  localUrls = [URL.createObjectURL(files.file), URL.createObjectURL(files.thumbnail)]
+  return clipOfQueued(item, Number(userId.value), { file: localUrls[0]!, thumbnail: localUrls[1]! })
+}
 const { data: clip, error, reload } = useRemote(
   async () => {
+    const item = queuedItem.value
+    if (item) return await localClip(item)
     const { data } = await api.GET('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } })
     return data ?? null
   },
   { watch: [currentId] },
 )
+onBeforeUnmount(releaseLocal)
 
 // The other clips of the same session or archer, in the order of the grid.
 onMounted(async () => {
@@ -59,7 +80,7 @@ onMounted(async () => {
   const owner = route.query.owner ? Number(route.query.owner) : undefined
   if (!session && owner === undefined) return
   const { data } = await api.GET('/api/media/', { params: { query: session ? { session } : { owner } } }).catch(() => ({ data: null }))
-  everything.value = (data ?? []).map((m) => ({ id: m.id, kind: m.kind }))
+  everything.value = playerSiblings(media.items.value, (data ?? []).map((m) => ({ id: m.id, kind: m.kind })), { session, owner }, Number(userId.value))
 })
 // Next and previous stay among the same kind: photos among photos, clips among clips.
 const isPhoto = computed(() => clip.value?.kind === 'photo')
@@ -78,17 +99,17 @@ function goTo(delta: number) {
 
 // Coach notes on single frames: the tape shows where they are, a tap on a note jumps to its frame.
 const notes = useRemote(
-  async () => (await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null,
+  async () => (queuedItem.value ? [] : ((await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null)),
   { watch: [currentId] },
 )
 // A note written here goes up in the background; when it has, the server's list has it.
 watch(useNotes().uploaded, notes.reload)
 const teams = useRemote(
-  async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
-  { watch: [clip] },
+  async () => (clip.value && !queuedItem.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
+  { watch: [clip, () => !!queuedItem.value] },
 )
 // A coach of the archer may write notes; so may the archer, for themselves.
-const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
+const canNote = computed(() => !!clip.value && !queuedItem.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
 const frameNotes = computed(() =>
   (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
 )
@@ -426,6 +447,10 @@ const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
 async function remove() {
   if (!confirmDelete.value) return (confirmDelete.value = true)
+  if (queuedItem.value) {
+    media.remove(currentId.value)
+    return router.back()
+  }
   const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } }).catch(() => ({ response: null }))
   if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
   router.back()
@@ -439,7 +464,7 @@ const moveError = ref<string | null>(null)
 async function moveTo(session: string | null) {
   pickerOpen.value = false
   moveError.value = null
-  const { failed } = await moveMedia([{ id: currentId.value, queued: false }], session)
+  const { failed } = await moveMedia([{ id: currentId.value, queued: !!queuedItem.value }], session)
   if (failed > 0) moveError.value = t('media.moveFailed', { n: failed }, failed)
   reload()
   notes.reload()
@@ -540,7 +565,8 @@ async function moveTo(session: string | null) {
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
-      <MediaEvent v-if="clip" :clip="clip" @changed="reload(); notes.reload()" />
+      <div v-if="queuedItem" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
+      <MediaEvent v-if="clip && !queuedItem" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
       <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
@@ -556,7 +582,7 @@ async function moveTo(session: string | null) {
       :owner="clip.owner"
       :taken-at="clip.taken_at"
       :current="clip.session ?? null"
-      server-items
+      :server-items="!queuedItem"
       :removable="!!clip.session"
       @close="pickerOpen = false"
       @pick="moveTo"

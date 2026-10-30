@@ -166,6 +166,7 @@ export default {
     noNotes: 'Noch keine Notizen zu diesem Video.',
     notes: 'Notizen zu diesem Video',
     noNotesPhoto: 'Noch keine Notizen zu diesem Foto.',
+    notesAfterUpload: 'Wartet auf den Upload. Notizen und Zeichnungen gehen, sobald es hochgeladen ist.',
     notesPhoto: 'Notizen zu diesem Foto',
     openNotes: 'Notizen',
     moveToSession: 'In ein Training verschieben',

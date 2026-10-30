@@ -54,6 +54,7 @@ For the pull of media and notes (#83, #84); the app part comes after the server 
 - **Screen**: `MediaView` shows the library when the server cannot be reached, for your own photos and videos (also of one session), with a line that says so. Tapping a photo shows its thumbnail, a video cannot be played (it streams). Coaches see other archers' media online only.
 - **Account**: sign-out keeps the library under the account's key; deleting the account removes it and the thumbnails.
 - **Cost**: a thumbnail is some tens of KB, so a thousand photos are tens of MB. There is no limit or cleanup yet.
+- **Player for a queued item**: `/media/<id>` with the id of an item in the media queue plays it from its file on the phone (`MediaPlayerView`, `queued-clip.ts`). The queue id is the id the server will use, so the route does not change when the upload finishes. The player builds the clip from the queue item and object URLs of the stored files, and does not ask the server for it. The next and previous clips are the queued ones first, then the server's list. Deleting and moving work on the queue item. Notes and drawings wait until the upload (a line says so); the next step lets you write them on the phone.
 
 ## Notes on the phone
 

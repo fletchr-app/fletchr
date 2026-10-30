@@ -162,6 +162,7 @@ export default {
     noNotes: 'No notes on this clip yet.',
     notes: 'Notes on this clip',
     noNotesPhoto: 'No notes on this photo yet.',
+    notesAfterUpload: 'Waiting to upload. Notes and drawings can be added once it is up.',
     notesPhoto: 'Notes on this photo',
     openNotes: 'Notes',
     moveToSession: 'Move to session',

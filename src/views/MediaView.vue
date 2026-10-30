@@ -332,10 +332,11 @@ async function loadFull(item: Shown) {
 }
 function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
-  if (item.remote?.kind === 'video') {
-    // The player page knows which clips are next to this one by the same query as this page.
+  const clipId = item.remote?.kind === 'video' ? item.remote.id : item.queued?.kind === 'video' ? item.queued.id : null
+  if (clipId) {
+    // The player page knows which clips are next to this one by the same query as this page. A clip that waits plays from the phone.
     const query = { ...(sessionId ? { session: sessionId } : { owner: String(owner.value) }), ...(route.query.pick ? { pick: route.query.pick as string } : {}) }
-    return void router.push({ path: `/media/${item.remote.id}`, query })
+    return void router.push({ path: `/media/${clipId}`, query })
   }
   viewKey.value = item.key
   confirmDelete.value = false
