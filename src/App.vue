@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useTeams } from '@/composables/useTeams'
 import { codeFromUrl } from '@/lib/invite-link'
 
@@ -15,6 +16,7 @@ const router = useRouter()
 const { status } = useAuth()
 const { isCoach } = useTeams()
 useMediaLibrary() // starts keeping the list of your photos and videos on the phone
+useNoteLibrary() // starts keeping your notes on the phone
 
 // Signing in or out moves you to the right side of the app, wherever you were.
 watch(status, (s) => {

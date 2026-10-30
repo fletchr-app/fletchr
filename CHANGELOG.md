@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Your notes can be read without a connection** (#84): the phone keeps the notes about you (your own and those coaches shared with you) and, for coaches, the notes you wrote. The notes on a session, under a photo in the media screen and "from your coaches" on Home show them when there is no connection (with a line that says so). Changing and deleting a note still needs a connection. Needs a server with 0.14.0.
+
 ## 0.14.0 (2026-10-30)
 
 - **Your photos and videos are listed without a connection** (#84): the phone keeps the list of your photos and videos and their small pictures, and the media screen shows them when there is no connection (with a line that says so). Full photos and videos still need a connection. Deleted ones disappear from the phone at the next sync. The small pictures use some storage (tens of MB for a thousand photos).

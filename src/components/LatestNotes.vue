@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuth } from '@/composables/useAuth'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useRemote } from '@/composables/useRemote'
 
 const SHOWN = 5
@@ -7,8 +7,8 @@ const SHOWN = 5
 // The newest notes your coaches wrote about you and shared with you.
 // `refresh` goes up each time the Home screen is shown, so a note shared meanwhile appears.
 const props = defineProps<{ userId: number; refresh?: number }>()
-const { api } = useAuth()
-const { data } = useRemote(async () => (await api.GET('/api/notes/', { params: { query: { archer: props.userId, visibility: 'shared' } } })).data ?? null, {
+const library = useNoteLibrary()
+const { data } = useRemote(() => library.list({ archer: props.userId, visibility: 'shared' }), {
   watch: [() => props.refresh],
 })
 </script>

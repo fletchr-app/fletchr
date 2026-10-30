@@ -669,6 +669,7 @@ export default {
     aboutTime: 'Über',
     coachNotes: 'Trainernotizen',
     myNotes: 'Meine Notizen',
+    offlineList: 'Keine Verbindung. Das sind die Notizen, die das Telefon gespeichert hat. Du kannst sie lesen, ändern geht nur mit Verbindung.',
     title: 'Notizen',
     link: 'Notizen',
     fromCoaches: 'Von deinen Trainern',

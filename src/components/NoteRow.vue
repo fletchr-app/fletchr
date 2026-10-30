@@ -12,6 +12,7 @@ import EventChips from '@/components/EventChips.vue'
 import FormField from '@/components/FormField.vue'
 import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
 import { drawnShapes } from '@/lib/media-notes'
@@ -32,6 +33,7 @@ const props = defineProps<{ note: Note; ends: { id: string; index: number }[]; p
 const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [note: Note]; open: [note: Note] }>()
 
 const { api } = useAuth()
+const library = useNoteLibrary()
 const editing = ref(false)
 const body = ref(props.note.body)
 // A note about yourself is always private: no choice of readers.
@@ -80,11 +82,13 @@ async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
 const save = () =>
   run(async () => {
     const { data, error: failure } = await api.PATCH('/api/notes/{id}/', { params: { path: { id: props.note.id } }, body: own.value ? { body: body.value } : { body: body.value, visibility: visibility.value, ...eventBody() } })
+    if (data) library.saved(data)
     return { ok: !!data, error: failure }
   })
 const remove = () =>
   run(async () => {
     const { response, error: failure } = await api.DELETE('/api/notes/{id}/', { params: { path: { id: props.note.id } } })
+    if (response.ok) library.forget(props.note.uid)
     return { ok: response.ok, error: failure }
   })
 </script>

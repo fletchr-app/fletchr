@@ -665,6 +665,7 @@ export default {
     aboutTime: 'About',
     coachNotes: 'Coach notes',
     myNotes: 'My notes',
+    offlineList: 'No connection. These are the notes the phone has kept. You can read them here, changing one needs a connection.',
     title: 'Notes',
     link: 'Notes',
     fromCoaches: 'From your coaches',
