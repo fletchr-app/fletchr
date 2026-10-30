@@ -111,6 +111,7 @@ function newEnd() {
         <RouterLink v-if="session.ends.length > 0" :to="`/training/${session.id}/setup`">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</RouterLink>
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+        <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
       <UnattachedHint compact :owner="archer" :session="session" :name="session.owner_name" class="text-center" />
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
@@ -131,6 +132,7 @@ function newEnd() {
       <div class="d-flex gap-4">
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
+        <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
       <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
       <VolumeLog :session="session" />

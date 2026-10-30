@@ -319,7 +319,7 @@ async function loadNotes(item: Shown) {
     }
     if (writable.value[remote.owner] === undefined) {
       const { data: teams } = await api.GET('/api/notes/teams/', { params: { query: { archer: remote.owner } } })
-      if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 }
+      if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 || remote.owner === Number(userId.value) }
     }
   } catch {
     /* no drawings and no Notes button; the photo is still there */

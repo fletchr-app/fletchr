@@ -11,5 +11,5 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-10-28-photo-notes-drawing.md](2026-10-28-photo-notes-drawing.md): notes and drawing on photos (#81). **implemented, not yet checked on a phone**
 - [2026-10-28-google-sign-in.md](2026-10-28-google-sign-in.md): sign in with Google, admin account transfer (#78, avatar part #79). **implemented, needs Google Cloud setup and a phone test**
 - [2026-10-29-backdated-sessions.md](2026-10-29-backdated-sessions.md): a training in the past, start time and duration when starting a session (#89). **implemented** (editing the start of an existing session is left out)
-- [2026-10-29-media-to-session.md](2026-10-29-media-to-session.md): move photos and videos into a session, list those without one (#91). **planned**
+- [2026-10-29-media-to-session.md](2026-10-29-media-to-session.md): move photos and videos into a session, list those without one (#91). **implemented**
 - [2026-10-29-offline-sync.md](2026-10-29-offline-sync.md): work offline, sync both ways (#84), local-store foundation first for #93. **planned** (Phase 0, the 410 fix, is implemented)

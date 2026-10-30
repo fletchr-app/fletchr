@@ -6,6 +6,7 @@ import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
+import { useAuth } from '@/composables/useAuth'
 import { useNotes } from '@/composables/useNotes'
 import type { Shape } from '@/lib/drawing'
 
@@ -29,10 +30,13 @@ const emit = defineEmits<{ added: [] }>()
 
 // The note is saved on the device and goes up as soon as it can, after the photo or session it is about.
 const { add: queueNote } = useNotes()
+// A note about yourself has no team and nobody else reads it.
+const { userId } = useAuth()
+const own = computed(() => props.archerId === Number(userId.value))
 const body = ref('')
 const visibility = ref<Visibility>('coach_only')
 const endId = ref('')
-const teamId = ref(String(props.teams[0]!.id))
+const teamId = ref(String(props.teams[0]?.id ?? ''))
 const error = ref<string | null>(null)
 
 const label = computed(() => {
@@ -46,9 +50,9 @@ function add() {
   if (!text) return (error.value = t('notes.noteEmpty'))
   queueNote({
     archer: props.archerId,
-    team: Number(teamId.value),
+    team: own.value ? null : Number(teamId.value),
     body: text,
-    visibility: visibility.value,
+    visibility: own.value ? 'private' : visibility.value,
     session: props.sessionId ?? null,
     end: endId.value || null,
     media: props.on?.mediaId ?? null,
@@ -65,14 +69,14 @@ function add() {
 <template>
   <div class="d-flex flex-column gap-2">
     <FormField v-model="body" :label="label" multiline capitalize="sentences" />
-    <ChipGroup v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
+    <ChipGroup v-if="!own" v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
     <ChipGroup
       v-if="ends.length > 0"
       v-model="endId"
       :label="$t('notes.about')"
       :options="[{ value: '', label: $t('notes.wholeSession') }, ...ends.map((e) => ({ value: e.id, label: $t('notes.end', { n: e.index + 1 }) }))]"
     />
-    <ChipGroup v-if="teams.length > 1" v-model="teamId" :label="$t('notes.team')" :options="teams.map((x) => ({ value: String(x.id), label: x.name }))" />
+    <ChipGroup v-if="!own && teams.length > 1" v-model="teamId" :label="$t('notes.team')" :options="teams.map((x) => ({ value: String(x.id), label: x.name }))" />
     <ErrorText :message="error" />
     <AppButton @click="add">{{ $t('notes.add') }}</AppButton>
   </div>
