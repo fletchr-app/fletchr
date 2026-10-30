@@ -2,7 +2,7 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.13.0 (2026-10-30)
 
 - **Notes can be written without a connection:** a note (also one with a drawing on a photo or a frame of a clip) is saved on the phone at once and uploaded when there is a connection, after the photo, clip or session it is about. Until then it shows in the list as "waiting to upload" and can be taken back; a note the server refuses shows in the upload banner. Changing or deleting a note that is already up still needs a connection (#84).
 - **Server: notes about your own training** (#84). Every archer can write a note about their own sessions, ends, photos and videos; it has no team, is always private and nobody else can read it. The app gets screens for it later. New `PUT /api/notes/<uid>/` creates a note by an id the app made, for notes written offline. Needs a migration (the team of a note becomes optional).
