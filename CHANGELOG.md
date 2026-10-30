@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **A clip that has not been uploaded yet can be played** (#83, #84): tapping it in the media screen opens the player on the file on the phone, frame by frame like any clip. Delete and move to a session work too. Notes and drawings on it wait until it is up.
+
 - **Your notes can be read without a connection** (#84): the phone keeps the notes about you (your own and those coaches shared with you) and, for coaches, the notes you wrote. The notes on a session, under a photo in the media screen and "from your coaches" on Home show them when there is no connection (with a line that says so). Changing and deleting a note still needs a connection. Needs a server with 0.14.0.
 
 ## 0.14.0 (2026-10-30)

@@ -147,7 +147,7 @@ Progress: the media pull is the eleventh PR. It is a separate store (`useMediaLi
 Progress, notes: the copy is in `note-library.ts` and `useNoteLibrary`. Queued notes are never in the copy, so a pull cannot overwrite them; a delete on another device removes the note at the next pull. Screens use `library.list(query)`: server first, the copy when the server cannot be reached.
 
 - [x] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
-- [ ] Play before upload, per #83: player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
+- [x] Play before upload, per #83 (first of three PRs: play queued items; notes and drawings on them; keep uploaded clips with a size cap, decided with Tim): player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
 - [x] Notes pull: notes about you and by you changed since, plus tombstones (`useNoteLibrary`, a separate store like the media library, twelfth PR). Read only offline: editing and deleting stay online (decided with Tim).
 - [x] Conflict rule, media and notes: last write wins per item; a queued item is not overwritten by a pull; a tombstone removes the local copy unless it has a pending op, then it is a conflict (like Phase 3).
 
