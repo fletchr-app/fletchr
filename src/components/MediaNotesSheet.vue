@@ -4,6 +4,7 @@ import { IonModal } from '@ionic/vue'
 import ErrorText from '@/components/ErrorText.vue'
 import NewNote from '@/components/NewNote.vue'
 import NoteRow from '@/components/NoteRow.vue'
+import PendingNotes from '@/components/PendingNotes.vue'
 import type { components } from '@/lib/api-types'
 import type { Shape } from '@/lib/drawing'
 
@@ -34,6 +35,7 @@ const emit = defineEmits<{ close: []; removeAttached: []; added: []; changed: []
         <button type="button" class="text" @click="emit('removeAttached')">{{ $t('media.drawingRemove') }}</button>
       </div>
       <NewNote v-if="archerId !== undefined && teams.length > 0" :archer-id="archerId" :ends="[]" :teams="teams" :on="on" @added="emit('added')" />
+      <PendingNotes v-if="archerId !== undefined && on" :archer-id="archerId" :media-id="on.mediaId" />
       <div v-if="notes.length === 0" class="muted">{{ empty }}</div>
       <NoteRow v-for="n in notes" :key="n.id" :note="n" :ends="[]" @changed="emit('changed')" @jump="emit('jump', $event)" @edit-drawing="emit('editDrawing', $event)" />
     </div>
