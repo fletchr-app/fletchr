@@ -3,6 +3,7 @@ import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
 import { useKeyedStore } from '@/composables/useKeyedStore';
+import { useKeptMedia } from '@/composables/useKeptMedia';
 import { useLog } from '@/composables/useLog';
 import { useMedia } from '@/composables/useMedia';
 import { cachedThumbnailSrc, removeCachedThumbnails, saveCachedThumbnail } from '@/lib/media-files';
@@ -14,6 +15,7 @@ import { storeKey } from '@/lib/store-owner';
 const { api, storeOwner, status, userId } = useAuth();
 const log = useLog();
 const media = useMedia();
+const kept = useKeptMedia();
 
 const storageKey = computed(() => (storeOwner.value ? storeKey('library', storeOwner.value) : null));
 const state = shallowRef<LibraryState>(EMPTY_LIBRARY);
@@ -61,6 +63,7 @@ async function pull() {
     const gone = new Set(result.gone);
     const removed = state.value.items.filter((m) => gone.has(m.id)).map((m) => m.id);
     dispatch({ type: 'pulled', changed: result.changed.map(withoutLinks), gone: result.gone, lastPull: result.lastPull });
+    kept.forget(result.gone);
     if (removed.length > 0) {
       thumbnails.value = Object.fromEntries(Object.entries(thumbnails.value).filter(([id]) => !gone.has(id)));
       void removeCachedThumbnails(removed);
