@@ -37,6 +37,15 @@ Updated: 2026-10-29
 - **`PUT /api/notes/<uid>/`** creates a note by the uid the app gave it, or changes it, and is safe to repeat. The rules are those of `POST`; only the author can write, and a note of somebody else is answered 404 and left as it was. A photo, clip or session the server has not seen yet is a 400 on that field (`media`, `session`): the app takes that as "wait" and sends it after the photo or session has gone up. What a note is about (archer, session, end, photo, frame) cannot change after it is written; body, drawing and visibility can.
 - **A note about yourself** (`archer` is you): no team, always private, nobody else reads it. A team or a visibility other than private is a 400. This is what an archer can write, and what a person without an account (#93) will upload when they make one.
 
+## What a phone can read about photos, videos and notes
+
+For the pull of media and notes (#83, #84); the app part comes after the server part.
+
+- **Changes**: `Media.updated_at` is set by every save (upload, note, move into or out of a session) and by hand where the code uses `update()`: a session deleted (its clips stay, out of the session), two sessions merged, an account claimed. `GET /api/media/?updated_after=` and `GET /api/notes/?updated_after=` list what changed. Rows created before this have `created_at`.
+- **Deletes**: `GET /api/gone/?kind=media|note&updated_after=` (`core.Tombstone`, [data-model.md](data-model.md)) tells a phone to drop its copy. It lists only what the signed-in person may have a copy of: their own clips, notes they wrote, and notes about them that were shared. Coaches read other people's data online only, so they get none for a clip of an archer they coach. Only the id and the time are kept.
+- **Notes withdrawn**: a note shared with an archer that becomes coach only or private is a tombstone for the archer, so a copy on their phone goes.
+- **Not covered**: notes deleted by their team being deleted, and a clip that changes owner through the transfer of an account (the old tombstones move with it, the clip's `updated_at` does not). Both are rare.
+
 ## Notes on the phone
 
 - **Queue** (`note-store.ts`, `useNotes`, a file per account, `notes:` key): a note written on the phone is saved on the device with a uid and goes up with `PUT /api/notes/<uid>/` (`note-sync.ts`). Once the server has it, it leaves the queue and the server's list shows it; the screens that show that list read it again when a note went up. Until then it is shown in the list as "waiting to upload" (`PendingNotes`) and can be taken back.

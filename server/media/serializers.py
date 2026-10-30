@@ -24,7 +24,7 @@ class MediaSerializer(serializers.ModelSerializer):
         model = Media
         fields = [
             "id", "owner", "owner_name", "uploaded_by", "uploaded_by_name", "session", "kind", "taken_at", "width", "height", "size",
-            "duration_ms", "capture_fps", "frame_count", "note", "created_at", "file_url", "thumbnail_url", "can_edit",
+            "duration_ms", "capture_fps", "frame_count", "note", "created_at", "updated_at", "file_url", "thumbnail_url", "can_edit",
         ]
 
     def get_owner_name(self, media) -> str:

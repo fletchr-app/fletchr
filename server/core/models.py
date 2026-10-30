@@ -235,3 +235,26 @@ class PasswordReset(models.Model):
 
     def __str__(self):
         return f"reset for {self.user} ({self.created_at:%Y-%m-%d %H:%M})"
+
+
+class Tombstone(models.Model):
+    """A photo, video or note that was deleted, for the phone of `owner`, who may have a copy and drops it.
+
+    Only the id and the time are kept, for everyone who could read the item (see `core.tombstones.forget`).
+    Sessions have their own (`SessionTombstone`), because they can also be merged into another one.
+    """
+
+    class Kind(models.TextChoices):
+        MEDIA = "media"
+        NOTE = "note"
+
+    kind = models.CharField(max_length=10, choices=Kind.choices)
+    uid = models.UUIDField(help_text="The id of a photo or video, the uid of a note")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["kind", "uid", "owner"], name="one_tombstone_per_item_and_owner")]
+
+    def __str__(self):
+        return f"{self.kind} {self.uid} gone for {self.owner_id}"

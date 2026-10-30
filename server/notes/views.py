@@ -1,5 +1,6 @@
 from django.utils.translation import gettext
 import django_filters
+from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
@@ -10,7 +11,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to, note_teams
-from core.models import COACH_ROLES, Role, TeamMember, User
+from core.models import COACH_ROLES, Role, TeamMember, Tombstone, User
+from core.tombstones import forget
 
 from .models import Note
 from .serializers import NoteSerializer, NoteTeamSerializer
@@ -27,7 +29,21 @@ class NotePermission(BasePermission):
         return request.method == "DELETE" and obj.team_id in view.admin_team_ids(request.user)
 
 
+def readers_with_a_copy(note):
+    """Whose phone may keep this note: its author, and the archer if they can read it. Coaches of the team read notes online only."""
+    shared = note.visibility == Note.Visibility.SHARED or note.archer_id == note.author_id
+    return [note.author_id, note.archer_id] if shared else [note.author_id]
+
+
+def forget_withdrawn(note, was_shared):
+    """A note that was shared with the archer and no longer is: their phone drops it, as if it were deleted."""
+    if was_shared and note.visibility != Note.Visibility.SHARED:
+        forget(Tombstone.Kind.NOTE, note.uid, [note.archer_id])
+
+
 class NoteFilter(django_filters.FilterSet):
+    updated_after = django_filters.IsoDateTimeFilter(field_name="updated_at", lookup_expr="gt", help_text="Changed after this time")
+
     class Meta:
         model = Note
         fields = ["archer", "session", "end", "media", "team", "author", "visibility"]
@@ -70,6 +86,16 @@ class NoteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def perform_update(self, serializer):
+        was_shared = serializer.instance.visibility == Note.Visibility.SHARED
+        note = serializer.save()
+        forget_withdrawn(note, was_shared)
+
+    def perform_destroy(self, instance):
+        with transaction.atomic():
+            forget(Tombstone.Kind.NOTE, instance.uid, readers_with_a_copy(instance))
+            instance.delete()
+
 
 @extend_schema(tags=["notes"], request=NoteSerializer, responses={200: NoteSerializer, 201: NoteSerializer})
 class NotePutView(APIView):
@@ -93,7 +119,9 @@ class NotePutView(APIView):
         }
         serializer = NoteSerializer(note, data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
+        was_shared = note is not None and note.visibility == Note.Visibility.SHARED
         saved = serializer.save(author=request.user, uid=uid) if note is None else serializer.save()
+        forget_withdrawn(saved, was_shared)
         return Response(NoteSerializer(saved, context=context).data, status=200 if note else 201)
 
 

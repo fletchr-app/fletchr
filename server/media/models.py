@@ -50,6 +50,8 @@ class Media(models.Model):
     frame_count = models.PositiveIntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Changes of the note or the session (a move). Code that changes a clip with `update()` has to set it too: the phones pull by it.
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-taken_at", "-created_at"]
