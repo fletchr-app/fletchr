@@ -231,6 +231,9 @@ export default {
   count: {
     ends: '{n} Passe | {n} Passen',
     arrows: '{n} Pfeil | {n} Pfeile',
+    sessions: '{n} Training | {n} Trainings',
+    notes: '{n} Notiz | {n} Notizen',
+    media: '{n} Foto oder Video | {n} Fotos oder Videos',
     points: '{n} Punkt | {n} Punkte',
   },
   sessionType: {
@@ -280,6 +283,9 @@ export default {
     reopen: 'Wieder öffnen',
     reopenSession: 'Training wieder öffnen',
   },
+  schedule: {
+    cancelled: 'Abgesagt',
+  },
   event: {
     kind: { training: 'Training', competition: 'Wettkampf', camp: 'Lager' },
     suggest: 'Training',
@@ -287,6 +293,16 @@ export default {
     linked: 'Training: {name}, {date}',
     link: 'Mit einem Training verknüpfen',
     change: 'Ändern',
+    title: 'Training',
+    newMediaFrom: 'Neue Fotos und Videos sind von',
+    changeFailed: 'Das Training ließ sich nicht ändern',
+    counts: '{notes} · {media}',
+    archers: 'Schützen',
+    nobody: 'Mit diesem Training ist noch nichts verknüpft.',
+    notes: 'Notizen',
+    noNotes: 'Keine Notizen.',
+    media: 'Fotos und Videos',
+    noMedia: 'Keine Fotos oder Videos.',
     unlink: 'Keins',
   },
   privacy: {
@@ -617,6 +633,8 @@ export default {
     defaultTitle: 'Schütze',
   },
   notes: {
+    aboutEarlier: 'Über eine frühere Zeit',
+    aboutTime: 'Über',
     coachNotes: 'Trainernotizen',
     myNotes: 'Meine Notizen',
     title: 'Notizen',

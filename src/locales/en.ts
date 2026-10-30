@@ -227,6 +227,9 @@ export default {
   count: {
     ends: '{n} end | {n} ends',
     arrows: '{n} arrow | {n} arrows',
+    sessions: '{n} session | {n} sessions',
+    notes: '{n} note | {n} notes',
+    media: '{n} photo or video | {n} photos or videos',
     points: '{n} point | {n} points',
   },
   sessionType: {
@@ -276,6 +279,9 @@ export default {
     reopen: 'Reopen',
     reopenSession: 'Reopen session',
   },
+  schedule: {
+    cancelled: 'Cancelled',
+  },
   event: {
     kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },
     suggest: 'Training',
@@ -283,6 +289,16 @@ export default {
     linked: 'Training: {name}, {date}',
     link: 'Link to a training',
     change: 'Change',
+    title: 'Training',
+    newMediaFrom: 'New photos and videos are from',
+    changeFailed: 'Could not change the training',
+    counts: '{notes} · {media}',
+    archers: 'Archers',
+    nobody: 'Nothing is linked to this training yet.',
+    notes: 'Notes',
+    noNotes: 'No notes.',
+    media: 'Photos and videos',
+    noMedia: 'No photos or videos.',
     unlink: 'None',
   },
   privacy: {
@@ -613,6 +629,8 @@ export default {
     defaultTitle: 'Archer',
   },
   notes: {
+    aboutEarlier: 'About an earlier time',
+    aboutTime: 'About',
     coachNotes: 'Coach notes',
     myNotes: 'My notes',
     title: 'Notes',

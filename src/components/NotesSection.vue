@@ -7,6 +7,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { noteLink } from '@/lib/media-notes'
+import type { EventLink } from '@/lib/schedule'
 import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -15,7 +16,7 @@ const always = () => true
 
 // Coach notes about an archer, or about one of their sessions. Coaches see all notes of their team and can
 // write new ones (coach only unless they choose otherwise); an archer sees the notes shared with them.
-const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[] }>(), { ends: () => [] })
+const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[]; event?: EventLink | null }>(), { ends: () => [] })
 
 const { api, userId } = useAuth()
 // Your own training: you write private notes for yourself, no team involved.
@@ -52,6 +53,7 @@ watch(uploaded, notes.reload)
       :archer-id="archerId"
       :session-id="sessionId"
       :ends="ends"
+      :event="event"
       :teams="teams.data.value ?? []"
       @added="notes.reload"
     />

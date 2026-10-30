@@ -3,6 +3,7 @@
 // `PUT`, after the photo or session it is about. Once the server has it, it leaves this queue and the server's list
 // shows it. Notes the server already has are still changed and deleted online.
 import type { Drawing } from './drawing.ts';
+import type { EventLink } from './schedule.ts';
 
 export type NoteVisibility = 'private' | 'coach_only' | 'shared';
 
@@ -19,6 +20,10 @@ export type QueuedNote = {
   frame: number | null;
   time_ms: number | null;
   drawing: Drawing | null;
+  /** The team training the note is about; the team follows it. */
+  event?: EventLink | null;
+  /** What time the note is about, when that is not when it was written. */
+  at?: string | null;
   created_at: string;
   /** Set when the server refused it. */
   error?: string;

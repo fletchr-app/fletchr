@@ -54,10 +54,10 @@ const mediaLink = computed(() => ({
       <ErrorText :message="error" />
       <SessionDetailsText :details="session.details" />
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
-      <UnattachedHint :owner="data.owner" :session="data" :name="session.owner_name" />
+      <UnattachedHint :owner="data.owner" :session="data" :event-id="data.event" :name="session.owner_name" />
       <SessionPlots :session="session" />
-      <EndRows v-if="session.ends.length > 0" :ends="session.ends" />
-      <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" />
+      <EndRows v-if="session.ends.length > 0" :ends="session.ends" :event="session.event" />
+      <NotesSection :archer-id="data.owner" :session-id="data.id" :ends="session.ends" :event="session.event" />
       <div v-for="v in session.volume" :key="v.id">{{ $t('volume.entry', { n: v.arrow_count, d: formatDistance(v.distance_m) }, v.arrow_count) }}</div>
     </div>
   </AppPage>

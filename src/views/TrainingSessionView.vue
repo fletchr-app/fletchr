@@ -87,7 +87,7 @@ function newEnd() {
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
       <SessionEvent :session="session" />
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
-      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
+      <UnattachedHint :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" />
       <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
@@ -116,7 +116,7 @@ function newEnd() {
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
         <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
-      <UnattachedHint compact :owner="archer" :session="session" :name="session.owner_name" class="text-center" />
+      <UnattachedHint compact :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" class="text-center" />
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
@@ -138,7 +138,7 @@ function newEnd() {
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
         <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
-      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
+      <UnattachedHint :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" />
       <VolumeLog :session="session" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

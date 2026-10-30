@@ -44,3 +44,12 @@ test('arrows of this week count the sessions since Monday, scored or not', () =>
   assert.equal(arrowsSince(rows, weekStart(new Date(2026, 9, 21))), 50);
   assert.equal(arrowsSince([], weekStart(new Date())), 0);
 });
+
+test('a training with notes or photos of the archer and no session of theirs is a row between the sessions', () => {
+  const event = { event: { id: 'ev1', name: 'Squad', kind: 'training', start: '2026-10-18T16:00:00Z', location: 'Hall' }, notes: 2, media: 1 } as never;
+  const rows = sessionRows([local('a', '2026-10-18T09:00:00Z'), local('b', '2026-10-17T09:00:00Z')], [], new Set(), [event], 7);
+  assert.deepEqual(rows.map((r) => r.id), ['event:ev1', 'a', 'b']);
+  assert.equal(rows[0]!.to, '/events/ev1?archer=7');
+  assert.deepEqual(rows[0]!.event, { name: 'Squad', kind: 'training', notes: 2, media: 1 });
+  assert.equal(sessionRows([], [], new Set(), [event])[0]!.to, '/events/ev1');
+});

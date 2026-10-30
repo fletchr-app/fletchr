@@ -57,6 +57,7 @@ async function flush() {
       },
       fail: (id, message) => set(items.value.map((i) => (i.id === id ? { ...i, error: message } : i))),
       dropSession: (id) => set(items.value.map((i) => (i.id === id ? { ...i, session: null } : i))),
+      dropEvent: (id) => set(items.value.map((i) => (i.id === id ? { ...i, event: undefined } : i))),
       blocked: (item) => (item.session !== null && log.sessionWaiting(item.session)) || waitsForWifi(item),
       send: async (item) => {
         if (item.uploaded) return sendMedia(api, item, null);

@@ -20,7 +20,7 @@ const session = computed(() => sessions.value.find((s) => s.id === sessionId))
   <AppPage :title="$t('notes.title')">
     <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <div v-else class="screen">
-      <NotesSection :archer-id="session.owner ?? Number(userId)" :session-id="session.id" :ends="session.ends" />
+      <NotesSection :archer-id="session.owner ?? Number(userId)" :session-id="session.id" :ends="session.ends" :event="session.event" />
     </div>
   </AppPage>
 </template>

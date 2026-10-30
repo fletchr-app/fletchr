@@ -19,6 +19,8 @@ const props = defineProps<{
   owner: number
   session: { id: string; started_at: string; ended_at?: string | null }
   compact?: boolean
+  /** The training the session is linked to: its photos and videos show in the session already. */
+  eventId?: string | null
   /** Query to open the archer's page with: the name shown there, for an archer other than yourself. */
   name?: string
 }>()
@@ -32,11 +34,11 @@ const busy = ref(false)
 const failed = ref(false)
 
 const queued = computed(() =>
-  media.items.value.filter((i) => i.session === null && (i.owner ?? Number(userId.value)) === props.owner && isNear(i.taken_at, props.session)),
+  media.items.value.filter((i) => i.session === null && (i.owner ?? Number(userId.value)) === props.owner && isNear(i.taken_at, props.session) && (!props.eventId || i.event?.id !== props.eventId)),
 )
 const remote = useRemote(async () => {
   const { from, to } = nearWindow(props.session)
-  const query = { owner: props.owner, without_session: true, taken_after: new Date(from).toISOString(), taken_before: new Date(to).toISOString() }
+  const query = { owner: props.owner, without_session: true, ...(props.eventId ? { not_in_event: props.eventId } : {}), taken_after: new Date(from).toISOString(), taken_before: new Date(to).toISOString() }
   return (await api.GET('/api/media/', { params: { query } })).data ?? null
 })
 watch(media.uploaded, remote.reload)

@@ -21,6 +21,9 @@ export async function sendNote(api: ApiClient, note: QueuedNote): Promise<SendRe
     frame: note.frame,
     time_ms: note.time_ms,
     drawing: note.drawing,
+    ...(note.at ? { at: note.at } : {}),
+    // Left out when not chosen; the occurrence of a slot that is no row yet is made by the server.
+    ...(note.event ? { event: note.event.id, ...(note.event.slot && note.event.date ? { event_slot: note.event.slot, event_date: note.event.date } : {}) } : {}),
   };
   try {
     const { response, data, error } = await api.PUT('/api/notes/{uid}/', { params: { path: { uid: note.uid } }, body });

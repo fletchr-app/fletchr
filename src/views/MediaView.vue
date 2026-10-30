@@ -14,7 +14,7 @@ import {
   onIonViewWillEnter,
 } from '@ionic/vue'
 import { checkmarkCircle, closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -23,8 +23,10 @@ import AppPage from '@/components/AppPage.vue'
 import DrawnPicture from '@/components/DrawnPicture.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import EventChips from '@/components/EventChips.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
+import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
@@ -34,6 +36,7 @@ import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
 import { fitted, type Shape } from '@/lib/drawing'
 import { prepareImage } from '@/lib/image'
+import { type EventLink, linkOf, preselected } from '@/lib/schedule'
 import { drawnShapes } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
@@ -197,14 +200,48 @@ async function add(source: PickSource) {
   }
 }
 
-function where() {
-  return { owner: owner.value === me.value ? null : owner.value, session: sessionId }
+// The training a new photo or clip is from: the one of your teams that takes place when it was taken, when exactly one does;
+// change it with the chips. A coach adding for an archer is offered the teams they may write notes about that archer in.
+const { suggest, load: loadAgenda } = useAgenda()
+const archerTeams = ref<number[] | null>(null)
+onMounted(() => {
+  void loadAgenda()
+  if (ownerParam && ownerParam !== me.value) void api.GET('/api/notes/teams/', { params: { query: { archer: ownerParam } } }).then(({ data: teams }) => (archerTeams.value = teams?.map((x) => x.id) ?? null)).catch(() => {})
+})
+const teamsOfOwner = () => (owner.value === me.value ? undefined : (archerTeams.value ?? []))
+// From the agenda: a training chosen in advance (the id, and slot and date when it is no row yet).
+const fromRoute: EventLink | undefined = route.query.event ? { id: String(route.query.event), slot: (route.query.slot as string) ?? null, date: (route.query.date as string) ?? null } : undefined
+const eventPicked = ref<EventLink | null | undefined>(fromRoute)
+const eventTouched = ref(!!fromRoute)
+const eventSuggestions = computed(() => (sessionId ? [] : suggest(new Date(), null, { teams: teamsOfOwner() })))
+const eventChoice = computed<EventLink | null | undefined>({
+  get: () => {
+    if (eventTouched.value) return eventPicked.value
+    const one = preselected(eventSuggestions.value)
+    return one ? linkOf(one) : undefined
+  },
+  set: (link) => {
+    eventTouched.value = true
+    eventPicked.value = link
+  },
+})
+function eventAt(takenAt: string): EventLink | null | undefined {
+  if (sessionId) return undefined // a session knows its training
+  if (eventTouched.value) return eventPicked.value
+  const one = preselected(suggest(takenAt, null, { teams: teamsOfOwner() }))
+  return one ? linkOf(one) : undefined
+}
+
+function where(takenAt: string) {
+  const event = eventAt(takenAt)
+  return { owner: owner.value === me.value ? null : owner.value, session: sessionId, ...(event ? { event } : {}) }
 }
 
 async function addPhoto(key: string, picked: Extract<Picked, { kind: 'photo' }>) {
   preparing.value = [...preparing.value, { key, kind: 'photo', src: URL.createObjectURL(picked.blob) }]
   const { file, thumbnail, width, height } = await prepareImage(picked.blob)
-  const id = await media.enqueue({ kind: 'photo', ...where(), taken_at: picked.takenAt ?? new Date().toISOString(), width, height }, { file, thumbnail })
+  const takenAt = picked.takenAt ?? new Date().toISOString()
+  const id = await media.enqueue({ kind: 'photo', ...where(takenAt), taken_at: takenAt, width, height }, { file, thumbnail })
   previews.value = { ...previews.value, [id]: URL.createObjectURL(thumbnail) } // so the tile does not blink when it changes
   stopPreparing(key)
 }
@@ -238,7 +275,7 @@ async function addVideo(key: string, picked: Extract<Picked, { kind: 'video' }>)
     media.enqueueStored({
       id,
       kind: 'video',
-      ...where(),
+      ...where(picked.takenAt ?? new Date().toISOString()),
       taken_at: picked.takenAt ?? new Date().toISOString(),
       width: plan.width,
       height: plan.height,
@@ -452,6 +489,7 @@ function removeSelected() {
         <AppButton v-if="sessionId" secondary :busy="selectedItems.length === 0" @click="removeSelected">{{ $t('media.removeFromSession') }}</AppButton>
       </div>
       <ChipGroup v-if="!sessionId && !picking" v-model="filter" :options="filters" />
+      <EventChips v-if="!sessionId && (eventSuggestions.length > 0 || eventChoice)" v-model="eventChoice" :suggestions="eventSuggestions" :label="$t('event.newMediaFrom')" />
       <div v-if="moveMessage" :class="moveMessage.failed ? 'text-danger' : 'muted'">{{ moveMessage.text }}</div>
       <div v-if="!videoAllowed" class="muted">{{ $t('media.needsConsent') }}</div>
       <div v-else-if="canRecordVideo()" class="faint">{{ $t('media.slowMotionHint') }}</div>
