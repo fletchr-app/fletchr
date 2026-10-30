@@ -10,6 +10,8 @@ class Note(models.Model):
     Written in a team. Private notes are for the author alone (not even team admins read them),
     coach-only ones for the coaches of that team, shared ones also for the archer. The note stays
     if the session or end it is about is deleted; deleting the photo or clip deletes its notes and drawings.
+
+    A note an archer writes about their own training has no team and is always private: author and archer are the same person.
     """
 
     class Visibility(models.TextChoices):
@@ -19,7 +21,7 @@ class Note(models.Model):
 
     # Made by the server or by the app; an id that exists before the server has seen the note (offline sync, #84).
     uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    team = models.ForeignKey("core.Team", on_delete=models.CASCADE, related_name="notes")
+    team = models.ForeignKey("core.Team", null=True, blank=True, on_delete=models.CASCADE, related_name="notes")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="written_notes")
     archer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notes_about")
     session = models.ForeignKey("training.TrainingSession", null=True, blank=True, on_delete=models.SET_NULL, related_name="coach_notes")

@@ -4,6 +4,7 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Server: notes about your own training** (#84). Every archer can write a note about their own sessions, ends, photos and videos; it has no team, is always private and nobody else can read it. The app gets screens for it later. New `PUT /api/notes/<uid>/` creates a note by an id the app made, for notes written offline. Needs a migration (the team of a note becomes optional).
 - **A bow that was used in a session stays in the list when you delete it:** the server refuses the delete, so the bow comes back at once and the upload banner says why ("deactivate it instead"). Before, it vanished from the list until you tapped "Give up" (#84).
 
 ## 0.12.0 (2026-10-29)

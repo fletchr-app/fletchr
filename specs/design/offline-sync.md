@@ -30,6 +30,11 @@ Updated: 2026-10-29
 - **Sessions**: equipment is chosen by key (the uid; the integer id as text in a copy made before there were uids), and a session names it by the uids of its revisions when it has them, else by the integer ids as before (`Gear`). A session that names a revision still waiting to upload waits, and with it the sessions behind it (the queue keeps its order); the sessions go up as soon as the equipment has. A copy of the equipment that an older version kept in the log is used until the first item is made or read.
 - **Not done**: a server that does not have #98 ignores `bow_revision_uid` and would store the session without equipment. Evaluations are not offline.
 
+## Notes made offline
+
+- **`PUT /api/notes/<uid>/`** creates a note by the uid the app gave it, or changes it, and is safe to repeat. The rules are those of `POST`; only the author can write, and a note of somebody else is answered 404 and left as it was. A photo, clip or session the server has not seen yet is a 400 on that field (`media`, `session`): the app takes that as "wait" and sends it after the photo or session has gone up. What a note is about (archer, session, end, photo, frame) cannot change after it is written; body, drawing and visibility can.
+- **A note about yourself** (`archer` is you): no team, always private, nobody else reads it. A team or a visibility other than private is a 400. This is what an archer can write, and what a person without an account (#93) will upload when they make one.
+
 ## Where the data is kept
 
 - **Owner and keys**: a store belongs to an owner (`src/lib/store-owner.ts`): an account on a server today, a person without an account later (#93). The key is `<store>:<server>:<userId>` for an account, which is what the log (`log:`) and the media queue (`media:`) always used, and `<store>:local:<id>` for a local owner. Another account on the same phone never sees the data, and it stays on the device when you sign out.

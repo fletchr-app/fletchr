@@ -1498,6 +1498,51 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/notes/{uid}/:
+    put:
+      operationId: notes_update
+      description: |-
+        Write a note by the uid the app gave it, or change it. Safe to repeat.
+
+        Only the author can write it. A note of somebody else is answered like one that does not exist. The same
+        rules as for `POST`: a note about another person needs a team you coach them in, a note about yourself
+        has no team and is private. A photo, clip or session the server has not seen yet is a 400 on that field.
+      parameters:
+      - in: path
+        name: uid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - notes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
   /api/notes/teams/:
     get:
       operationId: notes_teams_list
@@ -4573,7 +4618,9 @@ components:
           readOnly: true
         team:
           type: integer
-          description: Only needed if you coach this archer in several teams
+          nullable: true
+          description: Only needed if you coach this archer in several teams. Empty
+            for a note about yourself
         author:
           type: integer
           readOnly: true
@@ -4677,7 +4724,9 @@ components:
       properties:
         team:
           type: integer
-          description: Only needed if you coach this archer in several teams
+          nullable: true
+          description: Only needed if you coach this archer in several teams. Empty
+            for a note about yourself
         archer:
           type: integer
         session:
@@ -4946,7 +4995,9 @@ components:
       properties:
         team:
           type: integer
-          description: Only needed if you coach this archer in several teams
+          nullable: true
+          description: Only needed if you coach this archer in several teams. Empty
+            for a note about yourself
         archer:
           type: integer
         session:

@@ -588,6 +588,29 @@ export interface paths {
         patch: operations["notes_partial_update"];
         trace?: never;
     };
+    "/api/notes/{uid}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Write a note by the uid the app gave it, or change it. Safe to repeat.
+         *
+         *     Only the author can write it. A note of somebody else is answered like one that does not exist. The same
+         *     rules as for `POST`: a note about another person needs a team you coach them in, a note about yourself
+         *     has no team and is private. A photo, clip or session the server has not seen yet is a 400 on that field.
+         */
+        put: operations["notes_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notes/teams/": {
         parameters: {
             query?: never;
@@ -1982,8 +2005,8 @@ export interface components {
             readonly id: number;
             /** Format: uuid */
             readonly uid: string;
-            /** @description Only needed if you coach this archer in several teams */
-            team?: number;
+            /** @description Only needed if you coach this archer in several teams. Empty for a note about yourself */
+            team?: number | null;
             readonly author: number | null;
             readonly author_name: string;
             archer: number;
@@ -2024,8 +2047,8 @@ export interface components {
             file_url: string;
         };
         NoteRequest: {
-            /** @description Only needed if you coach this archer in several teams */
-            team?: number;
+            /** @description Only needed if you coach this archer in several teams. Empty for a note about yourself */
+            team?: number | null;
             archer: number;
             /** Format: uuid */
             session?: string | null;
@@ -2161,8 +2184,8 @@ export interface components {
             also_shoots?: boolean;
         };
         PatchedNoteRequest: {
-            /** @description Only needed if you coach this archer in several teams */
-            team?: number;
+            /** @description Only needed if you coach this archer in several teams. Empty for a note about yourself */
+            team?: number | null;
             archer?: number;
             /** Format: uuid */
             session?: string | null;
@@ -4052,6 +4075,41 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"];
+                };
+            };
+        };
+    };
+    notes_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["NoteRequest"];
+                "multipart/form-data": components["schemas"]["NoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Note"];
+                };
+            };
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
