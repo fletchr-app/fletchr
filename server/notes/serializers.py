@@ -38,7 +38,10 @@ class NotePictureSerializer(serializers.Serializer):
 
 class NoteSerializer(serializers.ModelSerializer):
     team = serializers.PrimaryKeyRelatedField(
-        queryset=Team.objects.all(), required=False, help_text="Only needed if you coach this archer in several teams"
+        queryset=Team.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Only needed if you coach this archer in several teams. Empty for a note about yourself",
     )
     archer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     session = SessionRefField(required=False, allow_null=True)
@@ -110,23 +113,34 @@ class NoteSerializer(serializers.ModelSerializer):
             for field in IMMUTABLE:
                 if field in attrs and attrs[field] != getattr(self.instance, field):
                     raise serializers.ValidationError({field: gettext("This cannot be changed after the note is written")})
+            if self.instance.team_id is None and attrs.get("visibility", Note.Visibility.PRIVATE) != Note.Visibility.PRIVATE:
+                raise serializers.ValidationError({"visibility": gettext("A note about yourself is private")})
             return attrs
 
         user = self.context["request"].user
-        if not TeamMember.objects.filter(user=user, role__in=COACH_ROLES).exists():
-            raise PermissionDenied(gettext("Only coaches can write notes"))
         archer, session, end = attrs["archer"], attrs.get("session"), attrs.get("end")
-        allowed = list(note_teams(user, archer))
-        team = attrs.get("team")
-        if team is not None:
-            if team not in allowed:
-                raise serializers.ValidationError({"team": gettext("You cannot write notes about this archer in that team")})
-        elif len(allowed) == 1:
-            team = allowed[0]
-        elif not allowed:
-            raise serializers.ValidationError({"archer": gettext("You cannot write notes about this person")})
+        if archer.id == user.id:
+            # A note about your own training: no team, and private. Nobody else reads it.
+            if attrs.get("team") is not None:
+                raise serializers.ValidationError({"team": gettext("A note about yourself has no team")})
+            if attrs.get("visibility", Note.Visibility.PRIVATE) != Note.Visibility.PRIVATE:
+                raise serializers.ValidationError({"visibility": gettext("A note about yourself is private")})
+            team = None
+            attrs["visibility"] = Note.Visibility.PRIVATE
         else:
-            raise serializers.ValidationError({"team": gettext("You coach this archer in several teams: say which one")})
+            if not TeamMember.objects.filter(user=user, role__in=COACH_ROLES).exists():
+                raise PermissionDenied(gettext("Only coaches can write notes"))
+            allowed = list(note_teams(user, archer))
+            team = attrs.get("team")
+            if team is not None:
+                if team not in allowed:
+                    raise serializers.ValidationError({"team": gettext("You cannot write notes about this archer in that team")})
+            elif len(allowed) == 1:
+                team = allowed[0]
+            elif not allowed:
+                raise serializers.ValidationError({"archer": gettext("You cannot write notes about this person")})
+            else:
+                raise serializers.ValidationError({"team": gettext("You coach this archer in several teams: say which one")})
         if session is not None and session.owner_id != archer.id:
             raise serializers.ValidationError({"session": gettext("This is not a session of that archer")})
         if end is not None and (session is None or end.session_id != session.id):

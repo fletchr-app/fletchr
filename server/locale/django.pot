@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 22:07+0100\n"
+"POT-Creation-Date: 2026-10-30 08:45+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -399,11 +399,11 @@ msgstr ""
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:217 notes/serializers.py:150
+#: evaluations/serializers.py:217 notes/serializers.py:164
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:220 notes/serializers.py:137
+#: evaluations/serializers.py:220 notes/serializers.py:151
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
@@ -411,7 +411,7 @@ msgstr ""
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:224 notes/serializers.py:144
+#: evaluations/serializers.py:224 notes/serializers.py:158
 msgid "The clip has no such frame"
 msgstr ""
 
@@ -478,7 +478,7 @@ msgstr ""
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:77 notes/views.py:83 training/views.py:153
+#: media/views.py:77 notes/views.py:110 training/views.py:153
 msgid "Give the id of the archer"
 msgstr ""
 
@@ -498,51 +498,59 @@ msgstr ""
 msgid "A drawing can have %(n)s shapes at most"
 msgstr ""
 
-#: notes/serializers.py:95
+#: notes/serializers.py:98
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:108
+#: notes/serializers.py:111
 msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr ""
 
-#: notes/serializers.py:112
+#: notes/serializers.py:115
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:117
+#: notes/serializers.py:117 notes/serializers.py:127
+msgid "A note about yourself is private"
+msgstr ""
+
+#: notes/serializers.py:125
+msgid "A note about yourself has no team"
+msgstr ""
+
+#: notes/serializers.py:132
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:123
+#: notes/serializers.py:137
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:127
+#: notes/serializers.py:141
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:129
+#: notes/serializers.py:143
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:131
+#: notes/serializers.py:145
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:133
+#: notes/serializers.py:147
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:140
+#: notes/serializers.py:154
 msgid "A photo has no frames"
 msgstr ""
 
-#: notes/serializers.py:142
+#: notes/serializers.py:156
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:148
+#: notes/serializers.py:162
 msgid "This clip is from another session"
 msgstr ""
 

@@ -47,8 +47,9 @@ def test_coaches_and_admins_can_write(api, club, who):
     assert write(api, club, who).status_code == 201
 
 
-def test_archers_cannot_write(api, club):
-    assert write(api, club, "archer1", about="archer1").status_code == 403
+def test_archers_cannot_write_about_other_people(api, club):
+    # A note about yourself is allowed: private, without a team (test_own_notes.py).
+    assert write(api, club, "archer1", about="archer2").status_code == 403
     assert write(api, club, "archer2", about="archer1").status_code == 403
     assert not Note.objects.exists()
 

@@ -29,7 +29,7 @@ def _equipment(owner, model, serializer, revision_serializer):
 def _note(note, **extra):
     return {
         "id": note.pk,
-        "team": note.team.name,
+        "team": note.team.name if note.team else None,  # none for a note about yourself
         "session": note.session_id,
         "end": note.end_id,
         "media": str(note.media_id) if note.media_id else None,
