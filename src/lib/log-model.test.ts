@@ -254,6 +254,63 @@ test('pulled sessions are stored without an upload, and never over a local one o
   assert.equal(reduce(s, { type: 'pulled', sessions: [coach] }).sessions.length, 2, 'no duplicate');
 });
 
+// --- pulling a session that is already on the device -------------------------------------------------
+
+const uploaded = (...actions: LogAction[]): LogState => {
+  // Everything started and sent: the device and the server agree.
+  let s = run(...actions);
+  for (const o of s.outbox) s = reduce(s, { type: 'opDone', key: o.key, rev: o.rev });
+  return s;
+};
+const server = (extra: Partial<LogSession> = {}): LogSession => ({ ...session('s1'), keep: true, ...extra });
+
+test('a pulled session brings in ends and volume from another phone', () => {
+  const s = reduce(EMPTY_LOG, { type: 'pulled', sessions: [server({ ends: [end('e1', 0)], volume: [{ id: 'v1', distance_m: '30', arrow_count: 12 }] })] });
+  assert.deepEqual(s.sessions[0].ends.map((e) => e.id), ['e1']);
+  assert.equal(s.sessions[0].volume.length, 1);
+  assert.deepEqual(s.outbox, []);
+});
+
+test('a pull replaces what is uploaded, adds new ends in order and drops ends deleted elsewhere', () => {
+  const before = uploaded({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }, { type: 'saveEnd', sessionId: 's1', end: end('e2', 1) });
+  const changed = end('e1', 0, [shot('a', 5)]);
+  const s = reduce(before, { type: 'pulled', sessions: [server({ location: 'Field', ended_at: '2026-10-18T11:00:00Z', ends: [end('e3', 2), changed] })] });
+  assert.deepEqual(s.sessions[0].ends.map((e) => e.id), ['e1', 'e3']); // e2 was deleted elsewhere
+  assert.equal(s.sessions[0].ends[0].shots[0].value, 5);
+  assert.equal(s.sessions[0].location, 'Field');
+  assert.equal(s.sessions[0].ended_at, '2026-10-18T11:00:00Z');
+  assert.deepEqual(s.outbox, []);
+});
+
+test('a pull does not touch what waits to be uploaded', () => {
+  const before = run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0, [shot('a', 10)]) });
+  const s = reduce(before, { type: 'pulled', sessions: [server({ location: 'Field', ends: [end('e1', 0, [shot('a', 1)]), end('e2', 1)] })] });
+  assert.equal(s.sessions[0].ends.find((e) => e.id === 'e1')!.shots[0].value, 10, 'the queued edit wins');
+  assert.equal(s.sessions[0].location, '', 'the queued session change wins');
+  assert.deepEqual(s.sessions[0].ends.map((e) => e.id), ['e1', 'e2']);
+  assert.deepEqual(keys(s), ['session', 'end']);
+});
+
+test('a local end that waits for its upload stays when the server does not have it yet', () => {
+  const before = uploaded({ type: 'startSession', session: session() });
+  const s = reduce(reduce(before, { type: 'saveEnd', sessionId: 's1', end: end('new', 0) }), { type: 'pulled', sessions: [server()] });
+  assert.deepEqual(s.sessions[0].ends.map((e) => e.id), ['new']);
+});
+
+test('an end whose delete is queued does not come back from a pull', () => {
+  const before = uploaded({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) });
+  const deleted = reduce(before, { type: 'deleteEnd', sessionId: 's1', endId: 'e1' });
+  const s = reduce(deleted, { type: 'pulled', sessions: [server({ ends: [end('e1', 0)] })] });
+  assert.deepEqual(s.sessions[0].ends, []);
+});
+
+test('a pull leaves a session marked gone alone', () => {
+  const before = reduce(run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }), { type: 'sessionGone', id: 's1' });
+  const s = reduce(before, { type: 'pulled', sessions: [server()] });
+  assert.equal(s.sessions[0].gone, true);
+  assert.equal(s.sessions[0].ends.length, 1);
+});
+
 test('replacing an id renames the session and rewrites the queue, keeping the session ahead of its ends', () => {
   const s = run(
     { type: 'startSession', session: session('old') },
