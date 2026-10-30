@@ -30,6 +30,7 @@ import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -134,11 +135,22 @@ onBeforeUnmount(() => {
   preparing.value.forEach((p) => p.src.startsWith('blob:') && URL.revokeObjectURL(p.src))
 })
 
+// Without a connection the screen shows what the phone has kept of your own photos and videos (their thumbnails, also in place of the photo).
+const library = useMediaLibrary()
+const savedList = computed<Remote[]>(() =>
+  data.value || (owner.value !== me.value && !sessionId)
+    ? []
+    : library
+        .known({ session: sessionId, withoutSession: unattachedOnly.value })
+        .map((m) => ({ ...m, thumbnail_url: library.thumbnails.value[m.id] ?? '', file_url: library.thumbnails.value[m.id] ?? '' })),
+)
+const showingSaved = computed(() => !data.value && !loading.value && savedList.value.length > 0)
+
 // Queued first, then what is being prepared (where it will be once it is queued), then what the server has.
 const shown = computed<Shown[]>(() => [
   ...queued.value.map((q) => ({ key: q.id, src: previews.value[q.id] ?? '', kind: q.kind, queued: q })),
   ...preparing.value.map((p) => ({ key: p.key, src: p.src, kind: p.kind, preparing: p })),
-  ...(data.value ?? []).filter((r) => !queued.value.some((q) => q.id === r.id)).map((r) => ({ key: r.id, src: r.thumbnail_url, kind: r.kind, remote: r })),
+  ...(data.value ?? savedList.value).filter((r) => !queued.value.some((q) => q.id === r.id)).map((r) => ({ key: r.id, src: r.thumbnail_url, kind: r.kind, remote: r })),
 ])
 // What is on the phone comes first without a heading, what the server has follows by day.
 const waiting = computed(() => shown.value.filter((i) => !i.remote))
@@ -496,7 +508,8 @@ function removeSelected() {
       <ErrorText :message="addError" />
       <SyncBanner />
       <div v-if="videoWaits && media.waitingForWifi() > 0" class="muted">{{ $t('media.videosWaitForWifi') }}</div>
-      <ErrorText :message="error" />
+      <div v-if="showingSaved" class="muted">{{ $t('media.offlineList') }}</div>
+      <ErrorText v-else :message="error" />
       <div v-if="loading && shown.length === 0">{{ $t('common.loading') }}</div>
       <div v-else-if="shown.length === 0 && !error">{{ $t('media.empty') }}</div>
       <template v-for="section in sections" :key="section.key">

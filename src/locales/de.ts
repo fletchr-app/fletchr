@@ -155,6 +155,7 @@ export default {
     serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
   },
   media: {
+    offlineList: 'Keine Verbindung. Das hat das Telefon gespeichert: nur kleine Bilder, Videos und ganze Fotos brauchen eine Verbindung.',
     draw: 'Auf diesem Bild zeichnen',
     drawPhoto: 'Auf dem Foto zeichnen',
     undo: 'Rückgängig',

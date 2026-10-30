@@ -46,6 +46,15 @@ For the pull of media and notes (#83, #84); the app part comes after the server 
 - **Notes withdrawn**: a note shared with an archer that becomes coach only or private is a tombstone for the archer, so a copy on their phone goes.
 - **Not covered**: notes deleted by their team being deleted, and a clip that changes owner through the transfer of an account (the old tombstones move with it, the clip's `updated_at` does not). Both are rare.
 
+## Your photos and videos on the phone
+
+- **The library** (`media-library.ts`, `useMediaLibrary`, a file per account under the `library:` key): the list of your own photos and videos as the server describes them (without the links, which run out after an hour), the ids whose thumbnail is on the phone, and where the last pull got to. Thumbnails are files in `Directory.Data/media-cache/<id>.thumb`, not in the queue's folder: they are copies and can be fetched again. The files themselves (full photos, videos) are not kept.
+- **Pull**: after sign-in, when the app comes back and when an upload finished, `GET /api/media/?owner=<me>&updated_after=` and `GET /api/gone/?kind=media&updated_after=`, then the thumbnails that are missing (for items not in this pull, a fresh link is asked for). A failed download stops the round and is tried again at the next pull. Items still in the upload queue are not in the library; the screen shows the queue first.
+- **Rule**: the server's copy replaces the library's, as there is nothing on the phone to protect (a change made on the phone goes through the queue or online). A deleted item leaves the list and its thumbnail file goes.
+- **Screen**: `MediaView` shows the library when the server cannot be reached, for your own photos and videos (also of one session), with a line that says so. Tapping a photo shows its thumbnail, a video cannot be played (it streams). Coaches see other archers' media online only.
+- **Account**: sign-out keeps the library under the account's key; deleting the account removes it and the thumbnails.
+- **Cost**: a thumbnail is some tens of KB, so a thousand photos are tens of MB. There is no limit or cleanup yet.
+
 ## Notes on the phone
 
 - **Queue** (`note-store.ts`, `useNotes`, a file per account, `notes:` key): a note written on the phone is saved on the device with a uid and goes up with `PUT /api/notes/<uid>/` (`note-sync.ts`). Once the server has it, it leaves the queue and the server's list shows it; the screens that show that list read it again when a note went up. Until then it is shown in the list as "waiting to upload" (`PendingNotes`) and can be taken back.
