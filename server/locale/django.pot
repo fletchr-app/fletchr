@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 08:45+0100\n"
+"POT-Creation-Date: 2026-10-30 19:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:68
+#: core/access.py:86
 msgid "Invalid or expired invite code"
 msgstr ""
 
-#: core/access.py:70
+#: core/access.py:88
 msgid "You are already a member of this team"
 msgstr ""
 
@@ -220,11 +220,11 @@ msgstr ""
 msgid "This account no longer exists"
 msgstr ""
 
-#: equipment/serializers.py:62 training/serializers.py:148
+#: equipment/serializers.py:62 training/serializers.py:206
 msgid "Not your bow"
 msgstr ""
 
-#: equipment/serializers.py:67 training/serializers.py:153
+#: equipment/serializers.py:67 training/serializers.py:211
 msgid "Not your arrow set"
 msgstr ""
 
@@ -399,11 +399,11 @@ msgstr ""
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:217 notes/serializers.py:164
+#: evaluations/serializers.py:217 notes/serializers.py:178
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:220 notes/serializers.py:151
+#: evaluations/serializers.py:220 notes/serializers.py:165
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
@@ -411,7 +411,7 @@ msgstr ""
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:224 notes/serializers.py:158
+#: evaluations/serializers.py:224 notes/serializers.py:172
 msgid "The clip has no such frame"
 msgstr ""
 
@@ -443,46 +443,47 @@ msgstr ""
 msgid "This session belongs to another archer"
 msgstr ""
 
-#: media/serializers.py:78
+#: media/serializers.py:79
 msgid "A video must be an MP4 file"
 msgstr ""
 
-#: media/serializers.py:80
+#: media/serializers.py:81
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:84
+#: media/serializers.py:85
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr ""
 
-#: media/serializers.py:87
+#: media/serializers.py:88
 msgid "A photo must be a JPEG file"
 msgstr ""
 
-#: media/serializers.py:89
+#: media/serializers.py:90
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:93
+#: media/serializers.py:94
 msgid "The preview must be a small JPEG file"
 msgstr ""
 
-#: media/serializers.py:96
+#: media/serializers.py:97
 msgid "There is no room left for this archer's photos and videos"
 msgstr ""
 
-#: media/views.py:27
+#: media/views.py:32
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:77 notes/views.py:110 training/views.py:153
+#: media/views.py:94 notes/views.py:112 training/schedule_views.py:268
+#: training/views.py:153
 msgid "Give the id of the archer"
 msgstr ""
 
-#: media/views.py:84
+#: media/views.py:101
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A "
 "coach can record it on the archer's page."
@@ -498,59 +499,63 @@ msgstr ""
 msgid "A drawing can have %(n)s shapes at most"
 msgstr ""
 
-#: notes/serializers.py:98
+#: notes/serializers.py:104
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:111
+#: notes/serializers.py:117
 msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr ""
 
-#: notes/serializers.py:115
+#: notes/serializers.py:121
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:117 notes/serializers.py:127
+#: notes/serializers.py:123 notes/serializers.py:141
 msgid "A note about yourself is private"
 msgstr ""
 
-#: notes/serializers.py:125
+#: notes/serializers.py:127 notes/serializers.py:135
+msgid "The event is in another team than the note"
+msgstr ""
+
+#: notes/serializers.py:139
 msgid "A note about yourself has no team"
 msgstr ""
 
-#: notes/serializers.py:132
+#: notes/serializers.py:146
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:137
+#: notes/serializers.py:151
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:141
+#: notes/serializers.py:155
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:143
+#: notes/serializers.py:157
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:145
+#: notes/serializers.py:159
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:147
+#: notes/serializers.py:161
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:154
+#: notes/serializers.py:168
 msgid "A photo has no frames"
 msgstr ""
 
-#: notes/serializers.py:156
+#: notes/serializers.py:170
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:162
+#: notes/serializers.py:176
 msgid "This clip is from another session"
 msgstr ""
 
@@ -570,59 +575,146 @@ msgid ""
 "first."
 msgstr ""
 
-#: training/serializers.py:36
+#: training/schedule.py:88
+msgid "The slot has no training on this date"
+msgstr ""
+
+#: training/schedule.py:111 training/schedule.py:114
+msgid "No such event"
+msgstr ""
+
+#: training/schedule_serializers.py:25
+msgid "The team of a slot cannot change"
+msgstr ""
+
+#: training/schedule_serializers.py:27 training/schedule_views.py:210
+msgid "The end must be after the start"
+msgstr ""
+
+#: training/schedule_serializers.py:29
+msgid "The last day can't be before the first day"
+msgstr ""
+
+#: training/schedule_serializers.py:32
+msgid "Give both days of the pause, or neither"
+msgstr ""
+
+#: training/schedule_serializers.py:34
+msgid "The pause can't end before it starts"
+msgstr ""
+
+#: training/schedule_views.py:49
+msgid "Give the id of the team"
+msgstr ""
+
+#: training/schedule_views.py:61
+msgid "Give a date or a time, like 2026-10-30"
+msgstr ""
+
+#: training/schedule_views.py:97 training/schedule_views.py:115
+#: training/schedule_views.py:186 training/schedule_views.py:219
+msgid "Only coaches can change the schedule"
+msgstr ""
+
+#: training/schedule_views.py:102
+msgid ""
+"Trainings of this slot are already in use. End this slot and add a new "
+"one from the day the new times apply."
+msgstr ""
+
+#: training/schedule_views.py:135
+#, python-format
+msgid "The period must be between 0 and %(n)s days"
+msgstr ""
+
+#: training/schedule_views.py:176
+msgid "The team, slot and date of an event cannot change"
+msgstr ""
+
+#: training/schedule_views.py:182
+msgid "Give the team of the event"
+msgstr ""
+
+#: training/schedule_views.py:194
+msgid "The id does not belong to this slot and date"
+msgstr ""
+
+#: training/schedule_views.py:205
+#, python-format
+msgid ""
+"Cannot cancel: %(sessions)s sessions, %(notes)s notes and %(media)s "
+"photos or videos are linked to it. Move it instead."
+msgstr ""
+
+#: training/schedule_views.py:221
+msgid "A training from a slot cannot be deleted. Cancel it instead."
+msgstr ""
+
+#: training/schedule_views.py:223
+msgid "Something is linked to this event. Change that first."
+msgstr ""
+
+#: training/schedule_views.py:235
+msgid "Only coaches can see who took part"
+msgstr ""
+
+#: training/schedule_views.py:300
+msgid "Only the archer or a coach of the team can do this"
+msgstr ""
+
+#: training/serializers.py:39
 msgid "Give both x and y, or neither"
 msgstr ""
 
-#: training/serializers.py:38
+#: training/serializers.py:41
 msgid "Position is out of range"
 msgstr ""
 
-#: training/serializers.py:52 training/views.py:405 training/views.py:465
+#: training/serializers.py:55 training/views.py:405 training/views.py:465
 msgid "Unknown target face"
 msgstr ""
 
-#: training/serializers.py:59
+#: training/serializers.py:62
 msgid "More shots than arrows per end"
 msgstr ""
 
-#: training/serializers.py:62
+#: training/serializers.py:65
 msgid "Duplicate shot id"
 msgstr ""
 
-#: training/serializers.py:71
+#: training/serializers.py:74
 #, python-format
 msgid "Shot %(n)s: this face has no spot %(spot)s"
 msgstr ""
 
-#: training/serializers.py:87
+#: training/serializers.py:90
 #, python-format
 msgid "Shot %(n)s: this face has no scores, place the arrow on it"
 msgstr ""
 
-#: training/serializers.py:92
+#: training/serializers.py:95
 #, python-format
 msgid "Shot %(n)s: %(value)s is not a score on this face"
 msgstr ""
 
-#: training/serializers.py:94
+#: training/serializers.py:97
 #, python-format
 msgid "Shot %(n)s: this face has no X ring"
 msgstr ""
 
-#: training/serializers.py:163
+#: training/serializers.py:221
 msgid "Send the revision either by id or by uid, not both"
 msgstr ""
 
-#: training/serializers.py:169
+#: training/serializers.py:227
 msgid "The type can't change once there are results"
 msgstr ""
 
-#: training/serializers.py:174
+#: training/serializers.py:232
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/serializers.py:179
+#: training/serializers.py:237
 msgid "The end can't be before the start"
 msgstr ""
 

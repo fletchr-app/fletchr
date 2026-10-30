@@ -20,6 +20,7 @@ function harness(results: Record<string, MediaSendResult[]>, start: QueuedMedia[
       done: (sent) => ((queue = afterUpload(queue, sent)), log.push(`done ${sent.id}`)),
       fail: (id, message) => ((queue = queue.map((i) => (i.id === id ? { ...i, error: message } : i))), log.push(`fail ${id}`)),
       dropSession: (id) => ((queue = queue.map((i) => (i.id === id ? { ...i, session: null } : i))), log.push(`drop ${id}`)),
+      dropEvent: (id) => ((queue = queue.map((i) => (i.id === id ? { ...i, event: undefined } : i))), log.push(`no event ${id}`)),
       send: async (i) => (results[i.id] ?? [{ kind: 'ok' }]).shift()!,
       blocked,
     });
@@ -82,6 +83,7 @@ test('stop pauses before the next item', async () => {
     done: (sent) => (queue = afterUpload(queue, sent)),
     fail: () => {},
     dropSession: () => {},
+    dropEvent: () => {},
     send: async (i) => (sent.push(i.id), { kind: 'ok' }),
     stop: () => sent.length === 1,
   });
@@ -127,6 +129,7 @@ test('a clip moved while it uploads gets a second, session-only request', async 
       done: (sent) => (queue = afterUpload(queue, sent)),
       fail: () => {},
       dropSession: () => {},
+      dropEvent: () => {},
       send: async (i) => {
         forms.push([...mediaForm(i, i.uploaded ? null : files, true).keys()]);
         if (!i.uploaded) queue = moveQueued(queue, ['a'], 's2'); // moved while the request runs
@@ -204,4 +207,24 @@ test('an uploaded item sends only the session, and a session that is gone is dro
   assert.deepEqual([...sent.calls[0]!.form!.keys()], ['session']);
   const bad = clientWith(() => json(400, { session: ['gone'] }));
   assert.equal((await sendMedia(bad.api, item('a', { session: 's2', uploaded: true }), null)).kind, 'withoutSession');
+});
+
+test('the form names the training: the id, and slot and date for an occurrence that is no row yet; none sends an empty id', () => {
+  const linked = mediaForm(item('a', { event: { id: 'ev1', slot: 'sl1', date: '2026-10-21' } }), files, true);
+  assert.deepEqual([linked.get('event'), linked.get('event_slot'), linked.get('event_date')], ['ev1', 'sl1', '2026-10-21']);
+  assert.equal(mediaForm(item('a'), files, true).has('event'), false);
+  assert.equal(mediaForm(item('a', { uploaded: true, event: null }), null, true).get('event'), ''); // taking it out of a clip the server has
+  assert.equal(mediaForm(item('a', { event: { id: 'ev1' } }), files, true, false).has('event'), false);
+  const again = mediaForm(item('a', { uploaded: true, event: { id: 'ev2' } }), null, true);
+  assert.deepEqual([again.get('event'), again.has('file')], ['ev2', false]);
+});
+
+test('a training the server refuses is dropped and the clip is sent again without it', async () => {
+  const refuse = createClient<paths>({ baseUrl: 'http://x', fetch: async () => new Response(JSON.stringify({ event: ['No such event'] }), { status: 400, headers: { 'content-type': 'application/json' } }) });
+  assert.equal((await sendMedia(refuse, item('a', { event: { id: 'ev1' } }), files)).kind, 'withoutEvent');
+  assert.equal((await sendMedia(refuse, item('a'), files)).kind, 'failed'); // no training in it: the 400 is something else
+  const h = harness({ a: [{ kind: 'withoutEvent' }, { kind: 'ok' }] }, [item('a', { event: { id: 'ev1' } })]);
+  await h.run();
+  assert.deepEqual(h.log, ['no event a', 'done a']);
+  assert.equal(h.queue().length, 0);
 });

@@ -3,11 +3,11 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from core.access import archers_visible_to, note_teams
+from core.access import archers_visible_to, can_tag, note_teams
 from core.models import COACH_ROLES, Team, TeamMember, User
 from media.access import media_link, visible_media
 from media.models import Media
-from training.serializers import SessionRefField
+from training.serializers import EventInfoSerializer, EventLinkSerializer, SessionRefField, event_info
 from training.models import End
 
 from .drawing import check_drawing
@@ -36,7 +36,7 @@ class NotePictureSerializer(serializers.Serializer):
     file_url = serializers.CharField(help_text="Opens for an hour")
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
     team = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
         required=False,
@@ -50,6 +50,8 @@ class NoteSerializer(serializers.ModelSerializer):
     frame = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="The frame, counted from 0")
     time_ms = serializers.IntegerField(min_value=0, required=False, allow_null=True, help_text="Where that frame is in the clip")
     drawing = serializers.JSONField(required=False, allow_null=True, help_text="Lines, angles and circles on the photo or frame; see notes/drawing.py for the format")
+    event_info = serializers.SerializerMethodField()
+    at = serializers.DateTimeField(required=False, help_text="What time the note is about; now by default, earlier for a note written afterwards")
     picture = serializers.SerializerMethodField(help_text="The photo or clip of the note; empty if it is gone or you may not see it")
     author_name = serializers.SerializerMethodField()
     archer_name = serializers.SerializerMethodField()
@@ -60,7 +62,7 @@ class NoteSerializer(serializers.ModelSerializer):
         model = Note
         fields = [
             "id", "uid", "team", "author", "author_name", "archer", "archer_name", "session", "end", "media", "picture", "frame", "time_ms", "drawing", "body",
-            "visibility", "can_edit", "can_delete", "created_at", "updated_at",
+            "visibility", "event", "event_slot", "event_date", "event_info", "at", "can_edit", "can_delete", "created_at", "updated_at",
         ]
         read_only_fields = ["author", "created_at", "updated_at"]
 
@@ -79,6 +81,10 @@ class NoteSerializer(serializers.ModelSerializer):
             "kind": media.kind, "width": media.width, "height": media.height,
             "thumbnail_url": media_link(request, media, "thumbnail"), "file_url": media_link(request, media, "file"),
         }
+
+    @extend_schema_field(EventInfoSerializer(allow_null=True))
+    def get_event_info(self, note):
+        return event_info(note.event)
 
     def get_author_name(self, note) -> str:
         return (note.author.profile.name or note.author.email) if note.author else "Former coach"
@@ -115,10 +121,18 @@ class NoteSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({field: gettext("This cannot be changed after the note is written")})
             if self.instance.team_id is None and attrs.get("visibility", Note.Visibility.PRIVATE) != Note.Visibility.PRIVATE:
                 raise serializers.ValidationError({"visibility": gettext("A note about yourself is private")})
+            attrs = self.take_event(attrs, self.instance.archer)
+            event = attrs.get("event")
+            if event is not None and self.instance.team_id not in (None, event.team_id):
+                raise serializers.ValidationError({"event": gettext("The event is in another team than the note")})
             return attrs
 
         user = self.context["request"].user
         archer, session, end = attrs["archer"], attrs.get("session"), attrs.get("end")
+        attrs = self.take_event(attrs, archer)
+        event = attrs.get("event")
+        if event is not None and attrs.get("team") not in (None, event.team):
+            raise serializers.ValidationError({"event": gettext("The event is in another team than the note")})
         if archer.id == user.id:
             # A note about your own training: no team, and private. Nobody else reads it.
             if attrs.get("team") is not None:
@@ -131,7 +145,7 @@ class NoteSerializer(serializers.ModelSerializer):
             if not TeamMember.objects.filter(user=user, role__in=COACH_ROLES).exists():
                 raise PermissionDenied(gettext("Only coaches can write notes"))
             allowed = list(note_teams(user, archer))
-            team = attrs.get("team")
+            team = attrs.get("team") or (event.team if event is not None else None)
             if team is not None:
                 if team not in allowed:
                     raise serializers.ValidationError({"team": gettext("You cannot write notes about this archer in that team")})
@@ -162,5 +176,7 @@ class NoteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"media": gettext("This clip is from another session")})
         elif frame is not None or attrs.get("time_ms") is not None:
             raise serializers.ValidationError({"media": gettext("Give the clip the frame is in")})
+        if media is not None and "event" not in attrs and media.event_id and (team is None or media.event.team_id == team.pk):
+            attrs["event"] = media.event  # the note is about the training the clip is from
         attrs["team"] = team
         return attrs

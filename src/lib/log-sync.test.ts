@@ -358,3 +358,32 @@ test('a session waits for equipment the server has not seen yet, and then the wh
   const without = reduce(EMPTY_LOG, { type: 'startSession', session });
   assert.equal(waitsForEquipment(without, without.outbox[0], () => true), false, 'no equipment: nothing to wait for');
 });
+
+test('the training a session is linked to is sent only when chosen, and null after "None"', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session });
+  await h.run();
+  assert.equal('event' in (h.calls[0]!.body as object), false); // nothing chosen: the server keeps its value
+  const link = { id: 'ev1', slot: 'sl1', date: '2026-10-21' };
+  h.dispatch({ type: 'updateSession', id: 's1', patch: { event: link } });
+  await h.run();
+  assert.deepEqual(
+    Object.entries(h.calls[1]!.body as object).filter(([k]) => k.startsWith('event')),
+    [['event', 'ev1'], ['event_slot', 'sl1'], ['event_date', '2026-10-21']],
+  );
+  h.dispatch({ type: 'updateSession', id: 's1', patch: { event: { id: 'ev2' } } }); // a row the server already has: no slot to send
+  await h.run();
+  assert.deepEqual(Object.entries(h.calls[2]!.body as object).filter(([k]) => k.startsWith('event')), [['event', 'ev2']]);
+  h.dispatch({ type: 'updateSession', id: 's1', patch: { event: null } });
+  await h.run();
+  assert.equal((h.calls[3]!.body as { event: unknown }).event, null);
+});
+
+test('a pull takes over the training a session is linked to, unless a change of it still waits', () => {
+  const linked: LogSession = { ...session, event: { id: 'ev1', name: 'Squad' } };
+  let state = reduce(EMPTY_LOG, { type: 'pulled', sessions: [linked] });
+  assert.equal(state.sessions[0]!.event?.name, 'Squad');
+  state = reduce(state, { type: 'updateSession', id: 's1', patch: { event: null } });
+  state = reduce(state, { type: 'pulled', sessions: [linked] });
+  assert.equal(state.sessions[0]!.event, null); // the unlink goes up first
+});

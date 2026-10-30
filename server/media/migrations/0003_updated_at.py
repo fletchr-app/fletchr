@@ -8,7 +8,7 @@ def from_created(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("media", "0001_initial")]
+    dependencies = [("media", "0002_media_event")]
 
     operations = [
         migrations.AddField(

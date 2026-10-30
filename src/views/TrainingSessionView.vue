@@ -8,6 +8,7 @@ import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
+import SessionEvent from '@/components/SessionEvent.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import UnattachedHint from '@/components/UnattachedHint.vue'
@@ -84,8 +85,9 @@ function newEnd() {
       <div class="muted">{{ session.location ? `${session.location} · ` : '' }}{{ session.ended_at ? $t('session.finished') : $t('training.inProgress') }}</div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
+      <SessionEvent :session="session" />
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
-      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
+      <UnattachedHint :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" />
       <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">
@@ -105,6 +107,7 @@ function newEnd() {
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
+      <SessionEvent :session="session" />
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
       <div class="d-flex justify-content-center gap-4">
@@ -113,7 +116,7 @@ function newEnd() {
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
         <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
-      <UnattachedHint compact :owner="archer" :session="session" :name="session.owner_name" class="text-center" />
+      <UnattachedHint compact :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" class="text-center" />
       <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
       <div class="d-flex gap-2">
         <AppButton v-if="session.ends.length > 0" secondary @click="router.push(`/training/${session.id}/ends`)">{{ $t('session.allEnds') }}</AppButton>
@@ -128,13 +131,14 @@ function newEnd() {
       </div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
+      <SessionEvent :session="session" />
       <SessionDetailsText :details="session.details" />
       <div class="d-flex gap-4">
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>
         <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
         <RouterLink :to="`/training/${session.id}/notes`">{{ $t('notes.link') }}</RouterLink>
       </div>
-      <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
+      <UnattachedHint :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" />
       <VolumeLog :session="session" />
       <AppButton v-if="canToggle" secondary @click="finish">{{ session.ended_at ? $t('session.reopenSession') : $t('session.finish') }}</AppButton>
       <AppButton secondary @click="confirmDelete ? deleteSession(session.id) : (confirmDelete = true)">

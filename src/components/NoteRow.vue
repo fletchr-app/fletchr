@@ -8,12 +8,15 @@ import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import DrawnPicture from '@/components/DrawnPicture.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import EventChips from '@/components/EventChips.vue'
 import FormField from '@/components/FormField.vue'
+import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
 import { drawnShapes } from '@/lib/media-notes'
 import { clock } from '@/lib/player'
+import { eventTitle, type EventLink } from '@/lib/schedule'
 
 type Note = components['schemas']['Note']
 type Visibility = 'private' | 'coach_only' | 'shared'
@@ -34,6 +37,29 @@ const body = ref(props.note.body)
 // A note about yourself is always private: no choice of readers.
 const own = computed(() => props.note.team === null || props.note.team === undefined)
 const visibility = ref<Visibility>(props.note.visibility ?? 'coach_only')
+// The training of the note, changeable by its author (it is a label, not a place). `undefined`: left as it is.
+const { suggest, load: loadAgenda } = useAgenda()
+const linked = computed<EventLink | null>(() => {
+  const info = props.note.event_info
+  return props.note.event && info ? { id: props.note.event, name: info.name, kind: info.kind as EventLink['kind'], start: info.start, team_name: info.team_name } : null
+})
+const eventChoice = ref<EventLink | null | undefined>(linked.value)
+const eventSuggestions = computed(() => suggest(props.note.at ?? props.note.created_at, null, { teams: props.note.team ? [props.note.team] : undefined }))
+const eventTitleText = computed(() => {
+  if (!linked.value) return ''
+  const title = eventTitle(linked.value)
+  return title.startsWith('event.kind.') ? t(title) : title
+})
+function startEditing() {
+  eventChoice.value = linked.value
+  void loadAgenda()
+  editing.value = true
+}
+const eventBody = () => {
+  const link = eventChoice.value
+  if (link === undefined || link?.id === linked.value?.id) return {}
+  return link === null ? { event: null } : { event: link.id, ...(link.slot && link.date ? { event_slot: link.slot, event_date: link.date } : {}) }
+}
 const confirmDelete = ref(false)
 const error = ref<string | null>(null)
 const isPhoto = computed(() => props.note.picture?.kind === 'photo')
@@ -53,7 +79,7 @@ async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
 }
 const save = () =>
   run(async () => {
-    const { data, error: failure } = await api.PATCH('/api/notes/{id}/', { params: { path: { id: props.note.id } }, body: own.value ? { body: body.value } : { body: body.value, visibility: visibility.value } })
+    const { data, error: failure } = await api.PATCH('/api/notes/{id}/', { params: { path: { id: props.note.id } }, body: own.value ? { body: body.value } : { body: body.value, visibility: visibility.value, ...eventBody() } })
     return { ok: !!data, error: failure }
   })
 const remove = () =>
@@ -72,10 +98,12 @@ const remove = () =>
     <template v-if="editing">
       <FormField v-model="body" :label="$t('notes.note')" multiline capitalize="sentences" />
       <ChipGroup v-if="!own" v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
+      <EventChips v-if="!own && (eventSuggestions.length > 0 || linked)" v-model="eventChoice" :suggestions="eventSuggestions" />
       <AppButton @click="save">{{ $t('common.save') }}</AppButton>
       <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>
     <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
+    <div v-if="linked && !editing" class="muted">{{ $t('event.linked', { name: eventTitleText, date: new Date(linked.start!).toLocaleDateString() }) }}</div>
     <button v-if="picture && isPhoto && note.picture" type="button" class="photo" :aria-label="$t('notes.openPhoto')" @click="emit('open', note)">
       <DrawnPicture :src="note.picture.thumbnail_url" :width="note.picture.width" :height="note.picture.height" :shapes="drawnShapes([note])" />
     </button>
@@ -88,7 +116,7 @@ const remove = () =>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
     <ErrorText :message="error" />
     <div v-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">
-      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="editing = true">{{ $t('notes.edit') }}</IonButton>
+      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="startEditing">{{ $t('notes.edit') }}</IonButton>
       <IonButton v-if="note.can_delete" fill="clear" size="small" class="m-0" @click="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? $t('notes.deleteConfirm') : $t('common.delete') }}</IonButton>
     </div>
   </div>

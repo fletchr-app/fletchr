@@ -3,7 +3,7 @@ from django.db.models import Sum
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from training.serializers import SessionRefField
+from training.serializers import EventInfoSerializerMixin, EventLinkSerializer, SessionRefField
 
 from .access import can_change, media_link
 from .files import is_jpeg, is_mp4
@@ -13,7 +13,7 @@ MB = 1024 * 1024
 REQUIRED = serializers.Field.default_error_messages["required"]  # the framework's text, already translated
 
 
-class MediaSerializer(serializers.ModelSerializer):
+class MediaSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
     uploaded_by_name = serializers.SerializerMethodField(help_text="Empty if that account is gone")
     file_url = serializers.SerializerMethodField(help_text="Opens for an hour; fetch the clip again for a new link")
@@ -23,7 +23,7 @@ class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
         fields = [
-            "id", "owner", "owner_name", "uploaded_by", "uploaded_by_name", "session", "kind", "taken_at", "width", "height", "size",
+            "id", "owner", "owner_name", "uploaded_by", "uploaded_by_name", "session", "event", "event_info", "kind", "taken_at", "width", "height", "size",
             "duration_ms", "capture_fps", "frame_count", "note", "created_at", "updated_at", "file_url", "thumbnail_url", "can_edit",
         ]
 
@@ -44,8 +44,8 @@ class MediaSerializer(serializers.ModelSerializer):
         return can_change(self.context["request"].user, media)
 
 
-class MediaWriteSerializer(serializers.Serializer):
-    """A new clip needs everything but `note` and `session`. Repeating the request for a clip that exists changes only those two."""
+class MediaWriteSerializer(EventLinkSerializer):
+    """A new clip needs everything but `note`, `session` and `event`. Repeating the request for a clip that exists changes only those three."""
 
     kind = serializers.ChoiceField(choices=Media.Kind.choices, required=False)
     file = serializers.FileField(required=False, help_text="A JPEG photo or an MP4 video, converted by the phone")
@@ -67,8 +67,9 @@ class MediaWriteSerializer(serializers.Serializer):
         return session
 
     def validate(self, attrs):
+        attrs = self.take_event(attrs, self.context["owner"])
         if self.instance is not None:
-            return {k: v for k, v in attrs.items() if k in ("note", "session")}
+            return {k: v for k, v in attrs.items() if k in ("note", "session", "event")}
         missing = {k: str(REQUIRED) for k in self.CREATE_ONLY if k not in attrs}
         if missing:
             raise serializers.ValidationError(missing)

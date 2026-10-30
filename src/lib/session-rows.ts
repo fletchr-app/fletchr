@@ -12,15 +12,19 @@ export type SessionRow = {
   ends: number;
   arrows: number;
   points: number;
+  /** A row for a team training that has notes or photos of the archer but no session of theirs: the training, and what is in it. */
+  event?: { name: string; kind: string; notes: number; media: number };
 };
 
 type Summary = components['schemas']['SessionSummary'];
+type MineEvent = components['schemas']['MineEvent'];
 
 /**
  * Newest first. A session known on both sides is shown from the device, where it can still be edited. `gone` are sessions
  * deleted on this device: the server's list may still have them until the delete has gone out and the list is fetched again.
+ * `events` (from `/api/events/mine/`) are trainings with something of this `archer` in them and no session of theirs.
  */
-export function sessionRows(local: LogSession[], remote: Summary[], gone: ReadonlySet<string> = new Set()): SessionRow[] {
+export function sessionRows(local: LogSession[], remote: Summary[], gone: ReadonlySet<string> = new Set(), events: MineEvent[] = [], archer?: number): SessionRow[] {
   return [
     ...local.map((s) => {
       const { arrows, score } = sessionTotals(s);
@@ -32,6 +36,10 @@ export function sessionRows(local: LogSession[], remote: Summary[], gone: Readon
         id: s.id, to: `/sessions/${s.id}`, started_at: s.started_at, type: s.type ?? '', location: s.location ?? '',
         finished: !!s.ended_at, ends: s.ends, arrows: s.scored_arrows + s.volume_arrows, points: s.score_total,
       })),
+    ...events.map((e) => ({
+      id: `event:${e.event.id}`, to: `/events/${e.event.id}${archer === undefined ? '' : `?archer=${archer}`}`, started_at: e.event.start, type: '', location: e.event.location ?? '',
+      finished: true, ends: 0, arrows: 0, points: 0, event: { name: e.event.name ?? '', kind: e.event.kind, notes: e.notes, media: e.media },
+    })),
   ].sort((a, b) => b.started_at.localeCompare(a.started_at));
 }
 

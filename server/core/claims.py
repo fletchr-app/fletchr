@@ -65,7 +65,7 @@ def claim_profile(code, user):
     SessionTombstone.objects.filter(owner=profile).update(owner=user)
     Tombstone.objects.filter(owner=profile).update(owner=user)
     Media.objects.filter(owner=profile).update(owner=user, updated_at=timezone.now())  # the files keep their names, which hold the old id
-    Note.objects.filter(archer=profile).update(archer=user)
+    Note.objects.filter(archer=profile).update(archer=user, updated_at=timezone.now())
     team = claim.team
     if profile.profile.avatar and not user.profile.avatar:
         # The coach's picture becomes the archer's (the file keeps its name); without this the delete below would remove it.

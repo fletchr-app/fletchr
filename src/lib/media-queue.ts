@@ -3,6 +3,7 @@
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
 import type { SendResult } from './log-sync.ts';
+import type { EventLink } from './schedule.ts';
 
 export type MediaKind = 'photo' | 'video';
 
@@ -13,6 +14,8 @@ export type QueuedMedia = {
   /** The archer it is about; null for yourself. */
   owner: number | null;
   session: string | null;
+  /** The team training it is from (a suggestion by time, confirmed or changed by the user); `null`: none, `undefined`: not chosen. */
+  event?: EventLink | null;
   taken_at: string;
   width: number;
   height: number;
@@ -49,13 +52,24 @@ export function afterUpload(items: QueuedMedia[], sent: QueuedMedia): QueuedMedi
   return items.map((i) => (i.id === sent.id ? { ...i, uploaded: true } : i));
 }
 
-export type MediaSendResult = SendResult | { kind: 'withoutSession' };
+export type MediaSendResult = SendResult | { kind: 'withoutSession' } | { kind: 'withoutEvent' };
 
-export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSession: boolean): FormData {
+/** The event fields of the form: the id, and the slot and date that let the server make an occurrence that is no row yet. Empty `event`: none. */
+function appendEvent(form: FormData, event: EventLink | null | undefined) {
+  if (event === undefined) return;
+  form.append('event', event?.id ?? '');
+  if (event?.slot && event.date) {
+    form.append('event_slot', event.slot);
+    form.append('event_date', event.date);
+  }
+}
+
+export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSession: boolean, withEvent = true): FormData {
   const form = new FormData();
   if (item.uploaded || !files) {
-    // The clip is on the server: the session (empty: none) and the note are all that can change.
+    // The clip is on the server: the session (empty: none), the training and the note are all that can change.
     form.append('session', withSession ? (item.session ?? '') : '');
+    if (withEvent) appendEvent(form, item.event);
     if (item.note !== undefined) form.append('note', item.note);
     return form;
   }
@@ -67,23 +81,26 @@ export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSessi
     if (item[key] !== undefined) form.append(key, String(item[key]));
   }
   if (withSession && item.session) form.append('session', item.session);
+  if (withEvent && item.event) appendEvent(form, item.event);
   form.append('file', files.file, `${item.id}.${item.kind === 'video' ? 'mp4' : 'jpg'}`);
   form.append('thumbnail', files.thumbnail, `${item.id}-thumb.jpg`);
   return form;
 }
 
 /** Upload one item. Repeating it is safe: the server knows the id. */
-export async function sendMedia(api: ApiClient, item: QueuedMedia, files: MediaFiles | null): Promise<MediaSendResult> {
+export async function sendMedia(api: ApiClient, item: QueuedMedia, files: MediaFiles | null, withEvent = true): Promise<MediaSendResult> {
   try {
     const { response, error } = await api.PUT('/api/media/{media_id}/', {
       params: { path: { media_id: item.id }, query: item.owner ? { owner: item.owner } : undefined },
       body: {},
-      bodySerializer: () => mediaForm(item, files, true),
+      bodySerializer: () => mediaForm(item, files, true, withEvent),
     });
     if (response.ok) return { kind: 'ok' };
     if (response.status === 401 || response.status >= 500) return { kind: 'retry' };
     // The session is gone (or never reached the server): the clip is worth keeping without it.
     if (response.status === 400 && item.session && (error as { session?: unknown } | undefined)?.session) return { kind: 'withoutSession' };
+    // The training is not usable for this archer (they left the team, or the coach did): the clip is worth keeping without it.
+    if (response.status === 400 && item.event && (error as { event?: unknown } | undefined)?.event) return { kind: 'withoutEvent' };
     return { kind: 'failed', message: `${response.status}: ${errorMessage(error)}` };
   } catch {
     return { kind: 'retry' }; // no connection
@@ -96,6 +113,8 @@ export type MediaDrain = {
   done: (item: QueuedMedia) => void;
   fail: (id: string, message: string) => void;
   dropSession: (id: string) => void;
+  /** The server refused the training of the item: send it again without one. */
+  dropEvent: (id: string) => void;
   send: (item: QueuedMedia) => Promise<MediaSendResult>;
   /** An item that has to wait, because its session is still on its way. */
   blocked?: (item: QueuedMedia) => boolean;
@@ -106,7 +125,7 @@ export type MediaDrain = {
  * Send the queue one by one, oldest first. What the server takes leaves the queue; what it refuses is marked and
  * skipped; no connection (or a server error) ends the run. An item whose session is not uploaded yet is passed over.
  */
-export async function drainMedia({ items, done, fail, dropSession, send, blocked = () => false, stop = () => false }: MediaDrain): Promise<void> {
+export async function drainMedia({ items, done, fail, dropSession, dropEvent, send, blocked = () => false, stop = () => false }: MediaDrain): Promise<void> {
   const passed = new Set<string>();
   for (;;) {
     if (stop()) return;
@@ -120,6 +139,7 @@ export async function drainMedia({ items, done, fail, dropSession, send, blocked
     if (result.kind === 'ok') done(item);
     else if (result.kind === 'failed') fail(item.id, result.message);
     else if (result.kind === 'withoutSession') dropSession(item.id);
+    else if (result.kind === 'withoutEvent') dropEvent(item.id);
     else return;
   }
 }

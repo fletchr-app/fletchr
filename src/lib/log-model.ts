@@ -1,5 +1,6 @@
 // Local copy of the sessions an archer logs on this device, plus the queue of uploads still to do.
 // Pure functions only (no React, no storage), so they can be tested with `npm test`.
+import type { EventLink } from './schedule.ts';
 
 /** Empty for a session a coach opened: the archer chooses when adding the first results. */
 export type SessionType = '' | 'scoring' | 'volume' | 'technique' | 'competition';
@@ -62,6 +63,8 @@ export type LogSession = {
   gear?: Gear | null;
   /** Left out until the archer fills it in, so uploading the session does not clear anything on the server. */
   details?: SessionDetails;
+  /** The team training this session was part of. Left out when no choice was made (the server keeps its value); `null` after "None". */
+  event?: EventLink | null;
   /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
   owner?: number;
   owner_name?: string;
@@ -97,7 +100,7 @@ export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equip
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type' | 'event'>> }
   /** Sessions the server has and this device does not (nothing to upload), and where the pull got to. */
   | { type: 'pulled'; sessions: LogSession[]; lastPull?: string }
   /** The server merged `from` into `to`: this device follows. */
@@ -167,6 +170,7 @@ function mergePulled(state: LogState, theirs: LogSession): LogState {
     : {
         started_at: theirs.started_at, ended_at: theirs.ended_at, type: theirs.type, environment: theirs.environment, location: theirs.location,
         details: theirs.details, opened_by: theirs.opened_by, opened_by_name: theirs.opened_by_name,
+        ...(theirs.event ? { event: theirs.event } : {}),
       };
   const next: LogSession = {
     ...mine,
@@ -212,6 +216,7 @@ function replaceSessionId(state: LogState, from: string, to: string): LogState {
     type: dst.type || src.type,
     gear: dst.gear ?? src.gear,
     details: dst.details ?? src.details,
+    event: dst.event ?? src.event,
   };
   const sessions = state.sessions.filter((s) => s.id !== from).map((s) => (s.id === to ? merged : s));
   let result: LogState = { ...state, sessions, outbox: dedupe(moved) };

@@ -1,5 +1,6 @@
 import django_filters
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext
 from drf_spectacular.types import OpenApiTypes
@@ -14,10 +15,14 @@ from rest_framework.views import APIView
 from core.models import Tombstone, User
 from core.tombstones import forget
 from notes.views import readers_with_a_copy
+from training.merge import resolve_session_id
+from training.models import TrainingSession
+from training.schedule import rows_of_session
 
 from .access import can_add_for, can_change, visible_media
 from .files import read_link, serve
 from .models import Media
+from .moves import move_to_session
 from .serializers import MediaSerializer, MediaWriteSerializer
 
 
@@ -39,9 +44,21 @@ class MediaFilter(django_filters.FilterSet):
     taken_before = django_filters.IsoDateTimeFilter(field_name="taken_at", lookup_expr="lt", help_text="Taken before this time")
     updated_after = django_filters.IsoDateTimeFilter(field_name="updated_at", lookup_expr="gt", help_text="Changed after this time (a new upload, a note, a move)")
 
+    session = django_filters.UUIDFilter(
+        method="filter_session", help_text="Photos and videos of this session, and those of its archer from the event it is linked to that are in no session"
+    )
+    not_in_event = django_filters.UUIDFilter(method="filter_not_in_event", help_text="Leave out the photos and videos of this event")
+
     class Meta:
         model = Media
-        fields = ["owner", "session", "kind"]
+        fields = ["owner", "event", "kind"]
+
+    def filter_session(self, queryset, name, value):
+        session = TrainingSession.objects.filter(pk=resolve_session_id(value) or value).first()
+        return queryset.none() if session is None else rows_of_session(queryset, session, "owner")
+
+    def filter_not_in_event(self, queryset, name, value):
+        return queryset.exclude(event=value)
 
 
 class MediaListView(generics.ListAPIView):
@@ -81,7 +98,7 @@ class MediaDetailView(APIView):
                 raise ValidationError({"owner": gettext("Give the id of the archer")})
             if owner is None or not can_add_for(request.user, owner):
                 raise NotFound()
-        serializer = MediaWriteSerializer(existing, data=request.data, context={"owner": owner})
+        serializer = MediaWriteSerializer(existing, data=request.data, context={"owner": owner, "request": request})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         if existing is None and data.get("kind") == Media.Kind.VIDEO and not owner.profile.video_allowed:
@@ -95,12 +112,21 @@ class MediaDetailView(APIView):
         else:
             media = existing
             moved = "session" in data and data["session"] != media.session
+            session = data.pop("session", media.session)
+            old_event = media.event
             with transaction.atomic():
                 for name, value in data.items():
                     setattr(media, name, value)
                 media.save()
-                if moved:  # the notes on the clip belong to the session it is in; the end was one of the old session
-                    media.coach_notes.update(session=media.session, end=None, updated_at=timezone.now())
+                if moved:  # the notes on the clip belong to the session it is in
+                    move_to_session(media, session)
+                if "event" in data and data["event"] != old_event:
+                    # the notes that followed the clip's event follow it again (a note of another team keeps its own)
+                    follow = Q(event=old_event) | Q(event__isnull=True) if old_event else Q(event__isnull=True)
+                    if media.event is None:
+                        media.coach_notes.filter(event=old_event).update(event=None, updated_at=timezone.now())
+                    else:
+                        media.coach_notes.filter(follow, team=media.event.team).update(event=media.event, updated_at=timezone.now())
         media = visible_media(request.user).get(pk=media.pk)
         return Response(MediaSerializer(media, context={"request": request}).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
 
