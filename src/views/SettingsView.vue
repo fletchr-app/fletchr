@@ -9,6 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useEquipment } from '@/composables/useEquipment'
+import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
@@ -17,6 +18,7 @@ import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useUnits } from '@/composables/useUnits'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import { t } from '@/i18n'
+import { CAP_CHOICES_MB } from '@/lib/media-keep'
 import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
@@ -51,6 +53,9 @@ const { url } = useServer()
 const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
+const kept = useKeptMedia()
+const capLabel = (mb: number | null) => (mb === null ? t('settings.keepNoLimit') : mb === 0 ? t('settings.keepNothing') : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`)
+const keptSize = computed(() => `${Math.round(kept.bytes.value / (1024 * 1024))} MB`)
 
 const THEMES: ThemeMode[] = ['system', 'light', 'dark']
 const LANGUAGES: { value: LanguageMode; key: string }[] = [
@@ -114,6 +119,15 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
             <IonSelectOption value="wifi">{{ $t('settings.videoWifi') }}</IonSelectOption>
             <IonSelectOption value="any">{{ $t('settings.videoAny') }}</IonSelectOption>
           </IonSelect>
+        </IonItem>
+        <IonItem v-if="!isLocal" lines="full">
+          <IonSelect :value="String(kept.capMb.value)" :label="$t('settings.keepMedia')" interface="action-sheet" @ion-change="kept.setCap($event.detail.value === 'null' ? null : Number($event.detail.value))">
+            <IonSelectOption v-for="mb in CAP_CHOICES_MB" :key="String(mb)" :value="String(mb)">{{ capLabel(mb) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+        <IonItem v-if="!isLocal && kept.count.value > 0" lines="full">
+          <IonLabel class="ion-text-wrap">{{ $t('settings.keptNow', { size: keptSize, n: kept.count.value }, kept.count.value) }}</IonLabel>
+          <AppButton secondary @click="kept.clear">{{ $t('settings.keptClear') }}</AppButton>
         </IonItem>
         <IonItem v-if="!isLocal" router-link="/settings/server" detail lines="full">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
