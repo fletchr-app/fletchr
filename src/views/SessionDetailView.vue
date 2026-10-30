@@ -49,6 +49,7 @@ const mediaLink = computed(() => ({
       </div>
       <div v-if="data.opened_by_name && data.opened_by !== data.owner" class="muted">{{ $t('training.openedBy', { name: data.opened_by_name }) }}</div>
       <div>{{ $t('count.arrows', totals.arrows) }}{{ usesEnds(session.type) ? ` · ${$t('count.points', totals.score)}` : '' }}</div>
+      <div v-if="data.event_info">{{ $t('event.linked', { name: data.event_info.name || $t(`event.kind.${data.event_info.kind}`), date: new Date(data.event_info.start).toLocaleDateString() }) }}</div>
       <div v-if="session.gear">{{ $t('session.equipment', { gear: gearLine(session.gear) }) }}</div>
       <ErrorText :message="error" />
       <SessionDetailsText :details="session.details" />

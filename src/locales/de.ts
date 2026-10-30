@@ -280,6 +280,15 @@ export default {
     reopen: 'Wieder öffnen',
     reopenSession: 'Training wieder öffnen',
   },
+  event: {
+    kind: { training: 'Training', competition: 'Wettkampf', camp: 'Lager' },
+    suggest: 'Training',
+    none: 'Keins',
+    linked: 'Training: {name}, {date}',
+    link: 'Mit einem Training verknüpfen',
+    change: 'Ändern',
+    unlink: 'Keins',
+  },
   privacy: {
     title: 'Deine Daten',
     password: 'Dein Passwort',

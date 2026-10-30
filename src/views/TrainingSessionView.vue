@@ -8,6 +8,7 @@ import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
+import SessionEvent from '@/components/SessionEvent.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionPlots from '@/components/SessionPlots.vue'
 import UnattachedHint from '@/components/UnattachedHint.vue'
@@ -84,6 +85,7 @@ function newEnd() {
       <div class="muted">{{ session.location ? `${session.location} · ` : '' }}{{ session.ended_at ? $t('session.finished') : $t('training.inProgress') }}</div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
+      <SessionEvent :session="session" />
       <RouterLink :to="mediaLink">{{ $t('media.link') }}</RouterLink>
       <UnattachedHint :owner="archer" :session="session" :name="session.owner_name" />
       <ChipGroup v-if="!session.noResults" v-model="chosen" :label="$t('training.chooseType')" :options="TYPES" />
@@ -105,6 +107,7 @@ function newEnd() {
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
       <div v-if="session.opened_by_name" class="muted">{{ $t('training.openedBy', { name: session.opened_by_name }) }}</div>
+      <SessionEvent :session="session" />
       <SessionPlots fill :session="session" />
       <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
       <div class="d-flex justify-content-center gap-4">
@@ -128,6 +131,7 @@ function newEnd() {
       </div>
       <div v-if="session.owner_name" class="muted">{{ $t('session.forArcher', { name: session.owner_name }) }}</div>
       <div v-else class="muted">{{ $t('session.equipment', { gear: gearLine(session.gear) || $t('session.noneChosen') }) }}</div>
+      <SessionEvent :session="session" />
       <SessionDetailsText :details="session.details" />
       <div class="d-flex gap-4">
         <RouterLink v-if="!session.owner" :to="`/training/${session.id}/details`">{{ $t('details.link') }}</RouterLink>

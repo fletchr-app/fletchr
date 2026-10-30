@@ -276,6 +276,15 @@ export default {
     reopen: 'Reopen',
     reopenSession: 'Reopen session',
   },
+  event: {
+    kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },
+    suggest: 'Training',
+    none: 'None',
+    linked: 'Training: {name}, {date}',
+    link: 'Link to a training',
+    change: 'Change',
+    unlink: 'None',
+  },
   privacy: {
     title: 'Your data',
     password: 'Your password',
