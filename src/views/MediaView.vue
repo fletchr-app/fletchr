@@ -30,6 +30,7 @@ import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useNotes } from '@/composables/useNotes'
@@ -67,6 +68,7 @@ const title = name ? t('media.titleFor', { name }) : t('media.title')
 const { api, userId, isLocal } = useAuth()
 const noteLibrary = useNoteLibrary()
 const notesQueue = useNotes()
+const kept = useKeptMedia()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -327,9 +329,11 @@ const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
 
 async function loadFull(item: Shown) {
-  if (!item.queued || full.value[item.key]) return
+  if (full.value[item.key]) return
   try {
-    full.value = { ...full.value, [item.key]: URL.createObjectURL((await loadFiles(item.queued.id, 'image/jpeg')).file) }
+    // A photo that waits for its upload, or one of yours the phone kept after it: from the file on the phone.
+    const files = item.queued ? await loadFiles(item.queued.id, 'image/jpeg') : item.remote && kept.has(item.remote.id) ? await kept.load(item.remote.id, 'image/jpeg') : null
+    if (files) full.value = { ...full.value, [item.key]: URL.createObjectURL(files.file) }
   } catch {
     /* the preview stays */
   }
@@ -375,6 +379,8 @@ async function loadNotes(item: Shown) {
       const list = await noteLibrary.list({ media: remote.id })
       if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
     }
+    // Your own photo: you can write about it without asking the server.
+    if (remote.owner === Number(userId.value) && writable.value[remote.owner] === undefined) writable.value = { ...writable.value, [remote.owner]: true }
     if (writable.value[remote.owner] === undefined) {
       const { data: teams } = await api.GET('/api/notes/teams/', { params: { query: { archer: remote.owner } } })
       if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 || remote.owner === Number(userId.value) }
@@ -390,6 +396,8 @@ const notesButton = computed(() => {
   if (item?.queued) return !item.queued.owner || item.queued.owner === Number(userId.value)
   const remote = item?.remote
   if (!remote) return false
+  // Without the server the photo opens in the player only if the phone has its file.
+  if (noteLibrary.offline.value && !kept.has(remote.id)) return false
   return (photoNotes.value[remote.id]?.length ?? 0) > 0 || writable.value[remote.owner] === true
 })
 const notesCount = computed(() => {
@@ -447,6 +455,7 @@ async function remove() {
   else {
     const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: item.remote!.id } } }).catch(() => ({ response: null }))
     if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
+    kept.forget([item.remote!.id])
     reload()
   }
   close()

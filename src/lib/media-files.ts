@@ -6,7 +6,9 @@ import type { MediaFiles } from './media-queue.ts';
 // The files of queued photos and videos, in the app's own folder (not the cache, which the system may empty). The video
 // plugin writes there too: files/media-queue/{id}.file. In the browser the plugin keeps them in IndexedDB.
 const FOLDER = 'media-queue';
-const path = (id: string, part: 'file' | 'thumb') => `${FOLDER}/${id}.${part}`;
+const path = (id: string, part: 'file' | 'thumb', folder = FOLDER) => `${folder}/${id}.${part}`;
+// Photos and clips that went up, kept to open without a connection (media-keep.ts). Apart from the queue, so clearing the one never touches the other.
+const KEPT = 'media-kept';
 
 function toBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -26,15 +28,15 @@ async function write(id: string, part: 'file' | 'thumb', blob: Blob) {
   await Filesystem.writeFile({ path: path(id, part), data: await toBase64(blob), directory: Directory.Data, recursive: true });
 }
 
-async function read(id: string, part: 'file' | 'thumb', type: string): Promise<Blob> {
+async function read(id: string, part: 'file' | 'thumb', type: string, folder = FOLDER): Promise<Blob> {
   if (Capacitor.isNativePlatform()) {
     // Through the WebView's own file route: a clip of tens of MB does not pass through a base64 string.
-    const { uri } = await Filesystem.getUri({ path: path(id, part), directory: Directory.Data });
+    const { uri } = await Filesystem.getUri({ path: path(id, part, folder), directory: Directory.Data });
     const response = await fetch(Capacitor.convertFileSrc(uri));
     if (!response.ok) throw new Error('File not found');
     return new Blob([await response.blob()], { type });
   }
-  const { data } = await Filesystem.readFile({ path: path(id, part), directory: Directory.Data });
+  const { data } = await Filesystem.readFile({ path: path(id, part, folder), directory: Directory.Data });
   return typeof data === 'string' ? fromBase64(data, type) : data; // the browser returns a Blob
 }
 
@@ -87,5 +89,33 @@ export async function removeCachedThumbnails(ids: string[]): Promise<void> {
 export async function removeFiles(id: string): Promise<void> {
   for (const part of ['file', 'thumb'] as const) {
     await Filesystem.deleteFile({ path: path(id, part), directory: Directory.Data }).catch(() => {});
+  }
+}
+
+/** Moves the files of an item that went up out of the queue's folder to the kept ones. Returns their size in bytes, or null if they are not there. */
+export async function keepFiles(id: string): Promise<number | null> {
+  try {
+    await Filesystem.mkdir({ path: KEPT, directory: Directory.Data, recursive: true }).catch(() => {});
+    let size = 0;
+    for (const part of ['file', 'thumb'] as const) {
+      await Filesystem.rename({ from: path(id, part), to: path(id, part, KEPT), directory: Directory.Data, toDirectory: Directory.Data });
+      size += (await Filesystem.stat({ path: path(id, part, KEPT), directory: Directory.Data })).size;
+    }
+    return size;
+  } catch {
+    await removeFiles(id);
+    return null;
+  }
+}
+
+export async function loadKept(id: string, fileType: string): Promise<MediaFiles> {
+  return { file: await read(id, 'file', fileType, KEPT), thumbnail: await read(id, 'thumb', 'image/jpeg', KEPT) };
+}
+
+export async function removeKept(ids: string[]): Promise<void> {
+  for (const id of ids) {
+    for (const part of ['file', 'thumb'] as const) {
+      await Filesystem.deleteFile({ path: path(id, part, KEPT), directory: Directory.Data }).catch(() => {});
+    }
   }
 }

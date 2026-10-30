@@ -14,7 +14,10 @@ import MediaEvent from '@/components/MediaEvent.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
+import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMedia } from '@/composables/useMedia'
+import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
@@ -23,7 +26,7 @@ import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
 import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
-import { clipOfQueued, playerSiblings } from '@/lib/queued-clip'
+import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
 // One uploaded photo or clip. A clip is looked at frame by frame: the video above, a tape below it that is dragged
@@ -49,8 +52,19 @@ const currentId = ref(route.params.id as string)
 const everything = ref<{ id: string; kind: string }[]>([])
 
 // A photo or clip that has not been uploaded yet plays from its file on the phone. Once it is up, the server's copy
-// takes over the next time it is loaded; what is on screen goes on from the file.
+// takes over the next time it is loaded; what is on screen goes on from the file. One of yours that the phone kept after
+// the upload (Settings sets how many) opens from its file too, also without a connection.
 const media = useMedia()
+const kept = useKeptMedia()
+const library = useMediaLibrary()
+const noteLibrary = useNoteLibrary()
+let heldId: string | null = null
+function hold(id: string | null) {
+  if (heldId) kept.release(heldId)
+  heldId = id
+  if (id) kept.hold(id)
+}
+onBeforeUnmount(() => hold(null))
 const queuedItem = computed(() => media.items.value.find((i) => i.id === currentId.value))
 let localUrls: string[] = []
 function releaseLocal() {
@@ -63,11 +77,25 @@ async function localClip(item: NonNullable<typeof queuedItem.value>) {
   localUrls = [URL.createObjectURL(files.file), URL.createObjectURL(files.thumbnail)]
   return clipOfQueued(item, Number(userId.value), { file: localUrls[0]!, thumbnail: localUrls[1]! })
 }
+async function keptClip(known: Parameters<typeof clipOfKept>[0]) {
+  const files = await kept.load(known.id, known.kind === 'video' ? 'video/mp4' : 'image/jpeg')
+  if (!files) return null
+  releaseLocal()
+  localUrls = [URL.createObjectURL(files.file), URL.createObjectURL(files.thumbnail)]
+  hold(known.id)
+  return clipOfKept(known, { file: localUrls[0]!, thumbnail: localUrls[1]! })
+}
 const { data: clip, error, reload } = useRemote(
   async () => {
     const item = queuedItem.value
     if (item) return await localClip(item)
-    const { data } = await api.GET('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } })
+    const id = currentId.value
+    let unreachable = false
+    const { data } = await api.GET('/api/media/{media_id}/', { params: { path: { media_id: id } } }).catch(() => ((unreachable = true), { data: undefined }))
+    const known = data ?? library.items.value.find((m) => m.id === id)
+    const fromPhone = known && kept.has(id) ? await keptClip(known) : null
+    if (fromPhone) return fromPhone
+    if (unreachable) throw new Error('offline')
     return data ?? null
   },
   { watch: [currentId] },
@@ -99,7 +127,7 @@ function goTo(delta: number) {
 
 // Coach notes on single frames: the tape shows where they are, a tap on a note jumps to its frame.
 const notes = useRemote(
-  async () => (queuedItem.value ? [] : ((await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null)),
+  async () => (queuedItem.value ? [] : noteLibrary.list({ media: currentId.value })),
   { watch: [currentId] },
 )
 // A note written here goes up in the background; when it has, the server's list has it. Until then it is in the
@@ -462,6 +490,7 @@ async function remove() {
   }
   const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } }).catch(() => ({ response: null }))
   if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
+  kept.forget([currentId.value])
   router.back()
 }
 watch(currentId, () => (confirmDelete.value = false))

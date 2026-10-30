@@ -33,6 +33,11 @@ export function clipOfQueued(item: QueuedMedia, me: number, urls: { file: string
   };
 }
 
+/** A photo or clip the phone kept after it went up: what the server said about it, with links to the files on the phone. */
+export function clipOfKept(known: Omit<Media, 'file_url' | 'thumbnail_url'>, urls: { file: string; thumbnail: string }): Media {
+  return { ...known, file_url: urls.file, thumbnail_url: urls.thumbnail };
+}
+
 /**
  * The photos and clips next to the one on show, in the order of the media screen: what waits on the phone first, then
  * what the server listed. `filter` is what the player was opened with: a session, or an archer.
