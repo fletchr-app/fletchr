@@ -18,8 +18,12 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 - `useAuth().status` is `loading | signedOut | signedIn | local`. `local` is chosen with "Use without an account" on the sign-in screen; the flag (`local-mode`) and the owner id (`local-owner-id`) are in Preferences (`src/lib/local-mode.ts`, `useLocalMode`) **[fact]**.
 - Setting tokens turns the flag off (`watch` on `state.tokens` in `useAuth`) and keeps the id and all data under `<store>:local:<id>`; nothing is uploaded **[fact]**. This is the "Keep on this phone only" behaviour of the design, and the place where the confirmation has to go in front.
 - Notes and media name their archer by number; without an account it is `LOCAL_ARCHER` = 0 **[fact]** (`src/lib/local-mode.ts`). The upload maps it to the account's id.
-- Media queue files are keyed by item id, not by owner, so they need no move **[fact, from the earlier check]**. `dataStore` has no `keys` or `move` **[check]**.
-- `local-export.ts` has `buildExport`, `parseImport` and `mergeImport` (items the device already has are kept) for log, equipment and notes, without media files **[fact]**. Whether `mergeImport` can serve as the merge of step 2 **[check]**.
+- Media queue files are keyed by item id, not by owner, so they need no move **[fact, from the earlier check]**. `dataStore` has no `keys` or `move` **[fact]**.
+- `local-export.ts` has `buildExport`, `parseExport` and `planImport(file, device)` (items the device already has are kept, it returns what to add and counts) for log, equipment and notes, without media files **[fact]**. `planImport` can be the merge for those three stores (the account's data as `device`); the media queue needs its own merge **[fact]**.
+- `useKeyedStore` has no `flush()` and no hold flag, and `dataStore` has no `keys` or `move` **[fact]**; both are new work in step 2.
+- `AuthSession` adds the Authorization header only when it holds a token, so a request with an explicit header before `setTokens` keeps it **[fact]**; `/api/me/` with the new access token works.
+- `signInWithGoogle(inviteCode?)`: with a code it can create an account, without one it only signs in (`no_account` otherwise) **[fact]**. So the app knows beforehand: a code means register (confirm before), none means sign-in (confirm after). Tokens are set inside the function, so the confirmation needs to move in front of `setTokens` there too.
+- The "videos wait for Wi-Fi" line exists in `MediaView` only (`waitingForWifi`); `SyncBanner` does not show it **[fact]**.
 - `note-store.ts` has `add` and `remove`, no edit; a note's text cannot be changed in local mode, only deleted **[fact]**.
 - Wi-Fi-only video upload exists (`videosWifiOnly`, default on) **[fact]**; the setting is hidden in local mode, shown again in an account.
 - Registration needs an invite or claim code **[fact]** (`RegisterSerializer.invite_code`).
@@ -34,7 +38,7 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 
 ## Step 0: first launch and sign-out as decided (small, before step 2)
 
-- [x] `useLocalMode` / `useAuth`: a phone with no tokens and no stored flag starts in `local` (today it is `signedOut` until "Use without an account" is chosen). Made on first read: `enterLocal()` runs once when `status` would be `signedOut` and the server has not been asked for a sign-in `status` stays `loading` until both `loaded` and `localLoaded` are true, so a watch on `status === 'signedOut'` in `useAuth` is safe (checked).
+- [x] `useLocalMode` / `useAuth`: a phone with no tokens and no stored flag starts in `local` (today it is `signedOut` until "Use without an account" is chosen). Made on first read: `enterLocal()` runs once when `status` would be `signedOut` and the server has not been asked for a sign-in **[check]** how `loaded` and `localLoaded` order at start-up.
 - [x] `signOut` and account deletion: call `enterLocal()` so the app ends in local mode on `/`, not on `/sign-in`. The account's data stays under its key.
 - [x] Router: `'out'` stays open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable now if the flag is lost).
 - [x] `SignInView`: the "Use without an account" choice is no longer needed there; remove it or keep it as a link back **(proposed: remove)**. `SettingsView` in local already has "Sign in or register".
@@ -48,18 +52,18 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 
 ## Step 2: sign-in with local data (one PR)
 
-- [ ] `src/lib/local-claim.ts` (pure): `localCounts(stores)` (sessions, bows, arrow sets, photos, videos, notes; reuse what `local-export.ts` counts **[check]**), `prepareUpload(stores, { userId, share })` (sets `visibility` on every session and on clips without a session, replaces `LOCAL_ARCHER` in notes and media with `userId`), and one merge per store: log, media queue, equipment, notes (append; ids are UUIDs; queue order: the account's ops first, then the local ones).
+- [ ] `src/lib/local-claim.ts` (pure): `localCounts(stores)` (sessions, bows, arrow sets, photos, videos, notes; `buildExport` counts all but media), `prepareUpload(stores, { userId, share })` (sets `visibility` on every session and on clips without a session, replaces `LOCAL_ARCHER` in notes and media with `userId`), and one merge per store: log, equipment and notes through `planImport`, the media queue by its own append (ids are UUIDs; queue order: the account's ops first, then the local ones).
 - [ ] `useAuth`: `signIn`, `register` and `signInWithGoogle` hand the tokens to a `commit` step before the existing `setTokens` / `local.leave()` path. If the local owner holds nothing: commit. Otherwise:
-  - `signIn`: ask `/api/me/` with the new access token (as header; the middleware adds none while no tokens are set **[check]**) for the email, then the confirmation.
-  - `register`: show the confirmation first, with the email from the form, and send the request only after Upload or Keep on this phone only. A Google sign-up that creates an account is the same **[check]** whether the app knows beforehand.
+  - `signIn`: ask `/api/me/` with the new access token (as explicit header) for the email, then the confirmation.
+  - `register`: show the confirmation first, with the email from the form, and send the request only after Upload or Keep on this phone only. `signInWithGoogle` with an invite code is the same as `register`; without a code it is a sign-in.
 - [ ] Confirmation (`alertController`, like the sign-out prompt in `SettingsView`): account email and counts, radio "Share your existing sessions with your coaches?" Yes / No, keep private (no preselection; Upload stays disabled until one is chosen), buttons Upload / Keep on this phone only / Cancel.
-  - Upload: flush and hold the local stores (`useKeyedStore` needs `flush()` and a hold flag **[check]**), read the account's stores from `dataStore` (they may exist from earlier use), merge, write, read back, then remove the local keys, then commit the tokens; the account stores load the merged data and the queues drain in the existing order.
+  - Upload: flush and hold the local stores (`useKeyedStore` needs a new `flush()` and a hold flag), read the account's stores from `dataStore` (they may exist from earlier use), merge, write, read back, then remove the local keys, then commit the tokens; the account stores load the merged data and the queues drain in the existing order.
   - Keep on this phone only: commit; local keys untouched (today's behaviour).
   - Cancel: for `signIn` drop the tokens and revoke the refresh token (as `signOut`); for `register` nothing was sent. Stay as before.
 - [ ] After Upload the local owner is empty; "Use without an account" later finds an empty local mode (the id is kept).
 - [ ] `LocalDataView` text: say that signing in offers to upload (it says today that nothing is uploaded) **[check]** the wording in `en.ts`/`de.ts` (`local.*`, `auth.signIn.*`).
 - [ ] Server: `PUT` of sessions and media accepts `visibility` (from the visibility plan); nothing else.
-- [ ] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner`: "n videos wait for Wi-Fi" **[check]** whether `waitingForWifi` is shown already. Joining a team (`JoinTeamView`) does not wait for the queue.
+- [ ] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner` does not show waiting videos (only `MediaView`); after the upload they would wait unseen, so add "n videos wait for Wi-Fi" to the banner (small). Joining a team (`JoinTeamView`) does not wait for the queue.
 - [ ] Tests (Vitest): counts; `prepareUpload` sets visibility for both answers and maps `LOCAL_ARCHER`; each merge keeps both sides and the queue order; an empty local owner gives no prompt; a failed write leaves the local keys in place.
 
 ## Step 3: sign-out
