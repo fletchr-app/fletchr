@@ -194,9 +194,17 @@ function sessionWaiting(id: string): boolean {
   return state.value.outbox.some((o) => o.sessionId === id && o.kind === 'session' && !o.error);
 }
 
+/** A note about this session or end must wait: the server does not have it yet. */
+function parentWaiting(sessionId: string | null, endId: string | null): boolean {
+  return state.value.outbox.some(
+    (o) => !o.delete && ((sessionId !== null && o.kind === 'session' && o.sessionId === sessionId) || (endId !== null && o.kind === 'end' && o.itemId === endId)),
+  );
+}
+
 const actions = {
   startSession,
   sessionWaiting,
+  parentWaiting,
   setType: (id: string, type: SessionType) => dispatch({ type: 'updateSession', id, patch: { type } }),
   onSessionRenamed: (listener: (from: string, to: string) => void) => void renameListeners.push(listener),
   onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),

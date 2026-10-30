@@ -8,8 +8,10 @@ import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
+import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { useNotes } from '@/composables/useNotes'
 import { useServer } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useUnits } from '@/composables/useUnits'
@@ -22,10 +24,13 @@ import type { Units } from '@/lib/units'
 const { signOut } = useAuth()
 const log = useLog()
 const media = useMedia()
+const equipment = useEquipment()
+const notes = useNotes()
 
 // What has not reached the server stays on the phone under this account, but the person should know before leaving.
 async function confirmSignOut() {
-  const unsent = log.waiting.value + log.failed.value.length + media.items.value.length
+  const unsent =
+    log.waiting.value + log.failed.value.length + media.items.value.length + equipment.waiting.value + equipment.failed.value.length + notes.waiting.value + notes.failed.value.length
   if (unsent === 0) return void signOut()
   const alert = await alertController.create({
     header: t('settings.signOut'),

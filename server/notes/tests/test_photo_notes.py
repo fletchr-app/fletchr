@@ -63,9 +63,11 @@ def test_who_sees_a_photo_note(api, club):
     assert api("archer2").get(url).data == []
 
 
-def test_archers_cannot_write_a_photo_note(api, club):
-    photo = give(club["archer1"], "photo")
-    assert photo_note(api, club, photo, who="archer1").status_code == 403
+def test_archers_cannot_write_a_note_on_the_photo_of_somebody_else(api, club):
+    # On their own photo an archer may (private, without a team: test_own_notes.py); on another archer's they cannot even see it.
+    photo = give(club["archer2"], "photo")
+    assert photo_note(api, club, photo, who="archer1", about="archer2").status_code == 400
+    assert photo_note(api, club, photo, who="archer1", about="archer1").status_code == 400
 
 
 def test_the_author_changes_the_drawing_but_not_the_photo(api, club):

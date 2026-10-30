@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 22:07+0100\n"
+"POT-Creation-Date: 2026-10-30 08:45+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -430,11 +430,11 @@ msgstr "Ein Kriterium ist zweimal bewertet"
 msgid "A rating goes from 1 to %(n)s"
 msgstr "Eine Bewertung geht von 1 bis %(n)s"
 
-#: evaluations/serializers.py:217 notes/serializers.py:150
+#: evaluations/serializers.py:217 notes/serializers.py:164
 msgid "Give the clip the frame is in"
 msgstr "Gib das Video an, zu dem das Bild gehört"
 
-#: evaluations/serializers.py:220 notes/serializers.py:137
+#: evaluations/serializers.py:220 notes/serializers.py:151
 msgid "This is not a photo or video of that archer"
 msgstr "Das ist kein Foto oder Video dieses Schützen"
 
@@ -442,7 +442,7 @@ msgstr "Das ist kein Foto oder Video dieses Schützen"
 msgid "Say which frame the rating is about"
 msgstr "Gib an, zu welchem Bild die Bewertung gehört"
 
-#: evaluations/serializers.py:224 notes/serializers.py:144
+#: evaluations/serializers.py:224 notes/serializers.py:158
 msgid "The clip has no such frame"
 msgstr "Das Video hat dieses Bild nicht"
 
@@ -511,7 +511,7 @@ msgstr ""
 "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video "
 "ändern"
 
-#: media/views.py:77 notes/views.py:83 training/views.py:153
+#: media/views.py:77 notes/views.py:110 training/views.py:153
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
@@ -533,51 +533,59 @@ msgstr "Das ist keine Zeichnung"
 msgid "A drawing can have %(n)s shapes at most"
 msgstr "Eine Zeichnung kann höchstens %(n)s Formen haben"
 
-#: notes/serializers.py:95
+#: notes/serializers.py:98
 msgid "A note cannot be empty"
 msgstr "Eine Notiz darf nicht leer sein"
 
-#: notes/serializers.py:108
+#: notes/serializers.py:111
 msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr "Eine Zeichnung gehört zu einem Foto oder einem Bild eines Videos"
 
-#: notes/serializers.py:112
+#: notes/serializers.py:115
 msgid "This cannot be changed after the note is written"
 msgstr "Das lässt sich nach dem Schreiben der Notiz nicht mehr ändern"
 
-#: notes/serializers.py:117
+#: notes/serializers.py:117 notes/serializers.py:127
+msgid "A note about yourself is private"
+msgstr "Eine Notiz über dich selbst ist privat"
+
+#: notes/serializers.py:125
+msgid "A note about yourself has no team"
+msgstr "Eine Notiz über dich selbst gehört zu keinem Team"
+
+#: notes/serializers.py:132
 msgid "Only coaches can write notes"
 msgstr "Nur Trainer können Notizen schreiben"
 
-#: notes/serializers.py:123
+#: notes/serializers.py:137
 msgid "You cannot write notes about this archer in that team"
 msgstr "In diesem Team kannst du keine Notizen über diesen Schützen schreiben"
 
-#: notes/serializers.py:127
+#: notes/serializers.py:141
 msgid "You cannot write notes about this person"
 msgstr "Über diese Person kannst du keine Notizen schreiben"
 
-#: notes/serializers.py:129
+#: notes/serializers.py:143
 msgid "You coach this archer in several teams: say which one"
 msgstr "Du trainierst diesen Schützen in mehreren Teams: Gib an, in welchem"
 
-#: notes/serializers.py:131
+#: notes/serializers.py:145
 msgid "This is not a session of that archer"
 msgstr "Das ist kein Training dieses Schützen"
 
-#: notes/serializers.py:133
+#: notes/serializers.py:147
 msgid "Give the session this end belongs to"
 msgstr "Gib das Training an, zu dem diese Passe gehört"
 
-#: notes/serializers.py:140
+#: notes/serializers.py:154
 msgid "A photo has no frames"
 msgstr "Ein Foto hat keine Einzelbilder"
 
-#: notes/serializers.py:142
+#: notes/serializers.py:156
 msgid "Say which frame the note is about"
 msgstr "Gib an, zu welchem Bild die Notiz gehört"
 
-#: notes/serializers.py:148
+#: notes/serializers.py:162
 msgid "This clip is from another session"
 msgstr "Dieses Video ist aus einem anderen Training"
 

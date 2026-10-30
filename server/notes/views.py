@@ -4,9 +4,10 @@ from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from core.access import archers_visible_to, note_teams
 from core.models import COACH_ROLES, Role, TeamMember, User
@@ -68,6 +69,32 @@ class NoteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+@extend_schema(tags=["notes"], request=NoteSerializer, responses={200: NoteSerializer, 201: NoteSerializer})
+class NotePutView(APIView):
+    """Write a note by the uid the app gave it, or change it. Safe to repeat.
+
+    Only the author can write it. A note of somebody else is answered like one that does not exist. The same
+    rules as for `POST`: a note about another person needs a team you coach them in, a note about yourself
+    has no team and is private. A photo, clip or session the server has not seen yet is a 400 on that field.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, uid):
+        note = Note.objects.filter(uid=uid).select_related("author__profile", "archer__profile", "media").first()
+        if note is not None and note.author_id != request.user.id:
+            raise NotFound
+        context = {
+            "request": request,
+            "admin_team_ids": NoteViewSet.admin_team_ids(request.user),
+            "visible_owner_ids": set(archers_visible_to(request.user).values_list("pk", flat=True)),
+        }
+        serializer = NoteSerializer(note, data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save(author=request.user, uid=uid) if note is None else serializer.save()
+        return Response(NoteSerializer(saved, context=context).data, status=200 if note else 201)
 
 
 @extend_schema(
