@@ -1,6 +1,7 @@
 import django_filters
 from django.db import transaction
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -11,7 +12,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import User
+from core.models import Tombstone, User
+from core.tombstones import forget
+from notes.views import readers_with_a_copy
 from training.merge import resolve_session_id
 from training.models import TrainingSession
 from training.schedule import rows_of_session
@@ -39,6 +42,7 @@ class MediaFilter(django_filters.FilterSet):
     )
     taken_after = django_filters.IsoDateTimeFilter(field_name="taken_at", lookup_expr="gte", help_text="Taken at or after this time")
     taken_before = django_filters.IsoDateTimeFilter(field_name="taken_at", lookup_expr="lt", help_text="Taken before this time")
+    updated_after = django_filters.IsoDateTimeFilter(field_name="updated_at", lookup_expr="gt", help_text="Changed after this time (a new upload, a note, a move)")
 
     session = django_filters.UUIDFilter(
         method="filter_session", help_text="Photos and videos of this session, and those of its archer from the event it is linked to that are in no session"
@@ -120,15 +124,20 @@ class MediaDetailView(APIView):
                     # the notes that followed the clip's event follow it again (a note of another team keeps its own)
                     follow = Q(event=old_event) | Q(event__isnull=True) if old_event else Q(event__isnull=True)
                     if media.event is None:
-                        media.coach_notes.filter(event=old_event).update(event=None)
+                        media.coach_notes.filter(event=old_event).update(event=None, updated_at=timezone.now())
                     else:
-                        media.coach_notes.filter(follow, team=media.event.team).update(event=media.event)
+                        media.coach_notes.filter(follow, team=media.event.team).update(event=media.event, updated_at=timezone.now())
         media = visible_media(request.user).get(pk=media.pk)
         return Response(MediaSerializer(media, context={"request": request}).data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
 
     @extend_schema(responses={204: None})
     def delete(self, request, media_id):
-        get_media(request, media_id, write=True).delete()
+        media = get_media(request, media_id, write=True)
+        with transaction.atomic():
+            forget(Tombstone.Kind.MEDIA, media.pk, [media.owner_id])
+            for note in media.coach_notes.all():  # they go with the photo or clip
+                forget(Tombstone.Kind.NOTE, note.uid, readers_with_a_copy(note))
+            media.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

@@ -300,7 +300,7 @@ class EventAttachView(APIView):
             raise PermissionDenied(gettext("Only the archer or a coach of the team can do this"))
         with transaction.atomic():
             notes = visible_notes(request.user).filter(event=event, archer=archer, session__isnull=True)
-            moved_notes = notes.update(session=session)
+            moved_notes = notes.update(session=session, updated_at=timezone.now())  # `update()` skips `auto_now`; the phones pull by the stamp
             clips = list(visible_media(request.user).filter(event=event, owner=archer, session__isnull=True))
             for clip in clips:
                 move_to_session(clip, session)

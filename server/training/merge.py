@@ -70,8 +70,9 @@ def merge(loser, winner):
     from media.models import Media
     from notes.models import Note
 
-    Media.objects.filter(session=loser).update(session=winner)
-    Note.objects.filter(session=loser).update(session=winner)
+    now = timezone.now()  # `update()` does not set `updated_at`, and the phones pull by it
+    Media.objects.filter(session=loser).update(session=winner, updated_at=now)
+    Note.objects.filter(session=loser).update(session=winner, updated_at=now)
     changed = []
     for field in FILLED_FIELDS:
         mine, theirs = getattr(winner, field), getattr(loser, field)

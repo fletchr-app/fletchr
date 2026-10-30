@@ -20,6 +20,7 @@ from core.claims import can_write_sessions_of
 from core.models import COACH_ROLES, Role, Team, TeamMember, User
 
 from media.access import can_add_for
+from media.models import Media
 
 from .merge import has_results, merge_if_possible, opened_by_other, resolve_session_id
 from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
@@ -180,7 +181,10 @@ class SessionDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         session = get_session(request, session_id, write=True)
         SessionTombstone.objects.update_or_create(pk=session.pk, defaults={"owner_id": session.owner_id, "merged_into": None, "at": timezone.now()})
-        session.delete()
+        with transaction.atomic():
+            # The photos and videos stay, out of the session. That is not a `save()`, so the phones are told here.
+            Media.objects.filter(session=session).update(updated_at=timezone.now())
+            session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

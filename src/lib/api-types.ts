@@ -400,6 +400,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/gone/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Photos, videos and notes you may have a copy of that were deleted, oldest first. Sessions: `/api/sessions/gone/`. */
+        get: operations["gone_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -2210,6 +2227,8 @@ export interface components {
             note?: string;
             /** Format: date-time */
             readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
             /** @description Opens for an hour; fetch the clip again for a new link */
             readonly file_url: string;
             /** @description Opens for an hour; fetch the clip again for a new link */
@@ -3094,6 +3113,22 @@ export interface components {
         TokenRefreshRequest: {
             refresh: string;
         };
+        Tombstone: {
+            kind: components["schemas"]["TombstoneKindEnum"];
+            /**
+             * Format: uuid
+             * @description The id of a photo or video, the uid of a note
+             */
+            uid: string;
+            /** Format: date-time */
+            at?: string;
+        };
+        /**
+         * @description * `media` - Media
+         *     * `note` - Note
+         * @enum {string}
+         */
+        TombstoneKindEnum: "media" | "note";
         /**
          * @description * `metric` - Metric
          *     * `imperial` - Imperial
@@ -4101,6 +4136,33 @@ export interface operations {
             };
         };
     };
+    gone_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `media` - Media
+                 *     * `note` - Note
+                 */
+                kind?: "media" | "note";
+                /** @description Deleted after this time */
+                updated_after?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tombstone"][];
+                };
+            };
+        };
+    };
     health_retrieve: {
         parameters: {
             query?: never;
@@ -4430,6 +4492,8 @@ export interface operations {
                 taken_after?: string;
                 /** @description Taken before this time */
                 taken_before?: string;
+                /** @description Changed after this time (a new upload, a note, a move) */
+                updated_after?: string;
                 /** @description true: only photos and videos that are in no session; false: only those in a session */
                 without_session?: boolean;
             };
@@ -4603,6 +4667,8 @@ export interface operations {
                 /** @description Notes of this session, and the notes of its archer about the event it is linked to that are in no session */
                 session?: string;
                 team?: number;
+                /** @description Changed after this time */
+                updated_after?: string;
                 /**
                  * @description * `private` - Private
                  *     * `coach_only` - Coach Only

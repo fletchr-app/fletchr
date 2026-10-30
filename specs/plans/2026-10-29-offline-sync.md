@@ -132,12 +132,14 @@ Tests: `log-model.test.ts` (pulled detail does not overwrite a pending end; remo
 
 ## Phase 4: media both ways and notes queue (#83)
 
+Progress: server part done in the tenth PR. Decided with Tim: the phone keeps the list and thumbnails of pulled media, not the video files (they stream online); one shared `core.Tombstone`; server first, then the app pull, then the player. The tombstone goes to the people who may keep a copy (the clip's owner; a note's author, and the archer if they can read it), not to coaches, who read online. Extras the plan did not list: `updated_at` is also set where code uses `update()` (session delete, merge, claim, move of a clip's notes), notes on a deleted clip get their own tombstones, and a note that stops being shared gets one for the archer.
+
 Server:
-- [ ] `media/migrations/0002_updated_at.py`: `Media.updated_at` (`auto_now`), backfill from `created_at`.
-- [ ] Tombstones (Q8): `core.Tombstone(kind, uid, owner, at)` with `core/migrations/0009_tombstone.py`; written on media and note delete; `GET /api/gone/?kind=&updated_after=`. `SessionTombstone` stays (it carries `merged_into`).
-- [ ] `MediaFilter.updated_after`.
-- [ ] Notes: `NoteFilter.updated_after` (the `PUT` route is in Phase 1b).
-- [ ] `npm run types:api`.
+- [x] `media/migrations/0003_updated_at.py`: `Media.updated_at` (`auto_now`), backfill from `created_at`.
+- [x] Tombstones (Q8): `core.Tombstone(kind, uid, owner, at)` with `core/migrations/0009_tombstone.py`; written on media and note delete; `GET /api/gone/?kind=&updated_after=`. `SessionTombstone` stays (it carries `merged_into`).
+- [x] `MediaFilter.updated_after`.
+- [x] Notes: `NoteFilter.updated_after` (the `PUT` route is in Phase 1b).
+- [x] `npm run types:api`.
 
 App:
 - [ ] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.

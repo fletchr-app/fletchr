@@ -1052,6 +1052,41 @@ paths:
                 items:
                   $ref: '#/components/schemas/Face'
           description: ''
+  /api/gone/:
+    get:
+      operationId: gone_list
+      description: 'Photos, videos and notes you may have a copy of that were deleted,
+        oldest first. Sessions: `/api/sessions/gone/`.'
+      parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - media
+          - note
+        description: |-
+          * `media` - Media
+          * `note` - Note
+      - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+        description: Deleted after this time
+      tags:
+      - gone
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tombstone'
+          description: ''
   /api/health/:
     get:
       operationId: health_retrieve
@@ -1411,6 +1446,12 @@ paths:
           format: date-time
         description: Taken before this time
       - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+        description: Changed after this time (a new upload, a note, a move)
+      - in: query
         name: without_session
         schema:
           type: boolean
@@ -1629,6 +1670,12 @@ paths:
         name: team
         schema:
           type: integer
+      - in: query
+        name: updated_after
+        schema:
+          type: string
+          format: date-time
+        description: Changed after this time
       - in: query
         name: visibility
         schema:
@@ -5063,6 +5110,10 @@ components:
           type: string
           format: date-time
           readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         file_url:
           type: string
           readOnly: true
@@ -5088,6 +5139,7 @@ components:
       - size
       - taken_at
       - thumbnail_url
+      - updated_at
       - uploaded_by_name
       - width
     MediaExportLink:
@@ -6947,6 +6999,29 @@ components:
           minLength: 1
       required:
       - refresh
+    Tombstone:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/TombstoneKindEnum'
+        uid:
+          type: string
+          format: uuid
+          description: The id of a photo or video, the uid of a note
+        at:
+          type: string
+          format: date-time
+      required:
+      - kind
+      - uid
+    TombstoneKindEnum:
+      enum:
+      - media
+      - note
+      type: string
+      description: |-
+        * `media` - Media
+        * `note` - Note
     UnitsEnum:
       enum:
       - metric
