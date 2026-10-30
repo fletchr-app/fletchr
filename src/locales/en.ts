@@ -62,10 +62,7 @@ export default {
   },
   local: {
     homeTitle: 'Your training log',
-    useWithout: 'Use without an account',
-    useWithoutText: 'Log your training on this phone only. No account and no server are needed. Your data stays on this phone, so make a backup file in Settings from time to time. Teams, coaches and evaluations need an account.',
-    useWithoutButton: 'Continue without an account',
-    signInText: 'Signing in does not delete or upload what is on this phone. It stays here and is not shown while you are signed in; "Use without an account" brings it back.',
+    signInText: 'Signing in does not delete or upload what is on this phone. It stays here and is not shown while you are signed in; signing out brings it back.',
     backToApp: 'Back to my training log',
     settingsNote: 'You use Fletchr without an account. Your data is only on this phone.',
     dataRow: 'Backup: export and import',

@@ -13,7 +13,7 @@ Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-
 
 ## Without an account (#93)
 
-The app can be used without an account or server: the sign-in screen offers "Use without an account". It is a third state next to signed in and signed out (`local`), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in later keeps the local data on the phone, hidden and not uploaded; uploading it to the account is not built yet.
+The app can be used without an account or server: a phone with no account starts in it, and signing out ends in it. It is a state next to signed in (`local`; `signedOut` is only passed through), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in later keeps the local data on the phone, hidden and not uploaded; uploading it to the account is not built yet.
 
 ## Admin: a person changes how they sign in
 

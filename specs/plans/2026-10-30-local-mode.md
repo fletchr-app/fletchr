@@ -38,11 +38,11 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 
 ## Step 0: first launch and sign-out as decided (small, before step 2)
 
-- [ ] `useLocalMode` / `useAuth`: a phone with no tokens and no stored flag starts in `local` (today it is `signedOut` until "Use without an account" is chosen). Made on first read: `enterLocal()` runs once when `status` would be `signedOut` and the server has not been asked for a sign-in **[check]** how `loaded` and `localLoaded` order at start-up.
-- [ ] `signOut` and account deletion: call `enterLocal()` so the app ends in local mode on `/`, not on `/sign-in`. The account's data stays under its key.
-- [ ] Router: `'out'` stays open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable now if the flag is lost).
-- [ ] `SignInView`: the "Use without an account" choice is no longer needed there; remove it or keep it as a link back **(proposed: remove)**. `SettingsView` in local already has "Sign in or register".
-- [ ] Tests: `local-mode.test.ts` for the first-start path; sign-out ends in `local`.
+- [x] `useLocalMode` / `useAuth`: a phone with no tokens and no stored flag starts in `local` (today it is `signedOut` until "Use without an account" is chosen). Made on first read: `enterLocal()` runs once when `status` would be `signedOut` and the server has not been asked for a sign-in **[check]** how `loaded` and `localLoaded` order at start-up.
+- [x] `signOut` and account deletion: call `enterLocal()` so the app ends in local mode on `/`, not on `/sign-in`. The account's data stays under its key.
+- [x] Router: `'out'` stays open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable now if the flag is lost).
+- [x] `SignInView`: the "Use without an account" choice is no longer needed there; remove it or keep it as a link back **(proposed: remove)**. `SettingsView` in local already has "Sign in or register".
+- [x] Tests: `local-mode.test.ts` for the first-start path; sign-out ends in `local`.
 
 ## Step 1: edit a note in local mode (small)
 

@@ -66,10 +66,7 @@ export default {
   },
   local: {
     homeTitle: 'Dein Trainingstagebuch',
-    useWithout: 'Ohne Konto nutzen',
-    useWithoutText: 'Trage dein Training nur auf diesem Handy ein. Du brauchst weder Konto noch Server. Deine Daten bleiben auf diesem Handy, mach daher ab und zu eine Sicherungsdatei in den Einstellungen. Teams, Trainer und Auswertungen brauchen ein Konto.',
-    useWithoutButton: 'Ohne Konto weiter',
-    signInText: 'Beim Anmelden wird nichts gelöscht und nichts hochgeladen, was auf diesem Handy ist. Es bleibt hier und wird nicht angezeigt, solange du angemeldet bist; „Ohne Konto nutzen“ holt es zurück.',
+    signInText: 'Beim Anmelden wird nichts gelöscht und nichts hochgeladen, was auf diesem Handy ist. Es bleibt hier und wird nicht angezeigt, solange du angemeldet bist; nach dem Abmelden ist es wieder da.',
     backToApp: 'Zurück zu meinem Trainingstagebuch',
     settingsNote: 'Du nutzt Fletchr ohne Konto. Deine Daten sind nur auf diesem Handy.',
     dataRow: 'Sicherung: Export und Import',
