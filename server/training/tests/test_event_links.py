@@ -223,3 +223,35 @@ def test_taking_over_a_managed_profile_keeps_the_links(client_for, club, join, e
     claim_profile(code.code, newcomer)
     assert TrainingSession.objects.get(pk=sid).event == event and TrainingSession.objects.get(pk=sid).owner == newcomer
     assert Note.objects.get(pk=note).event == event and Media.objects.get(pk=clip).event == event
+
+
+# --- manual attach (phase 5) ---------------------------------------------------------------------
+
+
+def attach(client, event, archer, session):
+    return client.post(f"/api/events/{event.pk}/attach/", {"archer": archer.pk, "session": str(session.pk)}, format="json")
+
+
+def test_the_rows_of_an_event_are_put_into_a_session_and_keep_their_event(client_for, club, event):
+    session = make_session(club["archer1"])
+    note = write_note(client_for, club, event=str(event.pk)).data["id"]
+    clip = put(client_for(club["coach"]), photo(event=str(event.pk)), owner=club["archer1"]).data["id"]
+    on_clip = write_note(client_for, club, media=clip).data["id"]
+    res = attach(client_for(club["coach"]), event, club["archer1"], session)
+    assert res.status_code == 200 and res.data == {"notes": 2, "media": 1}  # the note on the clip has the clip's event too
+    assert Note.objects.get(pk=note).session == session and Note.objects.get(pk=note).event == event
+    assert Media.objects.get(pk=clip).session == session and Media.objects.get(pk=clip).event == event
+    assert Note.objects.get(pk=on_clip).session == session  # the notes on a clip go with it
+    assert attach(client_for(club["coach"]), event, club["archer1"], session).data == {"notes": 0, "media": 0}  # repeating changes nothing
+
+
+def test_the_archer_attaches_what_they_may_read_a_stranger_cannot(client_for, club, event):
+    session = make_session(club["archer1"])
+    write_note(client_for, club, event=str(event.pk))  # coach only: the archer does not read it, so it stays
+    shared = write_note(client_for, club, event=str(event.pk), visibility="shared").data["id"]
+    res = attach(client_for(club["archer1"]), event, club["archer1"], session)
+    assert res.data == {"notes": 1, "media": 0} and Note.objects.get(pk=shared).session == session
+    assert attach(client_for(club["archer2"]), event, club["archer1"], session).status_code == 404
+    assert attach(client_for(club["b_admin"]), event, club["archer1"], session).status_code == 404
+    other = make_session(club["archer2"])
+    assert attach(client_for(club["coach"]), event, club["archer1"], other).status_code == 404  # not a session of that archer

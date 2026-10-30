@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 19:13+0100\n"
+"POT-Creation-Date: 2026-10-30 19:25+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -474,15 +474,15 @@ msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 msgid "There is no room left for this archer's photos and videos"
 msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 
-#: media/views.py:31
+#: media/views.py:32
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:93 notes/views.py:112 training/schedule_views.py:264 training/views.py:153
+#: media/views.py:94 notes/views.py:112 training/schedule_views.py:268 training/views.py:153
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
-#: media/views.py:100
+#: media/views.py:101
 msgid ""
 "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the "
 "archer's page."
@@ -517,7 +517,7 @@ msgstr "Eine Notiz über dich selbst ist privat"
 
 #: notes/serializers.py:127 notes/serializers.py:135
 msgid "The event is in another team than the note"
-msgstr "Das Training gehört zu einem anderen Team als die Notiz"
+msgstr "Der Termin gehört zu einem anderen Team als die Notiz"
 
 #: notes/serializers.py:139
 msgid "A note about yourself has no team"
@@ -575,17 +575,17 @@ msgstr "Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen
 
 #: training/schedule.py:88
 msgid "The slot has no training on this date"
-msgstr "Der Termin hat an diesem Datum kein Training"
+msgstr "Der Wochentermin hat an diesem Datum keinen Termin"
 
 #: training/schedule.py:111 training/schedule.py:114
 msgid "No such event"
-msgstr "Dieses Training gibt es nicht"
+msgstr "Diesen Termin gibt es nicht"
 
 #: training/schedule_serializers.py:25
 msgid "The team of a slot cannot change"
-msgstr "Das Team eines Termins lässt sich nicht ändern"
+msgstr "Das Team eines Wochentermins lässt sich nicht ändern"
 
-#: training/schedule_serializers.py:27 training/schedule_views.py:206
+#: training/schedule_serializers.py:27 training/schedule_views.py:210
 msgid "The end must be after the start"
 msgstr "Das Ende muss nach dem Beginn liegen"
 
@@ -601,64 +601,68 @@ msgstr "Gib beide Tage der Pause an, oder keinen"
 msgid "The pause can't end before it starts"
 msgstr "Die Pause darf nicht enden, bevor sie beginnt"
 
-#: training/schedule_views.py:45
+#: training/schedule_views.py:49
 msgid "Give the id of the team"
 msgstr "Gib die ID des Teams an"
 
-#: training/schedule_views.py:57
+#: training/schedule_views.py:61
 msgid "Give a date or a time, like 2026-10-30"
 msgstr "Gib ein Datum oder eine Uhrzeit an, zum Beispiel 2026-10-30"
 
-#: training/schedule_views.py:93 training/schedule_views.py:111 training/schedule_views.py:182
-#: training/schedule_views.py:215
+#: training/schedule_views.py:97 training/schedule_views.py:115 training/schedule_views.py:186
+#: training/schedule_views.py:219
 msgid "Only coaches can change the schedule"
 msgstr "Nur Trainer können den Trainingsplan ändern"
 
-#: training/schedule_views.py:98
+#: training/schedule_views.py:102
 msgid ""
 "Trainings of this slot are already in use. End this slot and add a new one from the day the new "
 "times apply."
 msgstr ""
-"Trainings dieses Termins werden schon verwendet. Beende diesen Termin und lege ab dem Tag der "
-"neuen Zeiten einen neuen an."
+"Termine dieses Wochentermins werden schon verwendet. Beende diesen Wochentermin und lege ab dem "
+"Tag der neuen Zeiten einen neuen an."
 
-#: training/schedule_views.py:131
+#: training/schedule_views.py:135
 #, python-format
 msgid "The period must be between 0 and %(n)s days"
 msgstr "Der Zeitraum muss zwischen 0 und %(n)s Tagen liegen"
 
-#: training/schedule_views.py:172
+#: training/schedule_views.py:176
 msgid "The team, slot and date of an event cannot change"
-msgstr "Team, Termin und Datum eines Trainings lassen sich nicht ändern"
+msgstr "Team, Wochentermin und Datum eines Termins lassen sich nicht ändern"
 
-#: training/schedule_views.py:178
+#: training/schedule_views.py:182
 msgid "Give the team of the event"
-msgstr "Gib das Team des Trainings an"
+msgstr "Gib das Team des Termins an"
 
-#: training/schedule_views.py:190
+#: training/schedule_views.py:194
 msgid "The id does not belong to this slot and date"
-msgstr "Die ID gehört nicht zu diesem Termin und Datum"
+msgstr "Die ID gehört nicht zu diesem Wochentermin und Datum"
 
-#: training/schedule_views.py:201
+#: training/schedule_views.py:205
 #, python-format
 msgid ""
 "Cannot cancel: %(sessions)s sessions, %(notes)s notes and %(media)s photos or videos are linked "
 "to it. Move it instead."
 msgstr ""
 "Absagen geht nicht: %(sessions)s Trainings, %(notes)s Notizen und %(media)s Fotos oder Videos "
-"sind damit verknüpft. Verschiebe es stattdessen."
+"sind damit verknüpft. Verschiebe den Termin stattdessen."
 
-#: training/schedule_views.py:217
+#: training/schedule_views.py:221
 msgid "A training from a slot cannot be deleted. Cancel it instead."
-msgstr "Ein Training aus einem Termin lässt sich nicht löschen. Sage es stattdessen ab."
+msgstr "Ein Termin aus einem Wochentermin lässt sich nicht löschen. Sage ihn stattdessen ab."
 
-#: training/schedule_views.py:219
+#: training/schedule_views.py:223
 msgid "Something is linked to this event. Change that first."
 msgstr "Damit ist etwas verknüpft. Ändere das zuerst."
 
-#: training/schedule_views.py:231
+#: training/schedule_views.py:235
 msgid "Only coaches can see who took part"
 msgstr "Nur Trainer können sehen, wer teilgenommen hat"
+
+#: training/schedule_views.py:300
+msgid "Only the archer or a coach of the team can do this"
+msgstr "Das kann nur der Schütze oder ein Trainer des Teams"
 
 #: training/serializers.py:39
 msgid "Give both x and y, or neither"

@@ -927,6 +927,44 @@ paths:
                 items:
                   $ref: '#/components/schemas/EventArcher'
           description: ''
+  /api/events/{event_id}/attach/:
+    post:
+      operationId: events_attach_create
+      description: |-
+        Put what an archer has in this event and in no session into one of their sessions. The rows keep their `event`.
+
+        For the archer who owns the session, and for coaches of the event's team. Safe to repeat: rows that are in a session
+        already are left alone. Only what you may see is moved.
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachResult'
+          description: ''
   /api/events/agenda/:
     get:
       operationId: events_agenda_list
@@ -3738,6 +3776,31 @@ components:
       - face_name
       - radius_cm
       - sets
+    AttachRequest:
+      type: object
+      properties:
+        archer:
+          type: integer
+          description: Whose rows of the event
+        session:
+          type: string
+          format: uuid
+          description: A session of that archer
+      required:
+      - archer
+      - session
+    AttachResult:
+      type: object
+      properties:
+        notes:
+          type: integer
+          description: Notes put into the session
+        media:
+          type: integer
+          description: Photos and videos put into the session
+      required:
+      - media
+      - notes
     AvatarResult:
       type: object
       properties:

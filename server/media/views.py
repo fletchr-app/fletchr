@@ -19,6 +19,7 @@ from training.schedule import rows_of_session
 from .access import can_add_for, can_change, visible_media
 from .files import read_link, serve
 from .models import Media
+from .moves import move_to_session
 from .serializers import MediaSerializer, MediaWriteSerializer
 
 
@@ -107,13 +108,14 @@ class MediaDetailView(APIView):
         else:
             media = existing
             moved = "session" in data and data["session"] != media.session
+            session = data.pop("session", media.session)
             old_event = media.event
             with transaction.atomic():
                 for name, value in data.items():
                     setattr(media, name, value)
                 media.save()
-                if moved:  # the notes on the clip belong to the session it is in; the end was one of the old session
-                    media.coach_notes.update(session=media.session, end=None)
+                if moved:  # the notes on the clip belong to the session it is in
+                    move_to_session(media, session)
                 if "event" in data and data["event"] != old_event:
                     # the notes that followed the clip's event follow it again (a note of another team keeps its own)
                     follow = Q(event=old_event) | Q(event__isnull=True) if old_event else Q(event__isnull=True)

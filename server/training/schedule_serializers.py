@@ -89,3 +89,13 @@ class MineEventSerializer(serializers.Serializer):
     event = EventSerializer()
     notes = serializers.IntegerField(help_text="Notes of the event about this archer, in no session, that you may read")
     media = serializers.IntegerField(help_text="Photos and videos of the event of this archer, in no session")
+
+
+class AttachSerializer(serializers.Serializer):
+    archer = serializers.IntegerField(help_text="Whose rows of the event")
+    session = serializers.UUIDField(help_text="A session of that archer")
+
+
+class AttachResultSerializer(serializers.Serializer):
+    notes = serializers.IntegerField(help_text="Notes put into the session")
+    media = serializers.IntegerField(help_text="Photos and videos put into the session")

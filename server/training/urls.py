@@ -19,4 +19,5 @@ urlpatterns = [
     path("events/mine/", schedule_views.EventsMineView.as_view()),
     path("events/<uuid:event_id>/", schedule_views.EventDetailView.as_view()),
     path("events/<uuid:event_id>/archers/", schedule_views.EventArchersView.as_view()),
+    path("events/<uuid:event_id>/attach/", schedule_views.EventAttachView.as_view()),
 ]

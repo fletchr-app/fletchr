@@ -328,6 +328,8 @@ export default {
     noNotes: 'No notes.',
     media: 'Photos and videos',
     noMedia: 'No photos or videos.',
+    attach: 'Put into a session',
+    attachFailed: 'Could not put it into the session',
     unlink: 'None',
   },
   privacy: {

@@ -11,12 +11,16 @@ from rest_framework.views import APIView
 from core.access import archers_visible_to, can_plan, is_coach_in, teams_of
 from core.models import Team, User
 from media.access import visible_media
+from media.moves import move_to_session
 from notes.access import visible_notes
 
+from .merge import resolve_session_id
 from .models import TrainingEvent, TrainingSession, TrainingSlot
 from .schedule import MAX_RANGE, agenda, materialise, occurrence_id, parse_instant
 from .schedule_serializers import (
     AgendaItemSerializer,
+    AttachResultSerializer,
+    AttachSerializer,
     EventArcherSerializer,
     EventSerializer,
     EventWriteSerializer,
@@ -275,3 +279,29 @@ class EventsMineView(APIView):
             events = events.filter(start__lt=end)
         rows = [{"event": e, "notes": notes.get(e.pk, 0), "media": media.get(e.pk, 0)} for e in events]
         return Response(MineEventSerializer(rows, many=True).data)
+
+
+class EventAttachView(APIView):
+    @extend_schema(request=AttachSerializer, responses=AttachResultSerializer)
+    def post(self, request, event_id):
+        """Put what an archer has in this event and in no session into one of their sessions. The rows keep their `event`.
+
+        For the archer who owns the session, and for coaches of the event's team. Safe to repeat: rows that are in a session
+        already are left alone. Only what you may see is moved."""
+        event = get_event(request, event_id)
+        serializer = AttachSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        archer_id, session_id = serializer.validated_data["archer"], serializer.validated_data["session"]
+        archer = archers_visible_to(request.user).filter(pk=archer_id).first()
+        session = TrainingSession.objects.filter(pk=resolve_session_id(session_id) or session_id, owner=archer).first() if archer else None
+        if session is None:
+            raise NotFound()
+        if request.user.pk != archer.pk and not is_coach_in(request.user, event.team):
+            raise PermissionDenied(gettext("Only the archer or a coach of the team can do this"))
+        with transaction.atomic():
+            notes = visible_notes(request.user).filter(event=event, archer=archer, session__isnull=True)
+            moved_notes = notes.update(session=session)
+            clips = list(visible_media(request.user).filter(event=event, owner=archer, session__isnull=True))
+            for clip in clips:
+                move_to_session(clip, session)
+        return Response({"notes": moved_notes, "media": len(clips)})

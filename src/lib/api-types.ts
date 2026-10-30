@@ -325,6 +325,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/{event_id}/attach/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Put what an archer has in this event and in no session into one of their sessions. The rows keep their `event`.
+         *
+         *     For the archer who owns the session, and for coaches of the event's team. Safe to repeat: rows that are in a session
+         *     already are left alone. Only what you may see is moved.
+         */
+        post: operations["events_attach_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/agenda/": {
         parameters: {
             query?: never;
@@ -1570,6 +1592,21 @@ export interface components {
              */
             radius_cm: number;
             sets: components["schemas"]["ArrowSetStats"][];
+        };
+        AttachRequest: {
+            /** @description Whose rows of the event */
+            archer: number;
+            /**
+             * Format: uuid
+             * @description A session of that archer
+             */
+            session: string;
+        };
+        AttachResult: {
+            /** @description Notes put into the session */
+            notes: number;
+            /** @description Photos and videos put into the session */
+            media: number;
         };
         AvatarResult: {
             avatar_url: string;
@@ -3963,6 +4000,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventArcher"][];
+                };
+            };
+        };
+    };
+    events_attach_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AttachRequest"];
+                "multipart/form-data": components["schemas"]["AttachRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachResult"];
                 };
             };
         };

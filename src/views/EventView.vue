@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList } from '@ionic/vue'
-import { computed } from 'vue'
+
+import AppButton from '@/components/AppButton.vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
@@ -8,6 +10,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import NewNote from '@/components/NewNote.vue'
 import NoteRow from '@/components/NoteRow.vue'
+import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { useTeams } from '@/composables/useTeams'
@@ -48,6 +51,23 @@ const link = computed<EventLink | null>(() => {
   return e ? { id: e.id, name: e.name, kind: e.kind, start: e.start, team: e.team, team_name: e.team_name } : null
 })
 const when = computed(() => (event.data.value ? `${new Date(event.data.value.start).toLocaleString()} – ${new Date(event.data.value.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''))
+
+// What this archer has in the training and in no session can be put into one of their sessions (the rows keep the training).
+const pickerOpen = ref(false)
+const attachError = ref<string | null>(null)
+const loose = computed(() => (notes.data.value ?? []).some((n) => !n.session) || (media.data.value ?? []).some((m) => !m.session))
+async function attach(session: string | null) {
+  pickerOpen.value = false
+  if (session === null || archer === null) return
+  attachError.value = null
+  try {
+    const { response } = await api.POST('/api/events/{event_id}/attach/', { params: { path: { event_id: id } }, body: { archer, session } })
+    if (!response.ok) attachError.value = t('event.attachFailed')
+  } catch {
+    attachError.value = t('common.serverNotReachable')
+  }
+  reloadAll()
+}
 const reloadAll = () => {
   notes.reload()
   media.reload()
@@ -83,6 +103,12 @@ const reloadAll = () => {
         <template v-if="archer !== null && link && writable.data.value?.length">
           <NewNote :archer-id="archer" :ends="[]" :event="link" :teams="writable.data.value" @added="reloadAll" />
         </template>
+
+        <template v-if="archer !== null && loose">
+          <AppButton secondary @click="pickerOpen = true">{{ $t('event.attach') }}</AppButton>
+          <ErrorText :message="attachError" />
+        </template>
+        <SessionPicker v-if="archer !== null" :open="pickerOpen" :owner="archer" :taken-at="event.data.value.start" :current="null" server-items :removable="false" @close="pickerOpen = false" @pick="attach" />
 
         <h2 class="h5 m-0">{{ $t('event.notes') }}</h2>
         <ErrorText :message="notes.error.value" />
