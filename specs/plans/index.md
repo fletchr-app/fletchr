@@ -13,4 +13,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-10-29-backdated-sessions.md](2026-10-29-backdated-sessions.md): a training in the past, start time and duration when starting a session (#89). **implemented** (editing the start of an existing session is left out)
 - [2026-10-29-media-to-session.md](2026-10-29-media-to-session.md): move photos and videos into a session, list those without one (#91). **implemented**
 - [2026-10-29-offline-sync.md](2026-10-29-offline-sync.md): work offline, sync both ways (#84), local-store foundation first for #93. **planned** (Phase 0, the 410 fix, is implemented)
-- [2026-10-30-trainer-session.md](2026-10-30-trainer-session.md): team schedule and training events, a shared label for sessions, notes and media (#104). **partly implemented** (phase 6, offline, is open)
+- [2026-10-30-trainer-session.md](2026-10-30-trainer-session.md): team schedule and training events, a shared label for sessions, notes and media (#104). **phases 1 to 5 implemented**, phase 6 (offline) open

@@ -17,3 +17,4 @@ Living architecture/design docs, one per feature or subsystem. Kept around after
 - [skeleton-detection.md](skeleton-detection.md): planned MediaPipe worker and form metrics (milestone 5).
 - [hosting-backups-cost.md](hosting-backups-cost.md): Docker layout, backups, mail, push, running cost.
 - [ios-without-an-apple-device.md](ios-without-an-apple-device.md): building and testing iOS without a Mac.
+- [schedule-and-events.md](schedule-and-events.md): team schedule, training events as labels for sessions, notes and media (#104).
