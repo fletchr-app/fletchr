@@ -31,6 +31,8 @@ const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [not
 const { api } = useAuth()
 const editing = ref(false)
 const body = ref(props.note.body)
+// A note about yourself is always private: no choice of readers.
+const own = computed(() => props.note.team === null || props.note.team === undefined)
 const visibility = ref<Visibility>(props.note.visibility ?? 'coach_only')
 const confirmDelete = ref(false)
 const error = ref<string | null>(null)
@@ -51,7 +53,7 @@ async function run(action: () => Promise<{ ok: boolean; error?: unknown }>) {
 }
 const save = () =>
   run(async () => {
-    const { data, error: failure } = await api.PATCH('/api/notes/{id}/', { params: { path: { id: props.note.id } }, body: { body: body.value, visibility: visibility.value } })
+    const { data, error: failure } = await api.PATCH('/api/notes/{id}/', { params: { path: { id: props.note.id } }, body: own.value ? { body: body.value } : { body: body.value, visibility: visibility.value } })
     return { ok: !!data, error: failure }
   })
 const remove = () =>
@@ -69,7 +71,7 @@ const remove = () =>
     </div>
     <template v-if="editing">
       <FormField v-model="body" :label="$t('notes.note')" multiline capitalize="sentences" />
-      <ChipGroup v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
+      <ChipGroup v-if="!own" v-model="visibility" :label="$t('notes.whoCanRead')" :options="VISIBILITY" />
       <AppButton @click="save">{{ $t('common.save') }}</AppButton>
       <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>

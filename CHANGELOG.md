@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Notes about your own training in the app** (#84): on a session of yours, on your photos and clips you can write a private note for yourself (no team, nobody else reads it). They are saved on the phone first like other notes. The list on a session says "My notes" instead of "Coach notes". A session on your phone has a new "Notes" link for this.
+
 ## 0.13.0 (2026-10-30)
 
 - **Notes can be written without a connection:** a note (also one with a drawing on a photo or a frame of a clip) is saved on the phone at once and uploaded when there is a connection, after the photo, clip or session it is about. Until then it shows in the list as "waiting to upload" and can be taken back; a note the server refuses shows in the upload banner. Changing or deleting a note that is already up still needs a connection (#84).

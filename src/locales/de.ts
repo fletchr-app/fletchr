@@ -508,8 +508,6 @@ export default {
     history: 'Verlauf',
     created: 'angelegt',
     nameRequired: 'Gib einen Namen ein.',
-    couldNotLoadEquipment: 'Deine Ausrüstung konnte nicht geladen werden',
-    couldNotLoadData: 'Deine Daten konnten nicht geladen werden',
     bowType: {
       recurve: 'Recurve',
       compound: 'Compound',
@@ -611,6 +609,9 @@ export default {
   },
   notes: {
     coachNotes: 'Trainernotizen',
+    myNotes: 'Meine Notizen',
+    title: 'Notizen',
+    link: 'Notizen',
     fromCoaches: 'Von deinen Trainern',
     newNoteOnFrame: 'Neue Notiz zu Bild {n}',
     newNoteOnPhoto: 'Neue Notiz zum Foto',

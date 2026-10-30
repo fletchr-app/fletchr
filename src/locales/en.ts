@@ -504,8 +504,6 @@ export default {
     history: 'History',
     created: 'created',
     nameRequired: 'Give it a name.',
-    couldNotLoadEquipment: 'Could not load your equipment',
-    couldNotLoadData: 'Could not load your data',
     bowType: {
       recurve: 'recurve',
       compound: 'compound',
@@ -607,6 +605,9 @@ export default {
   },
   notes: {
     coachNotes: 'Coach notes',
+    myNotes: 'My notes',
+    title: 'Notes',
+    link: 'Notes',
     fromCoaches: 'From your coaches',
     newNoteOnFrame: 'New note on frame {n}',
     newNoteOnPhoto: 'New note on this photo',

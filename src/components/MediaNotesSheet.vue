@@ -20,6 +20,7 @@ defineProps<{
   attached: Shape[]
   archerId?: number
   teams: { id: number; name: string }[]
+  canWrite: boolean
   on?: { mediaId: string; frame?: number; timeMs?: number; drawing?: { v: 1; shapes: Shape[] } | null }
 }>()
 const emit = defineEmits<{ close: []; removeAttached: []; added: []; changed: []; jump: [frame: number]; editDrawing: [note: Note] }>()
@@ -34,7 +35,7 @@ const emit = defineEmits<{ close: []; removeAttached: []; added: []; changed: []
         <span>{{ $t('media.drawingAttached', { n: attached.length }) }}</span>
         <button type="button" class="text" @click="emit('removeAttached')">{{ $t('media.drawingRemove') }}</button>
       </div>
-      <NewNote v-if="archerId !== undefined && teams.length > 0" :archer-id="archerId" :ends="[]" :teams="teams" :on="on" @added="emit('added')" />
+      <NewNote v-if="archerId !== undefined && canWrite" :archer-id="archerId" :ends="[]" :teams="teams" :on="on" @added="emit('added')" />
       <PendingNotes v-if="archerId !== undefined && on" :archer-id="archerId" :media-id="on.mediaId" />
       <div v-if="notes.length === 0" class="muted">{{ empty }}</div>
       <NoteRow v-for="n in notes" :key="n.id" :note="n" :ends="[]" @changed="emit('changed')" @jump="emit('jump', $event)" @edit-drawing="emit('editDrawing', $event)" />
