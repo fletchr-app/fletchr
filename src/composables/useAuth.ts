@@ -69,6 +69,16 @@ watch(
 /** Use the app without an account or server. Data of an earlier local use comes back. */
 const enterLocal = local.enter;
 
+// A phone with no tokens and no flag (first launch, or tokens revoked by the server) starts in local mode. `status` is
+// `loading` until both the tokens and the flag are read, so `signedOut` here means both are known to be missing.
+watch(
+  status,
+  (s) => {
+    if (s === 'signedOut') void enterLocal();
+  },
+  { immediate: true },
+);
+
 /** Resolves once the stored tokens have been read, so the first route is not chosen too early. */
 export function authReady(): Promise<void> {
   if (status.value !== 'loading') return Promise.resolve();
@@ -134,6 +144,7 @@ async function signInWithGoogle(inviteCode?: string): Promise<GoogleResult> {
 
 async function signOut(): Promise<void> {
   const refresh = session.value.getState().tokens?.refresh;
+  await enterLocal(); // before the tokens go, so the app never shows a signed-out state and lands on Home
   session.value.setTokens(null);
   if (refresh) {
     // Revoke the refresh token on the server; ignore failures (offline).

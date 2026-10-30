@@ -33,3 +33,15 @@ test('the flag without an id is not local mode', async () => {
   await store.set('local-mode', '1');
   assert.equal((await loadLocalMode(store)).enabled, false);
 });
+
+test('first launch, sign-in and sign-out all end in local mode on the same data', async () => {
+  const store = memory();
+  const ids = ['owner', 'other'];
+  // First launch: no flag, no tokens. The app enters local mode on its own.
+  assert.equal((await loadLocalMode(store)).enabled, false);
+  assert.equal(await enableLocalMode(store, () => ids.shift()!), 'owner');
+  // Signing in turns the flag off; signing out turns it on again and finds the same owner.
+  await disableLocalMode(store);
+  assert.equal(await enableLocalMode(store, () => ids.shift()!), 'owner');
+  assert.deepEqual(await loadLocalMode(store), { enabled: true, id: 'owner' });
+});
