@@ -6,9 +6,8 @@ import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
-import { useAuth } from '@/composables/useAuth'
+import { useNotes } from '@/composables/useNotes'
 import type { Shape } from '@/lib/drawing'
-import { errorMessage } from '@/lib/errors'
 
 type Visibility = 'private' | 'coach_only' | 'shared'
 const { t } = useI18n()
@@ -28,46 +27,38 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ added: [] }>()
 
-const { api } = useAuth()
+// The note is saved on the device and goes up as soon as it can, after the photo or session it is about.
+const { add: queueNote } = useNotes()
 const body = ref('')
 const visibility = ref<Visibility>('coach_only')
 const endId = ref('')
 const teamId = ref(String(props.teams[0]!.id))
 const error = ref<string | null>(null)
-const busy = ref(false)
 
 const label = computed(() => {
   if (!props.on) return t('notes.newNote')
   return props.on.frame === undefined ? t('notes.newNoteOnPhoto') : t('notes.newNoteOnFrame', { n: props.on.frame + 1 })
 })
 
-async function add() {
-  busy.value = true
+function add() {
   error.value = null
-  try {
-    const { data, error: failure } = await api.POST('/api/notes/', {
-      body: {
-        archer: props.archerId,
-        team: Number(teamId.value),
-        body: body.value,
-        visibility: visibility.value,
-        session: props.sessionId ?? null,
-        end: endId.value || null,
-        media: props.on?.mediaId ?? null,
-        frame: props.on?.frame ?? null,
-        time_ms: props.on?.timeMs ?? null,
-        drawing: props.on?.drawing ?? null,
-      },
-    })
-    if (data) {
-      body.value = ''
-      endId.value = ''
-      emit('added')
-    } else error.value = errorMessage(failure)
-  } catch {
-    error.value = t('common.serverNotReachable')
-  }
-  busy.value = false
+  const text = body.value.trim()
+  if (!text) return (error.value = t('notes.noteEmpty'))
+  queueNote({
+    archer: props.archerId,
+    team: Number(teamId.value),
+    body: text,
+    visibility: visibility.value,
+    session: props.sessionId ?? null,
+    end: endId.value || null,
+    media: props.on?.mediaId ?? null,
+    frame: props.on?.frame ?? null,
+    time_ms: props.on?.timeMs ?? null,
+    drawing: props.on?.drawing ?? null,
+  })
+  body.value = ''
+  endId.value = ''
+  emit('added')
 }
 </script>
 
@@ -83,6 +74,6 @@ async function add() {
     />
     <ChipGroup v-if="teams.length > 1" v-model="teamId" :label="$t('notes.team')" :options="teams.map((x) => ({ value: String(x.id), label: x.name }))" />
     <ErrorText :message="error" />
-    <AppButton :busy="busy" @click="add">{{ $t('notes.add') }}</AppButton>
+    <AppButton @click="add">{{ $t('notes.add') }}</AppButton>
   </div>
 </template>

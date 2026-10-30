@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import NoteRow from '@/components/NoteRow.vue'
 import NewNote from '@/components/NewNote.vue'
+import PendingNotes from '@/components/PendingNotes.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { noteLink } from '@/lib/media-notes'
+import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const REFRESH_MS = 10000
@@ -30,10 +33,16 @@ const notes = useRemote(
   { pollMs: REFRESH_MS, keepPolling: always },
 )
 const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)
+// A note written here goes up in the background; when it has, the server's list has it.
+const { uploaded, pendingFor } = useNotes()
+watch(uploaded, notes.reload)
 </script>
 
 <template>
-  <div v-if="notes.data.value?.length || teams.data.value?.length" class="d-flex flex-column gap-3">
+  <div
+    v-if="notes.data.value?.length || teams.data.value?.length || pendingFor({ archer: archerId, session: sessionId }).length"
+    class="d-flex flex-column gap-3"
+  >
     <h2 class="h5 m-0">{{ $t('notes.coachNotes') }}</h2>
     <ErrorText :message="notes.error.value" />
     <NewNote
@@ -44,6 +53,7 @@ const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params
       :teams="teams.data.value"
       @added="notes.reload"
     />
+    <PendingNotes :archer-id="archerId" :session-id="sessionId" />
     <NoteRow
       v-for="note in notes.data.value"
       :key="note.id"

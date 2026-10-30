@@ -14,6 +14,7 @@ import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
 import { useMoveMedia } from '@/composables/useMoveMedia'
+import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
@@ -79,6 +80,8 @@ const notes = useRemote(
   async () => (await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null,
   { watch: [currentId] },
 )
+// A note written here goes up in the background; when it has, the server's list has it.
+watch(useNotes().uploaded, notes.reload)
 const teams = useRemote(
   async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
   { watch: [clip] },

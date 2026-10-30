@@ -35,6 +35,13 @@ Updated: 2026-10-29
 - **`PUT /api/notes/<uid>/`** creates a note by the uid the app gave it, or changes it, and is safe to repeat. The rules are those of `POST`; only the author can write, and a note of somebody else is answered 404 and left as it was. A photo, clip or session the server has not seen yet is a 400 on that field (`media`, `session`): the app takes that as "wait" and sends it after the photo or session has gone up. What a note is about (archer, session, end, photo, frame) cannot change after it is written; body, drawing and visibility can.
 - **A note about yourself** (`archer` is you): no team, always private, nobody else reads it. A team or a visibility other than private is a 400. This is what an archer can write, and what a person without an account (#93) will upload when they make one.
 
+## Notes on the phone
+
+- **Queue** (`note-store.ts`, `useNotes`, a file per account, `notes:` key): a note written on the phone is saved on the device with a uid and goes up with `PUT /api/notes/<uid>/` (`note-sync.ts`). Once the server has it, it leaves the queue and the server's list shows it; the screens that show that list read it again when a note went up. Until then it is shown in the list as "waiting to upload" (`PendingNotes`) and can be taken back.
+- **Order**: a note waits while its photo or clip is still in the media queue (and not yet up), or its session or end is still in the log queue. Other notes go on meanwhile. The check is in the app (`blocked` in `drainNotes`), not a 400 from the server, so a note on a photo that is gone does not wait for ever: it fails with the server's message and shows in the banner (retry or give up).
+- **Failures**: 400, 403 and similar mark the note failed with the server's message; no connection, 401 or a server error keep it queued.
+- **Not offline**: changing a note's text or drawing, deleting a note, and anything about notes the server already has still need a connection. The list of notes and the teams a coach may write in are read from the server; the screen has to be open when the signal goes. Sign-out counts waiting notes, and deleting the account removes them.
+
 ## Where the data is kept
 
 - **Owner and keys**: a store belongs to an owner (`src/lib/store-owner.ts`): an account on a server today, a person without an account later (#93). The key is `<store>:<server>:<userId>` for an account, which is what the log (`log:`) and the media queue (`media:`) always used, and `<store>:local:<id>` for a local owner. Another account on the same phone never sees the data, and it stays on the device when you sign out.
