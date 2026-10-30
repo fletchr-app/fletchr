@@ -1,6 +1,6 @@
 # Local-only mode: use the app without an account or server (#93)
 
-Status: implemented in one change, not run on a phone
+Status: implemented in one change (#113), not run on a phone. First launch and sign-out were changed afterwards by Step 0 of [2026-10-30-local-mode.md](2026-10-30-local-mode.md); that plan holds everything that remains (note edit, upload on sign-in, sign-out wording, session visibility, Android backup decision)
 Date: 2026-10-30
 
 ## Scope
@@ -24,10 +24,10 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]**.
 ## Phase 1: auth state, router, shell
 
 - [x] `src/lib/local-mode.ts` (new, pure): keys, parse of the stored flag and id, so it can be tested.
-- [x] `useAuth`: `status` gets `'local'`; `isLocal`; `localId` made once with `newId()` and kept in Preferences (`local-owner-id`), the on/off flag in `local-mode`; `enterLocal()`; `storeOwner` is the local owner while `status === 'local'`; signing in/registering/Google sets tokens, which turns the flag off and keeps the id and all data (nothing deleted, nothing uploaded); `signOut` of an account lands on the sign-in screen.
+- [x] `useAuth`: `status` gets `'local'`; `isLocal`; `localId` made once with `newId()` and kept in Preferences (`local-owner-id`), the on/off flag in `local-mode`; `enterLocal()`; `storeOwner` is the local owner while `status === 'local'`; signing in/registering/Google sets tokens, which turns the flag off and keeps the id and all data (nothing deleted, nothing uploaded); `signOut` of an account lands on the sign-in screen (superseded by Step 0: it now returns to local mode on Home).
 - [x] Router: `meta.auth` `'in'` (signed in or local), new `'account'` (signed in only, local goes to `/`), `'out'` unchanged but open to local so "Sign in or register" works. Server-only routes get `'account'`: join team, team, agenda, forms, ranking, progress, evaluations, archers, events, account, profile, privacy (replaced), `/sessions/:id`.
 - [x] `App.vue`: tab bar for local (no Team tab: `isCoach` is false without teams), watchers for `local`.
-- [x] `SignInView`: a clear second choice "Use without an account" with two lines of text (data stays on the phone, export in Settings, signing in later does not upload it).
+- [x] `SignInView`: a clear second choice "Use without an account" with two lines of text (data stays on the phone, export in Settings, signing in later does not upload it). **Superseded by Step 0** (local-mode.md): the choice is gone, a fresh install opens on Home in local mode; the "does not upload it" text holds only until the upload on sign-in exists.
 - [x] `SettingsView` in local: no teams, account rows or sign-out; "Sign in or register" with the "nothing is uploaded" text; "Your data" opens the export/import screen; the server address and the video Wi-Fi setting are hidden; theme, language, units stay.
 - [x] `HomeView`, `TrainingListView`: local source only (no `/api/me`, no `useRemote`, no teams, evaluations or goals).
 - [x] `SyncBanner` and the sign-out count: nothing waiting is shown in local; `useTeams`, `useAgenda`, `useUnits`, `useMediaLibrary` stay quiet (they check `signedIn` already; verified, not assumed).
@@ -48,7 +48,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]**.
 ## Phase 4: notes, media, equipment on the device
 
 - [x] Equipment screens: check they work without a server (store only).
-- [x] Notes: `NotesSection`, `LatestNotes` and `SessionNotesView` in local show the device's notes only (own, private); `PendingNotes` rows stay (they are the real list now) with wording that does not say "waiting to upload"; edit and delete work on the store. No team, visibility, event chips.
+- [x] Notes: `NotesSection`, `LatestNotes` and `SessionNotesView` in local show the device's notes only (own, private); `PendingNotes` rows stay (they are the real list now) with wording that does not say "waiting to upload"; delete works on the store, the text of a note cannot be edited (see Deviations; edit is Step 1 of local-mode.md). No team, visibility, event chips.
 - [x] Photos and videos: `MediaView` in local lists the queue, no server list or consent request; clips play in the page from the local file; delete and move to a session work on the queue; `SessionPicker`, `UnattachedHint` read the device's sessions.
 - [x] Drawings on photos: `MediaPlayerView` is server-based. Decide after the above is done whether a local photo viewer with a drawing layer fits; if not, report it as skipped.
 - [x] `NewSessionView`: no agenda, no archer teams in local.
@@ -81,6 +81,6 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]**.
 
 - Rounding: Python `round` is half-even, JS `Math.round` is half-up; ties appear with exact binary fractions (0.0625). The port uses an exact-tie check.
 - Time zones: week and month boundaries use the viewer's zone through `Intl`; DST is covered by one fixture case.
-- A local archer is id 0 in notes and media; the later upgrade must map it to the account's id.
+- A local archer is id 0 in notes and media; the upgrade must map it to the account's id (`prepareUpload` in Step 2 of local-mode.md).
 - Without a server there is no second copy: the export is the only backup until the upgrade upload exists, and it does not contain photo and video files.
 - `MediaPlayerView` (drawings, frame-by-frame) is tied to the server API; the local version may be smaller than the account one.
