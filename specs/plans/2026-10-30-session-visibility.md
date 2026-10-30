@@ -7,7 +7,7 @@ Design: [session-visibility.md](../design/session-visibility.md). ADR: [0009](..
 ## Scope
 
 - `visibility` on sessions (`me | coaches` accepted now) on the shared ordered scale, the archer's default, one server filter used by every coach-facing route.
-- Lands first and alone (own PR, server and app), before local mode ([2026-10-30-local-mode.md](2026-10-30-local-mode.md)), whose upload asks "share with your coaches?".
+- Lands first and alone (own PR, server and app), before the upload of local data at sign-in ([2026-10-30-local-mode.md](2026-10-30-local-mode.md)), whose upload asks "share with your coaches?".
 - Out of scope: `team`, `everyone`, `followers`; profile visibility (#80); feed (#77); several teams per archer; equipment visibility.
 
 Markers: **[fact]** checked in the code, **[check]** verify before relying on it, **(assumed, confirm)** a default Tim has to confirm.
