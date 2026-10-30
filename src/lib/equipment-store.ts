@@ -31,6 +31,8 @@ export type EquipmentOp = {
   delete?: boolean;
   /** For a delete: the item is already gone from the list, so its id is kept here. */
   id?: number;
+  /** For a delete: the item as it was, to put back if the server refuses (say, a bow used in a session). */
+  restore?: StoredItem;
   rev: number;
   error?: string;
 };
@@ -115,7 +117,7 @@ export function reduce(state: EquipmentState, action: EquipmentAction): Equipmen
       const key = opKey(action.kind, action.uid);
       // Never uploaded: there is nothing on the server to delete.
       if (item.id === undefined) return { ...gone, outbox: gone.outbox.filter((o) => o.key !== key) };
-      return queue(gone, action.kind, action.uid, { delete: true, id: item.id });
+      return queue(gone, action.kind, action.uid, { delete: true, id: item.id, restore: item });
     }
     case 'opDone': {
       const done = { ...state, outbox: state.outbox.filter((o) => !(o.key === action.key && o.rev === action.rev)) };
@@ -129,10 +131,21 @@ export function reduce(state: EquipmentState, action: EquipmentAction): Equipmen
         revisions: item.revisions.map((r) => (r.uid === revision_uid ? { ...r, number: revision_number } : r)),
       }));
     }
-    case 'opFailed':
-      return { ...state, outbox: state.outbox.map((o) => (o.key === action.key && o.rev === action.rev ? { ...o, error: action.error } : o)) };
-    case 'retryFailed':
-      return { ...state, outbox: state.outbox.map(({ error: _error, ...o }) => o) };
+    case 'opFailed': {
+      const failed = { ...state, outbox: state.outbox.map((o) => (o.key === action.key && o.rev === action.rev ? { ...o, error: action.error } : o)) };
+      const op = state.outbox.find((o) => o.key === action.key && o.rev === action.rev);
+      // The server still has what was deleted: it is shown again, with the reason in the upload banner.
+      if (op?.delete && op.restore && !failed.items.some((i) => i.kind === op.kind && i.uid === op.uid)) {
+        return { ...failed, items: [...failed.items, op.restore] };
+      }
+      return failed;
+    }
+    case 'retryFailed': {
+      // Trying a refused delete again takes the item off the list again.
+      const again = state.outbox.filter((o) => o.error && o.delete);
+      const items = state.items.filter((i) => !again.some((o) => o.kind === i.kind && o.uid === i.uid));
+      return { ...state, items, outbox: state.outbox.map(({ error: _error, ...o }) => o) };
+    }
     case 'discardFailed':
       return { ...state, outbox: state.outbox.filter((o) => !o.error) };
     case 'pulled': {

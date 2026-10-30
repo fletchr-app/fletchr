@@ -77,6 +77,48 @@ test('removing an item the server has queues a delete with its id', () => {
   assert.deepEqual(pulled.outbox.map((o) => [o.key, o.delete, o.id]), [['bow:b1', true, 7]]);
 });
 
+const deleting = () => {
+  const queued = run({ type: 'pulled', items: [server('b1', 7, bow(), { uid: 'r1', id: 70, number: 1 })] }, { type: 'remove', kind: 'bow', uid: 'b1' });
+  return { queued, op: queued.outbox[0] };
+};
+
+test('a delete the server refuses puts the item back and keeps the reason', () => {
+  const { queued, op } = deleting();
+  assert.deepEqual(queued.items, []);
+  const s = reduce(queued, { type: 'opFailed', key: op.key, rev: op.rev, error: 'used in a session' });
+  assert.deepEqual(s.items.map((i) => [i.uid, i.id, i.values.name]), [['b1', 7, 'Hoyt']]);
+  assert.deepEqual(s.outbox.map((o) => [o.key, o.error]), [['bow:b1', 'used in a session']]);
+});
+
+test('giving up on a refused delete keeps the item', () => {
+  const { queued, op } = deleting();
+  const failed = reduce(queued, { type: 'opFailed', key: op.key, rev: op.rev, error: 'no' });
+  const s = reduce(failed, { type: 'discardFailed' });
+  assert.deepEqual([s.items.length, s.outbox.length], [1, 0]);
+});
+
+test('trying a refused delete again takes the item off the list again', () => {
+  const { queued, op } = deleting();
+  const failed = reduce(queued, { type: 'opFailed', key: op.key, rev: op.rev, error: 'no' });
+  const s = reduce(failed, { type: 'retryFailed' });
+  assert.deepEqual([s.items.length, s.outbox.map((o) => [o.delete, o.error])], [0, [[true, undefined]]]);
+});
+
+test('changing an item whose delete was refused replaces the delete', () => {
+  const { queued, op } = deleting();
+  const failed = reduce(queued, { type: 'opFailed', key: op.key, rev: op.rev, error: 'no' });
+  const s = reduce(failed, save('b1', bow({ draw_weight: '40.0' }), 'r2', false));
+  assert.deepEqual(s.outbox.map((o) => [o.key, o.delete, o.error]), [['bow:b1', undefined, undefined]]);
+  assert.equal(findItem(s, 'bow', 'b1')!.is_active, false);
+});
+
+test('a pull while a refused delete is shown does not change the item', () => {
+  const { queued, op } = deleting();
+  const failed = reduce(queued, { type: 'opFailed', key: op.key, rev: op.rev, error: 'no' });
+  const s = reduce(failed, { type: 'pulled', items: [server('b1', 7, bow({ name: 'Other' }), { uid: 'r1', id: 70, number: 1 })] });
+  assert.equal(findItem(s, 'bow', 'b1')!.values.name, 'Hoyt');
+});
+
 test('a pull adds items, and updates one that has nothing waiting', () => {
   const first = run({ type: 'pulled', items: [server('b1', 7, bow(), { uid: 'r1', id: 70, number: 1 })] });
   assert.deepEqual(first.items.map((i) => [i.uid, i.id, i.revisions[0].id]), [['b1', 7, 70]]);
