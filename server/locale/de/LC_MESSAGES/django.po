@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 08:45+0100\n"
+"POT-Creation-Date: 2026-10-30 19:13+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:68
+#: core/access.py:86
 msgid "Invalid or expired invite code"
 msgstr "Ungültiger oder abgelaufener Einladungscode"
 
-#: core/access.py:70
+#: core/access.py:88
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
@@ -36,9 +36,7 @@ msgstr "Das Bild ist zu groß, es sollte etwa 256 px an einer Seite haben"
 
 #: core/avatar.py:56
 msgid "A picture of an archer under 18 needs the consent of the parents"
-msgstr ""
-"Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der "
-"Eltern"
+msgstr "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern"
 
 #: core/avatar.py:58
 msgid "The picture is larger than 512 KB"
@@ -49,12 +47,10 @@ msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
 #: core/claims.py:55
-msgid ""
-"You are a coach in this team. A profile of an archer can only be taken "
-"over by an archer."
+msgid "You are a coach in this team. A profile of an archer can only be taken over by an archer."
 msgstr ""
-"Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von "
-"einem Schützen übernommen werden."
+"Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
+"werden."
 
 #: core/mail.py:31
 msgid "Fletchr: reset your password"
@@ -67,16 +63,15 @@ msgid ""
 "\n"
 "Your code: %(code)s\n"
 "\n"
-"Type it in the app. It works for one hour. If this was not you, ignore "
-"this mail: your password stays as it is."
+"Type it in the app. It works for one hour. If this was not you, ignore this mail: your password "
+"stays as it is."
 msgstr ""
-"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos "
-"zurückzusetzen.\n"
+"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n"
 "\n"
 "Dein Code: %(code)s\n"
 "\n"
-"Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, "
-"ignoriere diese Mail: Dein Passwort bleibt, wie es ist."
+"Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein "
+"Passwort bleibt, wie es ist."
 
 #: core/mail.py:45
 msgid "Fletchr: your password was changed"
@@ -86,15 +81,13 @@ msgstr "Fletchr: Dein Passwort wurde geändert"
 msgid ""
 "The password of your Fletchr account was changed just now.\n"
 "\n"
-"If this was you, there is nothing to do. If not, set a new password in "
-"the app (Sign in, then Forgot password?) and check who else knows your "
-"email password."
+"If this was you, there is nothing to do. If not, set a new password in the app (Sign in, then "
+"Forgot password?) and check who else knows your email password."
 msgstr ""
 "Das Passwort deines Fletchr-Kontos wurde gerade geändert.\n"
 "\n"
-"Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein "
-"neues Passwort (Anmelden, dann Passwort vergessen?) und prüfe, wer sonst "
-"dein E-Mail-Passwort kennt."
+"Wenn du das warst, musst du nichts tun. Wenn nicht, setze in der App ein neues Passwort "
+"(Anmelden, dann Passwort vergessen?) und prüfe, wer sonst dein E-Mail-Passwort kennt."
 
 #: core/serializers.py:14
 msgid "Enter a date of birth in the past"
@@ -130,33 +123,25 @@ msgstr "Diese Adresse ist nicht verfügbar"
 
 #: core/social.py:50 core/social.py:53 core/social.py:55
 msgid "Google sign-in failed. Please try again."
-msgstr ""
-"Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch "
-"einmal."
+msgstr "Die Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es noch einmal."
 
 #: core/social.py:72
 msgid "This account cannot sign in."
 msgstr "Mit diesem Konto kann man sich nicht anmelden."
 
 #: core/social.py:82
-msgid ""
-"There is no account for this Google sign-in yet. Register with your "
-"invite code."
-msgstr ""
-"Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit "
-"deinem Einladungscode."
+msgid "There is no account for this Google sign-in yet. Register with your invite code."
+msgstr "Für diese Google-Anmeldung gibt es noch kein Konto. Registriere dich mit deinem Einladungscode."
 
 #: core/social.py:84
 msgid "Google did not confirm your email address."
 msgstr "Google hat deine E-Mail-Adresse nicht bestätigt."
 
 #: core/social.py:86
-msgid ""
-"This email address already has an account. Ask an admin to connect it "
-"with your Google sign-in."
+msgid "This email address already has an account. Ask an admin to connect it with your Google sign-in."
 msgstr ""
-"Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit "
-"deiner Google-Anmeldung zu verbinden."
+"Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu "
+"verbinden."
 
 #: core/transfer.py:127
 msgid "Source and target are the same account"
@@ -174,21 +159,13 @@ msgstr "%(email)s ist deaktiviert"
 
 #: core/transfer.py:136
 #, python-format
-msgid ""
-"%(email)s already has data (%(what)s). Only an account without data can "
-"receive one."
-msgstr ""
-"%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines"
-" übernehmen."
+msgid "%(email)s already has data (%(what)s). Only an account without data can receive one."
+msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen."
 
 #: core/transfer.py:155
 #, python-format
-msgid ""
-"Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
-"of them first."
-msgstr ""
-"Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). "
-"Ändere zuerst eine davon."
+msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
+msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
 
 #: core/views.py:206
 msgid "No picture sent"
@@ -232,30 +209,22 @@ msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
 #: core/views.py:616
-msgid ""
-"Only coaches can choose this: archers' sessions are always visible to "
-"their coaches"
-msgstr ""
-"Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre "
-"Trainer immer sichtbar"
+msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
+msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
 #: core/views.py:628
-msgid ""
-"You are the only admin. Make someone else an admin first, or delete the "
-"team."
-msgstr ""
-"Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder "
-"lösche das Team."
+msgid "You are the only admin. Make someone else an admin first, or delete the team."
+msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
 #: core/views.py:640
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
-#: equipment/serializers.py:62 training/serializers.py:148
+#: equipment/serializers.py:62 training/serializers.py:206
 msgid "Not your bow"
 msgstr "Das ist nicht dein Bogen"
 
-#: equipment/serializers.py:67 training/serializers.py:153
+#: equipment/serializers.py:67 training/serializers.py:211
 msgid "Not your arrow set"
 msgstr "Das ist nicht dein Pfeilsatz"
 
@@ -430,11 +399,11 @@ msgstr "Ein Kriterium ist zweimal bewertet"
 msgid "A rating goes from 1 to %(n)s"
 msgstr "Eine Bewertung geht von 1 bis %(n)s"
 
-#: evaluations/serializers.py:217 notes/serializers.py:164
+#: evaluations/serializers.py:217 notes/serializers.py:178
 msgid "Give the clip the frame is in"
 msgstr "Gib das Video an, zu dem das Bild gehört"
 
-#: evaluations/serializers.py:220 notes/serializers.py:151
+#: evaluations/serializers.py:220 notes/serializers.py:165
 msgid "This is not a photo or video of that archer"
 msgstr "Das ist kein Foto oder Video dieses Schützen"
 
@@ -442,7 +411,7 @@ msgstr "Das ist kein Foto oder Video dieses Schützen"
 msgid "Say which frame the rating is about"
 msgstr "Gib an, zu welchem Bild die Bewertung gehört"
 
-#: evaluations/serializers.py:224 notes/serializers.py:158
+#: evaluations/serializers.py:224 notes/serializers.py:172
 msgid "The clip has no such frame"
 msgstr "Das Video hat dieses Bild nicht"
 
@@ -474,57 +443,54 @@ msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 msgid "This session belongs to another archer"
 msgstr "Dieses Training gehört einem anderen Schützen"
 
-#: media/serializers.py:78
+#: media/serializers.py:79
 msgid "A video must be an MP4 file"
 msgstr "Ein Video muss eine MP4-Datei sein"
 
-#: media/serializers.py:80
+#: media/serializers.py:81
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr "Das Video ist größer als %(n)s MB"
 
-#: media/serializers.py:84
+#: media/serializers.py:85
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr "Das Video ist länger als %(n)s Sekunden"
 
-#: media/serializers.py:87
+#: media/serializers.py:88
 msgid "A photo must be a JPEG file"
 msgstr "Ein Foto muss eine JPEG-Datei sein"
 
-#: media/serializers.py:89
+#: media/serializers.py:90
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr "Das Foto ist größer als %(n)s MB"
 
-#: media/serializers.py:93
+#: media/serializers.py:94
 msgid "The preview must be a small JPEG file"
 msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 
-#: media/serializers.py:96
+#: media/serializers.py:97
 msgid "There is no room left for this archer's photos and videos"
 msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 
-#: media/views.py:27
+#: media/views.py:31
 msgid "Only the archer or whoever added it can change a photo or video"
-msgstr ""
-"Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video "
-"ändern"
+msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:77 notes/views.py:110 training/views.py:153
+#: media/views.py:93 notes/views.py:112 training/schedule_views.py:264 training/views.py:153
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
-#: media/views.py:84
+#: media/views.py:100
 msgid ""
-"Video of an archer under 18 needs the consent of the parents first. A "
-"coach can record it on the archer's page."
+"Video of an archer under 18 needs the consent of the parents first. A coach can record it on the "
+"archer's page."
 msgstr ""
-"Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der "
-"Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen."
+"Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann "
+"sie auf der Seite des Schützen eintragen."
 
-#: notes/drawing.py:18 notes/drawing.py:25 notes/drawing.py:28
-#: notes/drawing.py:33 notes/drawing.py:38
+#: notes/drawing.py:18 notes/drawing.py:25 notes/drawing.py:28 notes/drawing.py:33 notes/drawing.py:38
 msgid "This is not a drawing"
 msgstr "Das ist keine Zeichnung"
 
@@ -533,59 +499,63 @@ msgstr "Das ist keine Zeichnung"
 msgid "A drawing can have %(n)s shapes at most"
 msgstr "Eine Zeichnung kann höchstens %(n)s Formen haben"
 
-#: notes/serializers.py:98
+#: notes/serializers.py:104
 msgid "A note cannot be empty"
 msgstr "Eine Notiz darf nicht leer sein"
 
-#: notes/serializers.py:111
+#: notes/serializers.py:117
 msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr "Eine Zeichnung gehört zu einem Foto oder einem Bild eines Videos"
 
-#: notes/serializers.py:115
+#: notes/serializers.py:121
 msgid "This cannot be changed after the note is written"
 msgstr "Das lässt sich nach dem Schreiben der Notiz nicht mehr ändern"
 
-#: notes/serializers.py:117 notes/serializers.py:127
+#: notes/serializers.py:123 notes/serializers.py:141
 msgid "A note about yourself is private"
 msgstr "Eine Notiz über dich selbst ist privat"
 
-#: notes/serializers.py:125
+#: notes/serializers.py:127 notes/serializers.py:135
+msgid "The event is in another team than the note"
+msgstr "Das Training gehört zu einem anderen Team als die Notiz"
+
+#: notes/serializers.py:139
 msgid "A note about yourself has no team"
 msgstr "Eine Notiz über dich selbst gehört zu keinem Team"
 
-#: notes/serializers.py:132
+#: notes/serializers.py:146
 msgid "Only coaches can write notes"
 msgstr "Nur Trainer können Notizen schreiben"
 
-#: notes/serializers.py:137
+#: notes/serializers.py:151
 msgid "You cannot write notes about this archer in that team"
 msgstr "In diesem Team kannst du keine Notizen über diesen Schützen schreiben"
 
-#: notes/serializers.py:141
+#: notes/serializers.py:155
 msgid "You cannot write notes about this person"
 msgstr "Über diese Person kannst du keine Notizen schreiben"
 
-#: notes/serializers.py:143
+#: notes/serializers.py:157
 msgid "You coach this archer in several teams: say which one"
 msgstr "Du trainierst diesen Schützen in mehreren Teams: Gib an, in welchem"
 
-#: notes/serializers.py:145
+#: notes/serializers.py:159
 msgid "This is not a session of that archer"
 msgstr "Das ist kein Training dieses Schützen"
 
-#: notes/serializers.py:147
+#: notes/serializers.py:161
 msgid "Give the session this end belongs to"
 msgstr "Gib das Training an, zu dem diese Passe gehört"
 
-#: notes/serializers.py:154
+#: notes/serializers.py:168
 msgid "A photo has no frames"
 msgstr "Ein Foto hat keine Einzelbilder"
 
-#: notes/serializers.py:156
+#: notes/serializers.py:170
 msgid "Say which frame the note is about"
 msgstr "Gib an, zu welchem Bild die Notiz gehört"
 
-#: notes/serializers.py:162
+#: notes/serializers.py:176
 msgid "This clip is from another session"
 msgstr "Dieses Video ist aus einem anderen Training"
 
@@ -600,70 +570,149 @@ msgstr "Tippe zur Bestätigung \"%(word)s\" ein"
 
 #: privacy/views.py:64
 #, python-format
-msgid ""
-"You are the only admin of %(teams)s. Make someone else an admin there "
-"first."
-msgstr ""
-"Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen "
-"zum Admin."
+msgid "You are the only admin of %(teams)s. Make someone else an admin there first."
+msgstr "Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen zum Admin."
 
-#: training/serializers.py:36
+#: training/schedule.py:88
+msgid "The slot has no training on this date"
+msgstr "Der Termin hat an diesem Datum kein Training"
+
+#: training/schedule.py:111 training/schedule.py:114
+msgid "No such event"
+msgstr "Dieses Training gibt es nicht"
+
+#: training/schedule_serializers.py:25
+msgid "The team of a slot cannot change"
+msgstr "Das Team eines Termins lässt sich nicht ändern"
+
+#: training/schedule_serializers.py:27 training/schedule_views.py:206
+msgid "The end must be after the start"
+msgstr "Das Ende muss nach dem Beginn liegen"
+
+#: training/schedule_serializers.py:29
+msgid "The last day can't be before the first day"
+msgstr "Der letzte Tag darf nicht vor dem ersten liegen"
+
+#: training/schedule_serializers.py:32
+msgid "Give both days of the pause, or neither"
+msgstr "Gib beide Tage der Pause an, oder keinen"
+
+#: training/schedule_serializers.py:34
+msgid "The pause can't end before it starts"
+msgstr "Die Pause darf nicht enden, bevor sie beginnt"
+
+#: training/schedule_views.py:45
+msgid "Give the id of the team"
+msgstr "Gib die ID des Teams an"
+
+#: training/schedule_views.py:57
+msgid "Give a date or a time, like 2026-10-30"
+msgstr "Gib ein Datum oder eine Uhrzeit an, zum Beispiel 2026-10-30"
+
+#: training/schedule_views.py:93 training/schedule_views.py:111 training/schedule_views.py:182
+#: training/schedule_views.py:215
+msgid "Only coaches can change the schedule"
+msgstr "Nur Trainer können den Trainingsplan ändern"
+
+#: training/schedule_views.py:98
+msgid ""
+"Trainings of this slot are already in use. End this slot and add a new one from the day the new "
+"times apply."
+msgstr ""
+"Trainings dieses Termins werden schon verwendet. Beende diesen Termin und lege ab dem Tag der "
+"neuen Zeiten einen neuen an."
+
+#: training/schedule_views.py:131
+#, python-format
+msgid "The period must be between 0 and %(n)s days"
+msgstr "Der Zeitraum muss zwischen 0 und %(n)s Tagen liegen"
+
+#: training/schedule_views.py:172
+msgid "The team, slot and date of an event cannot change"
+msgstr "Team, Termin und Datum eines Trainings lassen sich nicht ändern"
+
+#: training/schedule_views.py:178
+msgid "Give the team of the event"
+msgstr "Gib das Team des Trainings an"
+
+#: training/schedule_views.py:190
+msgid "The id does not belong to this slot and date"
+msgstr "Die ID gehört nicht zu diesem Termin und Datum"
+
+#: training/schedule_views.py:201
+#, python-format
+msgid ""
+"Cannot cancel: %(sessions)s sessions, %(notes)s notes and %(media)s photos or videos are linked "
+"to it. Move it instead."
+msgstr ""
+"Absagen geht nicht: %(sessions)s Trainings, %(notes)s Notizen und %(media)s Fotos oder Videos "
+"sind damit verknüpft. Verschiebe es stattdessen."
+
+#: training/schedule_views.py:217
+msgid "A training from a slot cannot be deleted. Cancel it instead."
+msgstr "Ein Training aus einem Termin lässt sich nicht löschen. Sage es stattdessen ab."
+
+#: training/schedule_views.py:219
+msgid "Something is linked to this event. Change that first."
+msgstr "Damit ist etwas verknüpft. Ändere das zuerst."
+
+#: training/schedule_views.py:231
+msgid "Only coaches can see who took part"
+msgstr "Nur Trainer können sehen, wer teilgenommen hat"
+
+#: training/serializers.py:39
 msgid "Give both x and y, or neither"
 msgstr "Gib x und y an, oder keines von beiden"
 
-#: training/serializers.py:38
+#: training/serializers.py:41
 msgid "Position is out of range"
 msgstr "Die Position liegt außerhalb des Bereichs"
 
-#: training/serializers.py:52 training/views.py:405 training/views.py:465
+#: training/serializers.py:55 training/views.py:405 training/views.py:465
 msgid "Unknown target face"
 msgstr "Unbekannte Scheibe"
 
-#: training/serializers.py:59
+#: training/serializers.py:62
 msgid "More shots than arrows per end"
 msgstr "Mehr Schüsse als Pfeile pro Passe"
 
-#: training/serializers.py:62
+#: training/serializers.py:65
 msgid "Duplicate shot id"
 msgstr "Doppelte Schuss-ID"
 
-#: training/serializers.py:71
+#: training/serializers.py:74
 #, python-format
 msgid "Shot %(n)s: this face has no spot %(spot)s"
 msgstr "Schuss %(n)s: Diese Scheibe hat keinen Spot %(spot)s"
 
-#: training/serializers.py:87
+#: training/serializers.py:90
 #, python-format
 msgid "Shot %(n)s: this face has no scores, place the arrow on it"
-msgstr ""
-"Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die "
-"Scheibe"
+msgstr "Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die Scheibe"
 
-#: training/serializers.py:92
+#: training/serializers.py:95
 #, python-format
 msgid "Shot %(n)s: %(value)s is not a score on this face"
 msgstr "Schuss %(n)s: %(value)s ist kein Wert auf dieser Scheibe"
 
-#: training/serializers.py:94
+#: training/serializers.py:97
 #, python-format
 msgid "Shot %(n)s: this face has no X ring"
 msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 
-#: training/serializers.py:163
+#: training/serializers.py:221
 msgid "Send the revision either by id or by uid, not both"
 msgstr "Sende die Version entweder mit der ID oder mit der UID, nicht mit beidem"
 
-#: training/serializers.py:169
+#: training/serializers.py:227
 msgid "The type can't change once there are results"
-msgstr ""
-"Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr "
-"geändert werden"
+msgstr "Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr geändert werden"
 
-#: training/serializers.py:174
+#: training/serializers.py:232
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/serializers.py:179
+#: training/serializers.py:237
 msgid "The end can't be before the start"
 msgstr "Das Ende darf nicht vor dem Beginn liegen"
 

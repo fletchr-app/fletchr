@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Note(models.Model):
@@ -34,7 +35,11 @@ class Note(models.Model):
     # What the coach drew on that photo or frame: {"v": 1, "shapes": [{"t": "line" | "angle" | "circle", "p": [[x, y], ...], "c": "#rrggbb"}]},
     # the points as fractions (0 to 1) of the picture, so the drawing fits any screen. See notes/drawing.py.
     drawing = models.JSONField(null=True, blank=True)
+    # A label like the session: the team training the note is about. Rows of an archer's event show in their linked session.
+    event = models.ForeignKey("training.TrainingEvent", null=True, blank=True, on_delete=models.SET_NULL, related_name="notes")
     body = models.TextField()
+    # What time the note is about: now by default, or earlier when the coach writes it down afterwards.
+    at = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.COACH_ONLY)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

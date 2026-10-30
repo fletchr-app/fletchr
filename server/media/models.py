@@ -36,6 +36,7 @@ class Media(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="media")
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="uploaded_media")
     session = models.ForeignKey("training.TrainingSession", null=True, blank=True, on_delete=models.SET_NULL, related_name="media")
+    event = models.ForeignKey("training.TrainingEvent", null=True, blank=True, on_delete=models.SET_NULL, related_name="media")
     kind = models.CharField(max_length=5, choices=Kind.choices)
     file = models.FileField(upload_to=file_path, max_length=200)
     thumbnail = models.FileField(upload_to=thumbnail_path, max_length=200)

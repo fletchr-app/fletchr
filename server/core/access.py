@@ -60,6 +60,24 @@ def note_teams(coach, archer):
     return Team.objects.filter(pk__in=coached).filter(pk__in=shooting).order_by("name")
 
 
+def can_plan(user, team):
+    """Who edits the schedule of a team: its coaches and admins. Every member reads it (`teams_of`)."""
+    return is_coach_in(user, team)
+
+
+def shoots_in(user, team):
+    """Whether `user` trains in `team`: as an archer, or as a coach who turned on `also_shoots`."""
+    return TeamMember.objects.filter(team=team, user=user).filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True)).exists()
+
+
+def can_tag(user, team, archer):
+    """Whether `user` may link a row about `archer` (a session, note or photo) to an event of `team`: the coach of the team
+    for an archer of that team, or the archer themselves when they train in that team."""
+    if user.pk == archer.pk:
+        return shoots_in(archer, team)
+    return note_teams(user, archer).filter(pk=team.pk).exists()
+
+
 @transaction.atomic
 def redeem_invite(code, user):
     """Add `user` to the invite's team. The same error for every failure, so codes can't be probed."""

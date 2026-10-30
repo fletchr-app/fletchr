@@ -280,6 +280,88 @@ export interface paths {
         patch: operations["evaluations_partial_update"];
         trace?: never;
     };
+    "/api/events/{event_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A training that is a row. The id of an occurrence nobody linked to is a 404: see the agenda. */
+        get: operations["events_retrieve"];
+        /**
+         * @description Create the event with this id, or change it (cancel it, move it). Safe to repeat. Coaches and admins of the team.
+         *
+         *     A one-off (competition, extra training, camp) needs `team`, `start` and `end`. The occurrence of a slot has
+         *     no row until someone links to it: send `slot` and `date` and the id from the agenda to make it a row, with
+         *     or without changes. It cannot be cancelled while sessions, notes or media are linked to it (409).
+         */
+        put: operations["events_update"];
+        post?: never;
+        /** @description Delete a one-off nothing is linked to. A training from a slot is cancelled instead. */
+        delete: operations["events_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{event_id}/archers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The archers who took part in the event, as far as anything shows it: a linked session, a note or a photo or video.
+         *     Coaches of the team only.
+         */
+        get: operations["events_archers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/agenda/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What happens in your teams in a period: slots' occurrences and events, by start time. Cancelled ones are listed with `cancelled`. */
+        get: operations["events_agenda_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/mine/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Events with notes or photos and videos of this archer that you may see, that sit in no session and whose archer
+         *     has no session linked to them: what the history shows next to the sessions.
+         */
+        get: operations["events_mine_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/faces/": {
         parameters: {
             query?: never;
@@ -827,6 +909,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/slots/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The weekly trainings of your teams. */
+        get: operations["slots_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/slots/{slot_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Create the slot with this id, or change it. Safe to repeat. Coaches and admins of the team.
+         *
+         *     The times, the weekday and the time zone cannot change once a later occurrence is a row (someone linked to it,
+         *     cancelled it or moved it): 409. End the slot with `valid_until` and add a new one from that date instead.
+         */
+        put: operations["slots_update"];
+        post?: never;
+        /** @description Delete the slot. Trainings that are rows stay as one-offs. */
+        delete: operations["slots_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stats/": {
         parameters: {
             query?: never;
@@ -1208,6 +1330,30 @@ export interface components {
         AccountBlocked: {
             detail: string;
             teams: components["schemas"]["BlockingTeam"][];
+        };
+        /**
+         * @description One training of a team. `virtual` ones come from a slot and have no row yet: to link something to it, send its
+         *     `id` with `slot` and `date` (see `event_slot`, `event_date`).
+         */
+        AgendaItem: {
+            /** Format: uuid */
+            id: string;
+            virtual: boolean;
+            /** Format: uuid */
+            slot: string | null;
+            /** Format: date */
+            date: string | null;
+            team: number;
+            team_name: string;
+            kind: components["schemas"]["KindF7eEnum"];
+            name: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            location: string;
+            time_zone: string;
+            cancelled: boolean;
         };
         Archer: {
             id: number;
@@ -1828,6 +1974,81 @@ export interface components {
          * @enum {string}
          */
         EvaluationVisibilityEnum: "shared" | "coach_only";
+        Event: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly team: number;
+            readonly team_name: string;
+            readonly kind: components["schemas"]["KindF7eEnum"];
+            readonly name: string;
+            /** Format: date-time */
+            readonly start: string;
+            /**
+             * Format: date-time
+             * @description After the start; may be on another day
+             */
+            readonly end: string;
+            readonly location: string;
+            /** @description IANA name the times are shown in */
+            readonly time_zone: string;
+            /** Format: uuid */
+            readonly slot: string | null;
+            /**
+             * Format: date
+             * @description The occurrence date in the time zone of the slot; empty for a one-off
+             */
+            readonly date: string | null;
+            readonly cancelled: boolean;
+        };
+        EventArcher: {
+            user_id: number;
+            name: string;
+            managed: boolean;
+            /** @description Sessions of the archer linked to the event */
+            sessions: string[];
+            /** @description Notes of the event about this archer that you may read */
+            notes: number;
+            /** @description Photos and videos of the event of this archer */
+            media: number;
+        };
+        /** @description Enough of an event to show it next to a row. */
+        EventInfo: {
+            name: string;
+            kind: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            team_name: string;
+            cancelled: boolean;
+        };
+        /**
+         * @description Everything is optional here; the view says what a new one needs. `slot` and `date` name the occurrence
+         *     of a slot (the id must be the one in the agenda), `team` a one-off's team.
+         */
+        EventWriteRequest: {
+            team?: number;
+            kind?: components["schemas"]["KindF7eEnum"];
+            name?: string;
+            /** Format: date-time */
+            start?: string;
+            /**
+             * Format: date-time
+             * @description After the start; may be on another day
+             */
+            end?: string;
+            location?: string;
+            /** @description IANA name the times are shown in */
+            time_zone?: string;
+            /** Format: uuid */
+            slot?: string | null;
+            /**
+             * Format: date
+             * @description The occurrence date in the time zone of the slot; empty for a one-off
+             */
+            date?: string | null;
+            cancelled?: boolean;
+        };
         /** @description The proof that it is me at the phone: my password, or for an account made with Google (no password) a fresh Google token of that account. */
         ExportRequestRequest: {
             password?: string;
@@ -1887,6 +2108,13 @@ export interface components {
             /** @default archer */
             role: components["schemas"]["RoleEnum"];
         };
+        /**
+         * @description * `training` - Training
+         *     * `competition` - Competition
+         *     * `camp` - Camp
+         * @enum {string}
+         */
+        KindF7eEnum: "training" | "competition" | "camp";
         LastSession: {
             /** Format: uuid */
             id: string;
@@ -1910,6 +2138,7 @@ export interface components {
             /** @description Providers (google) that can sign in to this account */
             readonly sign_in_providers: string[];
         };
+        /** @description For read serializers: `event` (the id) and `event_info` next to it. */
         Media: {
             /** Format: uuid */
             readonly id: string;
@@ -1920,6 +2149,9 @@ export interface components {
             readonly uploaded_by_name: string;
             /** Format: uuid */
             session?: string | null;
+            /** Format: uuid */
+            readonly event: string;
+            readonly event_info: components["schemas"]["EventInfo"] | null;
             kind: components["schemas"]["MediaKindEnum"];
             /** Format: date-time */
             taken_at: string;
@@ -1959,8 +2191,23 @@ export interface components {
          * @enum {string}
          */
         MediaKindEnum: "photo" | "video";
-        /** @description A new clip needs everything but `note` and `session`. Repeating the request for a clip that exists changes only those two. */
+        /** @description A new clip needs everything but `note`, `session` and `event`. Repeating the request for a clip that exists changes only those three. */
         MediaWriteRequest: {
+            /**
+             * Format: uuid
+             * @description The team training this is part of; send null to take it out
+             */
+            event?: string | null;
+            /**
+             * Format: uuid
+             * @description With `event_date`: the slot, when `event` is the id of an occurrence that has no row yet
+             */
+            event_slot?: string;
+            /**
+             * Format: date
+             * @description With `event_slot`: the date of the occurrence in the time zone of the slot
+             */
+            event_date?: string;
             kind?: components["schemas"]["MediaKindEnum"];
             /**
              * Format: binary
@@ -2001,6 +2248,14 @@ export interface components {
         MembershipSettings: {
             also_shoots?: boolean;
         };
+        MineEvent: {
+            event: components["schemas"]["Event"];
+            /** @description Notes of the event about this archer, in no session, that you may read */
+            notes: number;
+            /** @description Photos and videos of the event of this archer, in no session */
+            media: number;
+        };
+        /** @description The fields to link a row to an event. Subclasses call `take_event` in `validate`. */
         Note: {
             readonly id: number;
             /** Format: uuid */
@@ -2030,6 +2285,17 @@ export interface components {
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
+            /**
+             * Format: uuid
+             * @description The team training this is part of; send null to take it out
+             */
+            event?: string | null;
+            readonly event_info: components["schemas"]["EventInfo"] | null;
+            /**
+             * Format: date-time
+             * @description What time the note is about; now by default, earlier for a note written afterwards
+             */
+            at?: string;
             readonly can_edit: boolean;
             readonly can_delete: boolean;
             /** Format: date-time */
@@ -2046,6 +2312,7 @@ export interface components {
             /** @description Opens for an hour */
             file_url: string;
         };
+        /** @description The fields to link a row to an event. Subclasses call `take_event` in `validate`. */
         NoteRequest: {
             /** @description Only needed if you coach this archer in several teams. Empty for a note about yourself */
             team?: number | null;
@@ -2067,6 +2334,26 @@ export interface components {
             drawing?: unknown;
             body: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
+            /**
+             * Format: uuid
+             * @description The team training this is part of; send null to take it out
+             */
+            event?: string | null;
+            /**
+             * Format: uuid
+             * @description With `event_date`: the slot, when `event` is the id of an occurrence that has no row yet
+             */
+            event_slot?: string;
+            /**
+             * Format: date
+             * @description With `event_slot`: the date of the occurrence in the time zone of the slot
+             */
+            event_date?: string;
+            /**
+             * Format: date-time
+             * @description What time the note is about; now by default, earlier for a note written afterwards
+             */
+            at?: string;
         };
         NoteTeam: {
             id: number;
@@ -2183,6 +2470,7 @@ export interface components {
         PatchedMembershipSettingsRequest: {
             also_shoots?: boolean;
         };
+        /** @description The fields to link a row to an event. Subclasses call `take_event` in `validate`. */
         PatchedNoteRequest: {
             /** @description Only needed if you coach this archer in several teams. Empty for a note about yourself */
             team?: number | null;
@@ -2204,6 +2492,26 @@ export interface components {
             drawing?: unknown;
             body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
+            /**
+             * Format: uuid
+             * @description The team training this is part of; send null to take it out
+             */
+            event?: string | null;
+            /**
+             * Format: uuid
+             * @description With `event_date`: the slot, when `event` is the id of an occurrence that has no row yet
+             */
+            event_slot?: string;
+            /**
+             * Format: date
+             * @description With `event_slot`: the date of the occurrence in the time zone of the slot
+             */
+            event_date?: string;
+            /**
+             * Format: date-time
+             * @description What time the note is about; now by default, earlier for a note written afterwards
+             */
+            at?: string;
         };
         PatchedRoleChangeRequest: {
             role?: components["schemas"]["RoleEnum"];
@@ -2393,6 +2701,9 @@ export interface components {
             mental_rating?: number | null;
             goals?: string;
             notes?: string;
+            /** Format: uuid */
+            readonly event: string;
+            readonly event_info: components["schemas"]["EventInfo"] | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -2446,6 +2757,7 @@ export interface components {
              */
             centred_average: number | null;
         };
+        /** @description For read serializers: `event` (the id) and `event_info` next to it. */
         SessionSummary: {
             /** Format: uuid */
             readonly id: string;
@@ -2461,6 +2773,9 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             setup?: number | null;
+            /** Format: uuid */
+            readonly event: string;
+            readonly event_info: components["schemas"]["EventInfo"] | null;
             /** Format: date-time */
             readonly updated_at: string;
             readonly ends: number;
@@ -2509,6 +2824,21 @@ export interface components {
             mental_rating?: number | null;
             goals?: string;
             notes?: string;
+            /**
+             * Format: uuid
+             * @description The team training this is part of; send null to take it out
+             */
+            event?: string | null;
+            /**
+             * Format: uuid
+             * @description With `event_date`: the slot, when `event` is the id of an occurrence that has no row yet
+             */
+            event_slot?: string;
+            /**
+             * Format: date
+             * @description With `event_slot`: the date of the occurrence in the time zone of the slot
+             */
+            event_date?: string;
         };
         Setup: {
             readonly id: number;
@@ -2566,6 +2896,94 @@ export interface components {
             is_x?: boolean;
             is_miss?: boolean;
             arrow_number?: number | null;
+        };
+        Slot: {
+            /** Format: uuid */
+            readonly id: string;
+            /** @description Needed to create the slot; it cannot change afterwards */
+            team: number;
+            /** @description 0 is Monday, 6 is Sunday */
+            weekday: number;
+            /**
+             * Format: time
+             * @description Local time in `time_zone`
+             */
+            start_time: string;
+            /**
+             * Format: time
+             * @description Local time in `time_zone`, after the start (no training over midnight)
+             */
+            end_time: string;
+            /** @description IANA name, e.g. Europe/Berlin */
+            time_zone: string;
+            location?: string;
+            /** @description For example Squad */
+            name?: string;
+            /**
+             * Format: date
+             * @description The first day this slot applies
+             */
+            valid_from: string;
+            /**
+             * Format: date
+             * @description The last day this slot applies; empty for no end
+             */
+            valid_until?: string | null;
+            /**
+             * Format: date
+             * @description First day of a pause (holidays), with `pause_until`
+             */
+            pause_from?: string | null;
+            /**
+             * Format: date
+             * @description Last day of a pause
+             */
+            pause_until?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        SlotRequest: {
+            /** @description Needed to create the slot; it cannot change afterwards */
+            team: number;
+            /** @description 0 is Monday, 6 is Sunday */
+            weekday: number;
+            /**
+             * Format: time
+             * @description Local time in `time_zone`
+             */
+            start_time: string;
+            /**
+             * Format: time
+             * @description Local time in `time_zone`, after the start (no training over midnight)
+             */
+            end_time: string;
+            /** @description IANA name, e.g. Europe/Berlin */
+            time_zone: string;
+            location?: string;
+            /** @description For example Squad */
+            name?: string;
+            /**
+             * Format: date
+             * @description The first day this slot applies
+             */
+            valid_from: string;
+            /**
+             * Format: date
+             * @description The last day this slot applies; empty for no end
+             */
+            valid_until?: string | null;
+            /**
+             * Format: date
+             * @description First day of a pause (holidays), with `pause_until`
+             */
+            pause_from?: string | null;
+            /**
+             * Format: date
+             * @description Last day of a pause
+             */
+            pause_until?: string | null;
         };
         Spot: {
             /**
@@ -3452,6 +3870,154 @@ export interface operations {
             };
         };
     };
+    events_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+        };
+    };
+    events_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EventWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EventWriteRequest"];
+                "multipart/form-data": components["schemas"]["EventWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+        };
+    };
+    events_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    events_archers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventArcher"][];
+                };
+            };
+        };
+    };
+    events_agenda_list: {
+        parameters: {
+            query: {
+                /** @description A date or a time */
+                from: string;
+                /** @description Only this team; default: all your teams */
+                team?: number;
+                /** @description A date or a time, at most 120 days after `from` */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgendaItem"][];
+                };
+            };
+        };
+    };
+    events_mine_list: {
+        parameters: {
+            query: {
+                archer: number;
+                /** @description Events starting at or after this */
+                from?: string;
+                /** @description Events starting before this */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MineEvent"][];
+                };
+            };
+        };
+    };
     faces_list: {
         parameters: {
             query?: never;
@@ -3785,12 +4351,16 @@ export interface operations {
     media_list: {
         parameters: {
             query?: {
+                event?: string;
                 /**
                  * @description * `photo` - Photo
                  *     * `video` - Video
                  */
                 kind?: "photo" | "video";
+                /** @description Leave out the photos and videos of this event */
+                not_in_event?: string;
                 owner?: number;
+                /** @description Photos and videos of this session, and those of its archer from the event it is linked to that are in no session */
                 session?: string;
                 /** @description Taken at or after this time */
                 taken_after?: string;
@@ -3960,9 +4530,13 @@ export interface operations {
         parameters: {
             query?: {
                 archer?: number;
+                at_after?: string;
+                at_before?: string;
                 author?: number;
                 end?: string;
+                event?: string;
                 media?: string;
+                /** @description Notes of this session, and the notes of its archer about the event it is linked to that are in no session */
                 session?: string;
                 team?: number;
                 /**
@@ -4254,6 +4828,7 @@ export interface operations {
                  *     * `outdoor` - Outdoor
                  */
                 environment?: "indoor" | "outdoor";
+                event?: string;
                 owner?: number;
                 started_after?: string;
                 started_before?: string;
@@ -4561,6 +5136,83 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Setup"];
                 };
+            };
+        };
+    };
+    slots_list: {
+        parameters: {
+            query?: {
+                /** @description Only this team; default: all your teams */
+                team?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Slot"][];
+                };
+            };
+        };
+    };
+    slots_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SlotRequest"];
+                "multipart/form-data": components["schemas"]["SlotRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Slot"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Slot"];
+                };
+            };
+        };
+    };
+    slots_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
