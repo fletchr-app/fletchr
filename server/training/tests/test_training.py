@@ -257,6 +257,19 @@ def test_coach_sees_the_end_as_soon_as_it_is_uploaded(client_for, club, api):
     assert after["updated_at"] > before["updated_at"]
 
 
+def test_deleting_an_end_or_volume_entry_changes_the_session_stamp(api):
+    # The phone pulls sessions changed since its last pull and takes the ends from the detail: a delete on another phone must show up there.
+    end_id, _ = put_end(api, end_body([shot(0, 0)]))
+    entry_id = new_id()
+    assert api["client"].put(f"{api['url']}volume/{entry_id}/", {"distance_m": "18", "arrow_count": 12}, format="json").status_code == 201
+    stamp = api["client"].get(api["url"]).data["updated_at"]
+    assert api["client"].delete(f"{api['url']}ends/{end_id}/").status_code == 204
+    after_end = api["client"].get(api["url"]).data["updated_at"]
+    assert after_end > stamp
+    assert api["client"].delete(f"{api['url']}volume/{entry_id}/").status_code == 204
+    assert api["client"].get(api["url"]).data["updated_at"] > after_end
+
+
 def test_summary_totals_add_up_over_ends_and_volume(client_for, club, api):
     put_end(api, end_body([shot(0, 0), shot(0, 0)]), None)
     put_end(api, end_body([shot(0.15, 0)], index=1))

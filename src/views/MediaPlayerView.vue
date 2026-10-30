@@ -10,6 +10,7 @@ import DrawingLayer from '@/components/DrawingLayer.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
+import MediaEvent from '@/components/MediaEvent.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
@@ -28,7 +29,7 @@ import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, s
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { api } = useAuth()
+const { api, userId } = useAuth()
 
 const PX_PER_FRAME = 12
 // Opened from an evaluation to choose the frame that shows a criterion: "Use this frame" goes back to the form.
@@ -86,6 +87,8 @@ const teams = useRemote(
   async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
   { watch: [clip] },
 )
+// A coach of the archer may write notes; so may the archer, for themselves.
+const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
 const frameNotes = computed(() =>
   (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
 )
@@ -109,7 +112,7 @@ function jump(f: number) {
 
 // Drawing on a frame: lines, angles, circles. A new drawing is attached to the note that is written next; the drawing
 // of a note that exists is changed in place.
-const canDraw = computed(() => !!clip.value && !!teams.data.value?.length)
+const canDraw = computed(() => !!clip.value && canNote.value)
 const drawing = ref<{ shapes: Shape[]; noteId: number | null } | null>(null)
 const attached = ref<Shape[]>([]) // drawn, not yet saved with a note
 const tool = ref<Tool>('line')
@@ -509,7 +512,7 @@ async function moveTo(session: string | null) {
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.draw')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || teams.data.value?.length" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
+          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
             <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
           </button>
         </div>
@@ -529,7 +532,7 @@ async function moveTo(session: string | null) {
         <div v-else class="controls">
           <button type="button" :disabled="!hasPrevious" :aria-label="$t('media.previousPhoto')" @click="goTo(-1)"><IonIcon :icon="playSkipBack" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.drawPhoto')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || teams.data.value?.length" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
+          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
             <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
           </button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextPhoto')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
@@ -537,6 +540,7 @@ async function moveTo(session: string | null) {
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
+      <MediaEvent v-if="clip" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
       <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
@@ -566,6 +570,7 @@ async function moveTo(session: string | null) {
       :attached="attached"
       :archer-id="clip?.owner"
       :teams="teams.data.value ?? []"
+      :can-write="canNote"
       :on="sheetTarget"
       @close="notesOpen = false"
       @remove-attached="attached = []"

@@ -26,11 +26,17 @@ def _equipment(owner, model, serializer, revision_serializer):
     return items
 
 
+def _event(event):
+    return None if event is None else {"id": str(event.pk), "name": event.name, "kind": event.kind, "start": event.start}
+
+
 def _note(note, **extra):
     return {
         "id": note.pk,
         "team": note.team.name if note.team else None,  # none for a note about yourself
         "session": note.session_id,
+        "event": _event(note.event),
+        "at": note.at,
         "end": note.end_id,
         "media": str(note.media_id) if note.media_id else None,
         "frame": note.frame,
@@ -50,6 +56,7 @@ def _media(media):
         "kind": media.kind,
         "file": file_name(media),  # the name in the zip of the files
         "session": media.session_id,
+        "event": _event(media.event),
         "taken_at": media.taken_at,
         "width": media.width,
         "height": media.height,
@@ -100,7 +107,7 @@ def _evaluations(**filters):
 def export_user_data(user) -> dict:
     sessions = (
         TrainingSession.objects.filter(owner=user)
-        .select_related("owner__profile", "setup__bow_revision", "setup__arrow_set_revision")
+        .select_related("owner__profile", "setup__bow_revision", "setup__arrow_set_revision", "event__team")
         .prefetch_related("ends__shots", "volume_entries")
         .order_by("started_at")
     )

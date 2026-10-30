@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonItem, IonLabel, IonList } from '@ionic/vue'
+import { IonList } from '@ionic/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -11,11 +11,11 @@ import AvatarEditor from '@/components/AvatarEditor.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import ManagedArcherActions from '@/components/ManagedArcherActions.vue'
 import NotesSection from '@/components/NotesSection.vue'
+import SessionListItem from '@/components/SessionListItem.vue'
 import VideoConsent from '@/components/VideoConsent.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
-import { sessionTypeKey } from '@/lib/log-model'
 import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 10000
@@ -47,7 +47,11 @@ const profileLine = computed(() => {
     .join(' · ')
 })
 // Sessions the coach logged on this device (editable), then those the server has.
-const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? [], goneSessions.value))
+const events = useRemote(async () => (await api.GET('/api/events/mine/', { params: { query: { archer: Number(id) } } })).data ?? null, {
+  pollMs: REFRESH_MS,
+  keepPolling: () => true,
+})
+const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Number(id)), data.value ?? [], goneSessions.value, events.data.value ?? [], Number(id)))
 </script>
 
 <template>
@@ -75,14 +79,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <div v-if="loading">{{ $t('common.loading') }}</div>
       <div v-if="!loading && rows.length === 0">{{ $t('archer.noSessions') }}</div>
       <IonList v-if="rows.length > 0" inset>
-        <IonItem v-for="row in rows" :key="row.id" :router-link="row.to" detail lines="full">
-          <IonLabel class="ion-text-wrap">
-            <h3>{{ new Date(row.started_at).toLocaleString() }} · {{ $t(sessionTypeKey(row.type)) }}{{ row.finished ? '' : `  ● ${$t('training.inProgress')}` }}</h3>
-            <p>
-              {{ row.location ? `${row.location} · ` : '' }}{{ $t('count.ends', row.ends) }} · {{ $t('count.arrows', row.arrows) }}{{ row.ends > 0 ? ` · ${$t('count.points', row.points)}` : '' }}
-            </p>
-          </IonLabel>
-        </IonItem>
+        <SessionListItem v-for="row in rows" :key="row.id" :row="row" />
       </IonList>
       <ManagedArcherActions
         v-if="info.data.value?.managed && info.data.value.team_id"

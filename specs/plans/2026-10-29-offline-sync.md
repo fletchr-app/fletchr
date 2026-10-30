@@ -51,7 +51,7 @@ Today a 410 removes the session and its queued ends silently (problem 6). Fix it
 
 ## Phase 1: local-store foundation (ships alone)
 
-Progress: the store owner key, the file store with the Preferences migration, `useKeyedStore` and its use in `useLog` and `useMedia` are done (first PR). Second PR: `useAuth.storeOwner` (used by `useLog` and `useMedia`), the sign-out prompt, and account deletion removing the queued media. Third PR: the server `uid` fields on equipment, revisions and notes (migrations in three steps, read-only in the API, `record_revision` takes an app-made uid; evaluations are optional and not included). Fourth PR (Phase 1b, server part for equipment): `PUT` by uid for bows and arrow sets with `revision_uid`, and session writes by `bow_revision_uid` / `arrow_set_revision_uid`. Fifth PR (Phase 1b, app part for equipment): the equipment store, upload queue and read, the equipment screens on the store, and sessions naming equipment by uid. Sixth PR (Phase 1b, server part for notes): `PUT /api/notes/<uid>/`, and notes about yourself (no team, always private; `Note.team` is optional). Seventh PR (Phase 1b, app part for notes): the notes queue (`useNotes`), writing a note through it, notes shown as waiting, uploaded after their photo or session. Phase 1b is done except the screens for an archer's own notes (the server allows them), and changing or deleting a note offline. Those two stores are not built yet on purpose: the equipment store needs the server uids to copy server items in, and a notes store without its queue would be code nothing uses. They come with the upload path (Phase 1b).
+Progress: the store owner key, the file store with the Preferences migration, `useKeyedStore` and its use in `useLog` and `useMedia` are done (first PR). Second PR: `useAuth.storeOwner` (used by `useLog` and `useMedia`), the sign-out prompt, and account deletion removing the queued media. Third PR: the server `uid` fields on equipment, revisions and notes (migrations in three steps, read-only in the API, `record_revision` takes an app-made uid; evaluations are optional and not included). Fourth PR (Phase 1b, server part for equipment): `PUT` by uid for bows and arrow sets with `revision_uid`, and session writes by `bow_revision_uid` / `arrow_set_revision_uid`. Fifth PR (Phase 1b, app part for equipment): the equipment store, upload queue and read, the equipment screens on the store, and sessions naming equipment by uid. Sixth PR (Phase 1b, server part for notes): `PUT /api/notes/<uid>/`, and notes about yourself (no team, always private; `Note.team` is optional). Seventh PR (Phase 1b, app part for notes): the notes queue (`useNotes`), writing a note through it, notes shown as waiting, uploaded after their photo or session. Eighth PR: the screens for an archer's own notes (a Notes page for sessions on the phone, private notes on own photos and clips). Phase 1b is done except changing or deleting a note offline. Those two stores are not built yet on purpose: the equipment store needs the server uids to copy server items in, and a notes store without its queue would be code nothing uses. They come with the upload path (Phase 1b).
 
 Goal: every entity store is keyed by a **store owner**, not by a server user; stores are files, not one SharedPreferences blob; notes and equipment have app-made ids and a device store. No two-way sync, no tombstones.
 
@@ -119,10 +119,12 @@ Tests:
 
 ## Phase 3: sessions both ways (rest of #82)
 
-- [ ] `pull` takes all own sessions changed elsewhere (not only `isOpenedForMe`), fetches details for those, and applies them with the rule below. Coach view of others' sessions stays online (`useRemote`).
-- [ ] Conflict rule, sessions (Q4), to write into `offline-sync.md`: last write wins per item (session metadata, each end with its shots, each volume entry), as today on the server. On pull, an item with a pending local op is not overwritten (the op goes up and wins). An end that the server no longer has and that has no pending op is removed (detail replaces the list; no end tombstones needed, because `touch()` bumps the session on end deletes **[fact]**).
-- [ ] Delete against edit (Q11): the push side is done in Phase 0. Here the pull side: a tombstone or `gone` for a session with pending ops uses the same state and banner choices.
-- [ ] `log-model.ts`: actions `pulledSession` (apply rule) and `sessionConflict`.
+Progress: done in the ninth PR. Decided with Tim: upload order decides (no edit timestamps), the first pull on a new phone takes the whole history, a deleted session with waiting results asks as in Phase 0. No `sessionConflict` action was needed: the `gone` state of Phase 0 is the conflict. A pull that raced with a finished upload is dropped (`uploads` counter in `useLog`).
+
+- [x] `pull` takes all own sessions changed elsewhere (not only `isOpenedForMe`), fetches details for those, and applies them with the rule below. Coach view of others' sessions stays online (`useRemote`).
+- [x] Conflict rule, sessions (Q4), written into `offline-sync.md`: last write wins per item (session metadata, each end with its shots, each volume entry), as today on the server. On pull, an item with a pending local op is not overwritten (the op goes up and wins). An end that the server no longer has and that has no pending op is removed (detail replaces the list; no end tombstones needed, because `touch()` bumps the session on end deletes **[fact]**).
+- [x] Delete against edit (Q11): the push side is done in Phase 0. Here the pull side: a tombstone or `gone` for a session with pending ops uses the same state and banner choices.
+- [x] `log-model.ts`: the `pulled` action applies the rule (`mergePulled`).
 
 Server: none required. Optional: `?ids=` on the session detail or a `?include=ends` on the list to avoid one request per changed session **[inferred]** worth it only if pulls get slow.
 
@@ -130,15 +132,19 @@ Tests: `log-model.test.ts` (pulled detail does not overwrite a pending end; remo
 
 ## Phase 4: media both ways and notes queue (#83)
 
+Progress: server part done in the tenth PR. Decided with Tim: the phone keeps the list and thumbnails of pulled media, not the video files (they stream online); one shared `core.Tombstone`; server first, then the app pull, then the player. The tombstone goes to the people who may keep a copy (the clip's owner; a note's author, and the archer if they can read it), not to coaches, who read online. Extras the plan did not list: `updated_at` is also set where code uses `update()` (session delete, merge, claim, move of a clip's notes), notes on a deleted clip get their own tombstones, and a note that stops being shared gets one for the archer.
+
 Server:
-- [ ] `media/migrations/0002_updated_at.py`: `Media.updated_at` (`auto_now`), backfill from `created_at`.
-- [ ] Tombstones (Q8): `core.Tombstone(kind, uid, owner, at)` with `core/migrations/0009_tombstone.py`; written on media and note delete; `GET /api/gone/?kind=&updated_after=`. `SessionTombstone` stays (it carries `merged_into`).
-- [ ] `MediaFilter.updated_after`.
-- [ ] Notes: `NoteFilter.updated_after` (the `PUT` route is in Phase 1b).
-- [ ] `npm run types:api`.
+- [x] `media/migrations/0003_updated_at.py`: `Media.updated_at` (`auto_now`), backfill from `created_at`.
+- [x] Tombstones (Q8): `core.Tombstone(kind, uid, owner, at)` with `core/migrations/0009_tombstone.py`; written on media and note delete; `GET /api/gone/?kind=&updated_after=`. `SessionTombstone` stays (it carries `merged_into`).
+- [x] `MediaFilter.updated_after`.
+- [x] Notes: `NoteFilter.updated_after` (the `PUT` route is in Phase 1b).
+- [x] `npm run types:api`.
 
 App:
-- [ ] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
+Progress: the media pull is the eleventh PR. It is a separate store (`useMediaLibrary`, `library:` key) and not part of `useMedia`: the queue holds what is waiting, the library what the server has, and `MediaView` shows the queue first and the library when offline. List and thumbnails only (decided with Tim). The notes pull and the player for queued clips follow as their own PRs.
+
+- [x] `useMedia` pull: own media changed since, plus tombstones; queued items untouched.
 - [ ] Play before upload, per #83: player opens a queue id from the local file. Details belong in #83's own plan; this plan only provides the store and the order.
 - [ ] `useNotes` pull: notes changed since, plus tombstones (the notes queue is in Phase 1b).
 - [ ] Conflict rule, media and notes: last write wins per item; a queued item is not overwritten by a pull; a tombstone removes the local copy unless it has a pending op, then it is a conflict (like Phase 3).

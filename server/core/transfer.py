@@ -38,6 +38,7 @@ HANDLERS: dict[str, object] = {
     "training.TrainingSession.owner": MOVE,
     "training.TrainingSession.opened_by": MOVE,
     "training.SessionTombstone.owner": MOVE,
+    "core.Tombstone.owner": MOVE,
     "notes.Note.author": MOVE,
     "notes.Note.archer": MOVE,
     "evaluations.TemplateVersion.created_by": MOVE,

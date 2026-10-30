@@ -1,5 +1,6 @@
 // Local copy of the sessions an archer logs on this device, plus the queue of uploads still to do.
 // Pure functions only (no React, no storage), so they can be tested with `npm test`.
+import type { EventLink } from './schedule.ts';
 
 /** Empty for a session a coach opened: the archer chooses when adding the first results. */
 export type SessionType = '' | 'scoring' | 'volume' | 'technique' | 'competition';
@@ -62,6 +63,8 @@ export type LogSession = {
   gear?: Gear | null;
   /** Left out until the archer fills it in, so uploading the session does not clear anything on the server. */
   details?: SessionDetails;
+  /** The team training this session was part of. Left out when no choice was made (the server keeps its value); `null` after "None". */
+  event?: EventLink | null;
   /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
   owner?: number;
   owner_name?: string;
@@ -97,7 +100,7 @@ export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equip
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type' | 'event'>> }
   /** Sessions the server has and this device does not (nothing to upload), and where the pull got to. */
   | { type: 'pulled'; sessions: LogSession[]; lastPull?: string }
   /** The server merged `from` into `to`: this device follows. */
@@ -138,6 +141,47 @@ const mapSession = (state: LogState, id: string, fn: (s: LogSession) => LogSessi
 
 const hasResults = (s: LogSession) => s.ends.length > 0 || s.volume.length > 0;
 
+/**
+ * The list of `local` items after a pull: the server's items, except where this device has an op waiting for the item (the
+ * local copy goes up next and wins), plus local items that wait to be uploaded. An item the server does not have and
+ * nothing waits for is dropped (it was deleted elsewhere); an item whose delete is queued does not come back.
+ */
+function mergeItems<T extends { id: string }>(local: T[], server: T[], waiting: (id: string, del: boolean) => boolean, order: (a: T, b: T) => number): T[] {
+  const mine = new Map(local.map((x) => [x.id, x]));
+  const out: T[] = [];
+  for (const theirs of server) {
+    if (waiting(theirs.id, true)) continue;
+    out.push(waiting(theirs.id, false) ? (mine.get(theirs.id) ?? theirs) : theirs);
+  }
+  for (const x of local) if (!server.some((t) => t.id === x.id) && waiting(x.id, false)) out.push(x);
+  return out.sort(order);
+}
+
+/** A session the server sent, put into the log: added if new, else its metadata, ends and volume merged by `mergeItems`. */
+function mergePulled(state: LogState, theirs: LogSession): LogState {
+  const mine = state.sessions.find((s) => s.id === theirs.id);
+  if (!mine) return { ...state, sessions: [...state.sessions, theirs] };
+  if (mine.gone) return state;
+  const waiting = (kind: Op['kind']) => (id: string, del: boolean) =>
+    state.outbox.some((o) => o.kind === kind && o.sessionId === mine.id && o.itemId === id && !!o.delete === del);
+  const metaWaits = state.outbox.some((o) => o.kind === 'session' && o.sessionId === mine.id);
+  const meta = metaWaits
+    ? {}
+    : {
+        started_at: theirs.started_at, ended_at: theirs.ended_at, type: theirs.type, environment: theirs.environment, location: theirs.location,
+        details: theirs.details, opened_by: theirs.opened_by, opened_by_name: theirs.opened_by_name,
+        ...(theirs.event ? { event: theirs.event } : {}),
+      };
+  const next: LogSession = {
+    ...mine,
+    ...meta,
+    gear: mine.gear ?? theirs.gear,
+    ends: mergeItems(mine.ends, theirs.ends, waiting('end'), (a, b) => a.index - b.index),
+    volume: mergeItems(mine.volume, theirs.volume, waiting('volume'), () => 0),
+  };
+  return { ...state, sessions: state.sessions.map((s) => (s.id === mine.id ? next : s)) };
+}
+
 /** One op per key: when two collide, the newer one stays where the first was. */
 function dedupe(outbox: Op[]): Op[] {
   const newest = new Map<string, Op>();
@@ -172,6 +216,7 @@ function replaceSessionId(state: LogState, from: string, to: string): LogState {
     type: dst.type || src.type,
     gear: dst.gear ?? src.gear,
     details: dst.details ?? src.details,
+    event: dst.event ?? src.event,
   };
   const sessions = state.sessions.filter((s) => s.id !== from).map((s) => (s.id === to ? merged : s));
   let result: LogState = { ...state, sessions, outbox: dedupe(moved) };
@@ -198,9 +243,9 @@ export function reduce(state: LogState, action: LogAction): LogState {
       return queue(mapSession(state, action.id, (s) => ({ ...s, ...patch, ...(settable ? { type } : {}) })), 'session', action.id);
     }
     case 'pulled': {
-      const known = new Set([...state.sessions.map((s) => s.id), ...state.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId)]);
-      const added = action.sessions.filter((s) => !known.has(s.id));
-      return { ...state, sessions: [...state.sessions, ...added], lastPull: action.lastPull ?? state.lastPull };
+      const deleted = new Set(state.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId));
+      const next = action.sessions.filter((s) => !deleted.has(s.id)).reduce(mergePulled, state);
+      return { ...next, lastPull: action.lastPull ?? state.lastPull };
     }
     case 'sessionGone': {
       const unsent = state.outbox.some((o) => o.sessionId === action.id && !o.delete && (o.kind === 'end' || o.kind === 'volume'));

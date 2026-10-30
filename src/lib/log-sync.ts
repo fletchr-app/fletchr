@@ -1,8 +1,8 @@
 // Uploading the queue of a local log. No React here, so the retry rules can be tested with `npm test`.
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
-import type { components } from './api-types.ts';
 import type { Gear, LogAction, LogSession, LogState, Op } from './log-model.ts';
+import { fromServer } from './session-view.ts';
 
 /** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. */
 export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'failed'; message: string };
@@ -41,6 +41,12 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           environment: session.environment,
           location: session.location,
           ...(session.details ?? {}),
+          // Left out when nothing was chosen; null takes the link out. An occurrence that is no row yet is made by the server.
+          ...(session.event
+            ? { event: session.event.id, ...(session.event.slot && session.event.date ? { event_slot: session.event.slot, event_date: session.event.date } : {}) }
+            : session.event === null
+              ? { event: null }
+              : {}),
           // Left out when nothing was chosen, so the server keeps what it has; null clears it.
           ...(session.gear
             ? gearBody(session.gear)
@@ -122,35 +128,36 @@ export async function drain(
   }
 }
 
-type Summary = components['schemas']['SessionSummary'];
-
-/** A session someone else opened for you and nobody has shot in: the only kind this device takes over from the server. */
-const isOpenedForMe = (s: Summary, userId: number) =>
-  s.opened_by != null && s.opened_by !== userId && s.ends === 0 && s.scored_arrows === 0 && s.volume_arrows === 0;
-
 /**
  * What the server knows that this device does not, as actions to dispatch in order: ids that were merged or deleted, then
- * the sessions a coach opened for you. Null if the server cannot be reached. `since` is where the last pull got to.
+ * every session of yours that changed since `since`, with its ends and volume (the reducer decides what is taken over).
+ * Null if the server cannot be reached. `since` is where the last pull got to. A pull that breaks off half way keeps what
+ * it fetched and `lastPull` stops at the last session it got, so the next one goes on from there. `skip` are sessions
+ * whose delete is still queued.
  */
-export async function pull(api: ApiClient, userId: number, since?: string): Promise<LogAction[] | null> {
+export async function pull(api: ApiClient, userId: number, since?: string, skip: ReadonlySet<string> = new Set()): Promise<LogAction[] | null> {
   try {
     const query = { owner: userId, ...(since ? { updated_after: since } : {}) };
     const [list, gone] = await Promise.all([api.GET('/api/sessions/', { params: { query } }), api.GET('/api/sessions/gone/', { params: { query } })]);
     if (!list.data || !gone.data) return null;
     const actions: LogAction[] = gone.data.map((g) => (g.merged_into ? { type: 'replaceSessionId', from: g.id, to: g.merged_into } : { type: 'sessionGone', id: g.id }));
     const sessions: LogSession[] = [];
-    for (const s of list.data.filter((row) => isOpenedForMe(row, userId))) {
-      const detail = await api.GET('/api/sessions/{session_id}/', { params: { path: { session_id: s.id } } });
-      if (!detail.data) return null;
-      const d = detail.data;
-      sessions.push({
-        id: d.id, started_at: d.started_at, ended_at: d.ended_at ?? null, type: d.type ?? '', environment: d.environment ?? '', location: d.location ?? '',
-        ends: [], volume: [], opened_by: d.opened_by ?? undefined, opened_by_name: d.opened_by_name ?? undefined, keep: true,
-        details: { weather: d.weather ?? '', physical_rating: d.physical_rating ?? null, mental_rating: d.mental_rating ?? null, goals: d.goals ?? '', notes: d.notes ?? '' },
-      });
+    let reached: string | undefined;
+    let complete = true;
+    for (const row of list.data.filter((r) => !skip.has(r.id)).sort((a, b) => a.updated_at.localeCompare(b.updated_at))) {
+      const detail = await api.GET('/api/sessions/{session_id}/', { params: { path: { session_id: row.id } } });
+      if (!detail.data) {
+        complete = false;
+        break;
+      }
+      // The screen type carries the archer's name and a stamp; on the device a name would mean "logged for an archer".
+      const { owner_name: _name, updated_at: _at, ...mine } = fromServer(detail.data);
+      sessions.push({ ...mine, opened_by: detail.data.opened_by ?? undefined, opened_by_name: detail.data.opened_by_name ?? undefined, keep: true });
+      reached = detail.data.updated_at;
     }
-    const stamps = [...list.data.map((r) => r.updated_at), ...gone.data.map((g) => g.at ?? '')].filter(Boolean).sort();
-    actions.push({ type: 'pulled', sessions, lastPull: stamps.at(-1) });
+    if (!complete && sessions.length === 0) return null;
+    const stamps = complete ? [...list.data.map((r) => r.updated_at), ...gone.data.map((g) => g.at ?? '')].filter(Boolean).sort() : [reached ?? ''];
+    actions.push({ type: 'pulled', sessions, lastPull: stamps.at(-1) || undefined });
     return actions;
   } catch {
     return null;

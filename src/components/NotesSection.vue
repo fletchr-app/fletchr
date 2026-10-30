@@ -7,7 +7,8 @@ import { useAuth } from '@/composables/useAuth'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { noteLink } from '@/lib/media-notes'
-import { watch } from 'vue'
+import type { EventLink } from '@/lib/schedule'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const REFRESH_MS = 10000
@@ -15,9 +16,11 @@ const always = () => true
 
 // Coach notes about an archer, or about one of their sessions. Coaches see all notes of their team and can
 // write new ones (coach only unless they choose otherwise); an archer sees the notes shared with them.
-const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[] }>(), { ends: () => [] })
+const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[]; event?: EventLink | null }>(), { ends: () => [] })
 
-const { api } = useAuth()
+const { api, userId } = useAuth()
+// Your own training: you write private notes for yourself, no team involved.
+const own = computed(() => props.archerId === Number(userId.value))
 const router = useRouter()
 // A note on a photo or a frame opens its photo or clip; to change the drawing it goes there too, and starts drawing.
 const open = (note: { media?: string | null; frame?: number | null }) => {
@@ -40,17 +43,18 @@ watch(uploaded, notes.reload)
 
 <template>
   <div
-    v-if="notes.data.value?.length || teams.data.value?.length || pendingFor({ archer: archerId, session: sessionId }).length"
+    v-if="own || notes.data.value?.length || teams.data.value?.length || pendingFor({ archer: archerId, session: sessionId }).length"
     class="d-flex flex-column gap-3"
   >
-    <h2 class="h5 m-0">{{ $t('notes.coachNotes') }}</h2>
+    <h2 class="h5 m-0">{{ own ? $t('notes.myNotes') : $t('notes.coachNotes') }}</h2>
     <ErrorText :message="notes.error.value" />
     <NewNote
-      v-if="teams.data.value && teams.data.value.length > 0"
+      v-if="own || (teams.data.value && teams.data.value.length > 0)"
       :archer-id="archerId"
       :session-id="sessionId"
       :ends="ends"
-      :teams="teams.data.value"
+      :event="event"
+      :teams="teams.data.value ?? []"
       @added="notes.reload"
     />
     <PendingNotes :archer-id="archerId" :session-id="sessionId" />

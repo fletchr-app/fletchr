@@ -10,8 +10,11 @@ from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
 
+from core.access import can_tag
+
 from .merge import has_results, resolve_session_id
-from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
+from .models import End, SessionTombstone, Shot, TrainingEvent, TrainingSession, TrainingSlot, VolumeEntry
+from .schedule import resolve_event
 
 logger = logging.getLogger("training.scoring")
 
@@ -104,6 +107,61 @@ class VolumeEntrySerializer(serializers.ModelSerializer):
         fields = ["id", "distance_m", "arrow_count"]
 
 
+class EventRefField(serializers.UUIDField):
+    """The event a row is linked to. Read as its id. Written as an id that need not exist yet: for the occurrence of a
+    slot send `event_slot` and `event_date` too, and the server makes the row (`schedule.resolve_event`)."""
+
+    def get_attribute(self, instance):
+        return instance.event
+
+    def to_representation(self, value):
+        return str(value.pk)
+
+
+class EventInfoSerializer(serializers.Serializer):
+    """Enough of an event to show it next to a row."""
+
+    name = serializers.CharField(allow_blank=True)
+    kind = serializers.CharField()
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()
+    team_name = serializers.CharField()
+    cancelled = serializers.BooleanField()
+
+
+def event_info(event):
+    if event is None:
+        return None
+    return {"name": event.name, "kind": event.kind, "start": event.start, "end": event.end, "team_name": event.team.name, "cancelled": event.cancelled}
+
+
+class EventLinkSerializer(serializers.Serializer):
+    """The fields to link a row to an event. Subclasses call `take_event` in `validate`."""
+
+    event = EventRefField(required=False, allow_null=True, help_text="The team training this is part of; send null to take it out")
+    event_slot = serializers.UUIDField(required=False, write_only=True, help_text="With `event_date`: the slot, when `event` is the id of an occurrence that has no row yet")
+    event_date = serializers.DateField(required=False, write_only=True, help_text="With `event_slot`: the date of the occurrence in the time zone of the slot")
+
+    def take_event(self, attrs, archer):
+        """Replace the id in `attrs["event"]` by the event row, which `archer` must be allowed to be tagged in."""
+        slot, day = attrs.pop("event_slot", None), attrs.pop("event_date", None)
+        if attrs.get("event") is not None:
+            user = self.context["request"].user
+            attrs["event"] = resolve_event(attrs["event"], slot, day, allowed=lambda team: can_tag(user, team, archer))
+        return attrs
+
+
+class EventInfoSerializerMixin(serializers.Serializer):
+    """For read serializers: `event` (the id) and `event_info` next to it."""
+
+    event = EventRefField(read_only=True)
+    event_info = serializers.SerializerMethodField()
+
+    @extend_schema_field(EventInfoSerializer(allow_null=True))
+    def get_event_info(self, row):
+        return event_info(row.event)
+
+
 class SessionRefField(serializers.PrimaryKeyRelatedField):
     """A session by id. The id of a session that was merged into another gives the session it went into."""
 
@@ -118,7 +176,7 @@ class SessionRefField(serializers.PrimaryKeyRelatedField):
         return super().to_internal_value(resolved or data)
 
 
-class SessionWriteSerializer(serializers.ModelSerializer):
+class SessionWriteSerializer(EventLinkSerializer, serializers.ModelSerializer):
     """
     The equipment is chosen by revision: the app knows the revision ids from its stored copy of your
     equipment, and the server finds or creates the setup for that pair. Leave both out to keep the
@@ -140,7 +198,7 @@ class SessionWriteSerializer(serializers.ModelSerializer):
         fields = [
             "started_at", "ended_at", "type", "environment", "location", "weather",
             "bow_revision", "arrow_set_revision", "bow_revision_uid", "arrow_set_revision_uid",
-            "physical_rating", "mental_rating", "goals", "notes",
+            "physical_rating", "mental_rating", "goals", "notes", "event", "event_slot", "event_date",
         ]
 
     def validate_bow_revision(self, revision):
@@ -177,7 +235,7 @@ class SessionWriteSerializer(serializers.ModelSerializer):
         ended = attrs.get("ended_at", self.instance.ended_at if self.instance else None)
         if started is not None and ended is not None and ended < started:
             raise serializers.ValidationError({"ended_at": gettext("The end can't be before the start")})
-        return attrs
+        return self.take_event(attrs, self.instance.owner if self.instance else self.context["owner"])
 
     def _with_setup(self, validated_data):
         if "bow_revision" in validated_data or "arrow_set_revision" in validated_data:
@@ -218,8 +276,9 @@ def opened_by_name(session):
     return None if user is None else user.profile.name or user.email
 
 
-class SessionSerializer(serializers.ModelSerializer):
+class SessionSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
     """Full session for the detail view."""
+
 
     owner_name = serializers.SerializerMethodField()
     opened_by_name = serializers.SerializerMethodField()
@@ -231,7 +290,7 @@ class SessionSerializer(serializers.ModelSerializer):
         model = TrainingSession
         fields = [
             "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "weather",
-            "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "created_at", "updated_at",
+            "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "event", "event_info", "created_at", "updated_at",
             "ends", "volume_entries",
         ]
 
@@ -255,7 +314,7 @@ class SessionSerializer(serializers.ModelSerializer):
         }
 
 
-class SessionSummarySerializer(serializers.ModelSerializer):
+class SessionSummarySerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
     opened_by_name = serializers.SerializerMethodField()
     ends = serializers.IntegerField(source="end_count", read_only=True)
@@ -267,7 +326,7 @@ class SessionSummarySerializer(serializers.ModelSerializer):
         model = TrainingSession
         fields = [
             "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "setup",
-            "updated_at", "ends", "scored_arrows", "score_total", "volume_arrows",
+            "event", "event_info", "updated_at", "ends", "scored_arrows", "score_total", "volume_arrows",
         ]
 
     def get_owner_name(self, session) -> str:

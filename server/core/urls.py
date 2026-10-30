@@ -1,9 +1,10 @@
 from django.urls import path
 
-from . import views
+from . import gone, views
 
 urlpatterns = [
     path("health/", views.health),
+    path("gone/", gone.GoneListView.as_view()),
     path("register/", views.RegisterView.as_view()),
     path("auth/google/", views.GoogleSignInView.as_view()),
     path("invites/redeem/", views.RedeemInviteView.as_view()),

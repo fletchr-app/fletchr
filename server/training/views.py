@@ -20,6 +20,7 @@ from core.claims import can_write_sessions_of
 from core.models import COACH_ROLES, Role, Team, TeamMember, User
 
 from media.access import can_add_for
+from media.models import Media
 
 from .merge import has_results, merge_if_possible, opened_by_other, resolve_session_id
 from .models import End, SessionTombstone, Shot, TrainingSession, VolumeEntry
@@ -44,14 +45,14 @@ from .serializers import (
 
 
 # What a coach who opened a session may still change (the rest is the archer's).
-COACH_FIELDS = ("started_at", "ended_at", "environment", "location", "weather", "goals", "notes")
+COACH_FIELDS = ("started_at", "ended_at", "environment", "location", "weather", "goals", "notes", "event", "event_slot", "event_date")
 LIVE_WINDOW = timedelta(hours=3)
 OVERVIEW_DAYS = 7
 
 
 def visible_sessions(user):
     return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related(
-        "owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision"
+        "owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision", "event__team"
     )
 
 
@@ -82,7 +83,7 @@ class SessionFilter(django_filters.FilterSet):
 
     class Meta:
         model = TrainingSession
-        fields = ["owner", "type", "environment"]
+        fields = ["owner", "type", "environment", "event"]
 
 
 class SessionListView(generics.ListAPIView):
@@ -157,8 +158,8 @@ class SessionDetailView(APIView):
         if mode != "full":
             data = {k: v for k, v in request.data.items() if k in COACH_FIELDS}
             if mode == "fill":
-                data = {k: v for k, v in data.items() if getattr(existing, k) in (None, "")}
-        serializer = SessionWriteSerializer(existing, data=data, partial=mode != "full", context={"request": request})
+                data = {k: v for k, v in data.items() if getattr(existing, k, None) in (None, "")}
+        serializer = SessionWriteSerializer(existing, data=data, partial=mode != "full", context={"request": request, "owner": owner})
         serializer.is_valid(raise_exception=True)
         changed = serializer.validated_data
         times_changed = existing is None or any(k in changed and changed[k] != getattr(existing, k) for k in ("started_at", "ended_at"))
@@ -166,7 +167,7 @@ class SessionDetailView(APIView):
             session = serializer.save(**({} if existing else {"id": session_id, "owner": owner, "opened_by": request.user}))
             merged = merge_if_possible(session) if times_changed else session
         session = (
-            TrainingSession.objects.select_related("owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision")
+            TrainingSession.objects.select_related("owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision", "event__team")
             .prefetch_related("ends__shots", "volume_entries")
             .get(pk=merged.pk)
         )
@@ -180,7 +181,10 @@ class SessionDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         session = get_session(request, session_id, write=True)
         SessionTombstone.objects.update_or_create(pk=session.pk, defaults={"owner_id": session.owner_id, "merged_into": None, "at": timezone.now()})
-        session.delete()
+        with transaction.atomic():
+            # The photos and videos stay, out of the session. That is not a `save()`, so the phones are told here.
+            Media.objects.filter(session=session).update(updated_at=timezone.now())
+            session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

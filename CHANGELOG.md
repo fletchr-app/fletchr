@@ -2,6 +2,18 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.14.0 (2026-10-30)
+
+- **Your photos and videos are listed without a connection** (#84): the phone keeps the list of your photos and videos and their small pictures, and the media screen shows them when there is no connection (with a line that says so). Full photos and videos still need a connection. Deleted ones disappear from the phone at the next sync. The small pictures use some storage (tens of MB for a thousand photos).
+
+- **Server: what a phone needs to pull photos, videos and notes** (#84). Photos and videos have `updated_at` and the list takes `updated_after`; so does the list of notes. Deleted photos, videos and notes are listed at `GET /api/gone/` (only the id and the time are kept), for the people who may keep a copy. The app does not use this yet. Migrations: `core/0009_tombstone`, `media/0003_updated_at`.
+
+- **Team schedule and trainings** (#104): a team gets weekly trainings (slots, edited in the team settings by coaches) and one-offs (competition, camp, extra training) in an agenda. A session, a note or a photo can be linked to the training that takes place then: the app suggests it, you confirm or pick "None", nothing is linked by time alone. A coach can write notes and add photos for archers at a training without opening a session for each. A session linked to a training shows that archer's notes and photos of it. Archers without a linked session (or a profile without an account) see the training as a row in the history, which opens the training with its notes and photos, and "Put into a session" moves them into a session. Notes can be about an earlier time. New endpoints: `/api/slots/`, `/api/events/` (agenda, mine, archers, attach). Three migrations (`training/0003`, `notes/0008`, `media/0002`); the server image needs `tzdata` (added as a dependency). Old apps show the training rows on a linked session but cannot choose trainings. Offline use of the schedule is not built yet.
+
+- **Sessions come to the phone from the server** (#84): the phone now takes all your sessions with their ends and volume, not only those a coach opened. A new phone, or one after a reinstall, shows your whole history and can edit it. Results you enter on one phone arrive on the other at the next sync; an end deleted on one phone disappears on the other. Anything on a phone that has not been uploaded yet is never overwritten (the queued change goes up and wins). The first sync on a phone with a long history needs one request per session and can take a while.
+
+- **Notes about your own training in the app** (#84): on a session of yours, on your photos and clips you can write a private note for yourself (no team, nobody else reads it). They are saved on the phone first like other notes. The list on a session says "My notes" instead of "Coach notes". A session on your phone has a new "Notes" link for this.
+
 ## 0.13.0 (2026-10-30)
 
 - **Notes can be written without a connection:** a note (also one with a drawing on a photo or a frame of a clip) is saved on the phone at once and uploaded when there is a connection, after the photo, clip or session it is about. Until then it shows in the list as "waiting to upload" and can be taken back; a note the server refuses shows in the upload banner. Changing or deleting a note that is already up still needs a connection (#84).

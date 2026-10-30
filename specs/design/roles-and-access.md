@@ -2,7 +2,7 @@
 
 Status: implemented (video consent wording and flow wait for the legal review, #63)
 Date: 2026-10-23
-Updated: 2026-10-29
+Updated: 2026-10-30
 
 | Role | Can do |
 |---|---|
@@ -21,3 +21,5 @@ Access control is enforced on the server in Django REST Framework (permission cl
 **Video consent.** For an archer under 18 (birth date known) the server refuses new videos until a coach or admin has recorded the parents' consent on the archer's page (`video_consent_at`, `video_consent_by`); photos are not affected. An archer without a birth date counts as allowed.
 
 **Team ranking.** The ranking of archers in a team is coach-only and off by default; an admin switches it on in the team settings (`show_ranking`), so young teams do not get a table that orders them.
+
+**Schedule and training events (#104).** Every member of a team reads its slots and events. Coaches and admins write them (`core.access.can_plan`). A session is linked to an event by its owner (or by the coach who opened it, or the coach of a profile without an account); a note or a photo by a coach of the event's team for an archer of that team, or by the archer for their own photo (`can_tag`). A link adds no visibility: an archer still reads only the `shared` notes about them, the coaches the rest. See [schedule-and-events.md](schedule-and-events.md).
