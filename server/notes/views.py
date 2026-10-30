@@ -1,6 +1,5 @@
 from django.utils.translation import gettext
 import django_filters
-from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -10,8 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to, note_teams
-from core.models import COACH_ROLES, Role, TeamMember, User
+from core.models import Role, TeamMember, User
 
+from training.merge import resolve_session_id
+from training.models import TrainingSession
+from training.schedule import rows_of_session
+
+from .access import visible_notes
 from .models import Note
 from .serializers import NoteSerializer, NoteTeamSerializer
 
@@ -28,9 +32,19 @@ class NotePermission(BasePermission):
 
 
 class NoteFilter(django_filters.FilterSet):
+    session = django_filters.UUIDFilter(
+        method="filter_session", help_text="Notes of this session, and the notes of its archer about the event it is linked to that are in no session"
+    )
+    at_after = django_filters.IsoDateTimeFilter(field_name="at", lookup_expr="gte")
+    at_before = django_filters.IsoDateTimeFilter(field_name="at", lookup_expr="lt")
+
     class Meta:
         model = Note
-        fields = ["archer", "session", "end", "media", "team", "author", "visibility"]
+        fields = ["archer", "event", "end", "media", "team", "author", "visibility"]
+
+    def filter_session(self, queryset, name, value):
+        session = TrainingSession.objects.filter(pk=resolve_session_id(value) or value).first()
+        return queryset.none() if session is None else rows_of_session(queryset, session, "archer")
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -53,19 +67,7 @@ class NoteViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Note.objects.none()
-        user = self.request.user
-        coached = TeamMember.objects.filter(user=user, role__in=COACH_ROLES).values("team")
-        # Coaches see every note of their teams except what others keep private; an archer sees the
-        # shared notes about them; the author always sees their own private notes.
-        private = Note.Visibility.PRIVATE
-        return (
-            Note.objects.filter(
-                Q(team__in=coached) & ~Q(visibility=private)
-                | Q(archer=user, visibility=Note.Visibility.SHARED)
-                | Q(author=user, visibility=private)
-            )
-            .select_related("author__profile", "archer__profile", "media")
-        )
+        return visible_notes(self.request.user).select_related("author__profile", "archer__profile", "media", "event__team")
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -83,7 +85,7 @@ class NotePutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, uid):
-        note = Note.objects.filter(uid=uid).select_related("author__profile", "archer__profile", "media").first()
+        note = Note.objects.filter(uid=uid).select_related("author__profile", "archer__profile", "media", "event__team").first()
         if note is not None and note.author_id != request.user.id:
             raise NotFound
         context = {

@@ -41,6 +41,12 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
           environment: session.environment,
           location: session.location,
           ...(session.details ?? {}),
+          // Left out when nothing was chosen; null takes the link out. An occurrence that is no row yet is made by the server.
+          ...(session.event
+            ? { event: session.event.id, ...(session.event.slot && session.event.date ? { event_slot: session.event.slot, event_date: session.event.date } : {}) }
+            : session.event === null
+              ? { event: null }
+              : {}),
           // Left out when nothing was chosen, so the server keeps what it has; null clears it.
           ...(session.gear
             ? gearBody(session.gear)

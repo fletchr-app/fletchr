@@ -10,6 +10,7 @@ import DrawingLayer from '@/components/DrawingLayer.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
+import MediaEvent from '@/components/MediaEvent.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
@@ -539,6 +540,7 @@ async function moveTo(session: string | null) {
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
+      <MediaEvent v-if="clip" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
       <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">

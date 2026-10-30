@@ -5,7 +5,7 @@ import { IonInput, IonTextarea } from '@ionic/vue'
 withDefaults(
   defineProps<{
     label: string
-    type?: 'text' | 'password' | 'email' | 'date'
+    type?: 'text' | 'password' | 'email' | 'date' | 'time' | 'datetime-local'
     inputmode?: 'text' | 'decimal' | 'numeric' | 'email' | 'url'
     autocomplete?: AutocompleteTypes
     /** Words and sentences are capitalised by the keyboard; the default is none. */

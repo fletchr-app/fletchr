@@ -22,8 +22,14 @@ const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: 
   keepPolling: () => true,
 })
 
+// Trainings of your team with notes or photos of yours and no session of yours: they show between the sessions.
+const events = useRemote(async () => (await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null, {
+  pollMs: REFRESH_MS,
+  keepPolling: () => true,
+})
+
 // Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value))
+const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value, events.data.value ?? [], Number(userId.value)))
 </script>
 
 <template>

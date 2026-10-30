@@ -15,7 +15,7 @@ from .models import SessionTombstone, TrainingSession
 OPEN_SESSION_CAP = timedelta(hours=4)
 
 # Copied from the loser into the winner where the winner's value is empty.
-FILLED_FIELDS = ("ended_at", "type", "environment", "location", "weather", "setup_id", "physical_rating", "mental_rating", "goals", "notes")
+FILLED_FIELDS = ("ended_at", "type", "environment", "location", "weather", "setup_id", "physical_rating", "mental_rating", "goals", "notes", "event_id")
 
 
 def window(session):

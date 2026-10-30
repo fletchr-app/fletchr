@@ -31,6 +31,7 @@ const shown = computed(() => (onlyIdle.value ? (data.value ?? []).filter((a) => 
   <div class="d-flex flex-column gap-2">
     <h2 class="h5 m-0">{{ team.name }}</h2>
     <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? $t('teams.manage') : $t('teams.members') }}</AppButton>
+    <AppButton secondary :router-link="`/team/${team.id}/agenda`">{{ $t('schedule.agenda') }}</AppButton>
     <AppButton v-if="team.show_ranking" secondary :router-link="`/team/${team.id}/ranking`">{{ $t('ranking.title') }}</AppButton>
     <ShareTraining :team="team" />
     <AddArcher :team-id="team.id" @added="reload" />

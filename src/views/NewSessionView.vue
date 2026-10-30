@@ -7,15 +7,19 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
+import EventChips from '@/components/EventChips.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
+import { useAgenda } from '@/composables/useAgenda'
+import { useAuth } from '@/composables/useAuth'
 import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
 import { useUnits } from '@/composables/useUnits'
 import { FACES } from '@/lib/faces'
 import { defaultChoice, type Environment, firstEndDefaults, gearFor, type LogSession, type SessionType, sessionTypeKey, usesEnds } from '@/lib/log-model'
+import { type EventLink, linkOf, preselected } from '@/lib/schedule'
 import { DEFAULT_DURATION_MIN, DURATIONS_MIN, isPast, MAX_BACKDATE_DAYS, sessionTimes, startRange, toLocalValue } from '@/lib/session-time'
 
 const { t, locale } = useI18n()
@@ -50,6 +54,32 @@ const choice = computed(() => picked.value ?? defaultChoice(equipment.value, ses
 // Pick up equipment added since the last time: only works with a connection, otherwise the copy on the device is used.
 onMounted(() => void refreshEquipment())
 
+// The training of your team that takes place then, offered with "None". When exactly one overlaps it is preselected;
+// nothing is linked unless you confirm or choose. Without a connection (no schedule) the choice is not shown.
+const { api } = useAuth()
+const { suggest, load: loadAgenda } = useAgenda()
+// For an archer without an account or one you open a session for: only the teams you may write notes about them in.
+const archerTeams = ref<number[] | null>(null)
+onMounted(() => {
+  void loadAgenda()
+  if (archer) void api.GET('/api/notes/teams/', { params: { query: { archer: archer.id } } }).then(({ data }) => (archerTeams.value = data?.map((team) => team.id) ?? null)).catch(() => {})
+})
+const eventPicked = ref<EventLink | null | undefined>(undefined)
+const eventTouched = ref(false)
+const suggestions = computed(() => {
+  if (archer && archerTeams.value === null) return []
+  const times = sessionTimes(startLocal.value, Number(duration.value), new Date())
+  if ('error' in times) return []
+  return suggest(times.started_at, times.ended_at, { preferKind: type.value === 'competition' ? 'competition' : undefined, teams: archerTeams.value ?? undefined })
+})
+const event = computed<EventLink | null | undefined>({
+  get: () => (eventTouched.value ? eventPicked.value : (() => { const one = preselected(suggestions.value); return one ? linkOf(one) : undefined })()),
+  set: (link) => {
+    eventTouched.value = true
+    eventPicked.value = link
+  },
+})
+
 // Settings of the first end. Until you change one, it follows indoor/outdoor.
 const typed = ref<{ distance?: string; face?: string; arrows?: string }>({})
 const defaults = computed(() => firstEndDefaults(environment.value))
@@ -69,7 +99,7 @@ function start() {
   const times = sessionTimes(startLocal.value, Number(duration.value), new Date())
   if ('error' in times) return (error.value = t(times.error, { days: MAX_BACKDATE_DAYS }))
   // A finished session stays when nothing is entered yet (photos or notes can follow), and has no live state.
-  const when: Partial<LogSession> = { ...times, ...(times.ended_at ? { keep: true } : {}) }
+  const when: Partial<LogSession> = { ...times, ...(times.ended_at ? { keep: true } : {}), ...(event.value !== undefined ? { event: event.value } : {}) }
   if (open && archer) {
     const id = startSession('', environment.value, location.value.trim(), undefined, archer, { keep: true, noResults: !managed, ...when })
     return void router.replace(`/training/${id}`)
@@ -101,6 +131,7 @@ function start() {
         <IonDatetime id="session-start" v-model="startLocal" :min="range.min" :max="range.max" :locale="locale" :first-day-of-week="1" />
       </IonModal>
       <ChipGroup v-if="past" v-model="duration" :label="$t('newSession.duration')" :options="DURATIONS" />
+      <EventChips v-if="suggestions.length > 0" v-model="event" :suggestions="suggestions" />
       <template v-if="!open && usesEnds(type)">
         <div class="row g-3">
           <div class="col-6"><FormField v-model="distance" :label="$t('newSession.distance', { unit: distanceUnit() })" inputmode="decimal" /></div>

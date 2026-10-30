@@ -10,6 +10,7 @@ import { t } from '@/i18n';
 import type { components } from '@/lib/api-types';
 import { errorMessage } from '@/lib/errors';
 import { dataStore } from '@/lib/local-store';
+import type { EventLink } from '@/lib/schedule';
 import {
   EMPTY_LOG,
   type Environment,
@@ -219,6 +220,7 @@ const actions = {
   onSessionRenamed: (listener: (from: string, to: string) => void) => void renameListeners.push(listener),
   onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
+  setEvent: (id: string, event: EventLink | null) => dispatch({ type: 'updateSession', id, patch: { event } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
     dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),

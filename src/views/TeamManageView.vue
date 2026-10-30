@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 import ErrorText from '@/components/ErrorText.vue'
 import InvitesSection from '@/components/InvitesSection.vue'
 import MembersSection from '@/components/MembersSection.vue'
+import SlotEditor from '@/components/SlotEditor.vue'
 import TeamLeaveDelete from '@/components/TeamLeaveDelete.vue'
 import TeamRankingToggle from '@/components/TeamRankingToggle.vue'
 import TeamRename from '@/components/TeamRename.vue'
@@ -59,6 +60,8 @@ function reload() {
           :my-id="userId === null ? null : Number(userId)"
           @changed="reload"
         />
+        <AppButton secondary :router-link="`/team/${teamId}/agenda`">{{ $t('schedule.agenda') }}</AppButton>
+        <SlotEditor v-if="isCoach" :team-id="teamId" />
         <AppButton v-if="isCoach" secondary :router-link="`/team/${teamId}/forms`">{{ $t('evaluations.formsTitle') }}</AppButton>
         <AppButton v-if="isCoach" secondary :router-link="`/team/${teamId}/progress`">{{ $t('progress.teamTitle') }}</AppButton>
         <InvitesSection v-if="isAdmin && invites.data.value" :team-id="teamId" :team-name="team.data.value.name" :invites="invites.data.value" @changed="reload" />

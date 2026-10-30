@@ -817,6 +817,225 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/events/{event_id}/:
+    get:
+      operationId: events_retrieve
+      description: 'A training that is a row. The id of an occurrence nobody linked
+        to is a 404: see the agenda.'
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    put:
+      operationId: events_update
+      description: |-
+        Create the event with this id, or change it (cancel it, move it). Safe to repeat. Coaches and admins of the team.
+
+        A one-off (competition, extra training, camp) needs `team`, `start` and `end`. The occurrence of a slot has
+        no row until someone links to it: send `slot` and `date` and the id from the agenda to make it a row, with
+        or without changes. It cannot be cancelled while sessions, notes or media are linked to it (409).
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    delete:
+      operationId: events_destroy
+      description: Delete a one-off nothing is linked to. A training from a slot is
+        cancelled instead.
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/{event_id}/archers/:
+    get:
+      operationId: events_archers_list
+      description: |-
+        The archers who took part in the event, as far as anything shows it: a linked session, a note or a photo or video.
+        Coaches of the team only.
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventArcher'
+          description: ''
+  /api/events/{event_id}/attach/:
+    post:
+      operationId: events_attach_create
+      description: |-
+        Put what an archer has in this event and in no session into one of their sessions. The rows keep their `event`.
+
+        For the archer who owns the session, and for coaches of the event's team. Safe to repeat: rows that are in a session
+        already are left alone. Only what you may see is moved.
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachResult'
+          description: ''
+  /api/events/agenda/:
+    get:
+      operationId: events_agenda_list
+      description: 'What happens in your teams in a period: slots'' occurrences and
+        events, by start time. Cancelled ones are listed with `cancelled`.'
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: A date or a time
+        required: true
+      - in: query
+        name: team
+        schema:
+          type: integer
+        description: 'Only this team; default: all your teams'
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: A date or a time, at most 120 days after `from`
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgendaItem'
+          description: ''
+  /api/events/mine/:
+    get:
+      operationId: events_mine_list
+      description: |-
+        Events with notes or photos and videos of this archer that you may see, that sit in no session and whose archer
+        has no session linked to them: what the history shows next to the sessions.
+      parameters:
+      - in: query
+        name: archer
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Events starting at or after this
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: Events starting before this
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MineEvent'
+          description: ''
   /api/faces/:
     get:
       operationId: faces_list
@@ -1148,6 +1367,11 @@ paths:
         you coach, newest first.'
       parameters:
       - in: query
+        name: event
+        schema:
+          type: string
+          format: uuid
+      - in: query
         name: kind
         schema:
           type: string
@@ -1158,6 +1382,12 @@ paths:
           * `photo` - Photo
           * `video` - Video
       - in: query
+        name: not_in_event
+        schema:
+          type: string
+          format: uuid
+        description: Leave out the photos and videos of this event
+      - in: query
         name: owner
         schema:
           type: integer
@@ -1166,6 +1396,8 @@ paths:
         schema:
           type: string
           format: uuid
+        description: Photos and videos of this session, and those of its archer from
+          the event it is linked to that are in no session
       - in: query
         name: taken_after
         schema:
@@ -1358,11 +1590,26 @@ paths:
         schema:
           type: integer
       - in: query
+        name: at_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: at_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
         name: author
         schema:
           type: integer
       - in: query
         name: end
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: event
         schema:
           type: string
           format: uuid
@@ -1376,6 +1623,8 @@ paths:
         schema:
           type: string
           format: uuid
+        description: Notes of this session, and the notes of its archer about the
+          event it is linked to that are in no session
       - in: query
         name: team
         schema:
@@ -1709,6 +1958,11 @@ paths:
         description: |-
           * `indoor` - Indoor
           * `outdoor` - Outdoor
+      - in: query
+        name: event
+        schema:
+          type: string
+          format: uuid
       - in: query
         name: owner
         schema:
@@ -2079,6 +2333,90 @@ paths:
               schema:
                 $ref: '#/components/schemas/Setup'
           description: ''
+  /api/slots/:
+    get:
+      operationId: slots_list
+      description: The weekly trainings of your teams.
+      parameters:
+      - in: query
+        name: team
+        schema:
+          type: integer
+        description: 'Only this team; default: all your teams'
+      tags:
+      - slots
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+          description: ''
+  /api/slots/{slot_id}/:
+    put:
+      operationId: slots_update
+      description: |-
+        Create the slot with this id, or change it. Safe to repeat. Coaches and admins of the team.
+
+        The times, the weekday and the time zone cannot change once a later occurrence is a row (someone linked to it,
+        cancelled it or moved it): 409. End the slot with `valid_until` and add a new one from that date instead.
+      parameters:
+      - in: path
+        name: slot_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - slots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SlotRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+          description: ''
+    delete:
+      operationId: slots_destroy
+      description: Delete the slot. Trainings that are rows stay as one-offs.
+      parameters:
+      - in: path
+        name: slot_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - slots
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/stats/:
     get:
       operationId: stats_retrieve
@@ -2923,6 +3261,59 @@ components:
       required:
       - detail
       - teams
+    AgendaItem:
+      type: object
+      description: |-
+        One training of a team. `virtual` ones come from a slot and have no row yet: to link something to it, send its
+        `id` with `slot` and `date` (see `event_slot`, `event_date`).
+      properties:
+        id:
+          type: string
+          format: uuid
+        virtual:
+          type: boolean
+        slot:
+          type: string
+          format: uuid
+          nullable: true
+        date:
+          type: string
+          format: date
+          nullable: true
+        team:
+          type: integer
+        team_name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindF7eEnum'
+        name:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        location:
+          type: string
+        time_zone:
+          type: string
+        cancelled:
+          type: boolean
+      required:
+      - cancelled
+      - date
+      - end
+      - id
+      - kind
+      - location
+      - name
+      - slot
+      - start
+      - team
+      - team_name
+      - time_zone
+      - virtual
     Archer:
       type: object
       properties:
@@ -3385,6 +3776,31 @@ components:
       - face_name
       - radius_cm
       - sets
+    AttachRequest:
+      type: object
+      properties:
+        archer:
+          type: integer
+          description: Whose rows of the event
+        session:
+          type: string
+          format: uuid
+          description: A session of that archer
+      required:
+      - archer
+      - session
+    AttachResult:
+      type: object
+      properties:
+        notes:
+          type: integer
+          description: Notes put into the session
+        media:
+          type: integer
+          description: Photos and videos put into the session
+      required:
+      - media
+      - notes
     AvatarResult:
       type: object
       properties:
@@ -4216,6 +4632,163 @@ components:
       description: |-
         * `shared` - Shared
         * `coach_only` - Coach Only
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        team:
+          type: integer
+          readOnly: true
+        team_name:
+          type: string
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindF7eEnum'
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        start:
+          type: string
+          format: date-time
+          readOnly: true
+        end:
+          type: string
+          format: date-time
+          readOnly: true
+          description: After the start; may be on another day
+        location:
+          type: string
+          readOnly: true
+        time_zone:
+          type: string
+          readOnly: true
+          description: IANA name the times are shown in
+        slot:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          description: The occurrence date in the time zone of the slot; empty for
+            a one-off
+        cancelled:
+          type: boolean
+          readOnly: true
+      required:
+      - cancelled
+      - date
+      - end
+      - id
+      - kind
+      - location
+      - name
+      - slot
+      - start
+      - team
+      - team_name
+      - time_zone
+    EventArcher:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        managed:
+          type: boolean
+        sessions:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Sessions of the archer linked to the event
+        notes:
+          type: integer
+          description: Notes of the event about this archer that you may read
+        media:
+          type: integer
+          description: Photos and videos of the event of this archer
+      required:
+      - managed
+      - media
+      - name
+      - notes
+      - sessions
+      - user_id
+    EventInfo:
+      type: object
+      description: Enough of an event to show it next to a row.
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        team_name:
+          type: string
+        cancelled:
+          type: boolean
+      required:
+      - cancelled
+      - end
+      - kind
+      - name
+      - start
+      - team_name
+    EventWriteRequest:
+      type: object
+      description: |-
+        Everything is optional here; the view says what a new one needs. `slot` and `date` name the occurrence
+        of a slot (the id must be the one in the agenda), `team` a one-off's team.
+      properties:
+        team:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/KindF7eEnum'
+        name:
+          type: string
+          maxLength: 150
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+          description: After the start; may be on another day
+        location:
+          type: string
+          maxLength: 150
+        time_zone:
+          type: string
+          minLength: 1
+          description: IANA name the times are shown in
+          maxLength: 64
+        slot:
+          type: string
+          format: uuid
+          nullable: true
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: The occurrence date in the time zone of the slot; empty for
+            a one-off
+        cancelled:
+          type: boolean
     ExportRequestRequest:
       type: object
       description: 'The proof that it is me at the phone: my password, or for an account
@@ -4345,6 +4918,16 @@ components:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
           default: archer
+    KindF7eEnum:
+      enum:
+      - training
+      - competition
+      - camp
+      type: string
+      description: |-
+        * `training` - Training
+        * `competition` - Competition
+        * `camp` - Camp
     LastSession:
       type: object
       properties:
@@ -4404,6 +4987,8 @@ components:
       - sign_in_providers
     Media:
       type: object
+      description: 'For read serializers: `event` (the id) and `event_info` next to
+        it.'
       properties:
         id:
           type: string
@@ -4425,6 +5010,15 @@ components:
           type: string
           format: uuid
           nullable: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        event_info:
+          allOf:
+          - $ref: '#/components/schemas/EventInfo'
+          nullable: true
+          readOnly: true
         kind:
           $ref: '#/components/schemas/MediaKindEnum'
         taken_at:
@@ -4483,6 +5077,8 @@ components:
       required:
       - can_edit
       - created_at
+      - event
+      - event_info
       - file_url
       - height
       - id
@@ -4519,9 +5115,26 @@ components:
         * `video` - Video
     MediaWriteRequest:
       type: object
-      description: A new clip needs everything but `note` and `session`. Repeating
-        the request for a clip that exists changes only those two.
+      description: A new clip needs everything but `note`, `session` and `event`.
+        Repeating the request for a clip that exists changes only those three.
       properties:
+        event:
+          type: string
+          format: uuid
+          nullable: true
+          description: The team training this is part of; send null to take it out
+        event_slot:
+          type: string
+          format: uuid
+          writeOnly: true
+          description: 'With `event_date`: the slot, when `event` is the id of an
+            occurrence that has no row yet'
+        event_date:
+          type: string
+          format: date
+          writeOnly: true
+          description: 'With `event_slot`: the date of the occurrence in the time
+            zone of the slot'
         kind:
           $ref: '#/components/schemas/MediaKindEnum'
         file:
@@ -4606,8 +5219,26 @@ components:
       properties:
         also_shoots:
           type: boolean
+    MineEvent:
+      type: object
+      properties:
+        event:
+          $ref: '#/components/schemas/Event'
+        notes:
+          type: integer
+          description: Notes of the event about this archer, in no session, that you
+            may read
+        media:
+          type: integer
+          description: Photos and videos of the event of this archer, in no session
+      required:
+      - event
+      - media
+      - notes
     Note:
       type: object
+      description: The fields to link a row to an event. Subclasses call `take_event`
+        in `validate`.
       properties:
         id:
           type: integer
@@ -4671,6 +5302,21 @@ components:
           type: string
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
+        event:
+          type: string
+          format: uuid
+          nullable: true
+          description: The team training this is part of; send null to take it out
+        event_info:
+          allOf:
+          - $ref: '#/components/schemas/EventInfo'
+          nullable: true
+          readOnly: true
+        at:
+          type: string
+          format: date-time
+          description: What time the note is about; now by default, earlier for a
+            note written afterwards
         can_edit:
           type: boolean
           readOnly: true
@@ -4694,6 +5340,7 @@ components:
       - can_delete
       - can_edit
       - created_at
+      - event_info
       - id
       - picture
       - uid
@@ -4721,6 +5368,8 @@ components:
       - width
     NoteRequest:
       type: object
+      description: The fields to link a row to an event. Subclasses call `take_event`
+        in `validate`.
       properties:
         team:
           type: integer
@@ -4761,6 +5410,28 @@ components:
           minLength: 1
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
+        event:
+          type: string
+          format: uuid
+          nullable: true
+          description: The team training this is part of; send null to take it out
+        event_slot:
+          type: string
+          format: uuid
+          writeOnly: true
+          description: 'With `event_date`: the slot, when `event` is the id of an
+            occurrence that has no row yet'
+        event_date:
+          type: string
+          format: date
+          writeOnly: true
+          description: 'With `event_slot`: the date of the occurrence in the time
+            zone of the slot'
+        at:
+          type: string
+          format: date-time
+          description: What time the note is about; now by default, earlier for a
+            note written afterwards
       required:
       - archer
       - body
@@ -4992,6 +5663,8 @@ components:
           type: boolean
     PatchedNoteRequest:
       type: object
+      description: The fields to link a row to an event. Subclasses call `take_event`
+        in `validate`.
       properties:
         team:
           type: integer
@@ -5032,6 +5705,28 @@ components:
           minLength: 1
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
+        event:
+          type: string
+          format: uuid
+          nullable: true
+          description: The team training this is part of; send null to take it out
+        event_slot:
+          type: string
+          format: uuid
+          writeOnly: true
+          description: 'With `event_date`: the slot, when `event` is the id of an
+            occurrence that has no row yet'
+        event_date:
+          type: string
+          format: date
+          writeOnly: true
+          description: 'With `event_slot`: the date of the occurrence in the time
+            zone of the slot'
+        at:
+          type: string
+          format: date-time
+          description: What time the note is about; now by default, earlier for a
+            note written afterwards
     PatchedRoleChangeRequest:
       type: object
       properties:
@@ -5474,6 +6169,15 @@ components:
           type: string
         notes:
           type: string
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        event_info:
+          allOf:
+          - $ref: '#/components/schemas/EventInfo'
+          nullable: true
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -5495,6 +6199,8 @@ components:
       required:
       - created_at
       - ends
+      - event
+      - event_info
       - id
       - opened_by_name
       - owner
@@ -5584,6 +6290,8 @@ components:
       - spread
     SessionSummary:
       type: object
+      description: 'For read serializers: `event` (the id) and `event_info` next to
+        it.'
       properties:
         id:
           type: string
@@ -5622,6 +6330,15 @@ components:
         setup:
           type: integer
           nullable: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        event_info:
+          allOf:
+          - $ref: '#/components/schemas/EventInfo'
+          nullable: true
+          readOnly: true
         updated_at:
           type: string
           format: date-time
@@ -5640,6 +6357,8 @@ components:
           readOnly: true
       required:
       - ends
+      - event
+      - event_info
       - id
       - opened_by_name
       - owner
@@ -5738,6 +6457,23 @@ components:
           type: string
         notes:
           type: string
+        event:
+          type: string
+          format: uuid
+          nullable: true
+          description: The team training this is part of; send null to take it out
+        event_slot:
+          type: string
+          format: uuid
+          writeOnly: true
+          description: 'With `event_date`: the slot, when `event` is the id of an
+            occurrence that has no row yet'
+        event_date:
+          type: string
+          format: date
+          writeOnly: true
+          description: 'With `event_slot`: the date of the occurrence in the time
+            zone of the slot'
       required:
       - started_at
     Setup:
@@ -5892,6 +6628,136 @@ components:
           nullable: true
       required:
       - id
+    Slot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        team:
+          type: integer
+          description: Needed to create the slot; it cannot change afterwards
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+          description: 0 is Monday, 6 is Sunday
+        start_time:
+          type: string
+          format: time
+          description: Local time in `time_zone`
+        end_time:
+          type: string
+          format: time
+          description: Local time in `time_zone`, after the start (no training over
+            midnight)
+        time_zone:
+          type: string
+          description: IANA name, e.g. Europe/Berlin
+          maxLength: 64
+        location:
+          type: string
+          maxLength: 150
+        name:
+          type: string
+          description: For example Squad
+          maxLength: 100
+        valid_from:
+          type: string
+          format: date
+          description: The first day this slot applies
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+          description: The last day this slot applies; empty for no end
+        pause_from:
+          type: string
+          format: date
+          nullable: true
+          description: First day of a pause (holidays), with `pause_until`
+        pause_until:
+          type: string
+          format: date
+          nullable: true
+          description: Last day of a pause
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - end_time
+      - id
+      - start_time
+      - team
+      - time_zone
+      - updated_at
+      - valid_from
+      - weekday
+    SlotRequest:
+      type: object
+      properties:
+        team:
+          type: integer
+          description: Needed to create the slot; it cannot change afterwards
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+          description: 0 is Monday, 6 is Sunday
+        start_time:
+          type: string
+          format: time
+          description: Local time in `time_zone`
+        end_time:
+          type: string
+          format: time
+          description: Local time in `time_zone`, after the start (no training over
+            midnight)
+        time_zone:
+          type: string
+          minLength: 1
+          description: IANA name, e.g. Europe/Berlin
+          maxLength: 64
+        location:
+          type: string
+          maxLength: 150
+        name:
+          type: string
+          description: For example Squad
+          maxLength: 100
+        valid_from:
+          type: string
+          format: date
+          description: The first day this slot applies
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+          description: The last day this slot applies; empty for no end
+        pause_from:
+          type: string
+          format: date
+          nullable: true
+          description: First day of a pause (holidays), with `pause_until`
+        pause_until:
+          type: string
+          format: date
+          nullable: true
+          description: Last day of a pause
+      required:
+      - end_time
+      - start_time
+      - team
+      - time_zone
+      - valid_from
+      - weekday
     Spot:
       type: object
       properties:

@@ -1,6 +1,7 @@
 // A session as shown on screen, whether it comes from this device or from the server. No React.
 import type { components } from './api-types.ts';
 import { groupOf, type Group } from './group.ts';
+import type { EventLink } from './schedule.ts';
 import type { Gear, LogEnd, LogSession, LogShot, SessionDetails } from './log-model.ts';
 
 export type ViewSession = LogSession & { owner_name?: string; updated_at?: string };
@@ -27,8 +28,16 @@ function detailsOf(s: ServerSession): SessionDetails | undefined {
   return empty ? undefined : details;
 }
 
+/** The training a session is linked to, as the server describes it; undefined when there is none. */
+function eventOf(s: ServerSession): EventLink | undefined {
+  const info = s.event_info;
+  return s.event && info ? { id: s.event, name: info.name, kind: info.kind as EventLink['kind'], start: info.start, team_name: info.team_name } : undefined;
+}
+
 export function fromServer(s: ServerSession): ViewSession {
+  const event = eventOf(s);
   return {
+    ...(event ? { event } : {}),
     details: detailsOf(s),
     gear: gearOf(s.setup_info),
     id: s.id,
