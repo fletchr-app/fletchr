@@ -3,7 +3,7 @@
 // so what is already on a phone loads without a migration.
 export type StoreOwner = { kind: 'account'; server: string; userId: string } | { kind: 'local'; id: string };
 
-export type StoreName = 'log' | 'media' | 'equipment' | 'notes' | 'library';
+export type StoreName = 'log' | 'media' | 'equipment' | 'notes' | 'library' | 'note-library';
 
 export const ownerKey = (owner: StoreOwner): string => (owner.kind === 'account' ? `${owner.server}:${owner.userId}` : `local:${owner.id}`);
 

@@ -4,6 +4,7 @@ import NewNote from '@/components/NewNote.vue'
 import PendingNotes from '@/components/PendingNotes.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { noteLink } from '@/lib/media-notes'
@@ -31,8 +32,10 @@ const draw = (note: { id: number; media?: string | null; frame?: number | null }
   const link = noteLink(note)
   if (link) void router.push(`${link}${link.includes('?') ? '&' : '?'}draw=${note.id}`)
 }
+// Without a connection the list is the copy on the phone, read only.
+const library = useNoteLibrary()
 const notes = useRemote(
-  async () => (await api.GET('/api/notes/', { params: { query: { archer: props.archerId, session: props.sessionId } } })).data ?? null,
+  () => library.list({ archer: props.archerId, session: props.sessionId, sessionEvent: props.event?.id }),
   { pollMs: REFRESH_MS, keepPolling: always },
 )
 const teams = useRemote(async () => (await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)
@@ -48,6 +51,7 @@ watch(uploaded, notes.reload)
   >
     <h2 class="h5 m-0">{{ own ? $t('notes.myNotes') : $t('notes.coachNotes') }}</h2>
     <ErrorText :message="notes.error.value" />
+    <div v-if="library.offline.value" class="muted">{{ $t('notes.offlineList') }}</div>
     <NewNote
       v-if="own || (teams.data.value && teams.data.value.length > 0)"
       :archer-id="archerId"

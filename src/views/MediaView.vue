@@ -31,6 +31,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -63,6 +64,7 @@ const name = route.query.name as string | undefined
 const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId } = useAuth()
+const noteLibrary = useNoteLibrary()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -363,7 +365,7 @@ async function loadNotes(item: Shown) {
   if (!remote) return
   try {
     if (photoNotes.value[remote.id] === undefined) {
-      const { data: list } = await api.GET('/api/notes/', { params: { query: { media: remote.id } } })
+      const list = await noteLibrary.list({ media: remote.id })
       if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
     }
     if (writable.value[remote.owner] === undefined) {
