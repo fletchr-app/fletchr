@@ -64,6 +64,7 @@ test('a delete the server refuses because the bow was used stays failed with its
   h.dispatch({ type: 'remove', kind: 'bow', uid: 'b1' });
   await h.run();
   assert.match(h.state().outbox[0].error ?? '', /used in a session/);
+  assert.deepEqual(h.state().items.map((i) => i.uid), ['b1'], 'the bow is back in the list');
 });
 
 test('no connection or a server error leaves everything queued and ends the run', async () => {
