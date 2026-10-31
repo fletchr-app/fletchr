@@ -112,6 +112,7 @@ export default {
     },
     changeDrawing: 'Change drawing',
     deleteNote: 'Delete note',
+    changeNote: 'Change note',
   },
   sync: {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',

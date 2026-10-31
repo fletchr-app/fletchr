@@ -1,6 +1,6 @@
 # Local mode: use the app without an account or server (#93)
 
-Status: first version implemented (#113), first launch and sign-out changed to the decided model (#115, Step 0), upload on sign-in (Step 2) and sign-out wording (Step 3) implemented; none of it run on a phone. Planned: note edit (Step 1). Session visibility (own plan, needed by Step 2) is merged (#117)
+Status: first version implemented (#113), first launch and sign-out changed to the decided model (#115, Step 0), upload on sign-in (Step 2) and sign-out wording (Step 3) implemented; none of it run on a phone. Note edit (Step 1) implemented. Session visibility (own plan, needed by Step 2) is merged (#117)
 Date: 2026-10-30
 Design: [local-mode.md](../design/local-mode.md). The upload needs [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md) first. This file replaces the separate `2026-10-30-local-only-mode.md` (the record of #113), now the "Done" section below.
 
@@ -25,7 +25,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 - **State and routes**: `useAuth().status` is `loading | signedOut | signedIn | local`; `useLocalMode` and `src/lib/local-mode.ts` keep the flag (`local-mode`) and the owner id (`local-owner-id`) in Preferences. `meta.auth` is `'in'` (signed in or local), `'account'` (signed in only, local goes to `/`) or `'out'` (open to local so "Sign in or register" works). Server-only screens are `'account'`. Settings, Home, Training, the sync banner and the server-fed components have a local variant.
 - **Scoring**: `shared/scoring-vectors.json` covered 10 of 16 faces; the six others (wa-80, wa-60, wa-40-triple-triangle, wa-40-triple-vertical-compound, wa-field-60, wa-field-40) got vectors written from the ring diameters, and a coverage test on both sides fails for any face, ring, X or miss without one. No difference between `scoring.ts` and `scoring.py` was found.
 - **Statistics and heatmap**: `src/lib/stats.ts` ports `training/stats.py`, `arrow_stats.py` and `PositionsView`; `shared/stats-vectors.json` (8 cases) is read by pytest and Vitest. The fixture found two differences, both fixed in the app: Python's `round` is half-even (`pyRound` in `py-math.ts`), and Python 3.12+ `sum` of floats uses an error term (`pySum`, also used by `centred.ts`).
-- **Notes, photos and videos**: from the device. `LocalMediaView` (`/local-media/:id`) shows a photo with drawings and notes, or plays the video in the browser's player. A note can be deleted and its drawing changed, its text cannot be edited (Step 1). The frame-by-frame player and notes on a frame need the server. Queued video play in the media screen came with #112.
+- **Notes, photos and videos**: from the device. `LocalMediaView` (`/local-media/:id`) shows a photo with drawings and notes, or plays the video in the browser's player. A note can be deleted, its text and (on a photo) its drawing changed (Step 1). The frame-by-frame player and notes on a frame need the server. Queued video play in the media screen came with #112.
 - **Backup**: `LocalDataView` (`/settings/data`) exports and imports one JSON file (`src/lib/local-export.ts`: `buildExport`, `parseExport`, `planImport`; format `fletchr-local` v1) with sessions, equipment and notes, no photo and video files.
 - **Android backup**: reported, not changed (see Open).
 - Docs written in #113: `offline-sync.md`, `statistics.md`, `arrow-plotting.md`, `screens.md`, `accounts.md`, CHANGELOG.
@@ -60,15 +60,15 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 ## Order
 
 - [x] 1. Session visibility plan, merged (#117; not released yet: the upload needs a server with it).
-- [ ] 2. Step 1 (note edit), independent, can go any time.
+- [x] 2. Step 1 (note edit), independent.
 - [x] 3. Step 2 (upload on sign-in) with Step 3 (wording of sign-out).
 - Step 2 needs a server that accepts `visibility` on session and media `PUT` (0.15). An older server ignores the field and applies its defaults.
 
 ## Step 1: edit a note in local mode (small)
 
-- [ ] `note-store.ts`: an `edit` action (body, drawing) for a note still in the store; a note already uploaded is not in the store, so this only concerns local mode and notes still waiting.
-- [ ] Note screens: the edit button for a local note.
-- [ ] Test: edit keeps the uid and the order of the queue.
+- [x] `note-store.ts`: an `edit` action (body, drawing) for a note still in the store; a note already uploaded is not in the store, so this only concerns local mode and notes still waiting.
+- [x] Note screens (`LocalNoteText`): the edit button for a local note.
+- [x] Test: edit keeps the uid and the order of the queue.
 
 ## Step 2: sign-in with local data (one PR)
 
@@ -114,7 +114,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 ## Tests (summary)
 
-- [x] Vitest for every new `src/lib` file (`local-claim.ts`, `claim-flow.ts`) and `useKeyedStore` (hold, flush). The `note-store` edit reducer belongs to Step 1.
+- [x] Vitest for every new `src/lib` file (`local-claim.ts`, `claim-flow.ts`) and `useKeyedStore` (hold, flush). `note-store` edit reducer too.
 - [x] pytest: the visibility matrix from the visibility plan covers uploads with `me`.
 - [ ] Phone (also for what is already built): fresh install opens on Home; log a past session, a bow, photos, a video, a note; export and import round trip, file chooser and share sheet; video playback; Preferences persistence; back button. After Step 2: register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out, app is empty; sign in again, data is back without a prompt.
 - [x] `npm run type-check`, `npm test`, `cd server && uv run pytest`.

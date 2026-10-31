@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppPage from '@/components/AppPage.vue'
 import DrawingLayer from '@/components/DrawingLayer.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
+import LocalNoteText from '@/components/LocalNoteText.vue'
 import NewNote from '@/components/NewNote.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useMedia } from '@/composables/useMedia'
@@ -101,11 +102,10 @@ function remove() {
         <IonButton v-if="isPhoto" fill="outline" expand="block" class="m-0" @click="startDrawing(attached, null)"><IonIcon slot="start" :icon="createOutline" />{{ $t('media.drawPhoto') }}</IonButton>
         <div v-for="n in about" :key="n.uid" class="d-flex flex-column gap-1 py-1">
           <div class="muted">{{ new Date(n.created_at).toLocaleDateString() }}</div>
-          <div style="white-space: pre-wrap">{{ n.body }}</div>
-          <div class="d-flex gap-2">
+          <LocalNoteText :uid="n.uid" :body="n.body">
             <IonButton v-if="isPhoto" fill="clear" size="small" class="m-0" @click="startDrawing(readDrawing(n.drawing).shapes, n.uid)">{{ $t('local.changeDrawing') }}</IonButton>
             <IonButton fill="clear" size="small" class="m-0" @click="notes.remove(n.uid)">{{ $t('local.deleteNote') }}</IonButton>
-          </div>
+          </LocalNoteText>
         </div>
         <NewNote :archer-id="archer" :ends="[]" :teams="[]" :on="forNewNote" @added="attached = []" />
         <IonButton fill="clear" color="danger" class="m-0" @click="remove"><IonIcon slot="start" :icon="trashOutline" />{{ confirmDelete ? (about.length > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</IonButton>
