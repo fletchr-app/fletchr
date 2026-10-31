@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Android backup leaves out photo and video files** (#93): the log, equipment and notes stay in Android's backup, the photo and video files do not (they would fill the backup limit).
+
 - **Edit a note without an account** (#93): in local mode a note's text can be changed ("Change note" under the note, on the session and on a photo or clip).
 
 - **Signing in with data from local mode uploads it** (#93): when you sign in or register and the phone holds sessions, equipment, notes, photos or videos from using the app without an account, one question appears: the counts, the account's email, "Share your existing sessions with your coaches?" (Yes / No, keep private, no preselection; Upload stays off until you answer) and Upload / Keep on this phone only / Cancel. Upload merges the data into the account on the phone (nothing the account has is changed), checks that it was written, then removes the local copy; the normal upload then sends it, videos on Wi-Fi only (the sync banner shows how many wait for Wi-Fi). Your answer sets who sees the uploaded sessions and the photos and videos that are in no session. For a registration the question comes before anything is sent, so Cancel creates no account. If moving the data fails, nothing is changed on the phone and you are not signed in. Nothing is asked when the phone holds nothing. Sign-out now always asks and says the screens will be empty and the data comes back at the next sign-in. Photos and videos have a new optional `visibility` in the upload (no server change).

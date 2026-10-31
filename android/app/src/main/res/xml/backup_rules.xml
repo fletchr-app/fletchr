@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: back up the app's data, but not the photo and video files (they would fill the backup limit). -->
+<full-backup-content>
+    <exclude domain="file" path="media-queue" />
+    <exclude domain="file" path="media-kept" />
+</full-backup-content>
