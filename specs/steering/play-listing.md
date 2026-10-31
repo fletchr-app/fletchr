@@ -260,11 +260,11 @@ Government app, financial features, news app, health apps declaration (if shown:
 5. Build from **`main`** at the release tag, with the official server as default:
    ```bash
    git switch main && git pull
-   VITE_SERVER_URL=https://app.fletchr.de npm run build-only
+   VITE_SERVER_URL=https://app.fletchr.de VITE_GOOGLE_WEB_CLIENT_ID=<web client id> npm run build-only
    npx cap sync android
    cd android && ./gradlew bundleRelease
    ```
-   Upload `android/app/build/outputs/bundle/release/app-release.aab`. The `versionCode` comes from `package.json` and must be higher than any earlier upload.
+   The client ID is the same value as `DJANGO_GOOGLE_CLIENT_IDS` on the official server. Without it the build has no "Sign in with Google" button and nothing warns about it (the 0.15.0 Play build was made this way). Upload `android/app/build/outputs/bundle/release/app-release.aab`. The `versionCode` comes from `package.json` and must be higher than any earlier upload.
 6. **Testing, Internal testing**: create an email list of testers, create a release with the AAB, release notes from `CHANGELOG.md`, roll out. Send testers the opt-in link.
 7. Before production: new **personal** developer accounts must first run a **closed test** with a minimum number of testers for a minimum time before they can apply for production. Verify the current numbers in Play Console Help; internal testing does not count towards it **[check]**.
 

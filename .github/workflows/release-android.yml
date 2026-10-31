@@ -13,7 +13,7 @@ name: Release Android
 #             ANDROID_KEY_ALIAS
 #             ANDROID_KEY_PASSWORD
 #             PLAY_SERVICE_ACCOUNT_JSON  service account with "Release to testing tracks" in the Play Console
-#   variables VITE_GOOGLE_WEB_CLIENT_ID  the web client ID, as in the official server's DJANGO_GOOGLE_CLIENT_IDS (optional)
+#   variables VITE_GOOGLE_WEB_CLIENT_ID  the web client ID, as in the official server's DJANGO_GOOGLE_CLIENT_IDS (required: the build fails without it)
 on:
   push:
     tags: ['v*']
@@ -60,6 +60,12 @@ jobs:
           java-version: 21
 
       - run: npm ci
+
+      # Without the client ID the app builds without the Google button and nothing says so.
+      - name: The Google client ID is set
+        env:
+          VITE_GOOGLE_WEB_CLIENT_ID: ${{ vars.VITE_GOOGLE_WEB_CLIENT_ID }}
+        run: '[ -n "$VITE_GOOGLE_WEB_CLIENT_ID" ] || { echo "::error::set the variable VITE_GOOGLE_WEB_CLIENT_ID in the release environment"; exit 1; }'
 
       # The Play build talks to the official server, never the localhost default of .env.example.
       - name: Build the web app and sync it into android/
