@@ -2,7 +2,7 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.15.0 (2026-10-31)
 
 - **Android backup leaves out photo and video files** (#93): the log, equipment and notes stay in Android's backup, the photo and video files do not (they would fill the backup limit).
 
