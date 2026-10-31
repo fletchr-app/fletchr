@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["resvg-py"]
+# dependencies = ["resvg-py", "pillow"]
 # ///
 """Draws the Fletchr icon and writes every size the app needs: `uv run resources/generate.py`.
 
@@ -9,7 +9,10 @@ It writes the SVG sources to resources/ and the PNGs to the Android resources an
 """
 from pathlib import Path
 
+import io
+
 import resvg_py
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 NAVY, WHITE, ORANGE = "#1d3557", "#f1faee", "#f4a340"
@@ -74,4 +77,15 @@ png("icon-maskable.svg", "public/icon-maskable-512.png", 512)
 png("icon-square.svg", "public/apple-touch-icon.png", 180)
 png("icon.svg", "public/favicon.png", 64)
 (ROOT / "public" / "favicon.svg").write_text(SOURCES["icon.svg"])
+# Google Play feature graphic, 1024 x 500, without an alpha channel (Play refuses one).
+feature = svg(
+    "0 0 1024 500",
+    f'<rect width="1024" height="500" fill="{NAVY}"/>'
+    f'<g transform="translate(560 20) scale(2.3)">{mark()}</g>'
+    f'<text x="64" y="285" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="128" font-weight="700" fill="{WHITE}">Fletchr</text>'
+    f'<rect x="70" y="322" width="150" height="10" rx="5" fill="{ORANGE}"/>',
+)
+rendered = bytes(resvg_py.svg_to_bytes(svg_string=feature, width=1024, height=500))
+Image.open(io.BytesIO(rendered)).convert("RGB").save(ROOT / "resources" / "feature-graphic.png")
+(ROOT / "resources" / "feature-graphic.svg").write_text(feature)
 print("icon written")
