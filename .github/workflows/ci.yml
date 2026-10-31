@@ -11,9 +11,10 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same branch makes the older run pointless.
+# A newer push to the same branch makes the older run pointless. The workflow name is in the group because a release tag
+# calls this file from deploy.yml and release-android.yml at the same time; without it one cancels the other's checks.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
