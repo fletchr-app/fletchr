@@ -46,7 +46,7 @@ Checked in the npm package 8.10.0 (published 2026-10-17, MIT), not on a device:
 
 ### Tags
 
-- Every entry's `description` ends with a line `fletchr:event:<agenda id>:<hash>`; above it a short human line ("Training of <team>, from the Fletchr app"). `hash` is a short hash (FNV-1a, 8 hex) of everything we write: title, location, start, end, the reminder, the note. A different hash means "changed".
+- Every entry's `description` ends with a line `fletchr:event:<agenda id>:<hash>`; above it a short human line ("Team <team>, from the Fletchr app"; it goes on every kind of entry, so it does not say "Training"). `hash` is a short hash (FNV-1a, 8 hex) of everything we write: title, location, start, end, the reminder, the note. A different hash means "changed".
 - So the device holds the whole state; the app stores only `enabled`, `reminder` and the calendar id. Sync is a diff, safe to repeat and safe after a crash halfway.
 
 ### What should be in the calendar (desired)
@@ -88,8 +88,8 @@ From `GET /api/events/agenda/` for yesterday to plus 119 days (the 120-day maxim
 
 ### i18n
 
-`src/locales/en.ts` and `de.ts`, new block `deviceCalendar` (German to check with Tim; see `specs/steering/i18n.md`):
-- `toggle` "Trainings in the phone's calendar" / "Trainings im Kalender des Handys", `reminder` "Reminder" / "Erinnerung" with the four choices, `hint` "In a calendar of its own, on this phone only." / "In einem eigenen Kalender, nur auf diesem Handy.", `denied`, `failed`, `offline`, `updated` "Updated {time}" / "Aktualisiert {time}", `calendarName` "Fletchr", `entryNote` "Training of {team}, from the Fletchr app" / "Training von {team}, aus der Fletchr-App".
+`src/locales/en.ts` and `de.ts`, new block `deviceCalendar` (German reviewed against the style in `specs/steering/i18n.md`):
+- `toggle` "Trainings in the phone's calendar" / "Trainings im Kalender des Handys", `reminder` "Reminder" / "Erinnerung" with the four choices, `hint` "In a calendar of its own, on this phone only." / "In einem eigenen Kalender, nur auf diesem Handy.", `denied`, `failed`, `offline`, `updated` "Updated {time}" / "Aktualisiert {time}", `calendarName` "Fletchr", `entryNote` "Team {team}, from the Fletchr app" / "Team {team}, aus der Fletchr-App".
 - Entry titles use `schedule`/`event.kind` keys that exist. `device-calendar.ts` takes the texts as parameters (words in, no sentences built in `src/lib`). A language change changes the hash, so the next sync rewrites the entries.
 
 ## Checklist by phase (small PRs)
