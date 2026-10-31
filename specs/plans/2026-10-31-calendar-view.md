@@ -1,6 +1,6 @@
 # Calendar view for team trainings and events (#106)
 
-Status: decided (2026-10-31), not started: build it (a coach asked), month view, week starts by locale, no iCal, defaults for Q3 to Q5
+Status: phases 1 to 3 implemented (#126, #127, #128; Phase 4 only if wanted). Decided: build it (a coach asked), month view, week starts by locale, no iCal, defaults for Q3 to Q5
 Date: 2026-10-31
 
 Markers: **[fact]** checked in the code, **[inferred]** my reading, not checked by running anything, **[check]** verify before relying on it.
@@ -124,11 +124,11 @@ Phone:
 
 ## Docs to update
 
-- [ ] `specs/design/schedule-and-events.md`: Agenda section (month mode, shared day list); "Not built" drops the calendar grid and says iCal was dropped for #107.
-- [ ] `specs/design/screens.md`: agenda modes (and `/calendar` if Phase 4).
-- [ ] `specs/plans/index.md`: status of this plan.
-- [ ] ADR only if iCal is dropped for good: `specs/adrs/NNNN-no-ical-feed.md` (next free number **[check]**), short; else a line in the design doc is enough.
-- [ ] `CHANGELOG.md`: month view in the schedule.
+- [x] `specs/design/schedule-and-events.md`: Agenda section (month mode, shared day list); "Not built" drops the calendar grid and says iCal was dropped for #107.
+- [x] `specs/design/screens.md`: agenda modes (and `/calendar` if Phase 4).
+- [x] `specs/plans/index.md`: status of this plan.
+- [x] No ADR: a line in the design doc is enough. (Was: ADR only if iCal is dropped for good: `specs/adrs/NNNN-no-ical-feed.md` (next free number **[check]**), short; else a line in the design doc is enough.)
+- [x] `CHANGELOG.md`: month view in the schedule.
 
 ## Risks
 
