@@ -41,8 +41,15 @@ async function exportAll() {
   busy.value = false
 }
 
-const summary = (plan: ImportPlan) =>
-  t('local.imported', { sessions: plan.added.sessions, equipment: plan.added.equipment, notes: plan.added.notes, kept: plan.kept.sessions + plan.kept.equipment + plan.kept.notes })
+const summary = (plan: ImportPlan) => {
+  const kept = plan.kept.sessions + plan.kept.equipment + plan.kept.notes
+  const added = t('local.imported', {
+    sessions: t('local.n.sessions', plan.added.sessions),
+    equipment: t('local.n.equipment', plan.added.equipment),
+    notes: t('local.n.notes', plan.added.notes),
+  })
+  return kept > 0 ? `${added} ${t('local.importedKept', kept)}` : added
+}
 
 async function importFile(event: Event) {
   const input = event.target as HTMLInputElement
@@ -68,7 +75,7 @@ async function importFile(event: Event) {
     <div class="screen">
       <section class="d-flex flex-column gap-2">
         <h2 class="h5 m-0">{{ $t('local.onThisPhone') }}</h2>
-        <p class="m-0">{{ $t('local.onThisPhoneText', { sessions: counts.sessions, notes: counts.notes, media: counts.media }) }}</p>
+        <p class="m-0">{{ $t('local.onThisPhoneText', { sessions: $t('local.n.sessions', counts.sessions), notes: $t('local.n.notes', counts.notes), media: $t('local.n.media', counts.media) }) }}</p>
         <p class="m-0">{{ $t('local.noCopy') }}</p>
       </section>
       <section class="d-flex flex-column gap-2">
