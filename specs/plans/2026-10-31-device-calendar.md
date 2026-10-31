@@ -42,7 +42,9 @@ Checked in the npm package 8.10.0 (published 2026-10-17, MIT), not on a device:
 
 - Works: permission prompt on turning the switch on; a local calendar "Fletchr" (`account_type=LOCAL`, visible); entries with description and location; every instance of a series carries the tag in `description` (provider level); a second sync changes nothing; a changed entry is deleted and created again; turning off deletes the calendar and its entries.
 - **Does not work: cancelling one occurrence of a series.** The provider throws a `NullPointerException` in `CalendarProvider2.handleInsertException` (line 2067) when a cancelled exception is inserted on a local calendar's series. The same happens when the exception is inserted directly through `adb shell content insert`, so it is Android, not the plugin. Cancelled, moved and paused trainings are exactly what a schedule has, so the app does not use series.
-- Not checked: Google Calendar and Samsung Calendar display (only the provider was read), uninstall behaviour, whether Google's own default notifications attach to a local calendar.
+- Display: the "Fletchr" calendar shows up in the calendar app on Tim's phone without any setup (checked by Tim, 2026-10-31).
+- **Uninstall**: the calendar and all its entries stay on the phone (nobody owns them any more, and their reminders still fire). After a reinstall the app finds the calendar by its account name, reuses it and ends with the same number of entries, no duplicates (entries are rewritten when the reminder setting differs, which is the diff working as meant). Nothing can be done at uninstall time; the user can remove an orphaned calendar in the calendar app's settings.
+- Not checked: Samsung Calendar, whether Google's own default notifications attach to a local calendar.
 
 ### Tags
 
@@ -162,7 +164,8 @@ Phone (Android, after Phase 3):
 - **Stale entries**: changes by another coach only arrive on start or resume; an entry that was removed on the server stays while the phone is offline. Accepted; the hint shows the last update.
 - **Time zone**: each entry has the server's instants, so a training is at the right moment everywhere. The calendar app shows it in the phone's zone.
 - **Many entries**: about 17 per weekly slot for 119 days, so a few dozen to a few hundred for a person in several teams. A sync is one list, then only the differences.
-- **Hidden local calendar**: some calendar apps may not show local calendars (spike). Then the feature does nothing visible for those users.
+- **Hidden local calendar**: some calendar apps may not show local calendars. Tim's calendar app shows it; Samsung Calendar is not checked.
+- **Orphaned calendar after uninstall**: the calendar stays with its entries and reminders until the user removes it in the calendar app; a reinstall adopts it again.
 - **No cross-device sync**: an app-owned local calendar stays on the phone **[inferred]**, so the trainings are not on a tablet or on calendar.google.com. The iCal feed was dropped (#106); if users ask for it, it needs a new decision.
 - **Past entries**: only entries from yesterday on are written, and entries before the window are never touched, so past trainings stay as the calendar had them; only a changed entry is deleted and written again, so a renamed slot rewrites the future trainings only.
 - **Plugin from a personal repo** (~52 stars per the issue): pinned to an exact version; the wrapper keeps the rest of the app away from it, so a swap touches one file.
