@@ -95,10 +95,10 @@ i18n (`src/locales/en.ts`, `de.ts`, block `schedule`; German to check with Tim; 
 
 ### Phase 3: month grid
 
-- [ ] `src/components/MonthGrid.vue` (props `month`, `days`, `dots`, `selected`, `today`, `firstWeekday`; emits `select`, `shift(±1)`); colours from CSS variables in `src/assets/main.css`.
-- [ ] Mode toggle and month mode in `AgendaView.vue`; month-driven `useRemote`; read `route.params` once in setup (already so **[fact]**).
-- [ ] Locale keys in `en.ts` and `de.ts`.
-- [ ] `type-check`, `npm test`, phone test.
+- [x] `src/components/MonthGrid.vue` (props `month`, `days`, `dots`, `selected`, `today`, `firstWeekday`; emits `select`, `shift(±1)`); colours from CSS variables in `src/assets/main.css`.
+- [x] Mode toggle (remembered in `localStorage` `agenda:mode`) and month mode in `AgendaView.vue`; month-driven `useRemote`; read `route.params` once in setup (already so **[fact]**).
+- [x] Locale keys in `en.ts` and `de.ts`. A camp shows "until <date>" (`schedule.endsOn`) in the day list, in the list mode too.
+- [x] `type-check`, `npm test`. [x] Phone (2026-10-31, local test server, German, Monday start): toggle and choice kept after leaving the screen, dots, camp on each of its days with "bis 5. Nov.", hollow dot and struck-through row for a cancelled event, arrows, "Heute", selecting a day. Not tried in month mode: the coach actions (same component as the list), dark/light theme, English locale, 360 px width.
 
 ### Phase 4 (only if Q3 says so): all-teams calendar
 

@@ -8,6 +8,7 @@ import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAgendaActions } from '@/composables/useAgendaActions'
+import { daysOf } from '@/lib/calendar'
 import { type AgendaItem, eventTitle } from '@/lib/schedule'
 
 // The trainings of some days, one list per day. Tapping one opens its actions below it; `canPlan` tells whether the viewer may
@@ -31,6 +32,11 @@ const title = (item: AgendaItem) => {
   return name.startsWith('event.kind.') ? t(name) : name
 }
 const clock = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// A camp over several days is listed on its first day, with its last day.
+const until = (item: AgendaItem) => {
+  const last = daysOf(item).at(-1)!
+  return last === daysOf(item)[0] ? '' : t('schedule.endsOn', { date: new Date(`${last}T12:00`).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' }) })
+}
 const dayTitle = (day: string) => new Date(`${day}T12:00`).toLocaleDateString(locale.value, { weekday: 'long', day: 'numeric', month: 'long' })
 </script>
 
@@ -42,7 +48,7 @@ const dayTitle = (day: string) => new Date(`${day}T12:00`).toLocaleDateString(lo
         <IonItem button detail lines="full" @click="select(item)">
           <IonLabel class="ion-text-wrap">
             <h3 :class="{ 'text-decoration-line-through': item.cancelled }">{{ clock(item.start) }}–{{ clock(item.end) }} · {{ title(item) }}</h3>
-            <p>{{ [item.cancelled ? $t('schedule.cancelled') : '', item.location].filter(Boolean).join(' · ') }}</p>
+            <p>{{ [item.cancelled ? $t('schedule.cancelled') : '', until(item), item.location].filter(Boolean).join(' · ') }}</p>
           </IonLabel>
         </IonItem>
         <div v-if="selected?.id === item.id" class="d-flex flex-column gap-2 p-3">

@@ -383,6 +383,12 @@ export default {
     changeFrom: 'Ab diesem Tag ändern',
     deleteConfirm: 'Noch einmal tippen zum Löschen. Termine mit Inhalt bleiben.',
     cancelled: 'Abgesagt',
+    listMode: 'Liste',
+    monthMode: 'Monat',
+    today: 'Heute',
+    previousMonth: 'Vorheriger Monat',
+    nextMonth: 'Nächster Monat',
+    nothingThisDay: 'An diesem Tag ist nichts geplant.',
   },
   event: {
     kind: { training: 'Trainingstermin', competition: 'Wettkampf', camp: 'Lager' },
