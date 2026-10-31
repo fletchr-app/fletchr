@@ -2,9 +2,11 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.17.0 (2026-10-31)
 
 - **Trainings in the phone's calendar, Android** (#107): Settings has a switch that writes the trainings, competitions and camps of your teams into a calendar of its own on the phone ("Fletchr", on this phone only). Every training is an entry of its own, so a cancelled or moved one simply disappears. Optional reminder. Turning it off or signing out removes the calendar. Needs the calendar permission, asked when you turn it on.
+
+- **First start opens Home** (#130): a fresh install, or one whose sign-in expired, no longer flashes the sign-in screen and lands on Home in local mode.
 
 ## 0.16.0 (2026-10-31)
 
