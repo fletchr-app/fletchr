@@ -110,5 +110,5 @@ jobs:
           packageName: de.fletchr.app
           releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
           track: internal
-          # A new app whose store entry is not finished only accepts "draft"; change it to "completed" afterwards.
-          status: draft
+          # "draft" would need a click in the Play Console for every upload; "completed" rolls out to the internal track.
+          status: completed
