@@ -13,7 +13,7 @@ import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
-import { useServer } from '@/composables/useServer'
+import { useServer, useServerHealth } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { useUnits } from '@/composables/useUnits'
@@ -52,6 +52,7 @@ const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
 const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
+const health = useServerHealth()
 const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
 const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
@@ -145,9 +146,9 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
           <IonLabel class="ion-text-wrap">{{ $t('settings.keptNow', { size: keptSize, n: kept.count.value }, kept.count.value) }}</IonLabel>
           <AppButton secondary @click="kept.clear">{{ $t('settings.keptClear') }}</AppButton>
         </IonItem>
-        <IonItem v-if="!isLocal" router-link="/settings/server" detail lines="full">
+        <IonItem v-if="!isLocal" lines="full">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
-          <IonNote slot="end" class="server-note">{{ serverName }}</IonNote>
+          <IonNote slot="end" class="server-note">{{ health === 'unreachable' ? `${serverName} (${$t('settings.unreachable')})` : serverName }}</IonNote>
         </IonItem>
         <IonItem router-link="/settings/about" detail lines="none">
           <IonLabel>{{ $t('settings.about') }}</IonLabel>
