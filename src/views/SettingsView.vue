@@ -9,32 +9,36 @@ import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useEquipment } from '@/composables/useEquipment'
+import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
-import { useServer } from '@/composables/useServer'
+import { useServer, useServerHealth } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { useUnits } from '@/composables/useUnits'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import { t } from '@/i18n'
+import { CAP_CHOICES_MB } from '@/lib/media-keep'
+import type { Visibility } from '@/lib/log-model'
 import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
-const { signOut } = useAuth()
+const { signOut, isLocal } = useAuth()
 const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
 const notes = useNotes()
 
-// What has not reached the server stays on the phone under this account, but the person should know before leaving.
+// Signing out empties the screens (the account's data stays on the phone under its key and comes back at the next sign-in), so it always asks.
+// What has not reached the server stays too, but the person should know before leaving.
 async function confirmSignOut() {
   const unsent =
     log.waiting.value + log.failed.value.length + media.items.value.length + equipment.waiting.value + equipment.failed.value.length + notes.waiting.value + notes.failed.value.length
-  if (unsent === 0) return void signOut()
   const alert = await alertController.create({
     header: t('settings.signOut'),
-    message: t('settings.signOutWaiting', { n: unsent }, unsent),
+    message: [t('settings.signOutEmpty'), ...(unsent > 0 ? [t('settings.signOutWaiting', { n: unsent }, unsent)] : [])].join(' '),
     buttons: [
       { text: t('common.cancel'), role: 'cancel' },
       { text: t('settings.signOut'), role: 'confirm' },
@@ -48,9 +52,15 @@ const creating = useCreateTeam()
 const { mode: theme, setMode: setTheme } = useTheme()
 const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
+const health = useServerHealth()
 const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
+const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
+const VISIBILITIES: Visibility[] = ['coaches', 'me']
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
+const kept = useKeptMedia()
+const capLabel = (mb: number | null) => (mb === null ? t('settings.keepNoLimit') : mb === 0 ? t('settings.keepNothing') : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`)
+const keptSize = computed(() => `${Math.round(kept.bytes.value / (1024 * 1024))} MB`)
 
 const THEMES: ThemeMode[] = ['system', 'light', 'dark']
 const LANGUAGES: { value: LanguageMode; key: string }[] = [
@@ -66,8 +76,30 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
     <div class="screen">
       <IonList inset>
         <IonListHeader>{{ $t('settings.training') }}</IonListHeader>
-        <IonItem router-link="/equipment" detail lines="none"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
+        <IonItem router-link="/equipment" detail :lines="isLocal ? 'none' : 'full'"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
+        <IonItem v-if="!isLocal" lines="none">
+          <IonSelect
+            :value="trainingVisibility"
+            :label="$t('settings.trainingVisibility')"
+            interface="action-sheet"
+            @ion-change="$event.detail.value !== trainingVisibility && saveVisibility($event.detail.value)"
+          >
+            <IonSelectOption v-for="v in VISIBILITIES" :key="v" :value="v">{{ $t(`visibility.${v}`) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
       </IonList>
+      <div v-if="!isLocal" class="muted px-3">{{ $t('settings.trainingVisibilityHint') }}</div>
+      <ErrorText :message="visibilityError" />
+      <template v-if="isLocal">
+        <IonList inset>
+          <IonListHeader>{{ $t('settings.account') }}</IonListHeader>
+          <IonItem lines="full" class="ion-text-wrap"><IonLabel class="ion-text-wrap">{{ $t('local.settingsNote') }}</IonLabel></IonItem>
+          <IonItem router-link="/settings/data" detail lines="full"><IonLabel>{{ $t('local.dataRow') }}</IonLabel></IonItem>
+          <IonItem router-link="/sign-in" detail lines="none"><IonLabel>{{ $t('local.signInRow') }}</IonLabel></IonItem>
+        </IonList>
+        <div class="muted px-3">{{ $t('local.signInText') }}</div>
+      </template>
+      <template v-else>
       <IonList inset>
         <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
         <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
@@ -80,6 +112,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         <IonItem router-link="/account" detail lines="full"><IonLabel>{{ $t('settings.signInRow') }}</IonLabel></IonItem>
         <IonItem router-link="/privacy" detail lines="none"><IonLabel>{{ $t('settings.yourData') }}</IonLabel></IonItem>
       </IonList>
+      </template>
 
       <IonList inset>
         <IonListHeader>{{ $t('settings.app') }}</IonListHeader>
@@ -98,15 +131,24 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
             <IonSelectOption v-for="u in UNITS" :key="u" :value="u">{{ $t(`settings.units${u === 'metric' ? 'Metric' : 'Imperial'}`) }}</IonSelectOption>
           </IonSelect>
         </IonItem>
-        <IonItem lines="full">
+        <IonItem v-if="!isLocal" lines="full">
           <IonSelect :value="videosWifiOnly ? 'wifi' : 'any'" :label="$t('settings.videoUpload')" interface="action-sheet" @ion-change="setVideosWifiOnly($event.detail.value === 'wifi')">
             <IonSelectOption value="wifi">{{ $t('settings.videoWifi') }}</IonSelectOption>
             <IonSelectOption value="any">{{ $t('settings.videoAny') }}</IonSelectOption>
           </IonSelect>
         </IonItem>
-        <IonItem router-link="/settings/server" detail lines="full">
+        <IonItem v-if="!isLocal" lines="full">
+          <IonSelect :value="String(kept.capMb.value)" :label="$t('settings.keepMedia')" interface="action-sheet" @ion-change="kept.setCap($event.detail.value === 'null' ? null : Number($event.detail.value))">
+            <IonSelectOption v-for="mb in CAP_CHOICES_MB" :key="String(mb)" :value="String(mb)">{{ capLabel(mb) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+        <IonItem v-if="!isLocal && kept.count.value > 0" lines="full">
+          <IonLabel class="ion-text-wrap">{{ $t('settings.keptNow', { size: keptSize, n: kept.count.value }, kept.count.value) }}</IonLabel>
+          <AppButton secondary @click="kept.clear">{{ $t('settings.keptClear') }}</AppButton>
+        </IonItem>
+        <IonItem v-if="!isLocal" lines="full">
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
-          <IonNote slot="end" class="server-note">{{ serverName }}</IonNote>
+          <IonNote slot="end" class="server-note">{{ health === 'unreachable' ? `${serverName} (${$t('settings.unreachable')})` : serverName }}</IonNote>
         </IonItem>
         <IonItem router-link="/settings/about" detail lines="none">
           <IonLabel>{{ $t('settings.about') }}</IonLabel>
@@ -114,7 +156,7 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
         </IonItem>
       </IonList>
 
-      <AppButton class="mt-3" secondary @click="confirmSignOut">{{ $t('settings.signOut') }}</AppButton>
+      <AppButton v-if="!isLocal" class="mt-3" secondary @click="confirmSignOut">{{ $t('settings.signOut') }}</AppButton>
     </div>
   </AppPage>
 </template>

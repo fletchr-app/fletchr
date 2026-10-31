@@ -14,13 +14,19 @@ import MediaEvent from '@/components/MediaEvent.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
+import { useKeptMedia } from '@/composables/useKeptMedia'
+import { useMedia } from '@/composables/useMedia'
+import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
-import { drawnShapes, notesOnPicture } from '@/lib/media-notes'
+import { loadFiles } from '@/lib/media-files'
+import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
+import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
 // One uploaded photo or clip. A clip is looked at frame by frame: the video above, a tape below it that is dragged
@@ -45,13 +51,56 @@ let startFrame = route.query.frame !== undefined ? Number(route.query.frame) : n
 const currentId = ref(route.params.id as string)
 const everything = ref<{ id: string; kind: string }[]>([])
 
+// A photo or clip that has not been uploaded yet plays from its file on the phone. Once it is up, the server's copy
+// takes over the next time it is loaded; what is on screen goes on from the file. One of yours that the phone kept after
+// the upload (Settings sets how many) opens from its file too, also without a connection.
+const media = useMedia()
+const kept = useKeptMedia()
+const library = useMediaLibrary()
+const noteLibrary = useNoteLibrary()
+let heldId: string | null = null
+function hold(id: string | null) {
+  if (heldId) kept.release(heldId)
+  heldId = id
+  if (id) kept.hold(id)
+}
+onBeforeUnmount(() => hold(null))
+const queuedItem = computed(() => media.items.value.find((i) => i.id === currentId.value))
+let localUrls: string[] = []
+function releaseLocal() {
+  localUrls.forEach((u) => URL.revokeObjectURL(u))
+  localUrls = []
+}
+async function localClip(item: NonNullable<typeof queuedItem.value>) {
+  const files = await loadFiles(item.id, item.kind === 'video' ? 'video/mp4' : 'image/jpeg')
+  releaseLocal()
+  localUrls = [URL.createObjectURL(files.file), URL.createObjectURL(files.thumbnail)]
+  return clipOfQueued(item, Number(userId.value), { file: localUrls[0]!, thumbnail: localUrls[1]! })
+}
+async function keptClip(known: Parameters<typeof clipOfKept>[0]) {
+  const files = await kept.load(known.id, known.kind === 'video' ? 'video/mp4' : 'image/jpeg')
+  if (!files) return null
+  releaseLocal()
+  localUrls = [URL.createObjectURL(files.file), URL.createObjectURL(files.thumbnail)]
+  hold(known.id)
+  return clipOfKept(known, { file: localUrls[0]!, thumbnail: localUrls[1]! })
+}
 const { data: clip, error, reload } = useRemote(
   async () => {
-    const { data } = await api.GET('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } })
+    const item = queuedItem.value
+    if (item) return await localClip(item)
+    const id = currentId.value
+    let unreachable = false
+    const { data } = await api.GET('/api/media/{media_id}/', { params: { path: { media_id: id } } }).catch(() => ((unreachable = true), { data: undefined }))
+    const known = data ?? library.items.value.find((m) => m.id === id)
+    const fromPhone = known && kept.has(id) ? await keptClip(known) : null
+    if (fromPhone) return fromPhone
+    if (unreachable) throw new Error('offline')
     return data ?? null
   },
   { watch: [currentId] },
 )
+onBeforeUnmount(releaseLocal)
 
 // The other clips of the same session or archer, in the order of the grid.
 onMounted(async () => {
@@ -59,7 +108,7 @@ onMounted(async () => {
   const owner = route.query.owner ? Number(route.query.owner) : undefined
   if (!session && owner === undefined) return
   const { data } = await api.GET('/api/media/', { params: { query: session ? { session } : { owner } } }).catch(() => ({ data: null }))
-  everything.value = (data ?? []).map((m) => ({ id: m.id, kind: m.kind }))
+  everything.value = playerSiblings(media.items.value, (data ?? []).map((m) => ({ id: m.id, kind: m.kind })), { session, owner }, Number(userId.value))
 })
 // Next and previous stay among the same kind: photos among photos, clips among clips.
 const isPhoto = computed(() => clip.value?.kind === 'photo')
@@ -78,22 +127,31 @@ function goTo(delta: number) {
 
 // Coach notes on single frames: the tape shows where they are, a tap on a note jumps to its frame.
 const notes = useRemote(
-  async () => (await api.GET('/api/notes/', { params: { query: { media: currentId.value } } })).data ?? null,
+  async () => (queuedItem.value ? [] : noteLibrary.list({ media: currentId.value })),
   { watch: [currentId] },
 )
-// A note written here goes up in the background; when it has, the server's list has it.
-watch(useNotes().uploaded, notes.reload)
+// A note written here goes up in the background; when it has, the server's list has it. Until then it is in the
+// notes queue: its frame and drawing show with the picture, the text in the sheet.
+const queuedNotes = useNotes()
+watch(queuedNotes.uploaded, notes.reload)
+// Once the photo or clip is up, the server has the say about its notes.
+watch(() => !!queuedItem.value, notes.reload)
+const waiting = computed(() => waitingOnMedia(queuedNotes.notes.value, currentId.value))
 const teams = useRemote(
-  async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
-  { watch: [clip] },
+  async () => (clip.value && !queuedItem.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
+  { watch: [clip, () => !!queuedItem.value] },
 )
 // A coach of the archer may write notes; so may the archer, for themselves.
-const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
+// Without the server, only you can write, about your own: whose teams you coach in is not known on the phone.
+const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || (!queuedItem.value && !!teams.data.value?.length)))
 const frameNotes = computed(() =>
   (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
 )
 const photoNotes = computed(() => notesOnPicture(notes.data.value ?? [], null))
 const listed = computed(() => (isPhoto.value ? photoNotes.value : frameNotes.value))
+// What the button shows and where the tape is marked: the notes of the server and those that wait.
+const noteCount = computed(() => listed.value.length + (isPhoto.value ? notesOnPicture(waiting.value, null).length : waiting.value.filter((n) => n.frame !== null && n.frame !== undefined).length))
+const marks = computed(() => [...frameNotes.value, ...waiting.value].filter((n) => n.frame !== null && n.frame !== undefined))
 // The note to show under the picture: at this frame, or the newest on a photo.
 const noteHere = computed(() => (isPhoto.value ? photoNotes.value[photoNotes.value.length - 1] : frameNotes.value.find((n) => n.frame === frame.value)))
 const notesOpen = ref(false)
@@ -165,7 +223,7 @@ watch(
   },
   { immediate: true },
 )
-const savedHere = computed(() => drawnShapes(notesOnPicture(notes.data.value ?? [], isPhoto.value ? null : frame.value)))
+const savedHere = computed(() => drawnShapes(notesOnPicture([...(notes.data.value ?? []), ...waiting.value], isPhoto.value ? null : frame.value)))
 const shownShapes = computed(() => (drawing.value ? drawing.value.shapes : [...savedHere.value, ...attached.value]))
 // The picture is shown whole in the stage; the drawing layer has exactly its shape.
 const stage = ref<HTMLElement | null>(null)
@@ -426,8 +484,13 @@ const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
 async function remove() {
   if (!confirmDelete.value) return (confirmDelete.value = true)
+  if (queuedItem.value) {
+    media.remove(currentId.value)
+    return router.back()
+  }
   const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } }).catch(() => ({ response: null }))
   if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
+  kept.forget([currentId.value])
   router.back()
 }
 watch(currentId, () => (confirmDelete.value = false))
@@ -439,7 +502,7 @@ const moveError = ref<string | null>(null)
 async function moveTo(session: string | null) {
   pickerOpen.value = false
   moveError.value = null
-  const { failed } = await moveMedia([{ id: currentId.value, queued: false }], session)
+  const { failed } = await moveMedia([{ id: currentId.value, queued: !!queuedItem.value }], session)
   if (failed > 0) moveError.value = t('media.moveFailed', { n: failed }, failed)
   reload()
   notes.reload()
@@ -490,7 +553,7 @@ async function moveTo(session: string | null) {
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
         <div v-if="!drawing" ref="tape" class="tape" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
           <div class="ticks" :style="ticksStyle">
-            <span v-for="n in frameNotes" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
+            <span v-for="n in marks" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
           </div>
         </div>
         <DrawingToolbar
@@ -512,8 +575,8 @@ async function moveTo(session: string | null) {
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.draw')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
+          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
+            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
           </button>
         </div>
       </template>
@@ -532,15 +595,16 @@ async function moveTo(session: string | null) {
         <div v-else class="controls">
           <button type="button" :disabled="!hasPrevious" :aria-label="$t('media.previousPhoto')" @click="goTo(-1)"><IonIcon :icon="playSkipBack" /></button>
           <button v-if="canDraw" type="button" :aria-label="$t('media.drawPhoto')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="listed.length > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="listed.length > 0" class="count">{{ listed.length }}</span>
+          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
+            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
           </button>
           <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextPhoto')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
         </div>
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
-      <MediaEvent v-if="clip" :clip="clip" @changed="reload(); notes.reload()" />
+      <div v-if="queuedItem && !canNote" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
+      <MediaEvent v-if="clip && !queuedItem" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
       <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
@@ -556,7 +620,7 @@ async function moveTo(session: string | null) {
       :owner="clip.owner"
       :taken-at="clip.taken_at"
       :current="clip.session ?? null"
-      server-items
+      :server-items="!queuedItem"
       :removable="!!clip.session"
       @close="pickerOpen = false"
       @pick="moveTo"

@@ -24,10 +24,14 @@ export function useKeyedStore<T>(options: Options<T>) {
   const loadedKey = ref<string | null>(null);
   const loaded = computed(() => key.value !== null && loadedKey.value === key.value);
   let loading = 0;
+  // While held nothing is saved: the data of the key is being moved elsewhere (sign-in with local data) and a save
+  // would bring the removed key back. A new key (the owner changed) starts without a hold.
+  let held = false;
 
   watch(
     key,
     async (next) => {
+      held = false;
       if (resetOnKeyChange) {
         apply(empty);
         loadedKey.value = null;
@@ -52,8 +56,16 @@ export function useKeyedStore<T>(options: Options<T>) {
   );
 
   watch([changes, loaded, key], () => {
-    if (loaded.value && key.value) dataStore.set(key.value, JSON.stringify(read())).catch(() => {});
+    if (!held && loaded.value && key.value) dataStore.set(key.value, JSON.stringify(read())).catch(() => {});
   });
 
-  return { loaded };
+  return {
+    loaded,
+    /** Writes the current value now and resolves when it is on the device (rejects when that failed). Nothing to write before it is loaded. */
+    flush: async () => {
+      if (loaded.value && key.value) await dataStore.set(key.value, JSON.stringify(read()));
+    },
+    hold: () => void (held = true),
+    release: () => void (held = false),
+  };
 }

@@ -8,8 +8,8 @@ from .models import Media
 
 
 def visible_media(user):
-    """The photos and clips of the archers whose training `user` may see."""
-    return Media.objects.filter(owner__in=archers_visible_to(user)).select_related("owner__profile", "event__team")
+    """The photos and clips of the archers whose training `user` may see, and that are shared with them."""
+    return Media.objects.visible_to(user).select_related("owner__profile", "event__team")
 
 
 def media_link(request, media, part) -> str:

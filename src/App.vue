@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useTeams } from '@/composables/useTeams'
 import { codeFromUrl } from '@/lib/invite-link'
 
@@ -15,10 +16,11 @@ const router = useRouter()
 const { status } = useAuth()
 const { isCoach } = useTeams()
 useMediaLibrary() // starts keeping the list of your photos and videos on the phone
+useNoteLibrary() // starts keeping your notes on the phone
 
 // Signing in or out moves you to the right side of the app, wherever you were.
 watch(status, (s) => {
-  if (s === 'signedOut' && route.meta.auth === 'in') void router.replace('/sign-in')
+  if (s === 'signedOut' && (route.meta.auth === 'in' || route.meta.auth === 'account')) void router.replace('/sign-in')
   if (s === 'signedIn' && route.meta.auth === 'out') void router.replace('/')
 })
 
@@ -35,8 +37,8 @@ const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => openInv
 void CapacitorApp.getLaunchUrl().then((launch) => openInvite(launch?.url))
 onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
 
-// The tab bar is for signed-in users.
-const showTabs = computed(() => route.meta.tab === true && status.value === 'signedIn')
+// The tab bar is for signed-in users and for those who use the app without an account.
+const showTabs = computed(() => route.meta.tab === true && (status.value === 'signedIn' || status.value === 'local'))
 </script>
 
 <template>

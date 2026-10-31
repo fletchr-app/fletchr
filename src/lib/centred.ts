@@ -5,6 +5,7 @@
 // outside the face is a miss. Positions are relative to the spot (1 = its outer edge), so the arrows of all spots
 // of a face are taken together.
 
+import { pySum } from './py-math.ts';
 import { score, type ScoringFace } from './scoring.ts';
 
 /** Fewer arrows say too little about where the centre is. */
@@ -18,7 +19,7 @@ const pointsOf = (face: ScoringFace, points: { x: number; y: number }[], dx = 0,
 /** Null for a face without rings and for fewer than MIN_ARROWS arrows. */
 export function centredScore(face: ScoringFace, points: { x: number; y: number }[]): CentredScore | null {
   if (face.rings.length === 0 || points.length < MIN_ARROWS) return null;
-  const centreX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
-  const centreY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+  const centreX = pySum(points.map((p) => p.x)) / points.length;
+  const centreY = pySum(points.map((p) => p.y)) / points.length;
   return { n: points.length, real: pointsOf(face, points), centred: pointsOf(face, points, centreX, centreY), centreX, centreY };
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList, IonListHeader, IonNote, onIonViewWillEnter } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
@@ -14,12 +14,13 @@ import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
 import { useTeams } from '@/composables/useTeams'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import type { components } from '@/lib/api-types'
 import { arrowsSince, sessionRows, weekStart } from '@/lib/session-rows'
 
 type Me = components['schemas']['Me']
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const me = ref<Me | null>(null)
 const { t } = useI18n()
 const { teams, loaded, load } = useTeams()
@@ -27,11 +28,18 @@ const error = ref<string | null>(null)
 
 // Your own sessions, the same list as the Training tab: those on the device (also the ones not uploaded yet) and the server's.
 const { sessions: local, goneSessions } = useLog()
-const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value))
+const { visibility: defaultVisibility } = useTrainingVisibility()
+// Without an account the device is the only source.
+const remote = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)))
+const rows = computed(() =>
+  sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value, [], undefined, isLocal.value ? undefined : defaultVisibility.value),
+)
 const lastSession = computed(() => rows.value[0])
 const weekArrows = computed(() => arrowsSince(rows.value, weekStart(new Date())))
 const sessionsKnown = computed(() => !remote.loading.value || rows.value.length > 0)
+
+// The screen stays alive when someone signs out, so the account's profile must not stay in the greeting.
+watch(isLocal, (local) => local && (me.value = null))
 
 // Each time the screen is shown: it stays alive between visits, so a new team or note would not appear otherwise.
 const shown = ref(0)
@@ -40,6 +48,7 @@ onIonViewWillEnter(() => {
   shown.value++
   if (firstVisit) firstVisit = false
   else remote.reload()
+  if (isLocal.value) return void (me.value = null)
   return Promise.all([api.GET('/api/me/'), load()])
     .then(([meRes]) => {
       if (meRes.data) me.value = meRes.data
@@ -52,7 +61,7 @@ onIonViewWillEnter(() => {
 <template>
   <AppPage title="Fletchr" :back="false">
     <div class="screen">
-      <h2 class="h4 m-0">{{ me ? $t('home.hello', { name: me.profile.name || me.email }) : 'Fletchr' }}</h2>
+      <h2 class="h4 m-0">{{ me ? $t('home.hello', { name: me.profile.name || me.email }) : isLocal ? $t('local.homeTitle') : 'Fletchr' }}</h2>
       <VersionBanner />
       <ErrorText :message="error" />
       <template v-if="sessionsKnown">

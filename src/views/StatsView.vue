@@ -13,7 +13,9 @@ import SetupCompare from '@/components/SetupCompare.vue'
 import ScoreChart from '@/components/ScoreChart.vue'
 import VolumeChart from '@/components/VolumeChart.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
+import { computeArrowStats, computeStats, fromLog } from '@/lib/stats'
 
 const WEEKS = 12
 
@@ -37,25 +39,36 @@ const hasBack = owner !== undefined // opened from an archer's page, not from th
 const heatmapTo = (face: string, distance: string) =>
   `${owner ? `/archers/${owner}` : ''}/stats/heatmap?${new URLSearchParams({ face, distance, ...(name ? { name } : {}) })}`
 
-const { api } = useAuth()
+const { api, isLocal } = useAuth()
+// Without an account the numbers are computed from the sessions on the device (src/lib/stats.ts, tied to the server by shared/stats-vectors.json).
+const { sessions: onDevice } = useLog()
+const device = computed(() => fromLog(onDevice.value))
 const { data, error, loading, reload } = useRemote(
   async () =>
-    (await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })).data ?? null,
+    isLocal.value
+      ? computeStats(device.value.sessions, new Date().toISOString(), timeZone(), WEEKS)
+      : ((await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })).data ?? null),
+  { watch: [onDevice] },
 )
 
 // The names of the equipment setups, for the comparison.
-const setups = useRemote(async () => (await api.GET('/api/setups/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)
+const setups = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/setups/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)))
 const setupLabels = computed(() =>
-  Object.fromEntries(
-    (setups.data.value ?? []).map((s) => [
-      s.id,
-      [`${s.bow.name} (r${s.bow.number})`, s.arrow_set ? `${s.arrow_set.name} (r${s.arrow_set.number})` : ''].filter(Boolean).join(' · '),
-    ]),
-  ),
+  isLocal.value
+    ? device.value.setupLabels
+    : Object.fromEntries(
+        (setups.data.value ?? []).map((s) => [
+          s.id,
+          [`${s.bow.name} (r${s.bow.number})`, s.arrow_set ? `${s.arrow_set.name} (r${s.arrow_set.number})` : ''].filter(Boolean).join(' · '),
+        ]),
+      ),
 )
 
 // Numbered arrows: which ones land away from the group. Empty for an archer who does not number them.
-const arrows = useRemote(async () => (await api.GET('/api/stats/arrows/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)
+const arrows = useRemote(
+  async () => (isLocal.value ? computeArrowStats(device.value.sessions) : ((await api.GET('/api/stats/arrows/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)),
+  { watch: [onDevice] },
+)
 
 // The tab stays alive between visits: show fresh numbers each time it is opened again (the first time it has just loaded).
 let firstVisit = true

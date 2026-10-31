@@ -1,5 +1,5 @@
 {
- "_comment": "Hand-calculated expected scores, used by both the Python tests (server/targets) and the TypeScript tests (src/lib/scoring.test.ts). Do not generate these from the code under test.",
+ "_comment": "Hand-calculated expected scores, used by both the Python tests (server/targets) and the TypeScript tests (src/lib/scoring.test.ts). Do not generate these from the code under test. The vectors for the rings and faces the first hand-calculated set did not reach (added for #93) were written from the ring diameters in target-faces.json, not from the code. Both test suites fail for a face, ring, X or miss without a vector.",
  "vectors": [
   {
    "face": "wa-122",
@@ -876,6 +876,2010 @@
     "is_miss": false
    },
    "why": ""
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": true,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.05,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": true,
+    "is_miss": false
+   },
+   "why": "on the X line counts as X"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.0501,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside X"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.1,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 10 line counts as 10"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.1001,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 10"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.2,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 9 line counts as 9"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.2001,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 9"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.3,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.3001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.9,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.9001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-80",
+   "spot": 0,
+   "x": 0.106065,
+   "y": 0.106065,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.1,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 10 line counts as 10"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.1001,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 10"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.2,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 9 line counts as 9"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.2001,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 9"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.3,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.3001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.9,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.9001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-60",
+   "spot": 0,
+   "x": 0.106065,
+   "y": 0.106065,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.1,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 10 line counts as 10"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.1001,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 10"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 9 line counts as 9"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 9"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 0,
+   "x": 0.176775,
+   "y": 0.176775,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-40-triple-vertical-compound",
+   "spot": 2,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre of the last spot"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.2,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 10 line counts as 10"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.2001,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 10"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 9 line counts as 9"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 9"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 0,
+   "x": 0.21213,
+   "y": 0.21213,
+   "expect": {
+    "value": 9,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-40-triple-triangle",
+   "spot": 2,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 10,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre of the last spot"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.1,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.1001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.2,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.2001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-field-60",
+   "spot": 0,
+   "x": 0.106065,
+   "y": 0.106065,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "centre"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.1,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.1001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.2,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.2001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-field-40",
+   "spot": 0,
+   "x": 0.106065,
+   "y": 0.106065,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "diagonal, between the first two lines"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.9,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-122",
+   "spot": 0,
+   "x": 0.9001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.3,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.3001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.9,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 0.9001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.4,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.4001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 5 line counts as 5"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 5"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.7,
+   "y": 0,
+   "expect": {
+    "value": 4,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 4 line counts as 4"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.7001,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 4"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 3,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 3 line counts as 3"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 3"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.9,
+   "y": 0,
+   "expect": {
+    "value": 2,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 2 line counts as 2"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 0.9001,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 2"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 1,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 1 line counts as 1"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.5,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.5001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.6666666666666666,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.666767,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.8333333333333334,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-80-6ring",
+   "spot": 0,
+   "x": 0.833433,
+   "y": 0,
+   "expect": {
+    "value": 5,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 6"
+  },
+  {
+   "face": "wa-40-triple-vertical",
+   "spot": 0,
+   "x": 0.6,
+   "y": 0,
+   "expect": {
+    "value": 8,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 8 line counts as 8"
+  },
+  {
+   "face": "wa-40-triple-vertical",
+   "spot": 0,
+   "x": 0.6001,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 8"
+  },
+  {
+   "face": "wa-40-triple-vertical",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40-triple-vertical",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40-triple-triangle-compound",
+   "spot": 0,
+   "x": 0.8,
+   "y": 0,
+   "expect": {
+    "value": 7,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 7 line counts as 7"
+  },
+  {
+   "face": "wa-40-triple-triangle-compound",
+   "spot": 0,
+   "x": 0.8001,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "just outside 7"
+  },
+  {
+   "face": "wa-40-triple-triangle-compound",
+   "spot": 0,
+   "x": 1.0,
+   "y": 0,
+   "expect": {
+    "value": 6,
+    "is_x": false,
+    "is_miss": false
+   },
+   "why": "on the 6 line counts as 6"
+  },
+  {
+   "face": "wa-40",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-60-compound",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-40-compound",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
+  },
+  {
+   "face": "wa-40-triple-triangle-compound",
+   "spot": 0,
+   "x": 1.0001,
+   "y": 0,
+   "expect": {
+    "value": null,
+    "is_x": false,
+    "is_miss": true
+   },
+   "why": "just outside the face is a miss"
   }
  ]
 }

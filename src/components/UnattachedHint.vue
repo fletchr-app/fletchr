@@ -25,7 +25,7 @@ const props = defineProps<{
   name?: string
 }>()
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const media = useMedia()
 const log = useLog()
 const { move } = useMoveMedia()
@@ -37,6 +37,7 @@ const queued = computed(() =>
   media.items.value.filter((i) => i.session === null && (i.owner ?? Number(userId.value)) === props.owner && isNear(i.taken_at, props.session) && (!props.eventId || i.event?.id !== props.eventId)),
 )
 const remote = useRemote(async () => {
+  if (isLocal.value) return []
   const { from, to } = nearWindow(props.session)
   const query = { owner: props.owner, without_session: true, ...(props.eventId ? { not_in_event: props.eventId } : {}), taken_after: new Date(from).toISOString(), taken_before: new Date(to).toISOString() }
   return (await api.GET('/api/media/', { params: { query } })).data ?? null

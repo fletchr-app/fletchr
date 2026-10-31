@@ -8,7 +8,10 @@ import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import FormField from '@/components/FormField.vue'
 import RatingChips from '@/components/RatingChips.vue'
+import SessionVisibility from '@/components/SessionVisibility.vue'
+import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { type SessionDetails } from '@/lib/log-model'
 import { decodeWeather, encodeWeather, WEATHER_TOKENS, type WeatherToken } from '@/lib/weather'
 
@@ -16,7 +19,9 @@ import { decodeWeather, encodeWeather, WEATHER_TOKENS, type WeatherToken } from 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { loaded, sessions, setDetails } = useLog()
+const { loaded, sessions, setDetails, setVisibility } = useLog()
+const { isLocal } = useAuth()
+const { visibility: defaultVisibility } = useTrainingVisibility()
 
 const sessionId = route.params.id as string
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
@@ -29,6 +34,10 @@ const physical = ref<number | null>(start?.physical_rating ?? null)
 const mental = ref<number | null>(start?.mental_rating ?? null)
 const goals = ref(start?.goals ?? '')
 const notes = ref(start?.notes ?? '')
+// Coaches are the archer's to keep out of a session; not on a session logged for another archer, nor a coach's copy of one they opened, nor without an account.
+const canChoose = computed(() => !isLocal.value && !!session.value && !session.value.owner && !session.value.noResults)
+const startShared = (session.value?.visibility ?? defaultVisibility.value) === 'coaches'
+const shared = ref(startShared)
 
 // Several weather chips can be on at once.
 const WEATHER_CHIPS = computed(() => WEATHER_TOKENS.map((w) => ({ value: w, label: t(`details.weatherWord.${w}`) })))
@@ -43,6 +52,7 @@ function save() {
     notes: notes.value.trim(),
   }
   setDetails(sessionId, details)
+  if (canChoose.value && shared.value !== startShared) setVisibility(sessionId, shared.value ? 'coaches' : 'me')
   router.back()
 }
 </script>
@@ -65,6 +75,7 @@ function save() {
       <div class="faint">{{ $t('details.ratingHint') }}</div>
       <FormField v-model="goals" :label="$t('details.goals')" multiline capitalize="sentences" />
       <FormField v-model="notes" :label="$t('details.notes')" multiline capitalize="sentences" />
+      <SessionVisibility v-if="canChoose" v-model="shared" />
       <AppButton @click="save">{{ $t('common.save') }}</AppButton>
     </div>
   </AppPage>

@@ -65,6 +65,7 @@ def _media(media):
         "frame_count": media.frame_count,
         "bytes": media.size,
         "note": media.note,
+        "visibility": media.visibility,  # only for a clip in no session; null follows `profile.training_visibility`
         "added_by": (media.uploaded_by.profile.name or media.uploaded_by.email) if media.uploaded_by else None,
         "created_at": media.created_at,
     }
@@ -126,6 +127,7 @@ def export_user_data(user) -> dict:
             "dominant_eye": profile.dominant_eye,
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
+            "training_visibility": profile.training_visibility,
             "avatar": media_zip.AVATAR_NAME if profile.avatar else None,  # the name in the zip of the files
             "avatar_updated_at": profile.avatar_updated_at,
             "video_consent_at": profile.video_consent_at,

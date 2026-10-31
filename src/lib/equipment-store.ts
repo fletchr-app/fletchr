@@ -59,6 +59,8 @@ export type EquipmentAction =
   /** Create (new `uid`) or change an item. `revisionUid` is used if the values are new. */
   | { type: 'save'; kind: EquipmentKind; uid: string; values: Values; is_active: boolean; now: string; revisionUid: string }
   | { type: 'remove'; kind: EquipmentKind; uid: string }
+  /** Items from an exported file (local mode): those the device does not have are added, the others are left as they are. */
+  | { type: 'imported'; items: StoredItem[] }
   | { type: 'opDone'; key: string; rev: number; result?: { id: number; revision_uid: string; revision_number: number } }
   | { type: 'opFailed'; key: string; rev: number; error: string }
   | { type: 'retryFailed' }
@@ -109,6 +111,13 @@ export function reduce(state: EquipmentState, action: EquipmentAction): Equipmen
       const changed = !current || !sameValues(kind, current.values, values);
       const revisions = changed ? [{ uid: revisionUid, number: (current?.number ?? 0) + 1, created_at: now, values }, ...existing.revisions] : existing.revisions;
       return queue(mapItem(state, kind, uid, (i) => ({ ...i, values, is_active, revisions })), kind, uid);
+    }
+    case 'imported': {
+      let next = state;
+      for (const item of action.items.filter((i) => !state.items.some((x) => x.kind === i.kind && x.uid === i.uid))) {
+        next = queue({ ...next, items: [...next.items, item] }, item.kind, item.uid);
+      }
+      return next;
     }
     case 'remove': {
       const item = state.items.find((i) => i.kind === action.kind && i.uid === action.uid);

@@ -4,6 +4,7 @@ import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
 import { useKeyedStore } from '@/composables/useKeyedStore';
+import { useKeptMedia } from '@/composables/useKeptMedia';
 import { useLog } from '@/composables/useLog';
 import { useUploadSettings } from '@/composables/useUploadSettings';
 import { t } from '@/i18n';
@@ -15,8 +16,9 @@ import { newId } from '@/lib/uuid';
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, storeOwner, status } = useAuth();
+const { api, storeOwner, status, isLocal, userId } = useAuth();
 const log = useLog();
+const kept = useKeptMedia();
 const { videosWifiOnly } = useUploadSettings();
 
 const storageKey = computed(() => (storeOwner.value ? storeKey('media', storeOwner.value) : null));
@@ -28,11 +30,13 @@ let flushing = false;
 const onWifi = ref(true);
 
 // Another account (or none): what is in memory belongs to the one before. Its queue stays on the device under its own key.
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<QueuedMedia[]>({ key: storageKey, empty: [], read: () => items.value, apply: set, changes: items, resetOnKeyChange: true }),
 )!;
-const waiting = computed(() => items.value.filter((i) => !i.error));
-const failed = computed(() => items.value.filter((i) => i.error));
+const { loaded } = keyed;
+// Without an account nothing is uploaded, so nothing is waiting.
+const waiting = computed(() => (isLocal.value ? [] : items.value.filter((i) => !i.error)));
+const failed = computed(() => (isLocal.value ? [] : items.value.filter((i) => i.error)));
 
 function set(next: QueuedMedia[]) {
   items.value = next;
@@ -52,7 +56,8 @@ async function flush() {
       done: (sent) => {
         set(afterUpload(items.value, sent));
         // An item that was moved during its upload stays (without its files) until the server knows the session.
-        if (!items.value.some((i) => i.id === sent.id)) void removeFiles(sent.id);
+        // Your own go to the kept files (Settings sets how many); what you took for an archer is not yours to keep.
+        if (!items.value.some((i) => i.id === sent.id)) void (sent.owner === null || sent.owner === Number(userId.value) ? kept.keep(sent.id) : removeFiles(sent.id));
         uploaded.value++;
       },
       fail: (id, message) => set(items.value.map((i) => (i.id === id ? { ...i, error: message } : i))),
@@ -135,5 +140,5 @@ effectScope(true).run(() => {
 });
 
 export function useMedia() {
-  return { items, waiting, failed, uploaded, ...actions };
+  return { items, waiting, failed, uploaded, keyed, ...actions };
 }

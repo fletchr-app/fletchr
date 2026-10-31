@@ -11,25 +11,29 @@ import SyncBanner from '@/components/SyncBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { sessionRows } from '@/lib/session-rows'
 
 const REFRESH_MS = 15000
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
 const { sessions: local, goneSessions } = useLog()
-const remote = useRemote(async () => (await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null, {
+const { visibility: defaultVisibility } = useTrainingVisibility()
+const remote = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
-  keepPolling: () => true,
+  keepPolling: () => !isLocal.value,
 })
 
 // Trainings of your team with notes or photos of yours and no session of yours: they show between the sessions.
-const events = useRemote(async () => (await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null, {
+const events = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
-  keepPolling: () => true,
+  keepPolling: () => !isLocal.value,
 })
 
 // Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value, events.data.value ?? [], Number(userId.value)))
+const rows = computed(() =>
+  sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value, events.data.value ?? [], Number(userId.value), isLocal.value ? undefined : defaultVisibility.value),
+)
 </script>
 
 <template>

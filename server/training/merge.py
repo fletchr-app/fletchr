@@ -49,18 +49,20 @@ def pick_winner(a, b):
     return winner, loser
 
 
-def overlapping(session):
+def overlapping(session, viewer=None):
+    """The sessions of the same owner that overlap in time; with `viewer`, only those they may see."""
     start, end = window(session)
+    candidates = TrainingSession.objects if viewer is None else TrainingSession.objects.visible_to(viewer)
     return (
-        TrainingSession.objects.filter(owner_id=session.owner_id, started_at__lte=end)
+        candidates.filter(owner_id=session.owner_id, started_at__lte=end)
         .filter(Q(ended_at__gte=start) | Q(ended_at__isnull=True, started_at__gte=start - OPEN_SESSION_CAP))
         .exclude(pk=session.pk)
     )
 
 
-def merge_candidates(session):
+def merge_candidates(session, viewer=None):
     """Sessions that overlap this one in time and could be merged with it, as (winner, loser) pairs."""
-    pairs = (pick_winner(session, other) for other in overlapping(session))
+    pairs = (pick_winner(session, other) for other in overlapping(session, viewer))
     return [p for p in pairs if p is not None]
 
 
@@ -87,12 +89,15 @@ def merge(loser, winner):
     winner.save(update_fields=[*changed, "updated_at"] if changed else ["updated_at"])
 
 
-def merge_if_possible(session):
+def merge_if_possible(session, viewer=None):
     """Merge `session` with what it belongs to. Returns the session that exists afterwards.
+
+    With `viewer` (whoever sent the request), a session they may not see is never merged with: a coach who opens a
+    session must not be handed the data of an archer's private one.
 
     An empty session that overlaps more than one other is left alone: a coach's open session must not
     swallow a morning and an evening session."""
-    for winner, loser in merge_candidates(session):
+    for winner, loser in merge_candidates(session, viewer):
         if len(merge_candidates(loser)) > 1:
             continue
         merge(loser, winner)

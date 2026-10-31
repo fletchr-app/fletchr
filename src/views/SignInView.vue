@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
+import { onIonViewWillEnter } from '@ionic/vue'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -10,8 +11,11 @@ import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useServer } from '@/composables/useServer'
 
-const { signIn, googleAvailable, signInWithGoogle } = useAuth()
+const { signIn, googleAvailable, signInWithGoogle, isLocal, switchServer } = useAuth()
 const { url } = useServer()
+
+// This screen always signs in at the official server; a custom address from an earlier visit is dropped.
+onIonViewWillEnter(() => void switchServer(null))
 const email = ref('')
 const password = ref('')
 const error = ref<string | null>(null)
@@ -41,7 +45,12 @@ async function google() {
       <AppButton v-if="googleAvailable" secondary :busy="busy" @click="google">{{ $t('auth.google.signIn') }}</AppButton>
       <RouterLink to="/reset-password">{{ $t('auth.signIn.forgot') }}</RouterLink>
       <RouterLink to="/register">{{ $t('auth.signIn.haveInvite') }}</RouterLink>
-      <div class="muted">{{ $t('auth.signIn.server', { url }) }} <RouterLink to="/settings/server">{{ $t('auth.signIn.change') }}</RouterLink></div>
+      <template v-if="isLocal">
+        <div class="muted pt-3 border-top">{{ $t('local.signInText') }}</div>
+        <AppButton secondary router-link="/">{{ $t('local.backToApp') }}</AppButton>
+      </template>
+      <div class="muted">{{ $t('auth.signIn.server', { url }) }}</div>
+      <RouterLink to="/sign-in/custom">{{ $t('auth.signIn.customServer') }}</RouterLink>
     </div>
   </AppPage>
 </template>

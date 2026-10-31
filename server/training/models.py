@@ -6,6 +6,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
+from core import audience
+from core.access import archers_visible_to
+from core.audience import at_least
+
 
 def validate_time_zone(name):
     try:
@@ -78,6 +82,14 @@ class TrainingEvent(models.Model):
         return f"{self.team} {self.name or self.kind} {self.start:%Y-%m-%d}"
 
 
+class TrainingSessionQuerySet(models.QuerySet):
+    def visible_to(self, viewer):
+        """The sessions `viewer` may see: their own, and those of the archers they coach that are shared with coaches.
+        Every route that shows someone else's training goes through this (or `Media.objects.visible_to`)."""
+        shared = models.Q(owner__in=archers_visible_to(viewer), visibility__in=at_least("coaches"))
+        return self.filter(models.Q(owner=viewer) | shared)
+
+
 class TrainingSession(models.Model):
     """One day's shooting. The app creates the id, so it can build a session offline and upload it later."""
 
@@ -109,12 +121,17 @@ class TrainingSession(models.Model):
     notes = models.TextField(blank=True)
     # The team training this session was part of. Chosen by the archer; nothing links by time alone.
     event = models.ForeignKey(TrainingEvent, null=True, blank=True, on_delete=models.SET_NULL, related_name="sessions")
+    # Who sees it (core/audience.py). Ends, shots and volume entries follow the session.
+    visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.DEFAULT)
     created_at = models.DateTimeField(auto_now_add=True)
     # Bumped whenever an end or volume entry changes too, so a coach's live view can see activity.
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = TrainingSessionQuerySet.as_manager()
+
     class Meta:
         ordering = ["-started_at"]
+        indexes = [models.Index(fields=["owner", "visibility"])]
 
     def __str__(self):
         return f"{self.owner} {self.started_at:%Y-%m-%d}"

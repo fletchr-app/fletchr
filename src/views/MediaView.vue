@@ -30,7 +30,10 @@ import { useAgenda } from '@/composables/useAgenda'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
+import { useNoteLibrary } from '@/composables/useNoteLibrary'
+import { useNotes } from '@/composables/useNotes'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -38,7 +41,7 @@ import type { components } from '@/lib/api-types'
 import { fitted, type Shape } from '@/lib/drawing'
 import { prepareImage } from '@/lib/image'
 import { type EventLink, linkOf, preselected } from '@/lib/schedule'
-import { drawnShapes } from '@/lib/media-notes'
+import { drawnShapes, waitingOnMedia } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
@@ -62,7 +65,10 @@ const ownerParam = route.query.owner ? Number(route.query.owner) : null
 const name = route.query.name as string | undefined
 const title = name ? t('media.titleFor', { name }) : t('media.title')
 
-const { api, userId } = useAuth()
+const { api, userId, isLocal } = useAuth()
+const noteLibrary = useNoteLibrary()
+const notesQueue = useNotes()
+const kept = useKeptMedia()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -85,6 +91,7 @@ const filters = computed(() => [
 
 const { data, error, loading, reload } = useRemote(
   async () => {
+    if (isLocal.value) return [] // everything is on the phone: the queue below is the list
     const query = sessionId ? { session: sessionId } : { owner: owner.value, ...(unattachedOnly.value ? { without_session: true } : {}) }
     const { data: list, response } = await api.GET('/api/media/', { params: { query } })
     return response.status === 400 ? [] : (list ?? null) // 400: the session has not reached the server yet
@@ -94,6 +101,7 @@ const { data, error, loading, reload } = useRemote(
 
 // Video of an archer under 18 needs the consent of the parents on record. Unknown (offline) counts as allowed: the server decides.
 const consent = useRemote(async () => {
+  if (isLocal.value) return true
   if (ownerParam && ownerParam !== me.value) return (await api.GET('/api/archers/{user_id}/', { params: { path: { user_id: ownerParam } } })).data?.video_allowed ?? null
   return (await api.GET('/api/me/')).data?.profile.video_allowed ?? null
 })
@@ -159,7 +167,7 @@ const sections = computed(() => [
   ...(waiting.value.length > 0 ? [{ key: 'waiting', title: '', items: waiting.value }] : []),
   ...days.value.map((d) => ({ key: d.day, title: dayTitle(d.day, locale.value), items: d.items as unknown as Shown[] })),
 ])
-const videoWaits = computed(() => media.items.value.some((i) => i.kind === 'video') && videosWifiOnly.value)
+const videoWaits = computed(() => !isLocal.value && media.items.value.some((i) => i.kind === 'video') && videosWifiOnly.value)
 
 function tileOf(key: string) {
   return preparing.value.find((p) => p.key === key)
@@ -321,19 +329,24 @@ const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
 
 async function loadFull(item: Shown) {
-  if (!item.queued || full.value[item.key]) return
+  if (full.value[item.key]) return
   try {
-    full.value = { ...full.value, [item.key]: URL.createObjectURL((await loadFiles(item.queued.id, 'image/jpeg')).file) }
+    // A photo that waits for its upload, or one of yours the phone kept after it: from the file on the phone.
+    const files = item.queued ? await loadFiles(item.queued.id, 'image/jpeg') : item.remote && kept.has(item.remote.id) ? await kept.load(item.remote.id, 'image/jpeg') : null
+    if (files) full.value = { ...full.value, [item.key]: URL.createObjectURL(files.file) }
   } catch {
     /* the preview stays */
   }
 }
 function open(item: Shown) {
   if (item.preparing && !item.preparing.error) return // still working
-  if (item.remote?.kind === 'video') {
-    // The player page knows which clips are next to this one by the same query as this page.
+  // Without an account the photo or video opens from its file, with notes and drawings.
+  if (isLocal.value && item.queued) return void router.push(`/local-media/${item.queued.id}`)
+  const clipId = item.remote?.kind === 'video' ? item.remote.id : item.queued?.kind === 'video' ? item.queued.id : null
+  if (clipId) {
+    // The player page knows which clips are next to this one by the same query as this page. A clip that waits plays from the phone.
     const query = { ...(sessionId ? { session: sessionId } : { owner: String(owner.value) }), ...(route.query.pick ? { pick: route.query.pick as string } : {}) }
-    return void router.push({ path: `/media/${item.remote.id}`, query })
+    return void router.push({ path: `/media/${clipId}`, query })
   }
   viewKey.value = item.key
   confirmDelete.value = false
@@ -363,9 +376,11 @@ async function loadNotes(item: Shown) {
   if (!remote) return
   try {
     if (photoNotes.value[remote.id] === undefined) {
-      const { data: list } = await api.GET('/api/notes/', { params: { query: { media: remote.id } } })
+      const list = await noteLibrary.list({ media: remote.id })
       if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
     }
+    // Your own photo: you can write about it without asking the server.
+    if (remote.owner === Number(userId.value) && writable.value[remote.owner] === undefined) writable.value = { ...writable.value, [remote.owner]: true }
     if (writable.value[remote.owner] === undefined) {
       const { data: teams } = await api.GET('/api/notes/teams/', { params: { query: { archer: remote.owner } } })
       if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 || remote.owner === Number(userId.value) }
@@ -376,11 +391,20 @@ async function loadNotes(item: Shown) {
 }
 const shapesOf = (item: Shown): Shape[] => (item.remote ? drawnShapes(photoNotes.value[item.remote.id] ?? []) : [])
 const notesButton = computed(() => {
-  const remote = viewing.value?.remote
+  const item = viewing.value
+  // A photo that waits for its upload: you can write notes on your own, they go up after it.
+  if (item?.queued) return !item.queued.owner || item.queued.owner === Number(userId.value)
+  const remote = item?.remote
   if (!remote) return false
+  // Without the server the photo opens in the player only if the phone has its file.
+  if (noteLibrary.offline.value && !kept.has(remote.id)) return false
   return (photoNotes.value[remote.id]?.length ?? 0) > 0 || writable.value[remote.owner] === true
 })
-const notesCount = computed(() => photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0)
+const notesCount = computed(() => {
+  const queued = viewing.value?.queued
+  if (queued) return waitingOnMedia(notesQueue.notes.value, queued.id).length
+  return photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0
+})
 // Each slide is as large as the strip; a photo with a drawing is sized to fit, the drawing lies over exactly the photo.
 const stripBox = ref({ width: 0, height: 0 })
 let stripWatch: ResizeObserver | null = null
@@ -402,11 +426,11 @@ watch(viewing, (item) => item && void loadNotes(item))
 // "Notes" opens the photo in the player, where the notes and the pencil are. Back lands on the same photo here again.
 let comeBackTo: string | null = null
 function openNotes() {
-  const remote = viewing.value!.remote!
+  const id = (viewing.value!.queued ?? viewing.value!.remote!).id
   comeBackTo = viewKey.value
   const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
   close()
-  void router.push({ path: `/media/${remote.id}`, query })
+  void router.push({ path: `/media/${id}`, query })
 }
 function reopen() {
   const item = comeBackTo && photos.value.find((p) => p.key === comeBackTo)
@@ -431,6 +455,7 @@ async function remove() {
   else {
     const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: item.remote!.id } } }).catch(() => ({ response: null }))
     if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
+    kept.forget([item.remote!.id])
     reload()
   }
   close()
@@ -519,7 +544,7 @@ function removeSelected() {
             <img v-if="item.src" :src="item.src" alt="" />
             <IonIcon v-if="selecting && selected.has(item.key)" :icon="checkmarkCircle" class="check" />
             <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
-            <IonIcon v-if="item.queued && !item.queued.error" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
+            <IonIcon v-if="item.queued && !item.queued.error && !isLocal" :icon="cloudUploadOutline" class="badge" :title="$t('media.waiting')" />
             <span v-if="item.queued?.error || item.preparing?.error" class="badge text-danger">!</span>
             <span v-if="item.preparing && !item.preparing.error" class="veil" :title="$t('media.preparing')">
               <IonSpinner name="crescent" />

@@ -16,9 +16,18 @@ def test_shared_scoring_vectors(v):
     assert score(face, v["x"], v["y"]) == expected
 
 
-def test_vectors_cover_every_scored_face_kind():
-    used = {v["face"] for v in VECTORS}
-    assert {"wa-122", "wa-40", "wa-40-compound", "wa-80-6ring", "wa-field-80", "blank"} <= used
+def test_vectors_cover_every_face_ring_and_miss():
+    """A face added to the catalogue without vectors fails here, as it does in the app (src/lib/scoring.test.ts)."""
+    for face in load_faces():
+        mine = [v for v in VECTORS if v["face"] == face["slug"]]
+        assert mine, f"no vectors for {face['slug']}"
+        if not face["rings"]:
+            continue
+        for ring in face["rings"]:
+            assert any(v["expect"]["value"] == ring["value"] for v in mine), f"{face['slug']}: no vector for {ring['value']}"
+        assert any(v["expect"]["is_miss"] for v in mine), f"{face['slug']}: no vector for a miss"
+        if face.get("x_diameter_cm"):
+            assert any(v["expect"]["is_x"] for v in mine), f"{face['slug']}: no vector for an X"
 
 
 def test_score_is_the_same_in_every_direction():

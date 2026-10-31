@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onIonViewWillEnter } from '@ionic/vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -7,13 +8,20 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useServer } from '@/composables/useServer'
 import { newPasswordError } from '@/lib/account'
 import { errorMessage } from '@/lib/errors'
 import { t } from '@/i18n'
 
 // Forgotten password, in two steps on one screen: the email address gets a code, then the code and a new password
 // are sent together. Afterwards the person is signed in with the new password.
-const { api, signIn } = useAuth()
+// `custom`: reached from the custom server sign-in, which has already set the server. Otherwise this is the official server.
+const props = defineProps<{ custom?: boolean }>()
+const { api, signIn, switchServer } = useAuth()
+const { url } = useServer()
+onIonViewWillEnter(() => {
+  if (!props.custom) void switchServer(null)
+})
 const email = ref('')
 const code = ref('')
 const password = ref('')
@@ -64,15 +72,16 @@ const setPassword = () =>
 </script>
 
 <template>
-  <AppPage :title="$t('auth.reset.title')" back-href="/sign-in">
+  <AppPage :title="$t('auth.reset.title')" :back-href="custom ? '/sign-in/custom' : '/sign-in'">
     <div class="screen">
+      <div v-if="custom" class="muted">{{ $t('auth.signIn.server', { url }) }}</div>
       <template v-if="!sent">
         <div>{{ $t('auth.reset.intro') }}</div>
         <div class="muted">{{ $t('auth.reset.google') }}</div>
         <FormField v-model="email" :label="$t('auth.signIn.email')" type="email" inputmode="email" autocomplete="email" @enter="sendCode" />
         <ErrorText :message="error" />
         <AppButton :busy="busy" @click="sendCode">{{ $t('auth.reset.sendCode') }}</AppButton>
-        <RouterLink to="/sign-in">{{ $t('auth.reset.backToSignIn') }}</RouterLink>
+        <RouterLink :to="custom ? '/sign-in/custom' : '/sign-in'">{{ $t('auth.reset.backToSignIn') }}</RouterLink>
       </template>
       <template v-else>
         <div>{{ $t('auth.reset.sent', { email: address }) }}</div>

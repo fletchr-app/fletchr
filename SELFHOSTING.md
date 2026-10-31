@@ -191,7 +191,7 @@ npx cap sync android
 cd android && ./gradlew assembleRelease     # signed with your release key, see below
 ```
 
-Users can still type another server in the app (Settings, Server address; on the sign-in screen the "change" link). Release builds need `https://` for that.
+Users can still sign in at another server: on the sign-in screen, "Connect to custom server" (also for registering and resetting a password there). Release builds need `https://` for that, and `DJANGO_CORS_ORIGINS` must contain `https://localhost`. Google sign-in works only with the official server. A signed-in user cannot change the server: sign out first.
 
 ### Release signing (Android)
 

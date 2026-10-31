@@ -16,7 +16,7 @@ import { newId } from '@/lib/uuid';
 // server already has still needs a connection.
 const RETRY_INTERVAL_MS = 20_000;
 
-const { api, storeOwner, status } = useAuth();
+const { api, storeOwner, status, isLocal } = useAuth();
 const log = useLog();
 const media = useMedia();
 
@@ -32,7 +32,7 @@ function dispatch(action: NoteAction) {
   state.value = current;
 }
 
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<NotesState>({
     key: storageKey,
     empty: EMPTY_NOTES,
@@ -42,10 +42,12 @@ const { loaded } = effectScope(true).run(() =>
     resetOnKeyChange: true,
   }),
 )!;
+const { loaded } = keyed;
 
 const notes = computed(() => (loaded.value ? state.value.notes : []));
-const waiting = computed(() => notes.value.filter((n) => !n.error).length);
-const failed = computed(() => notes.value.filter((n) => n.error));
+// Without an account nothing is uploaded, so nothing is waiting: the notes are the list.
+const waiting = computed(() => (isLocal.value ? 0 : notes.value.filter((n) => !n.error).length));
+const failed = computed(() => (isLocal.value ? [] : notes.value.filter((n) => n.error)));
 
 /** The photo, session or end of the note has not gone up yet. */
 function blocked(note: QueuedNote): boolean {
@@ -81,6 +83,10 @@ function add(note: Omit<QueuedNote, 'uid' | 'created_at' | 'error'>): string {
 const actions = {
   add,
   remove: (uid: string) => dispatch({ type: 'remove', uid }),
+  edit: (uid: string, patch: Partial<Pick<QueuedNote, 'body' | 'drawing'>>) => dispatch({ type: 'edit', uid, patch }),
+  removeAboutMedia: (media: string) => dispatch({ type: 'removeAboutMedia', media }),
+  /** Notes from an exported file (local mode). */
+  importNotes: (notes: QueuedNote[]) => dispatch({ type: 'imported', notes }),
   pendingFor: (about: { archer: number; session?: string; media?: string }) => pendingNotes({ notes: notes.value }, about),
   retryFailed: () => {
     dispatch({ type: 'retryFailed' });
@@ -109,5 +115,5 @@ effectScope(true).run(() => {
 });
 
 export function useNotes() {
-  return { loaded, notes, waiting, failed, uploaded, ...actions };
+  return { loaded, notes, waiting, failed, uploaded, keyed, ...actions };
 }

@@ -25,6 +25,7 @@ import {
   type LogVolume,
   reduce,
   type SessionType,
+  type Visibility,
 } from '@/lib/log-model';
 import { drain, pull, send, waitsForEquipment } from '@/lib/log-sync';
 import { storeKey } from '@/lib/store-owner';
@@ -34,7 +35,7 @@ const RETRY_INTERVAL_MS = 20_000;
 
 export type DeletedCounts = components['schemas']['DeletedCounts'];
 
-const { api, userId, storeOwner, status, signOut } = useAuth();
+const { api, userId, storeOwner, status, signOut, isLocal } = useAuth();
 
 // Each user on each server has their own local log.
 const storageKey = computed(() => (storeOwner.value ? storeKey('log', storeOwner.value) : null));
@@ -94,7 +95,7 @@ async function sync() {
 
 // The log of the signed-in account is loaded from the device and saved again after each change. It keeps showing nothing
 // until it is loaded (`loaded`), and the app of another account never sees it.
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<LogState>({
     key: storageKey,
     empty: EMPTY_LOG,
@@ -103,8 +104,10 @@ const { loaded } = effectScope(true).run(() =>
     changes: state,
   }),
 )!;
-const waiting = computed(() => state.value.outbox.filter((o) => !o.error).length);
-const failed = computed(() => state.value.outbox.filter((o) => o.error));
+const { loaded } = keyed;
+// Without an account nothing is uploaded, so nothing is waiting (the outbox keeps the list for the upload of a later account).
+const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error).length));
+const failed = computed(() => (isLocal.value ? [] : state.value.outbox.filter((o) => o.error)));
 // Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
 const conflicts = computed(() => state.value.sessions.filter((s) => s.gone));
 const sessions = computed(() => (loaded.value ? state.value.sessions : []));
@@ -221,6 +224,7 @@ const actions = {
   onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setEvent: (id: string, event: EventLink | null) => dispatch({ type: 'updateSession', id, patch: { event } }),
+  setVisibility: (id: string, visibility: Visibility) => dispatch({ type: 'updateSession', id, patch: { visibility } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
     dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),
@@ -244,6 +248,8 @@ const actions = {
   discardGone: (id: string) => dispatch({ type: 'discardGone', id }),
   deleteMyData,
   deleteMyAccount,
+  /** Sessions from an exported file (local mode): new ones are added, those the device has are left as they are. */
+  importSessions: (sessions: LogSession[]) => dispatch({ type: 'imported', sessions }),
 };
 
 // The log lives as long as the app: its watchers are never stopped.
@@ -269,6 +275,6 @@ effectScope(true).run(() => {
 });
 
 export function useLog() {
-  return { loaded, sessions, equipment, renamed, waiting, failed, conflicts, goneSessions, ...actions };
+  return { loaded, sessions, equipment, renamed, waiting, failed, conflicts, goneSessions, keyed, ...actions };
 }
 
