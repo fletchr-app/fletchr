@@ -32,7 +32,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 ### #115: Step 0, first launch and sign-out (merged)
 
-- [x] `useAuth`: a `watch` on `status` calls `enterLocal()` when it becomes `signedOut` (also at start-up); `status` stays `loading` until both the tokens and the local flag are loaded, so `signedOut` is only seen once both are missing. `signOut()` and account deletion call `enterLocal()`; the account's data stays under its key.
+- [x] `useAuth`: a `watch` calls `enterLocal()` when there are no tokens and no flag (also at start-up). `status` stays `loading` until the tokens and the flag are loaded and, in that case, until local mode is on (`src/lib/auth-status.ts`, tested), so the router and `App.vue` never see `signedOut` and a fresh install or revoked tokens land on Home. `signedOut` remains only if starting local mode failed (storage error). First version (#115) set `signedOut` for a moment and redirected to `/sign-in`; found on a phone 2026-10-31. `signOut()` and account deletion call `enterLocal()`; the account's data stays under its key.
 - [x] Router: unchanged. `'out'` is open to `local`; `'in'` without tokens and without local still goes to `/sign-in` (only reachable if the flag is lost).
 - [x] `SignInView`: the "Use without an account" choice is removed; in local mode it shows a text and "Back to my training log".
 - [x] A 401 on token refresh also lands in local mode on Home.
