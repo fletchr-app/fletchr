@@ -65,6 +65,8 @@ export type LogSession = {
   details?: SessionDetails;
   /** The team training this session was part of. Left out when no choice was made (the server keeps its value); `null` after "None". */
   event?: EventLink | null;
+  /** Who sees it. Left out until the archer chooses, so the server applies their default; a pull takes the server's value. */
+  visibility?: Visibility;
   /** A coach logging for an archer without an account: who (the id of their profile on the server, and the name for display). */
   owner?: number;
   owner_name?: string;
@@ -94,13 +96,17 @@ export type Op = {
   error?: string;
 };
 
+/** The levels the server accepts for training now (`me` < `coaches`, see specs/design/session-visibility.md). */
+export type Visibility = 'me' | 'coaches';
+export const isVisibility = (v: unknown): v is Visibility => v === 'me' || v === 'coaches';
+
 export type LogState = { sessions: LogSession[]; outbox: Op[]; nextRev: number; equipment: Equipment; lastPull?: string };
 export const EMPTY_LOG: LogState = { sessions: [], outbox: [], nextRev: 1, equipment: { bows: [], arrowSets: [] } };
 
 export type LogAction =
   | { type: 'load'; state: LogState }
   | { type: 'startSession'; session: LogSession }
-  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type' | 'event'>> }
+  | { type: 'updateSession'; id: string; patch: Partial<Pick<LogSession, 'ended_at' | 'location' | 'environment' | 'gear' | 'details' | 'type' | 'event' | 'visibility'>> }
   /** Sessions the server has and this device does not (nothing to upload), and where the pull got to. */
   | { type: 'pulled'; sessions: LogSession[]; lastPull?: string }
   /** The server merged `from` into `to`: this device follows. */
@@ -172,6 +178,7 @@ function mergePulled(state: LogState, theirs: LogSession): LogState {
     : {
         started_at: theirs.started_at, ended_at: theirs.ended_at, type: theirs.type, environment: theirs.environment, location: theirs.location,
         details: theirs.details, opened_by: theirs.opened_by, opened_by_name: theirs.opened_by_name,
+        ...(theirs.visibility ? { visibility: theirs.visibility } : {}),
         ...(theirs.event ? { event: theirs.event } : {}),
       };
   const next: LogSession = {

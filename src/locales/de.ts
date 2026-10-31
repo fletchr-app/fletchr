@@ -802,6 +802,8 @@ export default {
     title: 'Einstellungen',
     training: 'Training',
     equipment: 'Meine Ausrüstung',
+    trainingVisibility: 'Neue Trainings sehen',
+    trainingVisibilityHint: 'Gilt für neue Trainings und für Fotos und Videos ohne Training, auch die schon vorhandenen: sie folgen alle dieser Einstellung. Ein einzelnes Training änderst du auf seiner Notizen-Seite. Braucht eine Verbindung.',
     teams: 'Teams',
     joinTeam: 'Team beitreten',
     createTeam: 'Team anlegen',
@@ -854,6 +856,13 @@ export default {
     privacy: 'Datenschutzerklärung',
     imprint: 'Impressum',
     contact: 'Kontakt',
+  },
+  visibility: {
+    me: 'Nur ich',
+    coaches: 'Ich und meine Trainer',
+    sessionToggle: 'Trainer können dieses Training sehen',
+    sessionHint: 'Ausgeschaltet bleiben das Training, seine Ergebnisse, Fotos und Videos vor deinen Trainern verborgen. Notizen, die ein Trainer dazu geschrieben hat, sind für ihn dann auch nicht sichtbar, bis du es wieder einschaltest.',
+    private: 'Privat, deine Trainer sehen dieses Training nicht',
   },
   details: {
     title: 'Notizen zum Training',

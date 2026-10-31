@@ -384,3 +384,20 @@ test('discarding a deleted session drops it, and only a deleted one', () => {
   const s = run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }, { type: 'sessionGone', id: 's1' }, { type: 'discardGone', id: 's1' });
   assert.deepEqual([s.sessions, s.outbox], [[], []]);
 });
+
+// --- who sees a session ------------------------------------------------------------------------------
+
+test('a visibility chosen here stays against a pull while its upload waits, and the server value is taken once it is sent', () => {
+  let s = run({ type: 'startSession', session: session('s1') }, { type: 'updateSession', id: 's1', patch: { visibility: 'me' } });
+  s = reduce(s, { type: 'pulled', sessions: [server({ visibility: 'coaches' })] });
+  assert.equal(s.sessions[0].visibility, 'me', 'the choice waits to be uploaded');
+  for (const o of s.outbox) s = reduce(s, { type: 'opDone', key: o.key, rev: o.rev });
+  s = reduce(s, { type: 'pulled', sessions: [server({ visibility: 'coaches' })] });
+  assert.equal(s.sessions[0].visibility, 'coaches', 'another phone changed it');
+});
+
+test('a pull from a server that does not know visibility keeps the local value', () => {
+  let s = uploaded({ type: 'startSession', session: { ...session('s1'), visibility: 'me' } });
+  s = reduce(s, { type: 'pulled', sessions: [server()] });
+  assert.equal(s.sessions[0].visibility, 'me');
+});

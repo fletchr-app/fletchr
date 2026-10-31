@@ -8,7 +8,7 @@ from core.models import COACH_ROLES, Team, TeamMember, User
 from media.access import media_link, visible_media
 from media.models import Media
 from training.serializers import EventInfoSerializer, EventLinkSerializer, SessionRefField, event_info
-from training.models import End
+from training.models import End, TrainingSession
 
 from .drawing import check_drawing
 from .models import Note
@@ -157,6 +157,8 @@ class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
                 raise serializers.ValidationError({"team": gettext("You coach this archer in several teams: say which one")})
         if session is not None and session.owner_id != archer.id:
             raise serializers.ValidationError({"session": gettext("This is not a session of that archer")})
+        if session is not None and not TrainingSession.objects.visible_to(user).filter(pk=session.pk).exists():  # private to this coach
+            raise serializers.ValidationError({"session": serializers.PrimaryKeyRelatedField.default_error_messages["does_not_exist"].format(pk_value=session.pk)})
         if end is not None and (session is None or end.session_id != session.id):
             raise serializers.ValidationError({"end": gettext("Give the session this end belongs to")})
         media, frame = attrs.get("media"), attrs.get("frame")

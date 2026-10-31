@@ -25,6 +25,7 @@ import {
   type LogVolume,
   reduce,
   type SessionType,
+  type Visibility,
 } from '@/lib/log-model';
 import { drain, pull, send, waitsForEquipment } from '@/lib/log-sync';
 import { storeKey } from '@/lib/store-owner';
@@ -222,6 +223,7 @@ const actions = {
   onAccountDeleted: (listener: () => void) => void accountDeletedListeners.push(listener),
   setDetails: (id: string, details: SessionDetails) => dispatch({ type: 'updateSession', id, patch: { details } }),
   setEvent: (id: string, event: EventLink | null) => dispatch({ type: 'updateSession', id, patch: { event } }),
+  setVisibility: (id: string, visibility: Visibility) => dispatch({ type: 'updateSession', id, patch: { visibility } }),
   setGear: (id: string, gear: Gear) => dispatch({ type: 'updateSession', id, patch: { gear } }),
   finishSession: (id: string, finished: boolean) =>
     dispatch({ type: 'updateSession', id, patch: { ended_at: finished ? new Date().toISOString() : null } }),

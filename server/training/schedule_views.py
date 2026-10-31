@@ -235,7 +235,7 @@ class EventArchersView(APIView):
             raise PermissionDenied(gettext("Only coaches can see who took part"))
         visible = archers_visible_to(request.user)
         sessions = {}
-        for s in TrainingSession.objects.filter(event=event, owner__in=visible).order_by("started_at"):
+        for s in TrainingSession.objects.visible_to(request.user).filter(event=event, owner__in=visible).order_by("started_at"):
             sessions.setdefault(s.owner_id, []).append(s.pk)
         notes = dict(visible_notes(request.user).filter(event=event).values_list("archer").annotate(n=Count("pk")))
         media = dict(visible_media(request.user).filter(event=event).values_list("owner").annotate(n=Count("pk")))
@@ -270,7 +270,7 @@ class EventsMineView(APIView):
             raise NotFound()
         notes = dict(visible_notes(request.user).filter(archer=archer, event__isnull=False, session__isnull=True).values_list("event").annotate(n=Count("pk")))
         media = dict(visible_media(request.user).filter(owner=archer, event__isnull=False, session__isnull=True).values_list("event").annotate(n=Count("pk")))
-        linked = TrainingSession.objects.filter(owner=archer, event__isnull=False).values("event")
+        linked = TrainingSession.objects.visible_to(request.user).filter(owner=archer, event__isnull=False).values("event")
         events = TrainingEvent.objects.filter(pk__in={*notes, *media}).exclude(pk__in=linked).select_related("team")
         start, end = instant_param(request, "from", False), instant_param(request, "to", False)
         if start:
@@ -293,7 +293,8 @@ class EventAttachView(APIView):
         serializer.is_valid(raise_exception=True)
         archer_id, session_id = serializer.validated_data["archer"], serializer.validated_data["session"]
         archer = archers_visible_to(request.user).filter(pk=archer_id).first()
-        session = TrainingSession.objects.filter(pk=resolve_session_id(session_id) or session_id, owner=archer).first() if archer else None
+        sessions = TrainingSession.objects.visible_to(request.user)
+        session = sessions.filter(pk=resolve_session_id(session_id) or session_id, owner=archer).first() if archer else None
         if session is None:
             raise NotFound()
         if request.user.pk != archer.pk and not is_coach_in(request.user, event.team):

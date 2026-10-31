@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from .audience import ACCEPTED, AUDIENCES, at_least, clamp  # noqa: F401  (the order lives in audience.py)
 from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User, normalize_code
 
 
@@ -46,6 +47,14 @@ def archers_visible_to(user):
         .values("user")
     )
     return User.objects.filter(Q(pk=user.pk) | Q(pk__in=shooters))
+
+
+def can_view(viewer, owner, visibility):
+    """Whether `viewer` may see training data of `owner` that has this `visibility`: the owner always; a coach of the
+    owner when the level reaches coaches. Rows of a model go through its `visible_to`, which says the same in a query."""
+    if viewer.pk == owner.pk:
+        return True
+    return visibility in at_least("coaches") and archers_visible_to(viewer).filter(pk=owner.pk).exists()
 
 
 def note_teams(coach, archer):
@@ -107,3 +116,20 @@ def can_see_avatar(viewer, person):
         mine.filter(role__in=COACH_ROLES, team__in=theirs.values("team")).exists()
         or theirs.filter(role__in=COACH_ROLES, team__in=mine.values("team")).exists()
     )
+
+
+def check_visibility(value, writer, owner):
+    """For a serializer that takes `visibility`: only the owner chooses, and only levels that are built. Returns `value`."""
+    from rest_framework import serializers
+
+    if writer.pk != owner.pk:
+        raise serializers.ValidationError(gettext("Only the archer can choose who sees this"))
+    if value not in ACCEPTED:
+        raise serializers.ValidationError(gettext("Not available yet"))
+    return value
+
+
+def starting_visibility(owner, created_by):
+    """What a new session starts with: the archer's own default; `coaches` when someone else created it (a coach
+    who opened it for the archer must see it, and a profile without an account has no say)."""
+    return owner.profile.training_visibility if created_by.pk == owner.pk else "coaches"
