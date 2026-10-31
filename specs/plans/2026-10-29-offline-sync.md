@@ -1,6 +1,6 @@
 # Work offline, sync both ways after reconnecting (#84)
 
-Status: planned
+Status: phases 0, 1, 1b, 3 and 4 implemented; phase 2 (shared `useSync`, `/sync` list, optional caches) and phase 5 (equipment pull, optional evaluations) open; not checked on a phone
 Date: 2026-10-29
 
 ## Scope
@@ -45,9 +45,9 @@ The phases below assume the recommended answers to the **Open questions** at the
 
 Today a 410 removes the session and its queued ends silently (problem 6). Fix it without the rest of Q11's machinery.
 
-- [ ] `sessionGone` in `useLog`/`log-model.ts`: when the session has queued ends or volume, keep it, mark it as `gone` and stop uploading it; `SyncBanner` shows it with "Keep as a new session" (new id, all items queued again) or "Discard". A session without unsent items is dropped as today.
-- [ ] Tests: `log-sync.test.ts` (410 with queued ends gives `gone`, not a drop; 410 without unsent items drops), `log-model.test.ts` (keep as new session renames and requeues).
-- [ ] Phase 3 later reuses this state for the pull side of Q11.
+- [x] `sessionGone` in `useLog`/`log-model.ts`: when the session has queued ends or volume, keep it, mark it as `gone` and stop uploading it; `SyncBanner` shows it with "Keep as a new session" (new id, all items queued again) or "Discard". A session without unsent items is dropped as today.
+- [x] Tests: `log-sync.test.ts` (410 with queued ends gives `gone`, not a drop; 410 without unsent items drops), `log-model.test.ts` (keep as new session renames and requeues).
+- [x] Phase 3 later reuses this state for the pull side of Q11.
 
 ## Phase 1: local-store foundation (ships alone)
 
@@ -56,29 +56,29 @@ Progress: the store owner key, the file store with the Preferences migration, `u
 Goal: every entity store is keyed by a **store owner**, not by a server user; stores are files, not one SharedPreferences blob; notes and equipment have app-made ids and a device store. No two-way sync, no tombstones.
 
 App:
-- [ ] `src/lib/store-owner.ts` (new, pure): `type StoreOwner = { kind: 'account'; server: string; userId: string } | { kind: 'local'; id: string }`; `ownerKey(o)` gives `<url>:<userId>` for accounts (**same string as today**, so existing logs and queues load without a migration) and `local:<uuid>` for local. `storeKey(name, owner)` gives `log:…`, `media:…`, `equipment:…`, `notes:…`.
-- [ ] `useAuth`: `storeOwner` computed (null while `loading` or signed out). `local` stays unused until #93; the type and key exist now so #93 only adds the state.
-- [ ] `src/lib/local-store.ts`: native backend to `Filesystem` JSON files in `Directory.Data/stores/<key>.json` (write to `.tmp`, then rename). On first `get` of a key that is not a file yet, read it from `Preferences`, write the file, remove the preference. Browser stays `localStorage`. `keys(prefix)` and `move(from, to)` (for #93's upgrade and for listing other owners' data). Atomic rename on Android **[check]** (`Filesystem.rename` within one directory).
-- [ ] `src/composables/useKeyedStore.ts` (new): the load/persist/`loaded` logic now copied in `useLog` and `useMedia` (watch key, generation counter, save on change). Debounced save (one write per tick) **[inferred]** needed once drawings are in a store.
-- [ ] `useLog`, `useMedia`: use `storeOwner` + `useKeyedStore`. `pull`, `flush`, `refreshEquipment` still need `status === 'signedIn'`; with a `local` owner they do nothing.
-- [ ] Equipment store `src/lib/equipment-store.ts` (new, pure reducer) + `src/composables/useEquipment.ts`: records `{ uid, kind: 'bow' | 'arrowSet', fields, is_active, revisions: [{ uid, number, fields }], server_id? }`. A local edit that changes a tracked field adds a revision with an app-made uid (same rule as `record_revision`). Server items are copied in with their uids (needs the server change below). Replaces `LogState.equipment`; `load` of an old `LogState` moves its cache over and drops the field. Field lists from `server/equipment/models.py`; keep them in one TS constant beside `equipment-fields.ts`.
-- [ ] `Gear` gets `bow_revision_uid` / `arrow_set_revision_uid`; `send` sends the numeric ids while they are known (server items), as today. A session with gear that exists only on the device is a Phase 5 problem; in account mode, equipment is still created online in this phase (`BowView`, `ArrowSetView` unchanged).
-- [ ] Notes store `src/lib/note-store.ts` (new, pure) + `src/composables/useNotes.ts`: `{ id (uuid), archer, team: number | null, session?, end?, media?, frame?, time_ms?, drawing?, body, visibility, updated_at }`. `team: null` leaves room for #93's own notes (Q6). No upload in this phase; screens keep posting to the server.
-- [ ] Sign-out and account switch (Q2): stores stay under their owner key; read-only caches are removed on sign-out (none exist yet; the hook goes into `useAuth.signOut`). `SettingsView`: when something is waiting, sign-out asks first ("n items have not been uploaded. They stay on this phone and go up when you sign in again."). `deleteMyAccount` also removes the media key and its files (today it removes only the log) **[fact]**.
+- [x] `src/lib/store-owner.ts` (new, pure): `type StoreOwner = { kind: 'account'; server: string; userId: string } | { kind: 'local'; id: string }`; `ownerKey(o)` gives `<url>:<userId>` for accounts (**same string as today**, so existing logs and queues load without a migration) and `local:<uuid>` for local. `storeKey(name, owner)` gives `log:…`, `media:…`, `equipment:…`, `notes:…`.
+- [x] `useAuth`: `storeOwner` computed (null while `loading` or signed out). `local` stays unused until #93; the type and key exist now so #93 only adds the state.
+- [x] `src/lib/local-store.ts`: native backend to `Filesystem` JSON files in `Directory.Data/stores/<key>.json` (write to `.tmp`, then rename). On first `get` of a key that is not a file yet, read it from `Preferences`, write the file, remove the preference. Browser stays `localStorage`. `keys(prefix)` and `move(from, to)` (for #93's upgrade and for listing other owners' data). Atomic rename on Android **[check]** (`Filesystem.rename` within one directory).
+- [x] `src/composables/useKeyedStore.ts` (new): the load/persist/`loaded` logic now copied in `useLog` and `useMedia` (watch key, generation counter, save on change). Debounced save (one write per tick) **[inferred]** needed once drawings are in a store.
+- [x] `useLog`, `useMedia`: use `storeOwner` + `useKeyedStore`. `pull`, `flush`, `refreshEquipment` still need `status === 'signedIn'`; with a `local` owner they do nothing.
+- [x] Equipment store `src/lib/equipment-store.ts` (new, pure reducer) + `src/composables/useEquipment.ts`: records `{ uid, kind: 'bow' | 'arrowSet', fields, is_active, revisions: [{ uid, number, fields }], server_id? }`. A local edit that changes a tracked field adds a revision with an app-made uid (same rule as `record_revision`). Server items are copied in with their uids (needs the server change below). Replaces `LogState.equipment`; `load` of an old `LogState` moves its cache over and drops the field. Field lists from `server/equipment/models.py`; keep them in one TS constant beside `equipment-fields.ts`.
+- [x] `Gear` gets `bow_revision_uid` / `arrow_set_revision_uid`; `send` sends the numeric ids while they are known (server items), as today. A session with gear that exists only on the device is a Phase 5 problem; in account mode, equipment is still created online in this phase (`BowView`, `ArrowSetView` unchanged).
+- [x] Notes store `src/lib/note-store.ts` (new, pure) + `src/composables/useNotes.ts`: `{ id (uuid), archer, team: number | null, session?, end?, media?, frame?, time_ms?, drawing?, body, visibility, updated_at }`. `team: null` leaves room for #93's own notes (Q6). No upload in this phase; screens keep posting to the server.
+- [x] Sign-out and account switch (Q2): stores stay under their owner key; read-only caches are removed on sign-out (none exist yet; the hook goes into `useAuth.signOut`). `SettingsView`: when something is waiting, sign-out asks first ("n items have not been uploaded. They stay on this phone and go up when you sign in again."). `deleteMyAccount` also removes the media key and its files (today it removes only the log) **[fact]**.
 
 Server (small, additive; needed by Phases 2 to 5, not by #93 alone):
-- [ ] `equipment/migrations/0002_uids.py`: `uid` `UUIDField` on `Bow`, `ArrowSet`, `BowRevision`, `ArrowSetRevision`. Three steps for SQLite (Django's "unique field" recipe): add nullable, `RunPython` backfill `uuid4`, alter to `unique=True`. `record_revision` takes an optional uid.
-- [ ] `notes/migrations/0006_uid.py`: same for `Note.uid`.
-- [ ] Serializers: `uid` read-only in `BowSerializer`, `ArrowSetSerializer`, revision serializers, `NoteSerializer`, `SessionSerializer` setup block.
-- [ ] `npm run types:api`.
+- [x] `equipment/migrations/0002_uids.py`: `uid` `UUIDField` on `Bow`, `ArrowSet`, `BowRevision`, `ArrowSetRevision`. Three steps for SQLite (Django's "unique field" recipe): add nullable, `RunPython` backfill `uuid4`, alter to `unique=True`. `record_revision` takes an optional uid.
+- [x] `notes/migrations/0006_uid.py`: same for `Note.uid`.
+- [x] Serializers: `uid` read-only in `BowSerializer`, `ArrowSetSerializer`, revision serializers, `NoteSerializer`, `SessionSerializer` setup block.
+- [x] `npm run types:api`.
 
 Tests:
-- [ ] `store-owner.test.ts`: account key equals today's `log:<url>:<userId>` form; local key; no collision between a local id and an account.
-- [ ] `local-store` migration: a key in Preferences moves to a file once, then reads from the file (mock `Filesystem` and `Preferences`).
-- [ ] `equipment-store.test.ts`: a field change adds a revision, a non-tracked change does not, numbers count up, old `LogState.equipment` is moved over.
-- [ ] `note-store.test.ts`: save, edit (drawing changes, immutable fields refused like `IMMUTABLE`), remove.
-- [ ] `log-model.test.ts`, `log-sync.test.ts`, `media-queue.test.ts` unchanged and green.
-- [ ] Server: migration backfills unique uids; uids are stable across a revision; `pytest`.
+- [x] `store-owner.test.ts`: account key equals today's `log:<url>:<userId>` form; local key; no collision between a local id and an account.
+- [x] `local-store` migration: a key in Preferences moves to a file once, then reads from the file (mock `Filesystem` and `Preferences`).
+- [x] `equipment-store.test.ts`: a field change adds a revision, a non-tracked change does not, numbers count up, old `LogState.equipment` is moved over.
+- [x] `note-store.test.ts`: save, edit (drawing changes, immutable fields refused like `IMMUTABLE`), remove.
+- [x] `log-model.test.ts`, `log-sync.test.ts`, `media-queue.test.ts` unchanged and green.
+- [x] Server: migration backfills unique uids; uids are stable across a revision; `pytest`.
 - [ ] Phone: upgrade an installed app with a waiting session; it loads and uploads after the update.
 
 ## Phase 1b: upload path (moved forward from Phases 2, 4 and 5; needed by #93)
@@ -86,16 +86,16 @@ Tests:
 Goal: everything a local-only user creates can be uploaded once, in the right order, after an account exists. Also makes equipment and notes created offline work for normal accounts. No pull, no tombstones.
 
 Server:
-- [ ] `PUT /api/bows/<uuid:uid>/`, `/api/arrow-sets/<uuid:uid>/` with `revision_uid`: the server writes the revision with the app's uid (Q7). The session write accepts `bow_revision_uid` and `arrow_set_revision_uid` besides the int ids, so a session logged with offline equipment uploads after it. Revision `number` is renumbered by the server on upload (display only, see Risks).
-- [ ] `PUT /api/notes/<uuid:uid>/` (create or update, safe to repeat), same checks as `NoteSerializer.validate`; int routes kept for one release (Q3). A note on a media id that is not there yet is 400 on `media`, which the app treats as "wait".
-- [ ] Archer's own notes (Q6, now decided here because the upgrade upload needs it): `Note.team` nullable, `team = null` means a private note of its author about themselves; only the author sees it. Coach rules unchanged. Migration, `can_see_note` rule, tests (a coach never sees it, another archer never sees it).
-- [ ] `npm run types:api`.
+- [x] `PUT /api/bows/<uuid:uid>/`, `/api/arrow-sets/<uuid:uid>/` with `revision_uid`: the server writes the revision with the app's uid (Q7). The session write accepts `bow_revision_uid` and `arrow_set_revision_uid` besides the int ids, so a session logged with offline equipment uploads after it. Revision `number` is renumbered by the server on upload (display only, see Risks).
+- [x] `PUT /api/notes/<uuid:uid>/` (create or update, safe to repeat), same checks as `NoteSerializer.validate`; int routes kept for one release (Q3). A note on a media id that is not there yet is 400 on `media`, which the app treats as "wait".
+- [x] Archer's own notes (Q6, now decided here because the upgrade upload needs it): `Note.team` nullable, `team = null` means a private note of its author about themselves; only the author sees it. Coach rules unchanged. Migration, `can_see_note` rule, tests (a coach never sees it, another archer never sees it).
+- [x] `npm run types:api`.
 
 App:
-- [ ] Upload order (decided, not open): equipment, then sessions/ends/volume, then media, then notes. Each later queue passes over items whose parent is still queued (the `blocked` rule of `drainMedia`, generalised) in `drain` order inside `useLog`; the move to a shared `useSync` happens in Phase 2.
-- [ ] Equipment queue in `useEquipment`: create and edit on the device with app-made uids (Phase 1 store), upload by `PUT`; `BowView`, `ArrowSetView`, `EquipmentListView` read and write the store. Delete of used equipment stays refused (409 kept as failed with the server's message).
-- [ ] Notes queue in `useNotes`: `PUT` by uid after its media and session; 403 is failed with the server's message and kept on the device; deleting a queued clip asks, then deletes its queued notes. `NewNote.vue`, `NoteRow.vue`, `NotesSection.vue`, `LatestNotes.vue` write to the store and list server notes plus queued ones.
-- [ ] `SyncBanner`: counts per kind (waiting, failed) and "Give up" per item. The full `/sync` list view stays in Phase 2.
+- [x] Upload order (decided, not open): equipment, then sessions/ends/volume, then media, then notes. Each later queue passes over items whose parent is still queued (the `blocked` rule of `drainMedia`, generalised) in `drain` order inside `useLog`; the move to a shared `useSync` happens in Phase 2.
+- [x] Equipment queue in `useEquipment`: create and edit on the device with app-made uids (Phase 1 store), upload by `PUT`; `BowView`, `ArrowSetView`, `EquipmentListView` read and write the store. Delete of used equipment stays refused (409 kept as failed with the server's message).
+- [x] Notes queue in `useNotes`: `PUT` by uid after its media and session; 403 is failed with the server's message and kept on the device; deleting a queued clip asks, then deletes its queued notes. `NewNote.vue`, `NoteRow.vue`, `NotesSection.vue`, `LatestNotes.vue` write to the store and list server notes plus queued ones.
+- [x] `SyncBanner`: counts per kind (waiting, failed) and "Give up" per item. The full `/sync` list view stays in Phase 2.
 
 Tests: offline new bow, session with it, both upload in order; revision uid kept; repeated note `PUT` creates once; note on another archer's media refused; own note invisible to coaches; note waits for its media.
 
@@ -176,13 +176,13 @@ Tests: equipment edited on a second phone arrives; tombstone removes a deleted b
 
 ## Order and dependencies
 
-- [ ] 1. Answers to the open questions.
-- [ ] 2. Phase 0 (410 fix), alone and first.
-- [ ] 3. Phase 1 (app); its server part can go in the same release or the next.
-- [ ] 4. Phase 1b (needs Phase 1 stores and server uids). **#93 can start after this**, plus the scoring check (Risks).
+- [x] 1. Answers to the open questions.
+- [x] 2. Phase 0 (410 fix), alone and first.
+- [x] 3. Phase 1 (app); its server part can go in the same release or the next.
+- [x] 4. Phase 1b (needs Phase 1 stores and server uids). **#93 can start after this**, plus the scoring check (Risks).
 - [ ] 5. Phase 2 pull step (needs Phase 1 store keys); caches only on demand.
-- [ ] 6. Phase 3 (needs Phase 2 pull step).
-- [ ] 7. Phase 4 (needs Phase 2 pull step). Can run beside Phase 3.
+- [x] 6. Phase 3 (needs Phase 2 pull step).
+- [x] 7. Phase 4 (needs Phase 2 pull step). Can run beside Phase 3.
 - [ ] 8. Phase 5 equipment pull; evaluations only on demand.
 - [ ] 9. Per phase: `npm run type-check`, `npm test`, `cd server && uv run pytest`, phone test in airplane mode.
 

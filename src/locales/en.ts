@@ -379,6 +379,12 @@ export default {
     changeFrom: 'Change from this day',
     deleteConfirm: 'Tap again to delete. Trainings with something in them stay.',
     cancelled: 'Cancelled',
+    listMode: 'List',
+    monthMode: 'Month',
+    today: 'Today',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    nothingThisDay: 'Nothing on this day.',
   },
   event: {
     kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },

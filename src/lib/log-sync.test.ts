@@ -285,6 +285,29 @@ test('410 on a session PUT keeps the session when ends of it were not uploaded',
   assert.equal(h.calls.length, 1); // nothing more is sent for it
 });
 
+test('404 on an end of a session the server deleted keeps the session as gone', async () => {
+  // The session went up earlier and was deleted elsewhere; only an end is still queued.
+  const h = harness((call) => (call.path === '/api/sessions/s1/' ? json(410, { detail: 'gone' }) : json(404, { detail: 'Not found.' })));
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'opDone', key: h.state().outbox[0].key, rev: h.state().outbox[0].rev });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a', 'b']) });
+  assert.deepEqual(h.queued(), ['end']);
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => `${c.method} ${c.path}`), ['PUT /api/sessions/s1/ends/e1/', 'PUT /api/sessions/s1/']);
+  assert.deepEqual(h.state().sessions.map((s) => [s.id, s.gone, s.ends.length]), [['s1', true, 1]]);
+  assert.deepEqual(h.queued(), []);
+});
+
+test('404 on an end when the session is still there is a refusal, not gone', async () => {
+  const h = harness((call) => (call.path === '/api/sessions/s1/' ? json(200) : json(404, { detail: 'Not found.' })));
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'opDone', key: h.state().outbox[0].key, rev: h.state().outbox[0].rev });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await h.run();
+  assert.deepEqual(h.state().sessions.map((s) => [s.id, s.gone]), [['s1', undefined]]);
+  assert.deepEqual(h.queued(), ['end!']);
+});
+
 const summary = (id: string, extra = {}) => ({
   id, owner: 7, owner_name: 'Me', opened_by: 3, opened_by_name: 'Coach', started_at: '2026-10-18T09:00:00Z', ended_at: null, type: '', environment: '', location: 'Hall',
   updated_at: '2026-10-18T09:05:00Z', ends: 0, scored_arrows: 0, score_total: 0, volume_arrows: 0, ...extra,

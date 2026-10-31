@@ -22,6 +22,36 @@ export function waitsForEquipment(state: LogState, op: Op, revisionPending: (uid
   return [gear?.bow_revision_uid, gear?.arrow_set_revision_uid].some((uid) => !!uid && revisionPending(uid));
 }
 
+/** Create or update the session on the server from the local copy. Safe to repeat. */
+function putSession(api: ApiClient, session: LogSession) {
+  return api.PUT('/api/sessions/{session_id}/', {
+    // `owner` only matters when the session is created: a coach logging for an archer without an account.
+    params: { path: { session_id: session.id }, query: session.owner ? { owner: session.owner } : undefined },
+    body: {
+      started_at: session.started_at,
+      ended_at: session.ended_at,
+      type: session.type,
+      environment: session.environment,
+      location: session.location,
+      ...(session.details ?? {}),
+      // Left out when nothing was chosen; null takes the link out. An occurrence that is no row yet is made by the server.
+      ...(session.event
+        ? { event: session.event.id, ...(session.event.slot && session.event.date ? { event_slot: session.event.slot, event_date: session.event.date } : {}) }
+        : session.event === null
+          ? { event: null }
+          : {}),
+      // Left out until the archer chose, so the server applies their default. Only for their own session: a coach's copy of one they opened is not theirs to set.
+      ...(session.visibility && !session.owner && !session.noResults ? { visibility: session.visibility } : {}),
+      // Left out when nothing was chosen, so the server keeps what it has; null clears it.
+      ...(session.gear
+        ? gearBody(session.gear)
+        : session.gear === null
+          ? { bow_revision: null, arrow_set_revision: null }
+          : {}),
+    },
+  });
+}
+
 /** Upload one queued item, with its body taken from the current local data. */
 export async function send(api: ApiClient, state: LogState, op: Op): Promise<SendResult> {
   const session = state.sessions.find((s) => s.id === op.sessionId);
@@ -31,32 +61,7 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
       result = await api.DELETE('/api/sessions/{session_id}/', { params: { path: { session_id: op.sessionId } } });
     } else if (op.kind === 'session') {
       if (!session) return { kind: 'ok' };
-      result = await api.PUT('/api/sessions/{session_id}/', {
-        // `owner` only matters when the session is created: a coach logging for an archer without an account.
-        params: { path: { session_id: op.sessionId }, query: session.owner ? { owner: session.owner } : undefined },
-        body: {
-          started_at: session.started_at,
-          ended_at: session.ended_at,
-          type: session.type,
-          environment: session.environment,
-          location: session.location,
-          ...(session.details ?? {}),
-          // Left out when nothing was chosen; null takes the link out. An occurrence that is no row yet is made by the server.
-          ...(session.event
-            ? { event: session.event.id, ...(session.event.slot && session.event.date ? { event_slot: session.event.slot, event_date: session.event.date } : {}) }
-            : session.event === null
-              ? { event: null }
-              : {}),
-          // Left out until the archer chose, so the server applies their default. Only for their own session: a coach's copy of one they opened is not theirs to set.
-          ...(session.visibility && !session.owner && !session.noResults ? { visibility: session.visibility } : {}),
-          // Left out when nothing was chosen, so the server keeps what it has; null clears it.
-          ...(session.gear
-            ? gearBody(session.gear)
-            : session.gear === null
-              ? { bow_revision: null, arrow_set_revision: null }
-              : {}),
-        },
-      });
+      result = await putSession(api, session);
     } else if (op.kind === 'end' && op.delete) {
       result = await api.DELETE('/api/sessions/{session_id}/ends/{end_id}/', {
         params: { path: { session_id: op.sessionId, end_id: op.itemId! } },
@@ -94,6 +99,9 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
     const { response, error, data } = result;
     if (response.ok) return op.kind === 'session' && !op.delete && data?.id && data.id !== op.sessionId ? { kind: 'ok', mergedInto: data.id } : { kind: 'ok' };
     if (op.kind === 'session' && !op.delete && response.status === 410) return { kind: 'gone' };
+    // An end or volume entry of a session the server no longer has gets 404, like any session that is not yours.
+    // The session itself says which: it answers 410 for a deleted one.
+    if (op.kind !== 'session' && !op.delete && response.status === 404 && session && (await putSession(api, session)).response.status === 410) return { kind: 'gone' };
     if (op.delete && response.status === 404) return { kind: 'ok' }; // already gone
     // Signed out, or the server is having trouble: try again later.
     if (response.status === 401 || response.status >= 500) return { kind: 'retry' };
