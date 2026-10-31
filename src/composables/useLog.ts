@@ -95,7 +95,7 @@ async function sync() {
 
 // The log of the signed-in account is loaded from the device and saved again after each change. It keeps showing nothing
 // until it is loaded (`loaded`), and the app of another account never sees it.
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<LogState>({
     key: storageKey,
     empty: EMPTY_LOG,
@@ -104,6 +104,7 @@ const { loaded } = effectScope(true).run(() =>
     changes: state,
   }),
 )!;
+const { loaded } = keyed;
 // Without an account nothing is uploaded, so nothing is waiting (the outbox keeps the list for the upload of a later account).
 const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error).length));
 const failed = computed(() => (isLocal.value ? [] : state.value.outbox.filter((o) => o.error)));
@@ -274,6 +275,6 @@ effectScope(true).run(() => {
 });
 
 export function useLog() {
-  return { loaded, sessions, equipment, renamed, waiting, failed, conflicts, goneSessions, ...actions };
+  return { loaded, sessions, equipment, renamed, waiting, failed, conflicts, goneSessions, keyed, ...actions };
 }
 

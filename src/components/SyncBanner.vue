@@ -21,6 +21,8 @@ const failed = computed(() => [
   ...equipment.failed.value.map((o) => o.error),
   ...notes.failed.value.map((n) => n.error),
 ])
+// Videos held back for Wi-Fi: after the upload of local data they would otherwise wait unseen.
+const wifiWaiting = computed(() => media.waitingForWifi())
 const retryFailed = () => (log.retryFailed(), media.retryFailed(), equipment.retryFailed(), notes.retryFailed())
 const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipment.discardFailed(), notes.discardFailed())
 </script>
@@ -35,6 +37,7 @@ const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipme
       <AppButton secondary @click="log.discardGone(s.id)">{{ $t('sync.discard') }}</AppButton>
     </div>
     <div v-if="waiting > 0">{{ $t('sync.waiting', { n: waiting }, waiting) }}</div>
+    <div v-if="wifiWaiting > 0" class="muted small">{{ $t('sync.videosWaitForWifi', { n: wifiWaiting }, wifiWaiting) }}</div>
     <template v-if="failed.length > 0">
       <div class="text-danger">{{ $t('sync.failed', { n: failed.length, error: failed[0] }, failed.length) }}</div>
       <AppButton secondary @click="retryFailed">{{ $t('common.tryAgain') }}</AppButton>

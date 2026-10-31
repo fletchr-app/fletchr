@@ -44,7 +44,7 @@ function dispatch(action: EquipmentAction) {
   state.value = current;
 }
 
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<EquipmentState>({
     key: storageKey,
     empty: EMPTY_EQUIPMENT,
@@ -54,6 +54,7 @@ const { loaded } = effectScope(true).run(() =>
     resetOnKeyChange: true,
   }),
 )!;
+const { loaded } = keyed;
 
 const bows = computed(() => (loaded.value ? itemsOf(state.value, 'bow') : []));
 const arrowSets = computed(() => (loaded.value ? itemsOf(state.value, 'arrowSet') : []));
@@ -174,5 +175,5 @@ effectScope(true).run(() => {
 });
 
 export function useEquipment() {
-  return { loaded, bows, arrowSets, equipment, empty, waiting, failed, ...actions };
+  return { loaded, bows, arrowSets, equipment, empty, waiting, failed, keyed, ...actions };
 }

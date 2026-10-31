@@ -13,7 +13,7 @@ Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-
 
 ## Without an account (#93)
 
-The app can be used without an account or server: a phone with no account starts in it, and signing out ends in it. It is a state next to signed in (`local`; `signedOut` is only passed through), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in later keeps the local data on the phone, hidden and not uploaded; uploading it to the account is not built yet.
+The app can be used without an account or server: a phone with no account starts in it, and signing out ends in it. It is a state next to signed in (`local`; `signedOut` is only passed through), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in or registering with local data asks once whether to upload it to the account (counts, the account's email, "Share your existing sessions with your coaches?" with no preselection; Upload, Keep on this phone only, Cancel). For a registration the question comes before the request, so Cancel creates no account; for a sign-in it comes after the credentials are accepted, and Cancel revokes the tokens. Nothing is asked when the local owner holds nothing. Details in [local-mode.md](local-mode.md#signing-in-or-registering-with-local-data-built-not-run-on-a-phone).
 
 ## Admin: a person changes how they sign in
 

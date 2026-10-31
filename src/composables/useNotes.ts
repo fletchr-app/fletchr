@@ -32,7 +32,7 @@ function dispatch(action: NoteAction) {
   state.value = current;
 }
 
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<NotesState>({
     key: storageKey,
     empty: EMPTY_NOTES,
@@ -42,6 +42,7 @@ const { loaded } = effectScope(true).run(() =>
     resetOnKeyChange: true,
   }),
 )!;
+const { loaded } = keyed;
 
 const notes = computed(() => (loaded.value ? state.value.notes : []));
 // Without an account nothing is uploaded, so nothing is waiting: the notes are the list.
@@ -114,5 +115,5 @@ effectScope(true).run(() => {
 });
 
 export function useNotes() {
-  return { loaded, notes, waiting, failed, uploaded, ...actions };
+  return { loaded, notes, waiting, failed, uploaded, keyed, ...actions };
 }
