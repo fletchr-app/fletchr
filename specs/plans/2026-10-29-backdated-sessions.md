@@ -73,14 +73,14 @@ Server (`cd server && uv run pytest`):
 
 ## Order
 
-- [ ] 1. Answers to Q1 to Q5.
-- [ ] 2. `session-time.ts` and its tests, incl. the time zone case.
-- [ ] 3. `log-model`, `useLog` (`startSession` times, `setTimes`); tests.
-- [ ] 4. `NewSessionView` with `SessionTimeFields.vue`; locales.
-- [ ] 5. `TrainingSessionView`: no reopen for past sessions, "Change time" (Q2).
-- [ ] 6. Server validation (Q5), locale; server tests incl. overview, merge, media, notes.
-- [ ] 7. Docs, changelog.
-- [ ] 8. `npm run type-check`, `npm test`, `cd server && uv run pytest`, `npm run build-only`, `npx cap sync android` (no new plugin).
+- [x] 1. Answers to Q1 to Q5.
+- [x] 2. `session-time.ts` and its tests, incl. the time zone case.
+- [x] 3. `log-model`, `useLog` (`startSession` times, `setTimes`); tests.
+- [x] 4. `NewSessionView` with `SessionTimeFields.vue`; locales.
+- [x] 5. `TrainingSessionView`: no reopen for past sessions, "Change time" (Q2).
+- [x] 6. Server validation (Q5), locale; server tests incl. overview, merge, media, notes.
+- [x] 7. Docs, changelog.
+- [x] 8. `npm run type-check`, `npm test`, `cd server && uv run pytest`, `npm run build-only`, `npx cap sync android` (no new plugin).
 - [ ] 9. On the phone: coach opens a session for yesterday, adds a photo; archer sees it on yesterday's date in the training list; not live in the team overview.
 
 ## Risks

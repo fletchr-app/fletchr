@@ -33,44 +33,44 @@ Markers: **[fact]** checked in the code, **[check]** verify before relying on it
 
 ### Step 1: address parsing in `src/lib`
 
-- [ ] `src/lib/server-address.ts`: `parseServerAddress(input, { allowHttp })` returns `{ url }` or `{ error: key }` (`serverAddress.empty | invalid | scheme | httpNotAllowed | path`). Move `normaliseUrl` there; `useServer` imports it.
-- [ ] `src/lib/server-address.test.ts`: no scheme, trailing slashes, upper-case host, port, IPv6/IP addresses, `ftp://`, path/query/fragment, `http://` with and without `allowHttp`, whitespace, equal to default.
+- [x] `src/lib/server-address.ts`: `parseServerAddress(input, { allowHttp })` returns `{ url }` or `{ error: key }` (`serverAddress.empty | invalid | scheme | httpNotAllowed | path`). Move `normaliseUrl` there; `useServer` imports it.
+- [x] `src/lib/server-address.test.ts`: no scheme, trailing slashes, upper-case host, port, IPv6/IP addresses, `ftp://`, path/query/fragment, `http://` with and without `allowHttp`, whitespace, equal to default.
 
 ### Step 2: health check of a draft
 
-- [ ] `checkServer(address): Promise<'ok' | 'unreachable'>` in `useServer.ts` (one fetch to `/api/health/`, timeout about 8 s). `useServerHealth` uses it for the current `url`.
-- [ ] Unreachable message mentions both causes: wrong address, or the server does not allow the app (`DJANGO_CORS_ORIGINS` without `https://localhost`).
+- [x] `checkServer(address): Promise<'ok' | 'unreachable'>` in `useServer.ts` (one fetch to `/api/health/`, timeout about 8 s). `useServerHealth` uses it for the current `url`.
+- [x] Unreachable message mentions both causes: wrong address, or the server does not allow the app (`DJANGO_CORS_ORIGINS` without `https://localhost`).
 
 ### Step 3: custom flow
 
-- [ ] `SignInCustomView`: prefill from the last custom address, parse, check, `setUrl`, sign in. Errors under the address field (parse/health) and under the form (sign-in). Links "Join with invite code" and "Forgot password?" to the new routes, through the same parse and check.
-- [ ] Router: `/sign-in/custom/register` and `/sign-in/custom/reset-password` (`auth: 'out'`, `props: { custom: true }`), titles in `meta.title`.
-- [ ] `RegisterView`, `ResetPasswordView`: prop `custom`; back href and "back to sign-in" depend on it; show "Server: {url}" when custom. No Google (already off through `googleAvailable`).
-- [ ] `SignInView` (done), `RegisterView` and `ResetPasswordView` without `custom`: `setUrl(null)` in `onIonViewWillEnter`.
-- [ ] Remember the address after a successful health check (`lastCustomServer`).
+- [x] `SignInCustomView`: prefill from the last custom address, parse, check, `setUrl`, sign in. Errors under the address field (parse/health) and under the form (sign-in). Links "Join with invite code" and "Forgot password?" to the new routes, through the same parse and check.
+- [x] Router: `/sign-in/custom/register` and `/sign-in/custom/reset-password` (`auth: 'out'`, `props: { custom: true }`), titles in `meta.title`.
+- [x] `RegisterView`, `ResetPasswordView`: prop `custom`; back href and "back to sign-in" depend on it; show "Server: {url}" when custom. No Google (already off through `googleAvailable`).
+- [x] `SignInView` (done), `RegisterView` and `ResetPasswordView` without `custom`: `setUrl(null)` in `onIonViewWillEnter`.
+- [x] Remember the address after a successful health check (`lastCustomServer`).
 
 ### Step 4: Settings
 
-- [ ] Remove `/settings/server` and `SettingsServerView.vue`. Settings row: host plus health (`useServerHealth`), no `router-link`, no `detail`.
-- [ ] Remove the now unused keys (`settings.defaultFromBuild`, `overridden`, `save`, `reset`) **[check other users first]**.
+- [x] Remove `/settings/server` and `SettingsServerView.vue`. Settings row: host plus health (`useServerHealth`), no `router-link`, no `detail`.
+- [x] Remove the now unused keys (`settings.defaultFromBuild`, `overridden`, `save`, `reset`) **[check other users first]**.
 
 ### Step 5: texts (en and de)
 
-- [ ] `auth.custom.intro` (short: for a server run by your club; Google is not available there), `auth.custom.remembered` if shown, `auth.custom.register`, `auth.custom.forgot`.
-- [ ] `serverAddress.empty`, `invalid`, `scheme`, `httpNotAllowed`, `path`, `unreachable` (with the CORS hint), `isDefault`.
-- [ ] `settings.serverRow` with the health state, if the row text changes.
+- [x] `auth.custom.intro` (short: for a server run by your club; Google is not available there), `auth.custom.remembered` if shown, `auth.custom.register`, `auth.custom.forgot`.
+- [x] `serverAddress.empty`, `invalid`, `scheme`, `httpNotAllowed`, `path`, `unreachable` (with the CORS hint), `isDefault`.
+- [x] `settings.serverRow` with the health state, if the row text changes.
 
 ### Step 6: docs
 
 - [ ] `specs/design/accounts.md`: section "Servers": official vs custom, which screens reset, no switch while signed in.
-- [ ] `specs/design/screens.md`: the sign-in screens and the Settings row.
-- [ ] `SELFHOSTING.md` line 194: replace "Settings, Server address; ... the 'change' link" with "Connect to custom server" on the sign-in screen; add that `DJANGO_CORS_ORIGINS` must contain `https://localhost` for the Play Store app to reach the server.
-- [ ] `README.md` "Server address": the per-device change is now on the sign-in screen, not Settings.
-- [ ] Comment in `useServer.ts` ("Users can override it in Settings") updated.
+- [x] `specs/design/screens.md`: the sign-in screens and the Settings row.
+- [x] `SELFHOSTING.md` line 194: replace "Settings, Server address; ... the 'change' link" with "Connect to custom server" on the sign-in screen; add that `DJANGO_CORS_ORIGINS` must contain `https://localhost` for the Play Store app to reach the server.
+- [x] `README.md` "Server address": the per-device change is now on the sign-in screen, not Settings.
+- [x] Comment in `useServer.ts` ("Users can override it in Settings") updated.
 
 ### Step 7: check
 
-- [ ] `npm run type-check`, `npm test`.
+- [x] `npm run type-check`, `npm test`.
 - [ ] On a phone (release build, `VITE_SERVER_URL=https://app.fletchr.de`): custom sign-in, register, reset against a test server; failed sign-in, then back to `/sign-in` shows the official server and Google; invite link after a failed custom attempt lands on the official server; Settings row shows the custom host.
 
 ## Risks
