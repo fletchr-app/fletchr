@@ -3,6 +3,7 @@
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
 import type { SendResult } from './log-sync.ts';
+import type { Visibility } from './log-model.ts';
 import type { EventLink } from './schedule.ts';
 
 export type MediaKind = 'photo' | 'video';
@@ -23,6 +24,8 @@ export type QueuedMedia = {
   capture_fps?: number;
   frame_count?: number;
   note?: string;
+  /** Who sees a clip that is in no session (set by the upload of local data); left out: the server applies the archer's default. */
+  visibility?: Visibility;
   /** The files are on the server already; only `session` (and `note`) still have to go. Set when the item was moved during its upload. */
   uploaded?: true;
   /** Set when the server refused it. */
@@ -71,6 +74,7 @@ export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSessi
     form.append('session', withSession ? (item.session ?? '') : '');
     if (withEvent) appendEvent(form, item.event);
     if (item.note !== undefined) form.append('note', item.note);
+    if (item.visibility && !(withSession && item.session)) form.append('visibility', item.visibility);
     return form;
   }
   form.append('kind', item.kind);
@@ -81,6 +85,7 @@ export function mediaForm(item: QueuedMedia, files: MediaFiles | null, withSessi
     if (item[key] !== undefined) form.append(key, String(item[key]));
   }
   if (withSession && item.session) form.append('session', item.session);
+  else if (item.visibility) form.append('visibility', item.visibility);
   if (withEvent && item.event) appendEvent(form, item.event);
   form.append('file', files.file, `${item.id}.${item.kind === 'video' ? 'mp4' : 'jpg'}`);
   form.append('thumbnail', files.thumbnail, `${item.id}-thumb.jpg`);

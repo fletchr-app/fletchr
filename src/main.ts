@@ -9,6 +9,7 @@ import '@ionic/vue/css/palettes/dark.class.css'
 
 import App from './App.vue'
 import { initLanguage } from './composables/useLocale'
+import './composables/useLocalClaim'
 import { i18n } from './i18n'
 import { initTheme } from './composables/useTheme'
 import router from './router'

@@ -1,6 +1,6 @@
 # Local mode: use the app without an account or server (#93)
 
-Status: first version implemented (#113) and first launch and sign-out changed to the decided model (#115, Step 0), not run on a phone. Planned: note edit (Step 1), upload on sign-in (Step 2), sign-out wording (Step 3), session visibility (own plan, needed by Step 2)
+Status: first version implemented (#113), first launch and sign-out changed to the decided model (#115, Step 0), upload on sign-in (Step 2) and sign-out wording (Step 3) implemented; none of it run on a phone. Planned: note edit (Step 1). Session visibility (own plan, needed by Step 2) is merged (#117)
 Date: 2026-10-30
 Design: [local-mode.md](../design/local-mode.md). The upload needs [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md) first. This file replaces the separate `2026-10-30-local-only-mode.md` (the record of #113), now the "Done" section below.
 
@@ -44,7 +44,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 - The stats fixture has no `setup` filter case for positions: the heatmap screen does not use it.
 - `NewSessionView` needed no change (no agenda without a server).
 
-## What is there (for the remaining steps)
+## What was there before Step 2 (facts that the steps were built on)
 
 - Setting tokens turns the flag off (`watch` on `state.tokens` in `useAuth`) and keeps the id and all data under `<store>:local:<id>`; nothing is uploaded **[fact]**. This is the "Keep on this phone only" behaviour of the design and the place where the confirmation goes in front.
 - Notes and media name their archer by number; without an account it is `LOCAL_ARCHER` = 0 **[fact]** (`src/lib/local-mode.ts`). The upload maps it to the account's id.
@@ -59,10 +59,10 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 ## Order
 
-- [ ] 1. Session visibility plan, merged and released (the upload needs `visibility` on the server).
+- [x] 1. Session visibility plan, merged (#117; not released yet: the upload needs a server with it).
 - [ ] 2. Step 1 (note edit), independent, can go any time.
-- [ ] 3. Step 2 (upload on sign-in) with Step 3 (wording of sign-out).
-- Until Step 2 ships, signing in with local data leaves it hidden under the local key, as now. The sign-in screen says so.
+- [x] 3. Step 2 (upload on sign-in) with Step 3 (wording of sign-out).
+- Step 2 needs a server that accepts `visibility` on session and media `PUT` (0.15). An older server ignores the field and applies its defaults.
 
 ## Step 1: edit a note in local mode (small)
 
@@ -72,44 +72,59 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 ## Step 2: sign-in with local data (one PR)
 
-- [ ] `src/lib/local-claim.ts` (pure): `localCounts(stores)` (sessions, bows, arrow sets, photos, videos, notes; `buildExport` counts all but media), `prepareUpload(stores, { userId, share })` (sets `visibility` on every session and on clips without a session, replaces `LOCAL_ARCHER` in notes and media with `userId`), and one merge per store: log, equipment and notes through `planImport`, the media queue by its own append (ids are UUIDs; queue order: the account's ops first, then the local ones).
-- [ ] `useAuth`: `signIn`, `register` and `signInWithGoogle` hand the tokens to a `commit` step before the existing `setTokens` / `local.leave()` path. If the local owner holds nothing: commit. Otherwise:
+- [x] `src/lib/local-claim.ts` (pure): `localCounts(stores)` (sessions, bows, arrow sets, photos, videos, notes; `buildExport` counts all but media), `prepareUpload(stores, { userId, share })` (sets `visibility` on every session and on clips without a session, replaces `LOCAL_ARCHER` in notes and media with `userId`), and one merge per store: log, equipment and notes through `planImport`, the media queue by its own append (ids are UUIDs; queue order: the account's ops first, then the local ones).
+- [x] `useAuth`: `signIn`, `register` and `signInWithGoogle` hand the tokens to a `commit` step before the existing `setTokens` / `local.leave()` path. If the local owner holds nothing: commit. Otherwise:
   - `signIn`: ask `/api/me/` with the new access token (as explicit header) for the email, then the confirmation.
   - `register`: show the confirmation first, with the email from the form, and send the request only after Upload or Keep on this phone only. `signInWithGoogle` with an invite code is the same as `register`; without a code it is a sign-in.
-- [ ] Confirmation (`alertController`, like the sign-out prompt in `SettingsView`): account email and counts, radio "Share your existing sessions with your coaches?" Yes / No, keep private (no preselection; Upload stays disabled until one is chosen), buttons Upload / Keep on this phone only / Cancel.
+- [x] Confirmation (`alertController`, like the sign-out prompt in `SettingsView`): account email and counts, radio "Share your existing sessions with your coaches?" Yes / No, keep private (no preselection; Upload stays disabled until one is chosen), buttons Upload / Keep on this phone only / Cancel.
   - Upload: flush and hold the local stores (`useKeyedStore` needs a new `flush()` and a hold flag), read the account's stores from `dataStore` (they may exist from earlier use), merge, write, read back, then remove the local keys, then commit the tokens; the account stores load the merged data and the queues drain in the existing order.
   - Keep on this phone only: commit; local keys untouched (today's behaviour).
   - Cancel: for `signIn` drop the tokens and revoke the refresh token (as `signOut`); for `register` nothing was sent. Stay in local mode.
-- [ ] After Upload the local owner is empty; the id is kept.
-- [ ] Texts that say "nothing is uploaded" (`SignInView`, `LocalDataView`, `local.*`, `auth.signIn.*` in `en.ts`/`de.ts`) say that signing in offers to upload **[check]** the wording.
-- [ ] Server: `PUT` of sessions and media accepts `visibility` (from the visibility plan); nothing else.
-- [ ] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner`: "n videos wait for Wi-Fi" (small), since after the upload they would wait unseen. Joining a team (`JoinTeamView`) does not wait for the queue.
-- [ ] Tests (Vitest): counts; `prepareUpload` sets visibility for both answers and maps `LOCAL_ARCHER`; each merge keeps both sides and the queue order; an empty local owner gives no prompt; a failed write leaves the local keys in place.
+- [x] After Upload the local owner is empty; the id is kept.
+- [x] Texts that say "nothing is uploaded" (`SignInView`, `LocalDataView`, `local.*`, `auth.signIn.*` in `en.ts`/`de.ts`) say that signing in offers to upload **[check]** the wording.
+- [x] Server: `PUT` of sessions and media accepts `visibility` (from the visibility plan); nothing else.
+- [x] Videos: the confirmation adds a line when videos are among the counts: "Videos go up on Wi-Fi." If `videosWifiOnly` is off, the line says they go over mobile data, with the total size (proposed). `SyncBanner`: "n videos wait for Wi-Fi" (small), since after the upload they would wait unseen. Joining a team (`JoinTeamView`) does not wait for the queue.
+- [x] Tests (Vitest): counts; `prepareUpload` sets visibility for both answers and maps `LOCAL_ARCHER`; each merge keeps both sides and the queue order; an empty local owner gives no prompt; a failed write leaves the local keys in place.
+
+
+### Built (differences from the text above)
+
+- `src/lib/local-claim.ts` also holds `claimLocal` (read, merge, write, read back, compare, remove; the account's keys are restored on failure) and `readLocal`. `src/lib/claim-flow.ts` holds the order of steps (`decide`, `enter`, `beforeRequest`), `useLocalClaim` the confirmation (`ClaimSheet`, a modal, because an Ionic alert cannot disable a button) and the hold, flush and move. `useAuth` calls it through `setClaimGate`.
+- The merge goes through `planImport` for log, equipment and notes and then the existing `imported` reducers, so the local ops are queued again behind the account's. The local outbox is not copied (ops of items deleted while local are dropped).
+- `dataStore` got no `keys` or `move`: the four store names are known, and copy, read back and remove are done with `get`, `set` and `remove`. `useKeyedStore` has `hold`, `release` and `flush`; the hold also ends when the key changes.
+- Media: `QueuedMedia.visibility` is new and sent as a form field for a clip in no session (the server already accepted it).
+- Videos over mobile data: the line has no total size; the queue does not know the size without opening the files.
+- A failed upload never signs in (tokens revoked, local mode stays), also after a registration that already made the account.
+
+### Answers to the [check] items
+
+- Wording of the texts that said nothing is uploaded: `local.signInText` (sign-in screen and Settings) and `local.noCopy` (backup screen) now say that signing in or registering offers the upload; German written, needs a review.
+- `PUT` of sessions and media accepts `visibility`: sessions in `SessionSerializer` (`validate_visibility`, owner only), media in `MediaWriteSerializer` (`ChoiceField`, null allowed, owner only), both also on update. Nothing changed on the server.
 
 ## Step 3: sign-out
 
-- [ ] `SettingsView`: sign-out always asks; the text says the screens will be empty and the account's data comes back at the next sign-in, plus the existing count of waiting items when there are any (`settings.signOutWaiting`).
-- [ ] Test: sign-out leaves the account keys in place.
+- [x] `SettingsView`: sign-out always asks; the text says the screens will be empty and the account's data comes back at the next sign-in, plus the existing count of waiting items when there are any (`settings.signOutWaiting`).
+- [ ] Test: sign-out leaves the account keys in place. Not written: `useAuth` has no test harness (Capacitor, Ionic); `signOut` removes no key, it only sets the tokens to null and enters local mode (checked by reading the code).
 
 ## i18n (each step, `en.ts` and `de.ts`)
 
-- [ ] `claim.title`, `claim.counts.*` (pluralised per kind), `claim.share`, `claim.shareYes`, `claim.shareNo`, `claim.upload`, `claim.keepLocal`, `claim.cancel`, `claim.videosWifi`, `claim.videosMobile`.
-- [ ] `settings.signOutEmpty`.
-- [ ] Server: no new strings expected.
+- [x] `claim.title`, `claim.counts.*` (pluralised per kind), `claim.share`, `claim.shareYes`, `claim.shareNo`, `claim.upload`, `claim.keepLocal`, `claim.cancel`, `claim.videosWifi`, `claim.videosMobile`; also `claim.intro`, `claim.shareHint`, `claim.failed`, `claim.failedRegistered`, `sync.videosWaitForWifi`.
+- [x] `settings.signOutEmpty`.
+- [x] Server: no new strings expected.
 
 ## Tests (summary)
 
-- [ ] Vitest for every new `src/lib` file (`local-claim.ts`) and the changed reducer (`note-store` edit).
-- [ ] pytest: the visibility matrix from the visibility plan covers uploads with `me`.
+- [x] Vitest for every new `src/lib` file (`local-claim.ts`, `claim-flow.ts`) and `useKeyedStore` (hold, flush). The `note-store` edit reducer belongs to Step 1.
+- [x] pytest: the visibility matrix from the visibility plan covers uploads with `me`.
 - [ ] Phone (also for what is already built): fresh install opens on Home; log a past session, a bow, photos, a video, a note; export and import round trip, file chooser and share sheet; video playback; Preferences persistence; back button. After Step 2: register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out, app is empty; sign in again, data is back without a prompt.
-- [ ] `npm run type-check`, `npm test`, `cd server && uv run pytest`.
+- [x] `npm run type-check`, `npm test`, `cd server && uv run pytest`.
 
 ## Docs
 
-- [ ] `specs/design/local-mode.md`: status per step.
-- [ ] `specs/design/offline-sync.md`: the upload merge in "Where the data is kept" and the "Not built" line in the local-mode section.
-- [ ] `specs/design/accounts.md`: sign-in with local data.
-- [ ] `CHANGELOG.md`.
+- [x] `specs/design/local-mode.md`: status per step.
+- [x] `specs/design/offline-sync.md`: the upload merge in "Where the data is kept" and the "Not built" line in the local-mode section.
+- [x] `specs/design/accounts.md`: sign-in with local data.
+- [x] `CHANGELOG.md`.
 
 ## Risks
 

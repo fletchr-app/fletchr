@@ -1,6 +1,6 @@
 # Using the app without an account (#93)
 
-Status: partly implemented. Built: the local state, screens, statistics, export/import (#113) and first launch and sign-out (#115). Planned: note edit, upload on sign-in, sign-out wording, session visibility
+Status: partly implemented. Built: the local state, screens, statistics, export/import (#113), first launch and sign-out (#115), upload on sign-in and the sign-out wording (not run on a phone). Planned: note edit
 Date: 2026-10-30
 Plan: [2026-10-30-local-mode.md](../plans/2026-10-30-local-mode.md). Builds on [offline-sync.md](offline-sync.md) (store owner, queues) and [session-visibility.md](session-visibility.md).
 
@@ -14,9 +14,9 @@ How local mode works today (state, local owner, routes, screens, statistics, not
 - One local owner per phone; the stores work as they do for an account, nothing is sent.
 - Backup is the JSON export and import in Settings, without photo and video files.
 
-## Signing in or registering with local data (planned)
+## Signing in or registering with local data (built, not run on a phone)
 
-Today signing in turns local mode off and leaves the local data hidden under its key, uploading nothing. This section is what is planned on top of that. The rule is the same on every sign-in and registration: if the local owner holds nothing, nothing is asked.
+The rule is the same on every sign-in and registration: if the local owner holds nothing, nothing is asked.
 
 Otherwise, one confirmation. For a sign-in it comes after the server accepted the credentials and before the app switches to the account. For a registration (and a Google sign-up that creates an account) it comes **before** the request is sent, with the email typed in the form, so Cancel really cancels and no account is made:
 
@@ -24,12 +24,14 @@ Otherwise, one confirmation. For a sign-in it comes after the server accepted th
 > Share your existing sessions with your coaches? **Yes** / **No, keep private**
 > **Upload** · **Keep on this phone only** · **Cancel**
 
-- **Upload**: the local stores are merged into the account's stores (copy first; the local copy is removed only once the account's store has been written and read back). The queues then drain as usual, in the existing order (equipment, sessions, media, notes). Ids are made by the app, so uploading into an account that already has data only adds; equipment from two phones may end up twice, which is accepted.
+- **Upload**: the local stores are merged into the account's stores (copy first; the local copy is removed only once the account's store has been written and read back, `claimLocal` in `src/lib/local-claim.ts`). The account's queue stays first, the local ops come after it. The queues then drain as usual, in the existing order (equipment, sessions, media, notes). Ids are made by the app, so uploading into an account that already has data only adds; equipment from two phones may end up twice, which is accepted.
 - **The sharing answer** sets the visibility of everything uploaded from the local owner: sessions get `coaches` or `me`, clips without a session get their own value (`Media.visibility`), notes about yourself are private anyway.
 - **Keep on this phone only**: the account is used; the local data stays under the local key, hidden while signed in, and is offered again at the next sign-in.
 - **Cancel**: nothing is sent for a registration. For a sign-in the tokens are dropped and revoked. The app stays in local mode. If the answer to the sharing question is missing, Upload is disabled (no preselection).
+- **A failed upload** (the write or the read back failed, or a store is damaged): nothing is removed, the account's keys are put back as they were, the refresh token is revoked and the person stays in local mode with a message (`claim.failed`; for a registration that already made the account, `claim.failedRegistered`: sign in to try again). The app never signs in after a failed upload, so nothing looks uploaded that is not.
+- **Where it is built**: `useAuth` asks a gate (`setClaimGate`, set by `useLocalClaim`) and `src/lib/claim-flow.ts` holds the order of steps. The confirmation is the modal `ClaimSheet`. Google sign-in with an invite code is a registration (email for the dialog from the ID token), without a code a sign-in (email from `/api/me/`).
 - No export prompt before the upload (decided).
-- Videos go up on Wi-Fi only (the existing `videosWifiOnly` setting, on by default). Joining a team does not wait for them; the sync banner shows how many are waiting for Wi-Fi.
+- Videos go up on Wi-Fi only (the existing `videosWifiOnly` setting, on by default). The confirmation says so; with the setting off it says they go over mobile data (no size: the queue does not know it). Joining a team does not wait for them; the sync banner shows how many are waiting for Wi-Fi.
 - A session uploaded this way may be merged with a session a coach opened (ADR 0004); the archer's wins, as usual.
 
 The account's own stores may already exist on the phone (the person used the account here before). Upload therefore merges into them, it never replaces them.
@@ -37,7 +39,7 @@ The account's own stores may already exist on the phone (the person used the acc
 ## Signing out
 
 - Built (#115): sign-out lands on the home screen in an empty local mode, not on the sign-in screen. The account's data stays on the phone under its key and comes back at the next sign-in of that account. Deleting the account ends the same way.
-- Planned: the sign-out confirmation always shows a line that explains the empty screens afterwards (your data stays on this phone and comes back when you sign in again), plus the existing warning about waiting items when there are any.
+- Built: the sign-out confirmation always asks, with a line that explains the empty screens afterwards (your data stays on this phone and comes back when you sign in again), plus the warning about waiting items when there are any.
 - Rejected: copying the account's data into the local owner on sign-out. It would bring back items deleted elsewhere and upload them again on the next sign-in.
 
 ## Not covered

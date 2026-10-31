@@ -30,9 +30,10 @@ let flushing = false;
 const onWifi = ref(true);
 
 // Another account (or none): what is in memory belongs to the one before. Its queue stays on the device under its own key.
-const { loaded } = effectScope(true).run(() =>
+const keyed = effectScope(true).run(() =>
   useKeyedStore<QueuedMedia[]>({ key: storageKey, empty: [], read: () => items.value, apply: set, changes: items, resetOnKeyChange: true }),
 )!;
+const { loaded } = keyed;
 // Without an account nothing is uploaded, so nothing is waiting.
 const waiting = computed(() => (isLocal.value ? [] : items.value.filter((i) => !i.error)));
 const failed = computed(() => (isLocal.value ? [] : items.value.filter((i) => i.error)));
@@ -139,5 +140,5 @@ effectScope(true).run(() => {
 });
 
 export function useMedia() {
-  return { items, waiting, failed, uploaded, ...actions };
+  return { items, waiting, failed, uploaded, keyed, ...actions };
 }

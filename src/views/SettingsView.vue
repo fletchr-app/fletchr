@@ -31,14 +31,14 @@ const media = useMedia()
 const equipment = useEquipment()
 const notes = useNotes()
 
-// What has not reached the server stays on the phone under this account, but the person should know before leaving.
+// Signing out empties the screens (the account's data stays on the phone under its key and comes back at the next sign-in), so it always asks.
+// What has not reached the server stays too, but the person should know before leaving.
 async function confirmSignOut() {
   const unsent =
     log.waiting.value + log.failed.value.length + media.items.value.length + equipment.waiting.value + equipment.failed.value.length + notes.waiting.value + notes.failed.value.length
-  if (unsent === 0) return void signOut()
   const alert = await alertController.create({
     header: t('settings.signOut'),
-    message: t('settings.signOutWaiting', { n: unsent }, unsent),
+    message: [t('settings.signOutEmpty'), ...(unsent > 0 ? [t('settings.signOutWaiting', { n: unsent }, unsent)] : [])].join(' '),
     buttons: [
       { text: t('common.cancel'), role: 'cancel' },
       { text: t('settings.signOut'), role: 'confirm' },
