@@ -50,6 +50,6 @@ The account's own stores may already exist on the phone (the person used the acc
 
 ## Open
 
-- **Android backup configuration**: not decided, see [offline-sync.md](offline-sync.md#without-an-account-93).
+- **Android backup configuration** (decided: media folders excluded), see [offline-sync.md](offline-sync.md#without-an-account-93).
 - **Account without a team** (decided): local mode needs no registration. Registration still needs an invite or claim code (`RegisterSerializer.invite_code`; Google sign-up answers `no_account` without one) **[fact]**. The Settings entry is for people who already have an account or a code.
 - **Minors**: a video taken in local mode by an archer under 18 goes up when they join; the server only refuses it if a birth date is on record and no consent (`video_allowed`). A birth date entered later does not remove clips already uploaded.

@@ -27,7 +27,7 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 - **Statistics and heatmap**: `src/lib/stats.ts` ports `training/stats.py`, `arrow_stats.py` and `PositionsView`; `shared/stats-vectors.json` (8 cases) is read by pytest and Vitest. The fixture found two differences, both fixed in the app: Python's `round` is half-even (`pyRound` in `py-math.ts`), and Python 3.12+ `sum` of floats uses an error term (`pySum`, also used by `centred.ts`).
 - **Notes, photos and videos**: from the device. `LocalMediaView` (`/local-media/:id`) shows a photo with drawings and notes, or plays the video in the browser's player. A note can be deleted, its text and (on a photo) its drawing changed (Step 1). The frame-by-frame player and notes on a frame need the server. Queued video play in the media screen came with #112.
 - **Backup**: `LocalDataView` (`/settings/data`) exports and imports one JSON file (`src/lib/local-export.ts`: `buildExport`, `parseExport`, `planImport`; format `fletchr-local` v1) with sessions, equipment and notes, no photo and video files.
-- **Android backup**: reported, not changed (see Open).
+- **Android backup**: the media folders are excluded from the backup (decided, see Open).
 - Docs written in #113: `offline-sync.md`, `statistics.md`, `arrow-plotting.md`, `screens.md`, `accounts.md`, CHANGELOG.
 
 ### #115: Step 0, first launch and sign-out (merged)
@@ -139,6 +139,6 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 ## Open (for the user)
 
-- **Android backup of app storage**: `allowBackup="true"` with no backup rules, so Auto Backup's defaults apply to the stores, the owner id and the queued media files (details in `offline-sync.md`, "Without an account"). Options: leave it, exclude the media folder, or turn it off. Not changed.
+- **Android backup of app storage** (decided): the stores, the owner id and the settings stay in Android's backup; `media-queue/` and `media-kept/` are excluded (`backup_rules.xml`, `data_extraction_rules.xml`). After a restore, photos and videos that were only on the phone are gone, their entries stay in the lists. Details in `offline-sync.md`.
 - Not run on a phone: file chooser, share sheet, video playback, Preferences persistence, back button. German texts need a review.
 - The visibility defaults are in the visibility plan (assumed, confirm): no `followers` level, new accounts default to `coaches`, existing sessions migrate to `coaches`.
