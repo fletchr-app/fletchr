@@ -188,11 +188,21 @@ Build the app with your server address as its default, and sync it as for a rele
 ```bash
 VITE_SERVER_URL=https://app.example.org npm run build-only
 npx cap sync android
-cd android && ./gradlew assembleRelease     # signed with your release key, see below
+cd android && ./gradlew assembleRelease     # APK, signed with your release key, see below
+cd android && ./gradlew bundleRelease       # AAB for Google Play: android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 Users can still sign in at another server: on the sign-in screen, "Connect to custom server" (also for registering and resetting a password there). Release builds need `https://` for that, and `DJANGO_CORS_ORIGINS` must contain `https://localhost`. Google sign-in works only with the official server. A signed-in user cannot change the server: sign out first.
 
 ### Release signing (Android)
 
-A release APK or bundle must be signed. Create a key once (`keytool -genkey -v -keystore release.jks -alias fletchr -keyalg RSA -keysize 2048 -validity 10000`), keep it and its password somewhere safe and outside the repository (`*.jks` is ignored): without it the app cannot be updated.
+A release APK or bundle must be signed. Create a key once (`keytool -genkey -v -keystore release.jks -alias fletchr -keyalg RSA -keysize 2048 -validity 10000`), keep it and its password somewhere safe and outside the repository (`*.jks` is ignored): without it the app cannot be updated. Tell Gradle about it in `~/.gradle/gradle.properties` (not in the repository); without these four lines the release build is unsigned:
+
+```properties
+FLETCHR_STORE_FILE=/home/you/keys/release.jks
+FLETCHR_STORE_PASSWORD=...
+FLETCHR_KEY_ALIAS=fletchr
+FLETCHR_KEY_PASSWORD=...
+```
+
+For Google Play, enrol in Play App Signing: the key above then only signs the upload, and Google signs what users get with its own key (whose fingerprint is the one for Google sign-in above).
