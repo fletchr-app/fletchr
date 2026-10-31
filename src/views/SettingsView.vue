@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { alertController, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption } from '@ionic/vue'
+import { alertController, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption, IonToggle } from '@ionic/vue'
 import { computed } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -7,6 +7,7 @@ import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
+import { REMINDER_CHOICES, useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { type LanguageMode, useLocale } from '@/composables/useLocale'
 import { useEquipment } from '@/composables/useEquipment'
 import { useKeptMedia } from '@/composables/useKeptMedia'
@@ -59,6 +60,20 @@ const { visibility: trainingVisibility, error: visibilityError, save: saveVisibi
 const VISIBILITIES: Visibility[] = ['coaches', 'me']
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
 const kept = useKeptMedia()
+const calendar = useDeviceCalendar()
+async function toggleCalendar(event: CustomEvent<{ checked: boolean }>) {
+  if (!event.detail.checked) return void (await calendar.disable())
+  // Refused: the switch must not stay on
+  if (!(await calendar.enable())) (event.target as HTMLIonToggleElement).checked = false
+}
+const calendarHint = computed(() => {
+  const status = calendar.status.value
+  if (status === 'noPermission') return t('deviceCalendar.denied')
+  if (status === 'error') return t('deviceCalendar.failed')
+  if (status === 'offline') return t('deviceCalendar.offline')
+  const last = calendar.lastSync.value
+  return last ? t('deviceCalendar.updated', { time: new Date(last).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }) : t('deviceCalendar.hint')
+})
 const capLabel = (mb: number | null) => (mb === null ? t('settings.keepNoLimit') : mb === 0 ? t('settings.keepNothing') : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`)
 const keptSize = computed(() => `${Math.round(kept.bytes.value / (1024 * 1024))} MB`)
 
@@ -103,7 +118,20 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       <IonList inset>
         <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
         <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
-        <IonItem button detail lines="none" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+        <IonItem button detail :lines="calendar.supported ? 'full' : 'none'" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+        <template v-if="calendar.supported">
+          <IonItem :lines="calendar.enabled.value ? 'full' : 'none'" class="ion-text-wrap">
+            <IonToggle :checked="calendar.enabled.value" @ion-change="toggleCalendar">
+              {{ $t('deviceCalendar.toggle') }}
+              <IonNote class="d-block ion-text-wrap">{{ calendarHint }}</IonNote>
+            </IonToggle>
+          </IonItem>
+          <IonItem v-if="calendar.enabled.value" lines="none">
+            <IonSelect :value="String(calendar.reminder.value)" :label="$t('deviceCalendar.reminder')" interface="action-sheet" @ion-change="calendar.setReminder(Number($event.detail.value))">
+              <IonSelectOption v-for="m in REMINDER_CHOICES" :key="m" :value="String(m)">{{ $t(`deviceCalendar.reminder${m || 'None'}`) }}</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+        </template>
       </IonList>
       <ErrorText :message="creating.error.value" />
       <IonList inset>

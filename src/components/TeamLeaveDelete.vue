@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { useTeams } from '@/composables/useTeams'
 import { errorMessage } from '@/lib/errors'
 
@@ -17,6 +18,7 @@ const router = useRouter()
 const { t } = useI18n()
 const { api } = useAuth()
 const { load } = useTeams()
+const deviceCalendar = useDeviceCalendar()
 const path = { team_id: props.teamId }
 const confirmLeave = ref(false)
 const error = ref<string | null>(null)
@@ -27,6 +29,7 @@ async function run(request: () => Promise<{ response: Response; error?: unknown 
     const { response, error: failure } = await request()
     if (response.ok) {
       await load()
+      void deviceCalendar.sync(true) // the trainings of this team leave the phone's calendar
       void router.replace('/')
     } else error.value = errorMessage(failure)
   } catch {

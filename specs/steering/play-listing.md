@@ -256,7 +256,7 @@ Government app, financial features, news app, health apps declaration (if shown:
 1. Play Console: **Create app**. Name "Fletchr: Archery training", default language English (United States) or German, App, Free, accept the declarations.
 2. **Set up your app** tasks: privacy policy URL https://fletchr.de/en/privacy/, app access (above), ads (No), content rating, target audience, data safety, government/financial/health declarations, category Sports, contact details, store listing (both languages).
 3. **Play App Signing**: enrol (Google keeps the app signing key; `release.jks` becomes the upload key, see SELFHOSTING.md, "Release signing").
-4. Copy the **SHA-1 of the app signing certificate** (App integrity) into the Google Cloud Android OAuth client, and the SHA-256 into `site/.well-known/assetlinks.json` for invite links (`specs/design/accounts.md`, SELFHOSTING.md). Without this, Google sign-in and verified `fletchr.de/join/` links fail in the Play build.
+4. Put the SHA-1 **the installed Play build reports** (`adb logcat -d | grep GoogleProvider`, `signingSha1`, not the Play Console value; see `specs/design/accounts.md`) into the Google Cloud Android OAuth client, and the SHA-256 into `site/.well-known/assetlinks.json` for invite links (`specs/design/accounts.md`, SELFHOSTING.md). Without this, Google sign-in and verified `fletchr.de/join/` links fail in the Play build.
 5. Build from **`main`** at the release tag, with the official server as default:
    ```bash
    git switch main && git pull
