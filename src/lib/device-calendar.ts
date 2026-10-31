@@ -1,23 +1,22 @@
 // The trainings and events of your teams as entries in a calendar the app owns on the phone (#107). No Vue, no Capacitor:
 // the phone's calendar holds the whole state (every entry ends with a tag line: our key and a hash of what we wrote), so a
 // sync is a diff between what should be there and what is, safe to repeat and safe after a crash halfway.
-import type { components } from './api-types.ts';
-import { type AgendaItem, type EventKind, dayKey, toLocalInput } from './schedule.ts';
-
-type Slot = components['schemas']['Slot'];
+//
+// One entry per training, not a repeating series: Android's calendar provider cannot cancel a single occurrence of a series
+// in a local calendar (NullPointerException in `handleInsertException`, checked on a phone), and cancelled, moved and paused
+// trainings are exactly what a schedule has. The server has already worked out every occurrence, DST included.
+import { type AgendaItem, type EventKind } from './schedule.ts';
 
 /** The words an entry is made of; the caller translates (`src/lib` builds no sentences). */
 export type Texts = {
-  /** The title of a slot without a name. */
-  training: string;
   kind: Record<EventKind, string>;
   /** The line above the tag, e.g. "Training of <team>, from the Fletchr app". */
   note: (team: string) => string;
 };
 
-/** Something to write: a weekly series (`recurrence`) or a single entry. Times are instants in ms. */
+/** Something to write: one entry. Times are instants in ms. */
 export type Entry = {
-  /** `slot:<id>` for a series, `event:<id>` for everything else. */
+  /** `event:<agenda id>`. */
   key: string;
   hash: string;
   title: string;
@@ -25,19 +24,17 @@ export type Entry = {
   description: string;
   start: number;
   end: number;
-  /** `weekday` 1 is Monday, 7 Sunday; `until` the end of the last day (ms), or none. */
-  recurrence?: { weekday: number; until?: number };
   /** Minutes relative to the start, negative before it. */
   alerts: number[];
 };
 
-/** What the phone's calendar returns for our calendar: one row per occurrence. */
-export type Instance = { id: string; masterId: string | null; startDate: number; description: string | null };
+/** What the phone's calendar returns for our calendar: one row per entry. */
+export type Instance = { id: string; startDate: number; description: string | null };
 
 export type Window = { from: number; to: number };
 
 export const TAG = 'fletchr';
-const TAG_LINE = /^fletchr:((?:slot|event):[\w-]+):([0-9a-f]{8})$/;
+const TAG_LINE = /^fletchr:(event:[\w-]+):([0-9a-f]{8})$/;
 
 export const tagLine = (key: string, hash: string) => `${TAG}:${key}:${hash}`;
 
@@ -58,112 +55,46 @@ export function hash(parts: readonly unknown[]): string {
   return h.toString(16).padStart(8, '0');
 }
 
-/** The end of a `YYYY-MM-DD` day on the device's clock, in ms. */
-const endOfDay = (date: string) => {
-  const [y, m, d] = date.split('-').map(Number);
-  return new Date(y!, m! - 1, d!, 23, 59, 59).getTime();
-};
-
-/** 1 is Monday, 7 Sunday (the plugin's weekdays) for an instant on the device's clock. */
-const weekdayOf = (ms: number) => new Date(ms).getDay() || 7;
-
-const clock = (ms: number) => toLocalInput(new Date(ms).toISOString()).slice(11);
-
-function build(partial: Omit<Entry, 'hash' | 'description'>, note: string, shape: unknown[]): Entry {
-  const h = hash([partial.title, partial.location, note, partial.alerts, ...shape]);
-  return { ...partial, hash: h, description: `${note}\n${tagLine(partial.key, h)}` };
-}
-
-/**
- * What should be in the calendar for the window, from the slots and the agenda of all your teams.
- * A series per slot (from the first occurrence nobody changed, so its times are the server's, DST included), plus one entry per
- * training row that is not cancelled (one-offs, competitions, camps, and occurrences that were moved or got something linked).
- */
-export function desiredEntries(
-  slots: readonly Slot[],
-  agenda: readonly AgendaItem[],
-  teamNames: ReadonlyMap<number, string>,
-  texts: Texts,
-  window: Window,
-  reminder: number,
-): Entry[] {
+/** What should be in the calendar: every training and event of the agenda that is not cancelled (a paused one is not in it). */
+export function desiredEntries(agenda: readonly AgendaItem[], texts: Texts, reminder: number): Entry[] {
   const alerts = reminder > 0 ? [-reminder] : [];
-  const windowStart = dayKey(new Date(window.from).toISOString());
-  const entries: Entry[] = [];
-
-  for (const slot of slots) {
-    if (slot.valid_until && slot.valid_until < windowStart) continue;
-    const first = agenda
-      .filter((item) => item.virtual && item.slot === slot.id)
-      .sort((a, b) => a.start.localeCompare(b.start))[0];
-    if (!first) continue; // nothing unchanged in the window (paused, or all moved): nothing to repeat
-    const team = teamNames.get(slot.team) ?? first.team_name;
-    const start = new Date(first.start).getTime();
-    const end = new Date(first.end).getTime();
-    const until = slot.valid_until ? endOfDay(slot.valid_until) : undefined;
-    const weekday = weekdayOf(start);
-    entries.push(
-      build(
-        {
-          key: `slot:${slot.id}`,
-          title: `${slot.name || texts.training} · ${team}`,
-          location: slot.location ?? '',
-          start,
-          end,
-          recurrence: { weekday, until },
-          alerts,
-        },
-        texts.note(team),
-        // The date of the first occurrence moves with the window, so only its time of day counts
-        [weekday, clock(start), clock(end), until ?? null],
-      ),
-    );
-  }
-
-  for (const item of agenda) {
-    if (item.virtual || item.cancelled) continue;
-    const team = teamNames.get(item.team) ?? item.team_name;
-    const start = new Date(item.start).getTime();
-    const end = new Date(item.end).getTime();
-    entries.push(
-      build(
-        { key: `event:${item.id}`, title: `${item.name || texts.kind[item.kind]} · ${team}`, location: item.location, start, end, alerts },
-        texts.note(team),
-        [start, end],
-      ),
-    );
-  }
-  return entries;
+  return agenda
+    .filter((item) => !item.cancelled)
+    .map((item) => {
+      const start = new Date(item.start).getTime();
+      const end = new Date(item.end).getTime();
+      const title = `${item.name || texts.kind[item.kind]} · ${item.team_name}`;
+      const note = texts.note(item.team_name);
+      const key = `event:${item.id}`;
+      const h = hash([title, item.location, note, alerts, start, end]);
+      return { key, hash: h, title, location: item.location, description: `${note}\n${tagLine(key, h)}`, start, end, alerts };
+    });
 }
 
 export type Plan = {
-  /** Events to delete whole (a series with all its occurrences). */
+  /** Ids of entries to delete. */
   remove: string[];
   create: Entry[];
 };
 
-/** The difference between what should be there and what is. Instances without our tag are not ours and stay. */
+/** The difference between what should be there and what is. Entries without our tag are not ours and stay. */
 export function plan(desired: readonly Entry[], existing: readonly Instance[]): Plan {
-  // key -> master id -> hash of the tag on it
-  const found = new Map<string, Map<string, string>>();
+  const found = new Map<string, { id: string; hash: string }[]>();
   for (const instance of existing) {
     const tag = parseTag(instance.description);
-    if (!tag) continue;
-    const masters = found.get(tag.key) ?? new Map<string, string>();
-    masters.set(instance.masterId ?? instance.id, tag.hash);
-    found.set(tag.key, masters);
+    if (tag) found.set(tag.key, [...(found.get(tag.key) ?? []), { id: instance.id, hash: tag.hash }]);
   }
 
   const remove: string[] = [];
   const create: Entry[] = [];
   const wanted = new Map(desired.map((entry) => [entry.key, entry]));
 
-  for (const [key, masters] of found) {
+  for (const [key, entries] of found) {
     const entry = wanted.get(key);
     let kept = false;
-    for (const [master, h] of masters) {
+    for (const { id, hash: h } of entries) {
       if (entry && h === entry.hash && !kept) kept = true; // the first one that is right stays
-      else remove.push(master); // not wanted, changed, or a duplicate
+      else remove.push(id); // not wanted, changed, or a duplicate
     }
     if (entry && !kept) create.push(entry);
   }
@@ -171,32 +102,15 @@ export function plan(desired: readonly Entry[], existing: readonly Instance[]): 
   return { remove, create };
 }
 
-/**
- * The occurrences of our series that should not be there: the agenda has no unchanged occurrence of the slot on that day.
- * That covers a cancelled, moved, paused or deleted training alike, without any date arithmetic of our own.
- */
-export function occurrencesToRemove(existing: readonly Instance[], agenda: readonly AgendaItem[]): Instance[] {
-  const days = new Set(agenda.filter((item) => item.virtual).map((item) => `${item.slot}|${dayKey(item.start)}`));
-  return existing.filter((instance) => {
-    const key = parseTag(instance.description)?.key;
-    if (!key?.startsWith('slot:')) return false;
-    return !days.has(`${key.slice('slot:'.length)}|${dayKey(new Date(instance.startDate).toISOString())}`);
-  });
-}
-
 /** The phone's calendar, as the sync needs it. */
 export interface CalendarBackend {
   listInstances(calendarId: string, window: Window): Promise<Instance[]>;
   create(calendarId: string, entry: Entry): Promise<void>;
-  /** The whole event: a one-off, or a series with all occurrences. */
   remove(id: string): Promise<void>;
-  removeOccurrence(masterId: string, instanceDate: number): Promise<void>;
 }
 
 export type SyncInput = {
-  slots: readonly Slot[];
   agenda: readonly AgendaItem[];
-  teamNames: ReadonlyMap<number, string>;
   texts: Texts;
   window: Window;
   /** Minutes before the start; 0 for none. */
@@ -205,12 +119,8 @@ export type SyncInput = {
 
 /** Bring the calendar in line with the schedule. Throws when the phone's calendar does; run again to finish. */
 export async function syncCalendar(backend: CalendarBackend, calendarId: string, input: SyncInput): Promise<void> {
-  const desired = desiredEntries(input.slots, input.agenda, input.teamNames, input.texts, input.window, input.reminder);
+  const desired = desiredEntries(input.agenda, input.texts, input.reminder);
   const { remove, create } = plan(desired, await backend.listInstances(calendarId, input.window));
   for (const id of remove) await backend.remove(id);
   for (const entry of create) await backend.create(calendarId, entry);
-  // A new series has every weekday occurrence; the ones the schedule changed come out of it now that the phone lists them
-  for (const instance of occurrencesToRemove(await backend.listInstances(calendarId, input.window), input.agenda)) {
-    await backend.removeOccurrence(instance.masterId ?? instance.id, instance.startDate);
-  }
 }

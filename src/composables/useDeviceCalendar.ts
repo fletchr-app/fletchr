@@ -32,7 +32,6 @@ let running: Promise<void> | null = null
 let queued = false
 
 const texts = (): Texts => ({
-  training: t('event.kind.training'),
   kind: { training: t('event.kind.training'), competition: t('event.kind.competition'), camp: t('event.kind.camp') },
   note: (team) => t('deviceCalendar.entryNote', { team }),
 })
@@ -46,17 +45,13 @@ async function run(): Promise<void> {
   const from = Date.now() - DAY_MS
   const window = { from, to: from + AHEAD_DAYS * DAY_MS }
   try {
-    const [slots, agenda] = await Promise.all([
-      api.GET('/api/slots/'),
-      api.GET('/api/events/agenda/', { params: { query: { from: new Date(window.from).toISOString(), to: new Date(window.to).toISOString() } } }),
-    ])
-    if (!slots.data || !agenda.data) {
+    const { data: agenda } = await api.GET('/api/events/agenda/', { params: { query: { from: new Date(window.from).toISOString(), to: new Date(window.to).toISOString() } } })
+    if (!agenda) {
       status.value = 'offline'
       return
     }
-    const teamNames = new Map(agenda.data.map((item) => [item.team, item.team_name]))
     const calendarId = await findOrCreateCalendar(t('deviceCalendar.calendarName'))
-    await syncCalendar(nativeBackend, calendarId, { slots: slots.data, agenda: agenda.data, teamNames, texts: texts(), window, reminder: reminder.value })
+    await syncCalendar(nativeBackend, calendarId, { agenda, texts: texts(), window, reminder: reminder.value })
     lastSync.value = Date.now()
     status.value = 'ok'
   } catch (e) {

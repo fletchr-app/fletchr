@@ -4,7 +4,7 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
-- **Trainings in the phone's calendar, Android** (#107): Settings has a switch that writes the trainings, competitions and camps of your teams into a calendar of its own on the phone ("Fletchr", on this phone only). Weekly trainings are repeating entries; a cancelled or moved one disappears from the series. Optional reminder. Turning it off or signing out removes the calendar. Needs the calendar permission, asked when you turn it on.
+- **Trainings in the phone's calendar, Android** (#107): Settings has a switch that writes the trainings, competitions and camps of your teams into a calendar of its own on the phone ("Fletchr", on this phone only). Every training is an entry of its own, so a cancelled or moved one simply disappears. Optional reminder. Turning it off or signing out removes the calendar. Needs the calendar permission, asked when you turn it on.
 
 ## 0.16.0 (2026-10-31)
 

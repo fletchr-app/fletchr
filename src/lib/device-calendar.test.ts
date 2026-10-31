@@ -1,53 +1,32 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import type { components } from './api-types.ts';
-import {
-  type CalendarBackend,
-  type Entry,
-  type Instance,
-  type SyncInput,
-  type Texts,
-  desiredEntries,
-  hash,
-  occurrencesToRemove,
-  parseTag,
-  plan,
-  syncCalendar,
-  tagLine,
-} from './device-calendar.ts';
+import { type CalendarBackend, type Entry, type Instance, type SyncInput, type Texts, desiredEntries, hash, parseTag, plan, syncCalendar, tagLine } from './device-calendar.ts';
 import type { AgendaItem } from './schedule.ts';
 
 // Instants are read on the device's clock; 25 October 2026 is the end of summer time.
 process.env.TZ = 'Europe/Berlin';
 
-type Slot = components['schemas']['Slot'];
-
 const texts: Texts = {
-  training: 'Training',
   kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },
   note: (team) => `Training of ${team}, from the Fletchr app`,
 };
-const teamNames = new Map([[1, 'Team A']]);
 const window = { from: new Date('2026-10-20T10:00:00Z').getTime(), to: new Date('2026-11-17T10:00:00Z').getTime() };
 
-const slot = (extra: Partial<Slot> = {}): Slot =>
-  ({ id: 's1', team: 1, weekday: 1, start_time: '18:00', end_time: '19:30', time_zone: 'Europe/Berlin', location: 'Hall', name: '', valid_from: '2026-01-01', valid_until: null, ...extra }) as Slot;
-
-const item = (start: string, end: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
-  id: `i-${start}`, virtual: true, slot: 's1', date: start.slice(0, 10), team: 1, team_name: 'Team A', kind: 'training', name: '', start, end, location: 'Hall', time_zone: 'Europe/Berlin', cancelled: false, ...extra,
+const item = (id: string, start: string, end: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
+  id, virtual: true, slot: 's1', date: start.slice(0, 10), team: 1, team_name: 'Team A', kind: 'training', name: '', start, end, location: 'Hall', time_zone: 'Europe/Berlin', cancelled: false, ...extra,
 });
 
 // Tuesdays 18:00 local: 16:00Z in summer time, 17:00Z after 25 October
-const tue = (day: string, utcHour: number, extra: Partial<AgendaItem> = {}) => item(`${day}T${utcHour}:00:00Z`, `${day}T${utcHour + 1}:30:00Z`, extra);
-const week = [tue('2026-10-20', 16), tue('2026-10-27', 17), tue('2026-11-03', 17), tue('2026-11-10', 17)];
+const tue = (id: string, day: string, utcHour: number, extra: Partial<AgendaItem> = {}) => item(id, `${day}T${utcHour}:00:00Z`, `${day}T${utcHour + 1}:30:00Z`, extra);
+const week = [tue('a', '2026-10-20', 16), tue('b', '2026-10-27', 17), tue('c', '2026-11-03', 17), tue('d', '2026-11-10', 17)];
 
-const instance = (entry: Entry, startDate: number, masterId: string | null = null, id = `${entry.key}-${startDate}`): Instance => ({ id, masterId, startDate, description: entry.description });
+const stored = (entry: Entry, id = `id-${entry.key}`): Instance => ({ id, startDate: entry.start, description: entry.description });
 
 test('parseTag finds our line at the end and nothing else', () => {
-  const tag = tagLine('slot:abc-1', '0123abcd');
-  assert.deepEqual(parseTag(`Training of A\n${tag}`), { key: 'slot:abc-1', hash: '0123abcd' });
-  assert.deepEqual(parseTag(`${tag}\n`), { key: 'slot:abc-1', hash: '0123abcd' });
+  const tag = tagLine('event:abc-1', '0123abcd');
+  assert.deepEqual(parseTag(`Training of A\n${tag}`), { key: 'event:abc-1', hash: '0123abcd' });
+  assert.deepEqual(parseTag(`${tag}\n`), { key: 'event:abc-1', hash: '0123abcd' });
   assert.equal(parseTag(`${tag}\nmore text`), null);
   assert.equal(parseTag('just a note'), null);
   assert.equal(parseTag(null), null);
@@ -60,164 +39,153 @@ test('hash is short, stable and tells inputs apart', () => {
   assert.notEqual(hash(['a', 1]), hash(['a', 2]));
 });
 
-test('a slot becomes one series that starts at its first unchanged occurrence', () => {
-  const entries = desiredEntries([slot()], week, teamNames, texts, window, 0);
-  assert.equal(entries.length, 1);
-  const [e] = entries;
-  assert.equal(e!.key, 'slot:s1');
-  assert.equal(e!.title, 'Training · Team A');
-  assert.equal(e!.start, new Date('2026-10-20T16:00:00Z').getTime());
-  assert.equal(e!.end, new Date('2026-10-20T17:30:00Z').getTime());
-  assert.deepEqual(e!.recurrence, { weekday: 2, until: undefined });
-  assert.deepEqual(e!.alerts, []);
-  assert.equal(parseTag(e!.description)?.hash, e!.hash);
-});
-
-test('a series ends at the end of valid_until, and one that ended before the window is left out', () => {
-  const [e] = desiredEntries([slot({ valid_until: '2026-11-10' })], week, teamNames, texts, window, 0);
-  assert.equal(e!.recurrence!.until, new Date(2026, 10, 10, 23, 59, 59).getTime());
-  assert.equal(desiredEntries([slot({ valid_until: '2026-10-19' })], week, teamNames, texts, window, 0).length, 0);
-});
-
-test('a slot with no unchanged occurrence in the window (paused, all moved) has no series', () => {
-  assert.equal(desiredEntries([slot()], [], teamNames, texts, window, 0).length, 0);
-  assert.equal(desiredEntries([slot()], [tue('2026-10-20', 16, { virtual: false })], teamNames, texts, window, 0).filter((e) => e.key.startsWith('slot:')).length, 0);
-});
-
-test('rows become single entries, cancelled ones do not', () => {
+test('every training and event that is not cancelled becomes one entry', () => {
   const agenda = [
     ...week,
-    tue('2026-10-27', 17, { id: 'moved', virtual: false, start: '2026-10-27T18:00:00Z', end: '2026-10-27T19:00:00Z' }),
-    item('2026-11-07T08:00:00Z', '2026-11-08T14:00:00Z', { id: 'cup', virtual: false, slot: null, date: null, kind: 'competition', name: 'Club cup', location: 'Arena' }),
-    tue('2026-11-03', 17, { id: 'off', virtual: false, cancelled: true }),
+    item('cup', '2026-11-07T08:00:00Z', '2026-11-08T14:00:00Z', { virtual: false, slot: null, date: null, kind: 'competition', name: 'Club cup', location: 'Arena' }),
+    tue('off', '2026-11-17', 17, { virtual: false, cancelled: true }),
   ];
-  const entries = desiredEntries([slot()], agenda, teamNames, texts, window, 60);
-  assert.deepEqual(entries.map((e) => e.key), ['slot:s1', 'event:moved', 'event:cup']);
-  const cup = entries[2]!;
+  const entries = desiredEntries(agenda, texts, 60);
+  assert.deepEqual(entries.map((e) => e.key), ['event:a', 'event:b', 'event:c', 'event:d', 'event:cup']);
+  const [first] = entries;
+  assert.equal(first!.title, 'Training · Team A');
+  assert.equal(first!.location, 'Hall');
+  assert.equal(first!.start, new Date('2026-10-20T16:00:00Z').getTime());
+  assert.equal(first!.end, new Date('2026-10-20T17:30:00Z').getTime());
+  assert.equal(parseTag(first!.description)?.hash, first!.hash);
+  assert.ok(first!.description.startsWith('Training of Team A, from the Fletchr app\n'));
+  const cup = entries[4]!;
   assert.equal(cup.title, 'Club cup · Team A');
   assert.equal(cup.location, 'Arena');
-  assert.equal(cup.recurrence, undefined);
   assert.deepEqual(cup.alerts, [-60]);
+  assert.deepEqual(first!.alerts, [-60]);
+  assert.deepEqual(desiredEntries(week, texts, 0)[0]!.alerts, []);
 });
 
-test('the hash follows what is written, not the date the series starts at', () => {
-  const a = desiredEntries([slot()], week, teamNames, texts, window, 0)[0]!;
-  const later = desiredEntries([slot()], week.slice(1), teamNames, texts, window, 0)[0]!;
-  assert.equal(a.hash, later.hash); // same time of day (18:00 in both), the first date moved with the window
-  assert.notEqual(a.hash, desiredEntries([slot({ location: 'Field' })], week, teamNames, texts, window, 0)[0]!.hash);
-  assert.notEqual(a.hash, desiredEntries([slot({ name: 'Juniors' })], week, teamNames, texts, window, 0)[0]!.hash);
-  assert.notEqual(a.hash, desiredEntries([slot({ valid_until: '2026-12-01' })], week, teamNames, texts, window, 0)[0]!.hash);
-  assert.notEqual(a.hash, desiredEntries([slot()], week, teamNames, texts, window, 30)[0]!.hash);
-  assert.notEqual(a.hash, desiredEntries([slot()], week, teamNames, { ...texts, note: (t) => `Training von ${t}` }, window, 0)[0]!.hash);
-  const changed = [tue('2026-10-20', 17), ...week.slice(1)];
-  assert.notEqual(a.hash, desiredEntries([slot()], changed, teamNames, texts, window, 0)[0]!.hash); // another time of day
+test('a training keeps its local time across the time change', () => {
+  const [before, after] = desiredEntries(week, texts, 0).slice(0, 2).map((e) => new Date(e.start).getHours());
+  assert.equal(before, 18);
+  assert.equal(after, 18);
+});
+
+test('the hash follows what is written', () => {
+  const base = desiredEntries(week, texts, 0)[0]!;
+  const changed = (extra: Partial<AgendaItem>, reminder = 0, t = texts) => desiredEntries([{ ...week[0]!, ...extra }], t, reminder)[0]!.hash;
+  assert.equal(base.hash, changed({}));
+  assert.notEqual(base.hash, changed({ location: 'Field' }));
+  assert.notEqual(base.hash, changed({ name: 'Juniors' }));
+  assert.notEqual(base.hash, changed({ team_name: 'Team B' }));
+  assert.notEqual(base.hash, changed({ start: '2026-10-20T17:00:00Z' }));
+  assert.notEqual(base.hash, changed({ end: '2026-10-20T18:00:00Z' }));
+  assert.notEqual(base.hash, changed({}, 30));
+  assert.notEqual(base.hash, changed({}, 0, { ...texts, note: (t) => `Training von ${t}` }));
 });
 
 test('plan: an empty phone gets everything, a phone in step gets nothing, twice', () => {
-  const desired = desiredEntries([slot()], week, teamNames, texts, window, 0);
+  const desired = desiredEntries(week, texts, 0);
   assert.deepEqual(plan(desired, []), { remove: [], create: desired });
-  const existing = [instance(desired[0]!, desired[0]!.start, 'm1'), instance(desired[0]!, desired[0]!.start + 7 * 86_400_000, 'm1')];
+  const existing = desired.map((e) => stored(e));
   assert.deepEqual(plan(desired, existing), { remove: [], create: [] });
   assert.deepEqual(plan(desired, existing), { remove: [], create: [] });
 });
 
-test('plan: a changed entry is removed and created again, a dropped one is removed', () => {
-  const [old] = desiredEntries([slot()], week, teamNames, texts, window, 0);
-  const [changed] = desiredEntries([slot({ location: 'Field' })], week, teamNames, texts, window, 0);
-  assert.deepEqual(plan([changed!], [instance(old!, old!.start, 'm1')]), { remove: ['m1'], create: [changed] });
-  assert.deepEqual(plan([], [instance(old!, old!.start, 'm1')]), { remove: ['m1'], create: [] });
+test('plan: a cancelled, moved or paused training goes, the others stay', () => {
+  const desired = desiredEntries(week, texts, 0);
+  const existing = desired.map((e) => stored(e));
+  // cancelled: no longer in the agenda as wanted
+  assert.deepEqual(plan(desired.filter((e) => e.key !== 'event:b'), existing), { remove: ['id-event:b'], create: [] });
+  // moved: same key, other times
+  const moved = desiredEntries([week[0]!, { ...week[1]!, start: '2026-10-27T18:00:00Z', end: '2026-10-27T19:00:00Z' }, week[2]!, week[3]!], texts, 0);
+  const result = plan(moved, existing);
+  assert.deepEqual(result.remove, ['id-event:b']);
+  assert.deepEqual(result.create.map((e) => e.key), ['event:b']);
 });
 
-test('plan: duplicates of one key keep one, a one-off is removed by its own id', () => {
-  const [e] = desiredEntries([slot()], week, teamNames, texts, window, 0);
-  assert.deepEqual(plan([e!], [instance(e!, 1, 'm1'), instance(e!, 2, 'm2')]), { remove: ['m2'], create: [] });
-  const [, moved] = desiredEntries([slot()], [...week, tue('2026-10-27', 17, { id: 'moved', virtual: false })], teamNames, texts, window, 0);
-  assert.deepEqual(plan([], [instance(moved!, 5, null, 'ev9')]), { remove: ['ev9'], create: [] });
+test('plan: a changed hash is removed and created again, an unknown key is removed', () => {
+  const [old] = desiredEntries(week, texts, 0);
+  const [changed] = desiredEntries(week.map((i) => ({ ...i, location: 'Field' })), texts, 0);
+  assert.deepEqual(plan([changed!], [stored(old!, 'x1')]), { remove: ['x1'], create: [changed] });
+  assert.deepEqual(plan([], [stored(old!, 'x1')]), { remove: ['x1'], create: [] });
+});
+
+test('plan: duplicates of one key keep one', () => {
+  const [e] = desiredEntries(week, texts, 0);
+  assert.deepEqual(plan([e!], [stored(e!, 'x1'), stored(e!, 'x2'), stored(e!, 'x3')]), { remove: ['x2', 'x3'], create: [] });
+  const [changed] = desiredEntries(week.map((i) => ({ ...i, location: 'Field' })), texts, 0);
+  assert.deepEqual(plan([e!], [stored(changed!, 'old'), stored(e!, 'x2')]).remove, ['old']);
 });
 
 test('plan: entries without our tag are not touched', () => {
-  const stray: Instance = { id: 'x', masterId: null, startDate: 1, description: 'Dentist' };
+  const stray: Instance = { id: 'x', startDate: 1, description: 'Dentist' };
   assert.deepEqual(plan([], [stray, { ...stray, id: 'y', description: null }]), { remove: [], create: [] });
 });
 
-test('occurrencesToRemove: cancelled, moved and paused days go, unchanged ones stay', () => {
-  const [e] = desiredEntries([slot()], week, teamNames, texts, window, 0);
-  const at = (iso: string) => instance(e!, new Date(iso).getTime(), 'm1');
-  const agenda = [tue('2026-10-20', 16), tue('2026-11-03', 17), tue('2026-10-27', 17, { virtual: false, cancelled: true })];
-  const gone = occurrencesToRemove([at('2026-10-20T16:00:00Z'), at('2026-10-27T17:00:00Z'), at('2026-11-03T17:00:00Z'), at('2026-11-10T17:00:00Z')], agenda);
-  assert.deepEqual(gone.map((i) => new Date(i.startDate).toISOString()), ['2026-10-27T17:00:00.000Z', '2026-11-10T17:00:00.000Z']);
-});
-
-test('occurrencesToRemove: the day is the device-local day, also across the time change', () => {
-  const [e] = desiredEntries([slot()], week, teamNames, texts, window, 0);
-  // 18:00 on 27 October is 17:00Z; the series keeps 18:00 local, and so does the agenda
-  const kept = occurrencesToRemove([instance(e!, new Date('2026-10-27T17:00:00Z').getTime(), 'm1')], week);
-  assert.equal(kept.length, 0);
-  assert.equal(occurrencesToRemove([{ id: 'o', masterId: null, startDate: 0, description: 'Dentist' }], []).length, 0);
-});
-
-// A phone that applies the calls and lists a weekly series as its instances
+// A phone that applies the calls
 function fakeBackend() {
-  const events = new Map<string, { entry: Entry; removed: Set<number> }>();
+  const events = new Map<string, Entry>();
   let next = 0;
   const calls: string[] = [];
   const backend: CalendarBackend = {
     async listInstances(_calendar, { from, to }) {
-      const out: Instance[] = [];
-      for (const [id, { entry, removed }] of events) {
-        // A weekly series keeps its local time across the time change
-        const times = entry.recurrence ? Array.from({ length: 6 }, (_, n) => new Date(entry.start).setDate(new Date(entry.start).getDate() + 7 * n)) : [entry.start];
-        for (const startDate of times) {
-          if (startDate >= from && startDate < to && !removed.has(startDate)) out.push({ id: `${id}/${startDate}`, masterId: entry.recurrence ? id : null, startDate, description: entry.description });
-        }
-      }
-      return out;
+      return [...events].filter(([, e]) => e.end > from && e.start < to).map(([id, e]) => ({ id, startDate: e.start, description: e.description }));
     },
     async create(_calendar, entry) {
       calls.push(`create ${entry.key}`);
-      events.set(`e${next++}`, { entry, removed: new Set() });
+      events.set(`e${next++}`, entry);
     },
     async remove(id) {
       calls.push(`remove ${id}`);
-      events.delete(id.split('/')[0]!);
-    },
-    async removeOccurrence(masterId, instanceDate) {
-      calls.push(`occurrence ${masterId}`);
-      events.get(masterId)!.removed.add(instanceDate);
+      events.delete(id);
     },
   };
   return { backend, calls, events };
 }
 
-const input = (agenda: AgendaItem[], slots = [slot()]): SyncInput => ({ slots, agenda, teamNames, texts, window, reminder: 0 });
+const input = (agenda: AgendaItem[]): SyncInput => ({ agenda, texts, window, reminder: 0 });
 
 test('syncCalendar: first run creates, second run changes nothing', async () => {
   const phone = fakeBackend();
   await syncCalendar(phone.backend, 'cal', input(week));
-  assert.deepEqual(phone.calls, ['create slot:s1']);
+  assert.equal(phone.calls.length, 4);
   phone.calls.length = 0;
   await syncCalendar(phone.backend, 'cal', input(week));
   assert.deepEqual(phone.calls, []);
 });
 
-test('syncCalendar: a cancelled occurrence comes out of the series and the next run leaves it alone', async () => {
+test('syncCalendar: a cancelled training disappears, the next run leaves it alone', async () => {
   const phone = fakeBackend();
   await syncCalendar(phone.backend, 'cal', input(week));
   phone.calls.length = 0;
-  const cancelled = [week[0]!, tue('2026-10-27', 17, { virtual: false, cancelled: true }), week[2]!];
+  const cancelled = [week[0]!, { ...week[1]!, virtual: false, cancelled: true }, week[2]!, week[3]!];
   await syncCalendar(phone.backend, 'cal', input(cancelled));
-  assert.deepEqual(phone.calls.filter((c) => !c.startsWith('occurrence')), []);
-  assert.ok(phone.calls.some((c) => c.startsWith('occurrence')));
+  assert.equal(phone.calls.length, 1);
+  assert.ok(phone.calls[0]!.startsWith('remove'));
+  assert.equal(phone.events.size, 3);
   phone.calls.length = 0;
   await syncCalendar(phone.backend, 'cal', input(cancelled));
   assert.deepEqual(phone.calls, []);
 });
 
-test('syncCalendar: finishing after a crash does not duplicate', async () => {
+test('syncCalendar: running again after a crash does not duplicate', async () => {
   const phone = fakeBackend();
-  const crashing = { ...phone.backend, removeOccurrence: async () => { throw new Error('provider gone'); } };
-  const cancelled = [week[0]!, tue('2026-10-27', 17, { virtual: false, cancelled: true }), week[2]!];
-  await assert.rejects(syncCalendar(crashing, 'cal', input(cancelled)));
-  await syncCalendar(phone.backend, 'cal', input(cancelled));
-  assert.equal(phone.events.size, 1);
+  let created = 0;
+  const crashing: CalendarBackend = {
+    ...phone.backend,
+    create: async (calendar, entry) => {
+      if (created++ === 2) throw new Error('provider gone');
+      await phone.backend.create(calendar, entry);
+    },
+  };
+  await assert.rejects(syncCalendar(crashing, 'cal', input(week)));
+  assert.equal(phone.events.size, 2);
+  await syncCalendar(phone.backend, 'cal', input(week));
+  assert.equal(phone.events.size, 4);
+});
+
+test('syncCalendar: entries outside the window are left as they were', async () => {
+  const phone = fakeBackend();
+  const old = desiredEntries([tue('old', '2026-09-01', 16)], texts, 0)[0]!;
+  phone.events.set('past', old);
+  await syncCalendar(phone.backend, 'cal', input(week));
+  assert.ok(phone.events.has('past'));
 });

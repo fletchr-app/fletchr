@@ -1,4 +1,4 @@
-import { CalendarPermissionScope, CapacitorCalendar, EventSpan } from '@ebarooni/capacitor-calendar';
+import { CalendarPermissionScope, CapacitorCalendar } from '@ebarooni/capacitor-calendar';
 
 import type { CalendarBackend, Entry, Instance, Window } from './device-calendar.ts';
 
@@ -46,7 +46,7 @@ export const nativeBackend: CalendarBackend = {
     const { result } = await CapacitorCalendar.listEventsInRange({ from, to });
     return result
       .filter((event) => event.calendarId === calendarId)
-      .map((event) => ({ id: event.id, masterId: event.masterId, startDate: event.startDate, description: event.description }));
+      .map((event) => ({ id: event.id, startDate: event.startDate, description: event.description }));
   },
 
   async create(calendarId: string, entry: Entry): Promise<void> {
@@ -58,16 +58,10 @@ export const nativeBackend: CalendarBackend = {
       startDate: entry.start,
       endDate: entry.end,
       alerts: entry.alerts,
-      recurrence: entry.recurrence && { frequency: 'weekly', byWeekDay: [entry.recurrence.weekday], end: entry.recurrence.until },
     });
   },
 
   async remove(id: string): Promise<void> {
-    // Without an `instanceDate` this takes the whole series
-    await CapacitorCalendar.deleteEvent({ id, span: EventSpan.THIS_AND_FUTURE_EVENTS });
-  },
-
-  async removeOccurrence(masterId: string, instanceDate: number): Promise<void> {
-    await CapacitorCalendar.deleteEvent({ id: masterId, span: EventSpan.THIS_EVENT, instanceDate });
+    await CapacitorCalendar.deleteEvent({ id });
   },
 };
