@@ -85,7 +85,7 @@ i18n (`src/locales/en.ts`, `de.ts`, block `schedule`; German to check with Tim; 
 - [x] `src/composables/useAgendaActions.ts` from the selection state, `row`, `open`, `change`, `move`, `addMedia` in `AgendaView.vue`; it takes the members and a `changed` callback.
 - [x] `src/components/AgendaDayList.vue` with the rows, inline actions, move form, archer chips; props `days` (all days in one component, so one training is selected at a time), `canPlan(item)`, `members`; emits `changed`.
 - [x] `AgendaView.vue` uses the component; the one-off form and the data loading stay (it has its own `start`, `end`, `location`, `error`).
-- [x] `npm run type-check`, `npm test`. [ ] Phone: agenda unchanged for coach and archer.
+- [x] `npm run type-check`, `npm test`. [x] Phone (2026-10-31, local test server): coach selects, moves (form only, not saved), cancels, reinstates, opens an occurrence; archer sees only Open. Not tried: saving a move, add note/media, Open on a one-off.
 
 ### Phase 2: date logic
 
