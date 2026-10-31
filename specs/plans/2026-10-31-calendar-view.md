@@ -89,9 +89,9 @@ i18n (`src/locales/en.ts`, `de.ts`, block `schedule`; German to check with Tim; 
 
 ### Phase 2: date logic
 
-- [ ] `dayKey` in `src/lib/schedule.ts`, `groupByDay` uses it.
-- [ ] `src/lib/calendar.ts`: `addDays`, `monthGrid`, `firstWeekday`, `rangeOf`, `daysOf`, `dotsByDay`.
-- [ ] `src/lib/calendar.test.ts` (see Tests).
+- [x] `dayKey` in `src/lib/schedule.ts`, `groupByDay` uses it.
+- [x] `src/lib/calendar.ts`: `addDays`, `addMonths`, `monthGrid`, `firstWeekday`, `rangeOf`, `daysOf`, `dotsByDay`. `firstWeekday` returns `Date.getDay()` numbers (0 is Sunday).
+- [x] `src/lib/calendar.test.ts` (14 tests; `process.env.TZ = 'Europe/Berlin'` at the top of the file works, also when the machine zone differs, and a first test checks it).
 
 ### Phase 3: month grid
 
@@ -108,9 +108,9 @@ i18n (`src/locales/en.ts`, `de.ts`, block `schedule`; German to check with Tim; 
 ## Tests
 
 Vitest (`npm test`):
-- [ ] `calendar.test.ts`: `addDays` across month and year ends; `monthGrid` pads to whole weeks for Monday and Sunday starts (a 28-day February, a month that needs 6 rows); `firstWeekday` falls back to Monday; `rangeOf` gives local midnights; `daysOf` for a one-day training, an event ending at midnight (not on the next day), a three-day camp; `dotsByDay` counts cancelled apart.
-- [ ] DST: the same cases with `TZ=Europe/Berlin` around 2026-03-29 and 2026-10-25 (a 23-hour and a 25-hour day stay one date step). Set `test.env.TZ` in `vitest.config.ts` or `process.env.TZ` at the top of the test file **[check]** which one Node picks up before the first `Date`; changing it for all tests may shift other tests.
-- [ ] `schedule.test.ts`: `groupByDay` unchanged after the `dayKey` move.
+- [x] `calendar.test.ts`: `addDays` across month and year ends; `monthGrid` pads to whole weeks for Monday and Sunday starts (a 28-day February, a month that needs 6 rows); `firstWeekday` falls back to Monday; `rangeOf` gives local midnights; `daysOf` for a one-day training, an event ending at midnight (not on the next day), a three-day camp; `dotsByDay` counts cancelled apart.
+- [x] DST: the same cases with `TZ=Europe/Berlin` around 2026-03-29 and 2026-10-25 (a 23-hour and a 25-hour day stay one date step). Set `test.env.TZ` in `vitest.config.ts` or `process.env.TZ` at the top of the test file **[check]** which one Node picks up before the first `Date`; changing it for all tests may shift other tests.
+- [x] `groupByDay` unchanged after the `dayKey` move (the existing tests pass).
 - [ ] Locale parity test covers the new keys.
 
 Server: none for Phases 1 to 3 (no server change). Phase 4: the two-team agenda test above.

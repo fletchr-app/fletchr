@@ -71,11 +71,14 @@ export function fromLocalInput(value: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+/** The device-local date (`YYYY-MM-DD`) of an instant. */
+export const dayKey = (iso: string): string => toLocalInput(iso).slice(0, 10);
+
 /** The agenda by day on this device's clock, in order; each day with its items. */
 export function groupByDay(items: readonly AgendaItem[]): { day: string; items: AgendaItem[] }[] {
   const days = new Map<string, AgendaItem[]>();
   for (const item of items) {
-    const day = toLocalInput(item.start).slice(0, 10);
+    const day = dayKey(item.start);
     days.set(day, [...(days.get(day) ?? []), item]);
   }
   return [...days].sort(([a], [b]) => a.localeCompare(b)).map(([day, list]) => ({ day, items: list }));
