@@ -33,6 +33,15 @@ A team has a schedule. A coach adds notes and photos to a team training without 
 - Deleting a slot keeps its rows as one-offs. A training from a slot is cancelled, not deleted.
 - A merge of two sessions keeps the loser's `event` where the winner has none (`FILLED_FIELDS`). Claiming a profile and the account transfer carry the links along.
 
+## Device calendar (#107, Android)
+
+Settings, Teams: "Trainings in the phone's calendar" (a switch, with a reminder choice: none, 30 minutes, 1 hour, 1 day before). Turning it on asks for the calendar permission, makes a local calendar "Fletchr" (account name `fletchr`, no Google account, so it stays on this phone) and fills it from `GET /api/slots/` and `GET /api/events/agenda/` (yesterday to 119 days ahead, all teams). Plan: `specs/plans/2026-10-31-device-calendar.md`.
+
+- A slot is one weekly series, starting at its first unchanged occurrence in the window (the server computes the times, DST included). Every other row that is not cancelled (one-offs, competitions, camps, moved occurrences) is a single entry.
+- Every entry ends with a tag line `fletchr:<slot|event>:<id>:<hash>` in its description; the hash covers what we write. The phone's calendar therefore holds the state and a sync (`src/lib/device-calendar.ts`) is a diff: remove what is not wanted or changed, create what is missing, then remove from a series every occurrence the agenda has no unchanged training for (cancelled, moved, paused). Entries without our tag are left alone.
+- A sync runs after each schedule write on this phone, after leaving a team, on app start and resume (at most every 15 minutes), and when the reminder changes. One at a time. Turning the switch off, or signing out, deletes the calendar. Past trainings appear only from when the switch was turned on.
+- Plugin: `@ebarooni/capacitor-calendar` (pinned), used only in `src/lib/device-calendar-native.ts`. The permissions `READ_CALENDAR` and `WRITE_CALENDAR` are in the manifest.
+
 ## Not built
 
-Offline use (cached agenda, notes queued with an event) waits for #84 and its team cache. A session upload that the server refuses because of its event is not retried without it (a photo is). The device calendar (#107), tournament results, group notes that every participant reads. An iCal feed per team (#106) is not planned: it needs a secret URL, a new way into the data; #107 (write the trainings into the phone's calendar) covers the need without one. A calendar over all of a person's teams is open (Phase 4 of the plan).
+Offline use (cached agenda, notes queued with an event) waits for #84 and its team cache. A session upload that the server refuses because of its event is not retried without it (a photo is). Tournament results, group notes that every participant reads. An iCal feed per team (#106) is not planned: it needs a secret URL, a new way into the data; the device calendar (below) covers the need without one. A calendar over all of a person's teams is open (Phase 4 of the plan).

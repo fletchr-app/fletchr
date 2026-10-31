@@ -6,6 +6,7 @@ import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuth } from '@/composables/useAuth'
+import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useTeams } from '@/composables/useTeams'
@@ -17,6 +18,7 @@ const { status } = useAuth()
 const { isCoach } = useTeams()
 useMediaLibrary() // starts keeping the list of your photos and videos on the phone
 useNoteLibrary() // starts keeping your notes on the phone
+useDeviceCalendar() // starts keeping the phone's calendar in step, when it is turned on
 
 // Signing in or out moves you to the right side of the app, wherever you were.
 watch(status, (s) => {
