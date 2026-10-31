@@ -26,8 +26,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release key: set FLETCHR_STORE_FILE, FLETCHR_STORE_PASSWORD, FLETCHR_KEY_ALIAS and
+    // FLETCHR_KEY_PASSWORD in ~/.gradle/gradle.properties. Without them the release build is unsigned.
+    def releaseStoreFile = findProperty('FLETCHR_STORE_FILE')
+    if (releaseStoreFile) {
+        signingConfigs {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword findProperty('FLETCHR_STORE_PASSWORD')
+                keyAlias findProperty('FLETCHR_KEY_ALIAS')
+                keyPassword findProperty('FLETCHR_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseStoreFile) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
