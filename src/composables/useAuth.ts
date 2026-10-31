@@ -1,8 +1,9 @@
 import { Capacitor } from '@capacitor/core';
-import { computed, nextTick, shallowRef, watch } from 'vue';
+import { computed, nextTick, ref, shallowRef, watch } from 'vue';
 
 import type { components } from '@/lib/api-types';
 import { type ApiClient, AuthSession } from '@/lib/auth-session';
+import { type AuthStatus, authStatus, needsLocal } from '@/lib/auth-status';
 import { currentLanguage, t } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { jwtPayload, userIdOf } from '@/lib/jwt';
@@ -15,9 +16,6 @@ import { useLocalMode } from '@/composables/useLocalMode';
 import type { StoreOwner } from '@/lib/store-owner';
 
 export type RegisterBody = components['schemas']['RegisterRequest'];
-
-/** `local`: no account and no server, everything stays on the phone (#93). */
-type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'local';
 
 const { url, isOverride, setUrl } = useServer();
 
@@ -58,9 +56,16 @@ const localOn = local.on;
 const localId = local.id;
 const localLoaded = local.loaded;
 
-const status = computed<AuthStatus>(() =>
-  !state.value.loaded || !localLoaded.value ? 'loading' : state.value.tokens ? 'signedIn' : localOn.value ? 'local' : 'signedOut',
-);
+// Set when starting local mode failed, so the person gets the sign-in screen instead of waiting for ever.
+const localFailed = ref(false);
+const facts = computed(() => ({
+  loaded: state.value.loaded && localLoaded.value,
+  hasTokens: !!state.value.tokens,
+  localOn: localOn.value,
+  localFailed: localFailed.value,
+}));
+/** `local`: no account and no server, everything stays on the phone (#93). */
+const status = computed<AuthStatus>(() => authStatus(facts.value));
 const isLocal = computed(() => status.value === 'local');
 
 /** Id of the signed-in user, read from the access token so it is known offline. */
@@ -86,12 +91,12 @@ watch(
 /** Use the app without an account or server. Data of an earlier local use comes back. */
 const enterLocal = local.enter;
 
-// A phone with no tokens and no flag (first launch, or tokens revoked by the server) starts in local mode. `status` is
-// `loading` until both the tokens and the flag are read, so `signedOut` here means both are known to be missing.
+// A phone with no tokens and no flag (first launch, or tokens revoked by the server) starts in local mode. `status` stays
+// `loading` until that is done, so the router never sees a signed-out phone and the first screen is Home.
 watch(
-  status,
-  (s) => {
-    if (s === 'signedOut') void enterLocal();
+  () => needsLocal(facts.value),
+  (needed) => {
+    if (needed) enterLocal().catch(() => (localFailed.value = true));
   },
   { immediate: true },
 );
