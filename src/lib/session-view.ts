@@ -2,7 +2,7 @@
 import type { components } from './api-types.ts';
 import { groupOf, type Group } from './group.ts';
 import type { EventLink } from './schedule.ts';
-import type { Gear, LogEnd, LogSession, LogShot, SessionDetails } from './log-model.ts';
+import { isVisibility, type Gear, type LogEnd, type LogSession, type LogShot, type SessionDetails } from './log-model.ts';
 
 export type ViewSession = LogSession & { owner_name?: string; updated_at?: string };
 
@@ -38,6 +38,8 @@ export function fromServer(s: ServerSession): ViewSession {
   const event = eventOf(s);
   return {
     ...(event ? { event } : {}),
+    // A server that does not know the field leaves it out; so does the copy then.
+    ...(isVisibility(s.visibility) ? { visibility: s.visibility } : {}),
     details: detailsOf(s),
     gear: gearOf(s.setup_info),
     id: s.id,

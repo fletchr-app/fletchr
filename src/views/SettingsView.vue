@@ -15,10 +15,12 @@ import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useServer } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { useUnits } from '@/composables/useUnits'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import { t } from '@/i18n'
 import { CAP_CHOICES_MB } from '@/lib/media-keep'
+import type { Visibility } from '@/lib/log-model'
 import type { Units } from '@/lib/units'
 
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
@@ -52,6 +54,8 @@ const { mode: language, setMode: setLanguage } = useLocale()
 const { url } = useServer()
 const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
+const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
+const VISIBILITIES: Visibility[] = ['coaches', 'me']
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
 const kept = useKeptMedia()
 const capLabel = (mb: number | null) => (mb === null ? t('settings.keepNoLimit') : mb === 0 ? t('settings.keepNothing') : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`)
@@ -71,8 +75,20 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
     <div class="screen">
       <IonList inset>
         <IonListHeader>{{ $t('settings.training') }}</IonListHeader>
-        <IonItem router-link="/equipment" detail lines="none"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
+        <IonItem router-link="/equipment" detail :lines="isLocal ? 'none' : 'full'"><IonLabel>{{ $t('settings.equipment') }}</IonLabel></IonItem>
+        <IonItem v-if="!isLocal" lines="none">
+          <IonSelect
+            :value="trainingVisibility"
+            :label="$t('settings.trainingVisibility')"
+            interface="action-sheet"
+            @ion-change="$event.detail.value !== trainingVisibility && saveVisibility($event.detail.value)"
+          >
+            <IonSelectOption v-for="v in VISIBILITIES" :key="v" :value="v">{{ $t(`visibility.${v}`) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
       </IonList>
+      <div v-if="!isLocal" class="muted px-3">{{ $t('settings.trainingVisibilityHint') }}</div>
+      <ErrorText :message="visibilityError" />
       <template v-if="isLocal">
         <IonList inset>
           <IonListHeader>{{ $t('settings.account') }}</IonListHeader>

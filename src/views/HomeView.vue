@@ -14,6 +14,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useRemote } from '@/composables/useRemote'
 import { useTeams } from '@/composables/useTeams'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import type { components } from '@/lib/api-types'
 import { arrowsSince, sessionRows, weekStart } from '@/lib/session-rows'
 
@@ -27,9 +28,12 @@ const error = ref<string | null>(null)
 
 // Your own sessions, the same list as the Training tab: those on the device (also the ones not uploaded yet) and the server's.
 const { sessions: local, goneSessions } = useLog()
+const { visibility: defaultVisibility } = useTrainingVisibility()
 // Without an account the device is the only source.
 const remote = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)))
-const rows = computed(() => sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value))
+const rows = computed(() =>
+  sessionRows(local.value.filter((s) => !s.owner), remote.data.value ?? [], goneSessions.value, [], undefined, isLocal.value ? undefined : defaultVisibility.value),
+)
 const lastSession = computed(() => rows.value[0])
 const weekArrows = computed(() => arrowsSince(rows.value, weekStart(new Date())))
 const sessionsKnown = computed(() => !remote.loading.value || rows.value.length > 0)

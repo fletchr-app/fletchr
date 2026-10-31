@@ -5106,6 +5106,12 @@ components:
           nullable: true
         note:
           type: string
+        visibility:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/VisibilityA4eEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         created_at:
           type: string
           format: date-time
@@ -5228,6 +5234,18 @@ components:
           type: string
           format: uuid
           nullable: true
+        visibility:
+          nullable: true
+          description: |-
+            Only for a clip in no session: `me` or `coaches`; null follows the archer's default. A clip in a session follows the session. Only the archer chooses.
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
+          oneOf:
+          - $ref: '#/components/schemas/VisibilityA4eEnum'
+          - $ref: '#/components/schemas/NullEnum'
     Member:
       type: object
       properties:
@@ -5507,6 +5525,9 @@ components:
         * `private` - Private
         * `coach_only` - Coach Only
         * `shared` - Shared
+    NullEnum:
+      enum:
+      - null
     PasswordChangeRequest:
       type: object
       description: 'Changing the login needs the current password, even when signed
@@ -5853,6 +5874,16 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+        training_visibility:
+          allOf:
+          - $ref: '#/components/schemas/TrainingVisibilityEnum'
+          description: |-
+            Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
         video_allowed:
           type: boolean
           readOnly: true
@@ -5892,6 +5923,16 @@ components:
           nullable: true
         units:
           $ref: '#/components/schemas/UnitsEnum'
+        training_visibility:
+          allOf:
+          - $ref: '#/components/schemas/TrainingVisibilityEnum'
+          description: |-
+            Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
     Ranking:
       type: object
       properties:
@@ -6199,6 +6240,8 @@ components:
         weather:
           type: string
           maxLength: 150
+        visibility:
+          $ref: '#/components/schemas/VisibilityA4eEnum'
         setup:
           type: integer
           nullable: true
@@ -6379,6 +6422,8 @@ components:
         location:
           type: string
           maxLength: 150
+        visibility:
+          $ref: '#/components/schemas/VisibilityA4eEnum'
         setup:
           type: integer
           nullable: true
@@ -6526,6 +6571,16 @@ components:
           writeOnly: true
           description: 'With `event_slot`: the date of the occurrence in the time
             zone of the slot'
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityA4eEnum'
+          description: |-
+            Who sees the session: `me` or `coaches`. Left out: your default for new sessions (`coaches` for a session a coach opens). Only the archer chooses.
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
       required:
       - started_at
     Setup:
@@ -7022,6 +7077,18 @@ components:
       description: |-
         * `media` - Media
         * `note` - Note
+    TrainingVisibilityEnum:
+      enum:
+      - me
+      - coaches
+      - team
+      - everyone
+      type: string
+      description: |-
+        * `me` - me
+        * `coaches` - coaches
+        * `team` - team
+        * `everyone` - everyone
     UnitsEnum:
       enum:
       - metric
@@ -7057,6 +7124,18 @@ components:
       - video_allowed
       - video_consent_at
       - video_consent_by
+    VisibilityA4eEnum:
+      enum:
+      - me
+      - coaches
+      - team
+      - everyone
+      type: string
+      description: |-
+        * `me` - me
+        * `coaches` - coaches
+        * `team` - team
+        * `everyone` - everyone
     VolumeEntry:
       type: object
       properties:

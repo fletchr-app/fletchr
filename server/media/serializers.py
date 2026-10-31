@@ -3,6 +3,9 @@ from django.db.models import Sum
 from django.utils.translation import gettext
 from rest_framework import serializers
 
+from core.access import check_visibility
+from core.audience import AUDIENCES
+from training.models import TrainingSession
 from training.serializers import EventInfoSerializerMixin, EventLinkSerializer, SessionRefField
 
 from .access import can_change, media_link
@@ -24,7 +27,7 @@ class MediaSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
         model = Media
         fields = [
             "id", "owner", "owner_name", "uploaded_by", "uploaded_by_name", "session", "event", "event_info", "kind", "taken_at", "width", "height", "size",
-            "duration_ms", "capture_fps", "frame_count", "note", "created_at", "updated_at", "file_url", "thumbnail_url", "can_edit",
+            "duration_ms", "capture_fps", "frame_count", "note", "visibility", "created_at", "updated_at", "file_url", "thumbnail_url", "can_edit",
         ]
 
     def get_owner_name(self, media) -> str:
@@ -58,18 +61,28 @@ class MediaWriteSerializer(EventLinkSerializer):
     frame_count = serializers.IntegerField(min_value=1, required=False, allow_null=True)
     note = serializers.CharField(required=False, allow_blank=True)
     session = SessionRefField(required=False, allow_null=True)
+    visibility = serializers.ChoiceField(
+        choices=AUDIENCES, required=False, allow_null=True,
+        help_text="Only for a clip in no session: `me` or `coaches`; null follows the archer's default. A clip in a session follows the session. Only the archer chooses.",
+    )
 
     CREATE_ONLY = ["kind", "file", "thumbnail", "taken_at", "width", "height"]
 
     def validate_session(self, session):
         if session is not None and session.owner_id != self.context["owner"].pk:
             raise serializers.ValidationError(gettext("This session belongs to another archer"))
+        # A coach cannot put a clip into a session they may not see (the same answer as for an id that does not exist).
+        if session is not None and not TrainingSession.objects.visible_to(self.context["request"].user).filter(pk=session.pk).exists():
+            raise serializers.ValidationError(serializers.PrimaryKeyRelatedField.default_error_messages["does_not_exist"].format(pk_value=session.pk))
         return session
+
+    def validate_visibility(self, value):
+        return value if value is None else check_visibility(value, self.context["request"].user, self.context["owner"])
 
     def validate(self, attrs):
         attrs = self.take_event(attrs, self.context["owner"])
         if self.instance is not None:
-            return {k: v for k, v in attrs.items() if k in ("note", "session", "event")}
+            return {k: v for k, v in attrs.items() if k in ("note", "session", "event", "visibility")}
         missing = {k: str(REQUIRED) for k in self.CREATE_ONLY if k not in attrs}
         if missing:
             raise serializers.ValidationError(missing)

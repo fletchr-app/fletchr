@@ -10,6 +10,8 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
+from . import audience
+
 INVITE_LIFETIME = timedelta(days=14)
 # Codes are read aloud, typed from a message and copied by hand, so no look-alikes: no 0 and O, no 1, I and L.
 # 31 symbols; 12 of them are about 59 bits, plenty for a code that is single-use, short-lived and rate-limited.
@@ -95,6 +97,8 @@ class Profile(models.Model):
     # A JPEG of at most 512 px (core/avatar.py). A new name on every change, so a cached link never shows an old picture.
     avatar = models.FileField(upload_to=avatar_path, blank=True, max_length=200)
     avatar_updated_at = models.DateTimeField(null=True, blank=True)
+    # The visibility new sessions start with (specs/design/session-visibility.md). Never above `coaches` for now.
+    training_visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.DEFAULT)
 
     def __str__(self):
         return self.name or self.user.email

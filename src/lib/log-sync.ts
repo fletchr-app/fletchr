@@ -47,6 +47,8 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
             : session.event === null
               ? { event: null }
               : {}),
+          // Left out until the archer chose, so the server applies their default. Only for their own session: a coach's copy of one they opened is not theirs to set.
+          ...(session.visibility && !session.owner && !session.noResults ? { visibility: session.visibility } : {}),
           // Left out when nothing was chosen, so the server keeps what it has; null clears it.
           ...(session.gear
             ? gearBody(session.gear)

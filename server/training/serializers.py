@@ -10,7 +10,7 @@ from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
 
-from core.access import can_tag
+from core.access import can_tag, check_visibility, starting_visibility
 
 from .merge import has_results, resolve_session_id
 from .models import End, SessionTombstone, Shot, TrainingEvent, TrainingSession, TrainingSlot, VolumeEntry
@@ -198,8 +198,13 @@ class SessionWriteSerializer(EventLinkSerializer, serializers.ModelSerializer):
         fields = [
             "started_at", "ended_at", "type", "environment", "location", "weather",
             "bow_revision", "arrow_set_revision", "bow_revision_uid", "arrow_set_revision_uid",
-            "physical_rating", "mental_rating", "goals", "notes", "event", "event_slot", "event_date",
+            "physical_rating", "mental_rating", "goals", "notes", "event", "event_slot", "event_date", "visibility",
         ]
+        extra_kwargs = {"visibility": {"help_text": "Who sees the session: `me` or `coaches`. Left out: your default for new sessions (`coaches` for a session a coach opens). Only the archer chooses."}}
+
+    def validate_visibility(self, value):
+        owner = self.instance.owner if self.instance else self.context["owner"]
+        return check_visibility(value, self.context["request"].user, owner)
 
     def validate_bow_revision(self, revision):
         if revision is not None and revision.bow.owner_id != self.context["request"].user.id:
@@ -249,6 +254,8 @@ class SessionWriteSerializer(EventLinkSerializer, serializers.ModelSerializer):
         return validated_data
 
     def create(self, validated_data):
+        if "visibility" not in validated_data:
+            validated_data["visibility"] = starting_visibility(validated_data["owner"], validated_data["opened_by"])
         return super().create(self._with_setup(validated_data))
 
     def update(self, instance, validated_data):
@@ -290,7 +297,7 @@ class SessionSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
         model = TrainingSession
         fields = [
             "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "weather",
-            "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "event", "event_info", "created_at", "updated_at",
+            "visibility", "setup", "setup_info", "physical_rating", "mental_rating", "goals", "notes", "event", "event_info", "created_at", "updated_at",
             "ends", "volume_entries",
         ]
 
@@ -325,7 +332,7 @@ class SessionSummarySerializer(EventInfoSerializerMixin, serializers.ModelSerial
     class Meta:
         model = TrainingSession
         fields = [
-            "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "setup",
+            "id", "owner", "owner_name", "opened_by", "opened_by_name", "started_at", "ended_at", "type", "environment", "location", "visibility", "setup",
             "event", "event_info", "updated_at", "ends", "scored_arrows", "score_total", "volume_arrows",
         ]
 

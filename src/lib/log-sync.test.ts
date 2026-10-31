@@ -387,3 +387,15 @@ test('a pull takes over the training a session is linked to, unless a change of 
   state = reduce(state, { type: 'pulled', sessions: [linked] });
   assert.equal(state.sessions[0]!.event, null); // the unlink goes up first
 });
+
+test('visibility is sent once it is chosen and left out before, and never for a session logged for another archer or a coach copy', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session });
+  h.dispatch({ type: 'startSession', session: { ...session, id: 's2', visibility: 'me' } });
+  h.dispatch({ type: 'startSession', session: { ...session, id: 's3', visibility: 'coaches', owner: 7, owner_name: 'Max' } });
+  h.dispatch({ type: 'startSession', session: { ...session, id: 's4', visibility: 'coaches', noResults: true } });
+  await h.run();
+  const bodies = h.calls.map((c) => c.body as Record<string, unknown>);
+  assert.deepEqual(bodies.map((b) => 'visibility' in b), [false, true, false, false]);
+  assert.equal(bodies[1]!.visibility, 'me');
+});

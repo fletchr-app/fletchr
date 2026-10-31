@@ -51,7 +51,7 @@ OVERVIEW_DAYS = 7
 
 
 def visible_sessions(user):
-    return TrainingSession.objects.filter(owner__in=archers_visible_to(user)).select_related(
+    return TrainingSession.objects.visible_to(user).select_related(
         "owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision", "event__team"
     )
 
@@ -156,6 +156,8 @@ class SessionDetailView(APIView):
                 raise NotFound()
         data = request.data
         if mode != "full":
+            if "visibility" in request.data:
+                raise ValidationError({"visibility": gettext("Only the archer can choose who sees this")})
             data = {k: v for k, v in request.data.items() if k in COACH_FIELDS}
             if mode == "fill":
                 data = {k: v for k, v in data.items() if getattr(existing, k, None) in (None, "")}
@@ -165,7 +167,7 @@ class SessionDetailView(APIView):
         times_changed = existing is None or any(k in changed and changed[k] != getattr(existing, k) for k in ("started_at", "ended_at"))
         with transaction.atomic():
             session = serializer.save(**({} if existing else {"id": session_id, "owner": owner, "opened_by": request.user}))
-            merged = merge_if_possible(session) if times_changed else session
+            merged = merge_if_possible(session, viewer=request.user) if times_changed else session
         session = (
             TrainingSession.objects.select_related("owner__profile", "opened_by__profile", "setup__bow_revision", "setup__arrow_set_revision", "event__team")
             .prefetch_related("ends__shots", "volume_entries")
@@ -205,7 +207,11 @@ class SessionTombstoneListView(generics.ListAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return SessionTombstone.objects.none()
-        return SessionTombstone.objects.filter(owner__in=archers_visible_to(self.request.user)).order_by("at")
+        # Your own ids, and those of an archer's sessions that were merged into one you may see. A deleted session of
+        # someone else (or one merged into a private session) says nothing: you may never have been allowed to know it.
+        user = self.request.user
+        others = Q(owner__in=archers_visible_to(user), merged_into__in=TrainingSession.objects.visible_to(user))
+        return SessionTombstone.objects.filter(Q(owner=user) | others).order_by("at")
 
 
 class EndView(APIView):
@@ -287,19 +293,20 @@ class TeamOverviewView(APIView):
             raise PermissionDenied(gettext("Only coaches can see the team overview"))
         now = timezone.now()
         since = now - timedelta(days=OVERVIEW_DAYS)
+        visible = TrainingSession.objects.visible_to(request.user)
         shots = (
-            Shot.objects.filter(end__session__owner=OuterRef("user"), end__session__started_at__gte=since)
+            Shot.objects.filter(end__session__in=visible, end__session__owner=OuterRef("user"), end__session__started_at__gte=since)
             .values("end__session__owner")
             .annotate(total=Count("id"))
             .values("total")
         )
         volume = (
-            VolumeEntry.objects.filter(session__owner=OuterRef("user"), session__started_at__gte=since)
+            VolumeEntry.objects.filter(session__in=visible, session__owner=OuterRef("user"), session__started_at__gte=since)
             .values("session__owner")
             .annotate(total=Sum("arrow_count"))
             .values("total")
         )
-        last = TrainingSession.objects.filter(owner=OuterRef("user")).order_by("-started_at")
+        last = visible.filter(owner=OuterRef("user")).order_by("-started_at")
         members = (
             TeamMember.objects.filter(team=team)
             .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
@@ -365,11 +372,12 @@ class StatsView(APIView):
         if not archers_visible_to(request.user).filter(pk=owner_id).exists():
             raise NotFound()
 
-        shots = Shot.objects.filter(end__session__owner_id=owner_id).values_list(
+        sessions = TrainingSession.objects.visible_to(request.user).filter(owner_id=owner_id)
+        shots = Shot.objects.filter(end__session__in=sessions).values_list(
             "end__session_id", "end__session__started_at", "end__session__type", "end__distance_m", "end__face",
             "value", "is_x", "is_miss", "x", "y", "end__session__physical_rating", "end__session__mental_rating", "end__session__setup_id",
         )
-        volume = VolumeEntry.objects.filter(session__owner_id=owner_id).values_list("session__started_at", "arrow_count")
+        volume = VolumeEntry.objects.filter(session__in=sessions).values_list("session__started_at", "arrow_count")
         stats = compute_stats(list(shots), list(volume), timezone.now(), tz, weeks)
         return Response(StatsSerializer({"owner": owner_id, "tz": str(tz), **stats}).data)
 
@@ -417,8 +425,9 @@ class PositionsView(APIView):
         if not archers_visible_to(request.user).filter(pk=owner_id).exists():
             raise NotFound()
 
+        sessions = TrainingSession.objects.visible_to(request.user).filter(owner_id=owner_id)
         shots = Shot.objects.filter(
-            end__session__owner_id=owner_id, end__face=face["slug"], end__distance_m=distance, x__isnull=False, y__isnull=False
+            end__session__in=sessions, end__face=face["slug"], end__distance_m=distance, x__isnull=False, y__isnull=False
         )
         if setup is not None:
             shots = shots.filter(end__session__setup_id=setup)
@@ -476,10 +485,11 @@ class TeamRankingView(APIView):
         )
         listed = [(m.user_id, m.user.profile.name or m.user.email, m.user.is_managed) for m in members]
         owners = [m[0] for m in listed]
-        shots = Shot.objects.filter(end__session__owner_id__in=owners, end__session__started_at__gte=since).values_list(
+        sessions = TrainingSession.objects.visible_to(request.user).filter(owner_id__in=owners)
+        shots = Shot.objects.filter(end__session__in=sessions, end__session__started_at__gte=since).values_list(
             "end__session__owner_id", "end__face", "end__distance_m", "value", "is_miss"
         )
-        volume = VolumeEntry.objects.filter(session__owner_id__in=owners, session__started_at__gte=since).values_list("session__owner_id", "arrow_count")
+        volume = VolumeEntry.objects.filter(session__in=sessions, session__started_at__gte=since).values_list("session__owner_id", "arrow_count")
         result = compute_ranking(listed, list(shots), list(volume), face, distance)
         return Response(RankingSerializer({"days": days, **result}).data)
 
@@ -498,7 +508,8 @@ class ArrowStatsView(APIView):
             raise ValidationError(gettext("owner must be a number"))
         if not archers_visible_to(request.user).filter(pk=owner_id).exists():
             raise NotFound()
-        shots = Shot.objects.filter(end__session__owner_id=owner_id, x__isnull=False, y__isnull=False)
+        sessions = TrainingSession.objects.visible_to(request.user).filter(owner_id=owner_id)
+        shots = Shot.objects.filter(end__session__in=sessions, x__isnull=False, y__isnull=False)
         # Only an archer who numbers their arrows has anything to show.
         if not shots.filter(arrow_number__isnull=False).exists():
             return Response([])

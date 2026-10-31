@@ -31,6 +31,8 @@ DE = {
     "This account no longer exists": "Dieses Konto gibt es nicht mehr",
     "Not your bow": "Das ist nicht dein Bogen",
     "Not your arrow set": "Das ist nicht dein Pfeilsatz",
+    "Only the archer can choose who sees this": "Nur der Schütze legt fest, wer das sieht",
+    "Not available yet": "Noch nicht verfügbar",
     "This revision belongs to something else": "Diese Version gehört zu etwas anderem",
     "A note about yourself is private": "Eine Notiz über dich selbst ist privat",
     "A note about yourself has no team": "Eine Notiz über dich selbst gehört zu keinem Team",

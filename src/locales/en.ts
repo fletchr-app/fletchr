@@ -798,6 +798,8 @@ export default {
     title: 'Settings',
     training: 'Training',
     equipment: 'My equipment',
+    trainingVisibility: 'New sessions are seen by',
+    trainingVisibilityHint: 'Applies to new sessions and to photos and videos that are in no session, including the ones you have already: they all follow it. You can change a session on its notes screen. Needs a connection.',
     teams: 'Teams',
     joinTeam: 'Join a team',
     createTeam: 'Create a team',
@@ -850,6 +852,13 @@ export default {
     privacy: 'Privacy policy',
     imprint: 'Imprint',
     contact: 'Contact',
+  },
+  visibility: {
+    me: 'Only me',
+    coaches: 'Me and my coaches',
+    sessionToggle: 'Coaches can see this session',
+    sessionHint: 'Off keeps the session, its results, photos and videos from your coaches. Notes a coach wrote on it are hidden from them too, until you turn this on again.',
+    private: 'Private, your coaches cannot see this session',
   },
   details: {
     title: 'Session notes',

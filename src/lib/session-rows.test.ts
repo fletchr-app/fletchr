@@ -53,3 +53,17 @@ test('a training with notes or photos of the archer and no session of theirs is 
   assert.deepEqual(rows[0]!.event, { name: 'Squad', kind: 'training', notes: 2, media: 1 });
   assert.equal(sessionRows([], [], new Set(), [event])[0]!.to, '/events/ev1');
 });
+
+test('a private session shows as such, from the device or the server; a session nobody chose for follows the default', () => {
+  const summary = (id: string, visibility: string) => ({ ...(remote(id, '2026-10-17T09:00:00Z') as object), visibility }) as never;
+  const rows = sessionRows(
+    [{ ...local('a', '2026-10-18T09:00:00Z'), visibility: 'me' }, local('b', '2026-10-16T09:00:00Z')],
+    [summary('c', 'me'), summary('d', 'coaches')],
+    new Set(),
+    [],
+    undefined,
+    'me',
+  );
+  assert.deepEqual(rows.map((r) => [r.id, r.visibility]), [['a', 'me'], ['c', 'me'], ['d', 'coaches'], ['b', 'me']]);
+  assert.equal(sessionRows([local('a', '2026-10-18T09:00:00Z')], []).every((r) => r.visibility === undefined), true, 'no lock where the sessions are not the viewer\'s own');
+});

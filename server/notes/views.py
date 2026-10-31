@@ -111,7 +111,7 @@ class NotePutView(APIView):
 
     def put(self, request, uid):
         note = Note.objects.filter(uid=uid).select_related("author__profile", "archer__profile", "media", "event__team").first()
-        if note is not None and note.author_id != request.user.id:
+        if note is not None and (note.author_id != request.user.id or not visible_notes(request.user).filter(pk=note.pk).exists()):
             raise NotFound
         context = {
             "request": request,

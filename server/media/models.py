@@ -1,6 +1,11 @@
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
+
+from core import audience
+from core.access import archers_visible_to
+from core.audience import at_least
 
 
 def video_path(media, filename):
@@ -17,6 +22,21 @@ def file_path(media, filename):
 
 def thumbnail_path(media, filename):
     return f"{media.owner_id}/{media.pk}-thumb.jpg"
+
+
+class MediaQuerySet(models.QuerySet):
+    def visible_to(self, viewer):
+        """The clips `viewer` may see: their own, and those of the archers they coach when the clip's session is visible
+        to them; a clip in no session follows its own `visibility`, else the archer's default for training."""
+        from training.models import TrainingSession
+
+        coached = Q(owner__in=archers_visible_to(viewer))
+        shared = at_least("coaches")
+        in_session = Q(session__in=TrainingSession.objects.visible_to(viewer))
+        loose = Q(session__isnull=True) & (
+            Q(visibility__in=shared) | Q(visibility__isnull=True, owner__profile__training_visibility__in=shared)
+        )
+        return self.filter(Q(owner=viewer) | coached & (in_session | loose))
 
 
 class Media(models.Model):
@@ -50,9 +70,13 @@ class Media(models.Model):
     capture_fps = models.FloatField(null=True, blank=True, validators=[MinValueValidator(1)])
     frame_count = models.PositiveIntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
+    # Only for a clip in no session: null follows the archer's default (`Profile.training_visibility`). A clip in a session follows the session.
+    visibility = models.CharField(max_length=10, choices=audience.CHOICES, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # Changes of the note or the session (a move). Code that changes a clip with `update()` has to set it too: the phones pull by it.
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = MediaQuerySet.as_manager()
 
     class Meta:
         ordering = ["-taken_at", "-created_at"]

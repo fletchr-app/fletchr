@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from core.access import note_teams, teams_of
 from core.models import COACH_ROLES, Team, TeamMember, User
+from media.access import visible_media
 from media.models import Media
 
 from .defaults import localize, localize_name
@@ -112,8 +113,21 @@ class TemplateWriteSerializer(serializers.Serializer):
         return value
 
 
+class VisibleMediaField(serializers.PrimaryKeyRelatedField):
+    """A clip the user may see. On the way out, the link is left out when they may not (a clip in a session that is private to them)."""
+
+    def get_queryset(self):
+        return visible_media(self.context["request"].user)
+
+    def to_representation(self, value):
+        request = self.context.get("request")
+        if request is not None and not visible_media(request.user).filter(pk=value.pk).exists():
+            return None
+        return super().to_representation(value)
+
+
 class ScoreSerializer(serializers.ModelSerializer):
-    media = serializers.PrimaryKeyRelatedField(queryset=Media.objects.all(), required=False, allow_null=True)
+    media = VisibleMediaField(queryset=Media.objects.none(), required=False, allow_null=True)
 
     class Meta:
         model = Score

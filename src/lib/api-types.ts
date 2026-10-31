@@ -2225,6 +2225,7 @@ export interface components {
             /** Format: int64 */
             frame_count?: number | null;
             note?: string;
+            visibility?: (components["schemas"]["VisibilityA4eEnum"] | components["schemas"]["BlankEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -2286,6 +2287,15 @@ export interface components {
             note?: string;
             /** Format: uuid */
             session?: string | null;
+            /**
+             * @description Only for a clip in no session: `me` or `coaches`; null follows the archer's default. A clip in a session follows the session. Only the archer chooses.
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            visibility?: (components["schemas"]["VisibilityA4eEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         Member: {
             readonly user_id: number;
@@ -2422,6 +2432,8 @@ export interface components {
          * @enum {string}
          */
         NoteVisibilityEnum: "private" | "coach_only" | "shared";
+        /** @enum {unknown} */
+        NullEnum: null;
         /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
         PasswordChangeRequest: {
             current_password: string;
@@ -2600,6 +2612,15 @@ export interface components {
             /** Format: date */
             date_of_birth?: string | null;
             units?: components["schemas"]["UnitsEnum"];
+            /**
+             * @description Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
             /** @description False for an archer under 18 whose parents' consent is not on record */
             readonly video_allowed: boolean;
             /** @description False for an archer under 18 whose parents' consent is not on record */
@@ -2614,6 +2635,15 @@ export interface components {
             /** Format: date */
             date_of_birth?: string | null;
             units?: components["schemas"]["UnitsEnum"];
+            /**
+             * @description Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
         };
         Ranking: {
             days: number;
@@ -2751,6 +2781,7 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
             weather?: string;
+            visibility?: components["schemas"]["VisibilityA4eEnum"];
             setup?: number | null;
             readonly setup_info: components["schemas"]["SetupInfo"] | null;
             physical_rating?: number | null;
@@ -2828,6 +2859,7 @@ export interface components {
             type?: components["schemas"]["SessionTypeEnum"] | components["schemas"]["BlankEnum"];
             environment?: components["schemas"]["EnvironmentEnum"] | components["schemas"]["BlankEnum"];
             location?: string;
+            visibility?: components["schemas"]["VisibilityA4eEnum"];
             setup?: number | null;
             /** Format: uuid */
             readonly event: string;
@@ -2895,6 +2927,15 @@ export interface components {
              * @description With `event_slot`: the date of the occurrence in the time zone of the slot
              */
             event_date?: string;
+            /**
+             * @description Who sees the session: `me` or `coaches`. Left out: your default for new sessions (`coaches` for a session a coach opens). Only the archer chooses.
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            visibility?: components["schemas"]["VisibilityA4eEnum"];
         };
         Setup: {
             readonly id: number;
@@ -3130,6 +3171,14 @@ export interface components {
          */
         TombstoneKindEnum: "media" | "note";
         /**
+         * @description * `me` - me
+         *     * `coaches` - coaches
+         *     * `team` - team
+         *     * `everyone` - everyone
+         * @enum {string}
+         */
+        TrainingVisibilityEnum: "me" | "coaches" | "team" | "everyone";
+        /**
          * @description * `metric` - Metric
          *     * `imperial` - Imperial
          * @enum {string}
@@ -3146,6 +3195,14 @@ export interface components {
             video_consent_at: string | null;
             video_consent_by: string | null;
         };
+        /**
+         * @description * `me` - me
+         *     * `coaches` - coaches
+         *     * `team` - team
+         *     * `everyone` - everyone
+         * @enum {string}
+         */
+        VisibilityA4eEnum: "me" | "coaches" | "team" | "everyone";
         VolumeEntry: {
             /** Format: uuid */
             readonly id: string;
