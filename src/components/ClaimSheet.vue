@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonButton, IonContent, IonItem, IonList, IonRadio, IonRadioGroup, modalController } from '@ionic/vue'
+import { IonButton, IonContent, IonHeader, IonItem, IonList, IonRadio, IonRadioGroup, IonTitle, IonToolbar, modalController } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
@@ -19,9 +19,14 @@ const upload = () => answer.value !== null && close({ kind: 'upload', share: ans
 </script>
 
 <template>
+  <!-- The title sits in a header like on every screen, so it stays below the system bar. -->
+  <IonHeader>
+    <IonToolbar>
+      <IonTitle>{{ $t('claim.title') }}</IonTitle>
+    </IonToolbar>
+  </IonHeader>
   <IonContent>
     <div class="screen p-3">
-      <h2 class="m-0">{{ $t('claim.title') }}</h2>
       <div>{{ $t('claim.intro', { email }) }}</div>
       <ul class="m-0">
         <li v-for="l in lines" :key="l.kind">{{ $t(`claim.counts.${l.kind}`, { n: l.n }, l.n) }}</li>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonItem, IonLabel, IonList, IonListHeader, IonNote, onIonViewWillEnter } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AppButton from '@/components/AppButton.vue'
@@ -38,6 +38,9 @@ const lastSession = computed(() => rows.value[0])
 const weekArrows = computed(() => arrowsSince(rows.value, weekStart(new Date())))
 const sessionsKnown = computed(() => !remote.loading.value || rows.value.length > 0)
 
+// The screen stays alive when someone signs out, so the account's profile must not stay in the greeting.
+watch(isLocal, (local) => local && (me.value = null))
+
 // Each time the screen is shown: it stays alive between visits, so a new team or note would not appear otherwise.
 const shown = ref(0)
 let firstVisit = true // the first load happens when the screen is created
@@ -45,7 +48,7 @@ onIonViewWillEnter(() => {
   shown.value++
   if (firstVisit) firstVisit = false
   else remote.reload()
-  if (isLocal.value) return
+  if (isLocal.value) return void (me.value = null)
   return Promise.all([api.GET('/api/me/'), load()])
     .then(([meRes]) => {
       if (meRes.data) me.value = meRes.data
