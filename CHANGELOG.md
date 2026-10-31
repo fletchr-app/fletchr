@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.16.0 (2026-10-31)
+
 - **Month view in the schedule** (#106): the team's schedule has a "List | Month" toggle. The month shows the days with dots for what is on (cancelled ones hollow); a tap on a day lists its trainings below, with the same actions as the list. A camp over several days is on every day it covers and says "until <date>". The week starts on Monday in German and on Sunday in English (from the app language). No iCal feed (the device calendar is #107).
 
 ## 0.15.0 (2026-10-31)
