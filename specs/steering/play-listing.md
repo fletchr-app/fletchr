@@ -182,7 +182,7 @@ Play counts data as "collected" when it leaves the device to the developer's ser
 | Photos and videos | Videos | Yes | Optional | Converted on the phone, no sound |
 | Audio files | all | No | | Videos are converted without sound |
 | Files and docs | | No | | The JSON backup stays on the phone (the user saves or shares it) |
-| Calendar | | No **[check]** | | Team schedule is app content, not the phone's calendar |
+| Calendar | Calendar events | No | | Opt-in in Settings: the team's trainings are written into a local calendar `fletchr` on the phone (`READ_CALENDAR` and `WRITE_CALENDAR`). The plugin lists the events of all calendars in the range and cannot filter, so the app filters to its own calendar on the phone; calendar data is never sent to the server (`useDeviceCalendar.ts` only does GET), so it is not "collected" in Play's sense. Reason for the permissions, if Play asks: show the team's trainings in the phone's calendar, only after the person turns it on |
 | Contacts | | No | | |
 | App activity | Other user-generated content | Yes | Optional | Sessions, ends, arrows, equipment, coach notes, drawings, evaluations |
 | App activity | App interactions, in-app search history, installed apps, web browsing history | No | | |
