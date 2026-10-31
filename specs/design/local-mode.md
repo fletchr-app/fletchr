@@ -1,6 +1,6 @@
 # Using the app without an account (#93)
 
-Status: partly implemented. Built: the local state, screens, statistics, export/import (#113), first launch and sign-out (#115), upload on sign-in and the sign-out wording (not run on a phone). Note edit (Step 1) is built too.
+Status: partly implemented. Built: the local state, screens, statistics, export/import (#113), first launch and sign-out (#115), upload on sign-in and the sign-out wording (run on a phone 2026-10-31, see the plan for what is still untested). Note edit (Step 1) is built too.
 Date: 2026-10-30
 Plan: [2026-10-30-local-mode.md](../plans/2026-10-30-local-mode.md). Builds on [offline-sync.md](offline-sync.md) (store owner, queues) and [session-visibility.md](session-visibility.md).
 
@@ -14,7 +14,7 @@ How local mode works today (state, local owner, routes, screens, statistics, not
 - One local owner per phone; the stores work as they do for an account, nothing is sent.
 - Backup is the JSON export and import in Settings, without photo and video files.
 
-## Signing in or registering with local data (built, not run on a phone)
+## Signing in or registering with local data (built, run on a phone 2026-10-31)
 
 The rule is the same on every sign-in and registration: if the local owner holds nothing, nothing is asked.
 

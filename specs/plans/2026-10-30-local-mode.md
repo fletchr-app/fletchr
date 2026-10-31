@@ -1,6 +1,6 @@
 # Local mode: use the app without an account or server (#93)
 
-Status: first version implemented (#113), first launch and sign-out changed to the decided model (#115, Step 0), upload on sign-in (Step 2) and sign-out wording (Step 3) implemented; none of it run on a phone. Note edit (Step 1) implemented. Session visibility (own plan, needed by Step 2) is merged (#117)
+Status: first version implemented (#113), first launch and sign-out changed to the decided model (#115, Step 0), upload on sign-in (Step 2) and sign-out wording (Step 3) implemented and run on a phone (2026-10-31, see Tests). Note edit (Step 1) implemented. Session visibility (own plan, needed by Step 2) is merged (#117)
 Date: 2026-10-30
 Design: [local-mode.md](../design/local-mode.md). The upload needs [2026-10-30-session-visibility.md](2026-10-30-session-visibility.md) first. This file replaces the separate `2026-10-30-local-only-mode.md` (the record of #113), now the "Done" section below.
 
@@ -116,7 +116,9 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 
 - [x] Vitest for every new `src/lib` file (`local-claim.ts`, `claim-flow.ts`) and `useKeyedStore` (hold, flush). `note-store` edit reducer too.
 - [x] pytest: the visibility matrix from the visibility plan covers uploads with `me`.
-- [ ] Phone (also for what is already built): fresh install opens on Home; log a past session, a bow, photos, a video, a note; export and import round trip, file chooser and share sheet; video playback; Preferences persistence; back button. After Step 2: register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out, app is empty; sign in again, data is back without a prompt.
+- [x] Phone, run 2026-10-31 on an Android phone (debug build against a local server): sign-out text and empty screens, Home greeting, note edit, German texts, claim sheet header, Cancel (nothing sent), register with an invite, Upload with "No, keep private" (server: session `me`, note private with the edited text), sign out and in again (data back). The back button does nothing on the claim sheet (accepted). Server migrations checked on a copy of a v0.14.0 database (existing sessions stay `coaches`).
+- [ ] Phone, not run yet: the video line in the claim sheet, a coach seeing private data in the app, a migration on the real server's data.
+- [ ] Phone, original list (for what is not covered above): fresh install opens on Home; log a past session, a bow, photos, a video, a note; export and import round trip, file chooser and share sheet; video playback; Preferences persistence; back button. After Step 2: register with an invite; Upload with "No, keep private"; coach sees nothing; switch a session to coaches, coach sees it; sign out, app is empty; sign in again, data is back without a prompt.
 - [x] `npm run type-check`, `npm test`, `cd server && uv run pytest`.
 
 ## Docs
@@ -140,5 +142,5 @@ Markers: **[fact]** checked in the code, **[inferred]**, **[check]** verify befo
 ## Open (for the user)
 
 - **Android backup of app storage** (decided): the stores, the owner id and the settings stay in Android's backup; `media-queue/` and `media-kept/` are excluded (`backup_rules.xml`, `data_extraction_rules.xml`). After a restore, photos and videos that were only on the phone are gone, their entries stay in the lists. Details in `offline-sync.md`.
-- Not run on a phone: file chooser, share sheet, video playback, Preferences persistence, back button. German texts need a review.
+- Not run on a phone: file chooser, share sheet, video playback, Preferences persistence. The back button does nothing on the claim sheet. German texts are reviewed.
 - The visibility defaults are in the visibility plan (assumed, confirm): no `followers` level, new accounts default to `coaches`, existing sessions migrate to `coaches`.
