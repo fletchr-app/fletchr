@@ -1,6 +1,6 @@
 # Using the app without an account (#93)
 
-Status: partly implemented. Built: the local state, screens, statistics, export/import (#113), first launch and sign-out (#115), upload on sign-in and the sign-out wording (not run on a phone). Planned: note edit
+Status: partly implemented. Built: the local state, screens, statistics, export/import (#113), first launch and sign-out (#115), upload on sign-in and the sign-out wording (not run on a phone). Note edit (Step 1) is built too.
 Date: 2026-10-30
 Plan: [2026-10-30-local-mode.md](../plans/2026-10-30-local-mode.md). Builds on [offline-sync.md](offline-sync.md) (store owner, queues) and [session-visibility.md](session-visibility.md).
 
