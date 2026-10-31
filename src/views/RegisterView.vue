@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
+import { onIonViewWillEnter } from '@ionic/vue'
 import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -9,10 +10,17 @@ import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCodePreview } from '@/composables/useCodePreview'
+import { useServer } from '@/composables/useServer'
 
+// `custom`: reached from the custom server sign-in, which has already set the server. Otherwise this is the official server.
+const props = defineProps<{ custom?: boolean }>()
 const { t } = useI18n()
-const { register, googleAvailable, signInWithGoogle } = useAuth()
+const { url } = useServer()
+const { register, switchServer, googleAvailable, signInWithGoogle } = useAuth()
 const { preview, check } = useCodePreview()
+onIonViewWillEnter(() => {
+  if (!props.custom) void switchServer(null)
+})
 const route = useRoute()
 const form = reactive({ invite_code: typeof route.query.code === 'string' ? route.query.code : '', name: '', email: '', password: '' })
 const error = ref<string | null>(null)
@@ -70,8 +78,9 @@ function change() {
 </script>
 
 <template>
-  <AppPage :title="$t('auth.register.title')" back-href="/sign-in">
+  <AppPage :title="$t('auth.register.title')" :back-href="custom ? '/sign-in/custom' : '/sign-in'">
     <div class="screen">
+      <div v-if="custom" class="muted">{{ $t('auth.signIn.server', { url }) }}</div>
       <FormField v-model="form.invite_code" :label="$t('auth.register.inviteCode')" capitalize="characters" @update:model-value="change" />
       <i18n-t v-if="preview?.kind === 'claim'" keypath="auth.register.claimNote" tag="div">
         <template #team><b>{{ preview.team_name }}</b></template>

@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { computed, shallowRef, watch } from 'vue';
+import { computed, nextTick, shallowRef, watch } from 'vue';
 
 import type { components } from '@/lib/api-types';
 import { type ApiClient, AuthSession } from '@/lib/auth-session';
@@ -19,7 +19,7 @@ export type RegisterBody = components['schemas']['RegisterRequest'];
 /** `local`: no account and no server, everything stays on the phone (#93). */
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'local';
 
-const { url, isOverride } = useServer();
+const { url, isOverride, setUrl } = useServer();
 
 // A new session per server address, so switching servers signs out.
 const session = shallowRef(new AuthSession(url.value, currentLanguage));
@@ -31,6 +31,21 @@ watch(url, (next) => {
   state.value = session.value.getState();
   unsubscribe = session.value.subscribe(() => (state.value = session.value.getState()));
 });
+
+/** Make `address` (or the default, for null) the server and wait until the session for it has loaded its tokens. */
+async function switchServer(address: string | null): Promise<void> {
+  setUrl(address);
+  await nextTick(); // the watcher above builds the new session
+  if (state.value.loaded) return;
+  await new Promise<void>((resolve) => {
+    const stop = watch(state, (s) => {
+      if (s.loaded) {
+        stop();
+        resolve();
+      }
+    });
+  });
+}
 
 // The client of the current session, so screens can keep one `api` for as long as the app runs.
 const api = new Proxy({} as ApiClient, {
@@ -198,5 +213,5 @@ function replaceTokens(tokens: { access: string; refresh: string }) {
 }
 
 export function useAuth() {
-  return { status, isLocal, enterLocal, api, userId, storeOwner, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
+  return { status, isLocal, switchServer, enterLocal, api, userId, storeOwner, signIn, register, googleAvailable, signInWithGoogle, signOut, replaceTokens };
 }

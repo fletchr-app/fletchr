@@ -77,7 +77,7 @@ iOS is not set up: it needs `npx cap add ios` on a Mac (or a macOS CI runner), s
 
 ## Server address
 
-The app's default server address is `VITE_SERVER_URL` in `.env`, read by Vite when it starts or builds. It can be changed per device on the app's Settings screen.
+The app's default server address is `VITE_SERVER_URL` in `.env`, read by Vite when it starts or builds. A different server is chosen per device on the sign-in screen ("Connect to custom server"); Settings only shows the server.
 
 On a phone, `localhost` is the phone itself. Use your PC's LAN IP instead, e.g. `VITE_SERVER_URL=http://192.168.1.20:8080`, with phone and PC on the same Wi-Fi (and see the Android notes above).
 
