@@ -1,0 +1,108 @@
+name: Release Android
+
+# A release tag (vX.Y.Z on main, specs/steering/releasing.md) builds the signed bundle and uploads it to the internal
+# track on Google Play, after the checks and after a reviewer approved the "release" environment. Promoting to
+# production stays a click in the Play Console. Issue #54.
+#
+# Off until the repository variable PLAY_RELEASE_ENABLED is "true" (Settings, Secrets and variables, Variables), so a tag
+# does not fail here before the secrets below exist. The first upload of a new app must be done by hand in the Console.
+#
+# Environment "release" (Settings, Environments; set a required reviewer, restrict it to tags v*):
+#   secrets   ANDROID_KEYSTORE_BASE64   base64 of release.jks (the upload key, SELFHOSTING.md "Release signing")
+#             ANDROID_STORE_PASSWORD
+#             ANDROID_KEY_ALIAS
+#             ANDROID_KEY_PASSWORD
+#             PLAY_SERVICE_ACCOUNT_JSON  service account with "Release to testing tracks" in the Play Console
+#   variables VITE_GOOGLE_WEB_CLIENT_ID  the web client ID, as in the official server's DJANGO_GOOGLE_CLIENT_IDS (optional)
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+# One upload at a time.
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    if: ${{ vars.PLAY_RELEASE_ENABLED == 'true' }}
+    uses: ./.github/workflows/ci.yml
+
+  bundle:
+    needs: checks
+    if: ${{ vars.PLAY_RELEASE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Releases come from main only, and the tag must name the version in package.json (the versionCode comes from it).
+      - name: Tag matches main and package.json
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+          version=$(node -p "require('./package.json').version")
+          [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "::error::tag $GITHUB_REF_NAME, package.json $version"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      # The Play build talks to the official server, never the localhost default of .env.example.
+      - name: Build the web app and sync it into android/
+        env:
+          VITE_SERVER_URL: https://app.fletchr.de
+          VITE_GOOGLE_WEB_CLIENT_ID: ${{ vars.VITE_GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          npm run build-only
+          npx cap sync android
+
+      - name: Signed bundle
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ORG_GRADLE_PROJECT_FLETCHR_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_FLETCHR_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_FLETCHR_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          keystore="$RUNNER_TEMP/release.jks"
+          (umask 077; printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore")
+          export ORG_GRADLE_PROJECT_FLETCHR_STORE_FILE="$keystore"
+          cd android && ./gradlew bundleRelease --no-daemon
+          rm -f "$keystore"
+
+      # An unsigned bundle (missing property) would build without an error; Play would then refuse it.
+      - name: The bundle is signed
+        run: |
+          out=$(jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab 2>&1 || true)
+          echo "$out"
+          echo "$out" | grep -q "jar verified" || { echo "::error::the bundle is not signed"; exit 1; }
+
+      # Kept for a manual upload when the Play step fails.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ github.ref_name }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 14
+
+      # Pin this action to a commit SHA once you have looked at it: it handles the service account.
+      - uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: de.fletchr.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          # A new app whose store entry is not finished only accepts "draft"; change it to "completed" afterwards.
+          status: draft
