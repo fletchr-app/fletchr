@@ -143,14 +143,17 @@ export async function drain(
  * every session of yours that changed since `since`, with its ends and volume (the reducer decides what is taken over).
  * Null if the server cannot be reached. `since` is where the last pull got to. A pull that breaks off half way keeps what
  * it fetched and `lastPull` stops at the last session it got, so the next one goes on from there. `skip` are sessions
- * whose delete is still queued.
+ * whose delete is still queued. `owners` are other archers this device holds a session for (one a coach opened): the server
+ * only lists their merged sessions that went into one the coach may see, and a list it refuses is skipped, not an error.
  */
-export async function pull(api: ApiClient, userId: number, since?: string, skip: ReadonlySet<string> = new Set()): Promise<LogAction[] | null> {
+export async function pull(api: ApiClient, userId: number, since?: string, skip: ReadonlySet<string> = new Set(), owners: readonly number[] = []): Promise<LogAction[] | null> {
   try {
     const query = { owner: userId, ...(since ? { updated_after: since } : {}) };
     const [list, gone] = await Promise.all([api.GET('/api/sessions/', { params: { query } }), api.GET('/api/sessions/gone/', { params: { query } })]);
     if (!list.data || !gone.data) return null;
     const actions: LogAction[] = gone.data.map((g) => (g.merged_into ? { type: 'replaceSessionId', from: g.id, to: g.merged_into } : { type: 'sessionGone', id: g.id }));
+    const others = await Promise.all(owners.filter((o) => o !== userId).map((owner) => api.GET('/api/sessions/gone/', { params: { query: { owner } } })));
+    for (const g of others.flatMap((r) => r.data ?? [])) if (g.merged_into) actions.push({ type: 'replaceSessionId', from: g.id, to: g.merged_into });
     const sessions: LogSession[] = [];
     let reached: string | undefined;
     let complete = true;

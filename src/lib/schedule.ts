@@ -71,6 +71,16 @@ export function fromLocalInput(value: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+/** The start and end of a new one-off as `datetime-local` values: the next full hour for two hours, on `day` (`YYYY-MM-DD`) when one is picked, else today. */
+export function newEventTimes(now: Date, day?: string): { start: string; end: string } {
+  const first = new Date(now);
+  first.setHours(first.getHours() + 1, 0, 0, 0);
+  const start = day ? new Date(`${day}T${pad(first.getHours())}:00`) : first;
+  const end = new Date(start);
+  end.setHours(end.getHours() + 2);
+  return { start: toLocalInput(start.toISOString()), end: toLocalInput(end.toISOString()) };
+}
+
 /** The device-local date (`YYYY-MM-DD`) of an instant. */
 export const dayKey = (iso: string): string => toLocalInput(iso).slice(0, 10);
 

@@ -12,6 +12,7 @@ import SessionListItem from '@/components/SessionListItem.vue'
 import VersionBanner from '@/components/VersionBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
+import { useOnReconnect } from '@/composables/useOnReconnect'
 import { useRemote } from '@/composables/useRemote'
 import { useTeams } from '@/composables/useTeams'
 import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
@@ -44,10 +45,7 @@ watch(isLocal, (local) => local && (me.value = null))
 // Each time the screen is shown: it stays alive between visits, so a new team or note would not appear otherwise.
 const shown = ref(0)
 let firstVisit = true // the first load happens when the screen is created
-onIonViewWillEnter(() => {
-  shown.value++
-  if (firstVisit) firstVisit = false
-  else remote.reload()
+function loadProfile() {
   if (isLocal.value) return void (me.value = null)
   return Promise.all([api.GET('/api/me/'), load()])
     .then(([meRes]) => {
@@ -55,6 +53,18 @@ onIonViewWillEnter(() => {
       error.value = meRes.data ? null : t('common.couldNotLoadData')
     })
     .catch(() => (error.value = t('common.serverNotReachable')))
+}
+onIonViewWillEnter(() => {
+  shown.value++
+  if (firstVisit) firstVisit = false
+  else remote.reload()
+  return loadProfile()
+})
+// A load that failed offline is tried again when the connection returns or the app comes back.
+useOnReconnect(() => {
+  if (!error.value && !remote.error.value) return
+  remote.reload()
+  void loadProfile()
 })
 </script>
 

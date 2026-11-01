@@ -1,6 +1,6 @@
 # Milestone 2: media and evaluations
 
-Status: in progress
+Status: mostly implemented; open: trends and goals on Home (#46), averages per team, backups setup on the server (#49), video checks on a second phone (#71)
 Date: 2026-10-23
 
 - Evaluations (#44, #45): the server app `evaluations` has forms per team (`Template`, with versions: a change makes a new version, criteria keep their keys), evaluations (`Evaluation` with a date, kind coach or self, visibility, comment, goals) and scores (rating 1 to the scale, comment, optional clip and frame). A team starts with the shooting technique form (20 criteria in 5 groups, 1 to 5, in the structure of the DSB squad technique sheet, own wording; lazily made, in the language of whoever asks first). Evaluations are coach-only until the coach shares them (and can take it back); a self-assessment is read by the archer and their coaches; the export and "Delete my data" cover them. The app has a forms editor (Team, Evaluation forms), the evaluation form (rating buttons, comment, link a frame through the player), a list per archer (from the archer's page and from Home) and a detail page that links the frames. Open: trends and goals on Home (#46), averages per team.

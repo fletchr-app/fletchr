@@ -81,7 +81,9 @@ async function pullNow() {
   const before = uploads;
   try {
     const deleting = new Set(current.outbox.filter((o) => o.kind === 'session' && o.delete).map((o) => o.sessionId));
-    const actions = await pull(api, Number(userId.value), current.lastPull, deleting);
+    const me = Number(userId.value);
+    const archers = [...new Set(current.sessions.flatMap((s) => (s.owner !== undefined && s.owner !== me ? [s.owner] : [])))];
+    const actions = await pull(api, me, current.lastPull, deleting, archers);
     if (actions && !paused && uploads === before) actions.forEach(dispatch);
   } finally {
     pulling = false;

@@ -342,6 +342,27 @@ test('pull turns the list and the tombstones into actions', async () => {
   assert.equal(pulled.lastPull, '2026-10-18T10:00:00Z');
 });
 
+test('a pull also asks for the sessions the server merged away for an archer this device opened one for', async () => {
+  const h = harness((call) => {
+    if (call.path === '/api/sessions/gone/') {
+      return call.search.includes('owner=9')
+        ? json(200, [{ id: 'coachs', owner: 9, merged_into: 'archers', at: '2026-10-18T11:00:00Z' }])
+        : json(200, []);
+    }
+    return json(200, []);
+  });
+  const actions = await pull(apiOf(h), 7, undefined, new Set(), [9]);
+  assert.ok(actions);
+  assert.deepEqual(actions.slice(0, 1), [{ type: 'replaceSessionId', from: 'coachs', to: 'archers' }]);
+});
+
+test('a refused tombstone list of another archer does not break the pull', async () => {
+  const h = harness((call) => (call.path === '/api/sessions/gone/' && call.search.includes('owner=9') ? json(403, { detail: 'No.' }) : json(200, [])));
+  const actions = await pull(apiOf(h), 7, undefined, new Set(), [9]);
+  assert.ok(actions);
+  assert.equal(actions.at(-1)?.type, 'pulled');
+});
+
 test('a pull that breaks off keeps what it got and goes on from there next time', async () => {
   const h = harness((call) => {
     if (call.path === '/api/sessions/gone/') return json(200, []);

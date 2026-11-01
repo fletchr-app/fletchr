@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { addDays, addMonths, daysOf, dotsByDay, firstWeekday, monthGrid, rangeOf } from './calendar.ts';
+import { addDays, addMonths, dayPart, daysOf, dotsByDay, firstWeekday, monthGrid, rangeOf } from './calendar.ts';
 import { type AgendaItem, dayKey } from './schedule.ts';
 
 // The helpers read the device's clock; the DST cases need a zone with a time change (25 October 2026 and 29 March 2026).
@@ -98,6 +98,16 @@ test('daysOf: a camp covers each day it touches', () => {
 test('daysOf: an end that is not after the start leaves the start day', () => {
   assert.deepEqual(daysOf(item('2026-10-10T16:00:00Z', '2026-10-10T16:00:00Z')), ['2026-10-10']);
   assert.deepEqual(daysOf(item('2026-10-10T16:00:00Z', '2026-10-09T16:00:00Z')), ['2026-10-10']);
+});
+
+test('dayPart: a camp shows its start on the first day, nothing on the days between and its end on the last', () => {
+  const camp = item('2026-10-09T15:00:00Z', '2026-10-11T10:00:00Z');
+  assert.equal(dayPart(camp, '2026-10-09'), 'from');
+  assert.equal(dayPart(camp, '2026-10-10'), 'whole');
+  assert.equal(dayPart(camp, '2026-10-11'), 'to');
+  assert.equal(dayPart(item('2026-10-10T16:00:00Z', '2026-10-10T18:00:00Z'), '2026-10-10'), 'span');
+  // ends at 00:00 local on the 12th: the 11th is a whole day, not "until 00:00"
+  assert.equal(dayPart(item('2026-10-09T15:00:00Z', '2026-10-11T22:00:00Z'), '2026-10-11'), 'whole');
 });
 
 test('dotsByDay counts trainings and cancelled ones apart, and a camp on every day', () => {

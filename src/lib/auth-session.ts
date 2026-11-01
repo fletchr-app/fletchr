@@ -10,6 +10,7 @@ export type SessionState = { loaded: boolean; tokens: Tokens | null };
 // Endpoints that must not carry (or wait for) an access token.
 const PUBLIC_PATHS = ['/api/token/', '/api/token/refresh/', '/api/token/blacklist/', '/api/register/', '/api/health/'];
 const REFRESH_MARGIN_MS = 30_000;
+const REFRESH_TIMEOUT_MS = 10_000;
 
 /** Tokens for one server, kept outside React so the API client can read them at any time. */
 export class AuthSession {
@@ -79,6 +80,8 @@ export class AuthSession {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: current.refresh }),
+        // A refresh started while the connection is switching can hang; every request waits for it, so it must end.
+        signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
       });
       if (res.ok) {
         const next = (await res.json()) as Tokens;

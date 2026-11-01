@@ -1,6 +1,6 @@
 # Calendar view for team trainings and events (#106)
 
-Status: phases 1 to 3 implemented (#126, #127, #128; Phase 4 only if wanted). Decided: build it (a coach asked), month view, week starts by locale, no iCal, defaults for Q3 to Q5
+Status: phases 1 to 3 implemented (#126, #127, #128; Phase 4, the all-teams calendar, dropped until a coach with several teams asks). Decided: build it (a coach asked), month view, week starts by locale, no iCal, defaults for Q3 to Q5
 Date: 2026-10-31
 
 Markers: **[fact]** checked in the code, **[inferred]** my reading, not checked by running anything, **[check]** verify before relying on it.
@@ -100,10 +100,10 @@ i18n (`src/locales/en.ts`, `de.ts`, block `schedule`; German to check with Tim; 
 - [x] Locale keys in `en.ts` and `de.ts`. A camp shows "until <date>" (`schedule.endsOn`) in the day list, in the list mode too.
 - [x] `type-check`, `npm test`. [x] Phone (2026-10-31, local test server, German, Monday start): toggle and choice kept after leaving the screen, dots, camp on each of its days with "bis 5. Nov.", hollow dot and struck-through row for a cancelled event, arrows, "Heute", selecting a day. Not tried in month mode: the coach actions (same component as the list), dark/light theme, English locale, 360 px width.
 
-### Phase 4 (only if Q3 says so): all-teams calendar
+### Phase 4: all-teams calendar (dropped, revisit if a coach with several teams asks)
 
-- [ ] Route `/calendar`, view `CalendarView.vue` with the strip and `AgendaDayList`, no `team` query, `canPlan` from `useTeams()`; link from `HomeView.vue`.
-- [ ] Server test: an archer in two teams gets both teams' items without `team` (add if `test_schedule.py` has none **[check]**; the `club` fixture has no member in two teams **[inferred]**).
+- [-] Route `/calendar`, view `CalendarView.vue` with the strip and `AgendaDayList`, no `team` query, `canPlan` from `useTeams()`; link from `HomeView.vue`.
+- [-] Server test: an archer in two teams gets both teams' items without `team` (add if `test_schedule.py` has none **[check]**; the `club` fixture has no member in two teams **[inferred]**).
 
 ## Tests
 
@@ -111,7 +111,7 @@ Vitest (`npm test`):
 - [x] `calendar.test.ts`: `addDays` across month and year ends; `monthGrid` pads to whole weeks for Monday and Sunday starts (a 28-day February, a month that needs 6 rows); `firstWeekday` falls back to Monday; `rangeOf` gives local midnights; `daysOf` for a one-day training, an event ending at midnight (not on the next day), a three-day camp; `dotsByDay` counts cancelled apart.
 - [x] DST: the same cases with `TZ=Europe/Berlin` around 2026-03-29 and 2026-10-25 (a 23-hour and a 25-hour day stay one date step). Set `test.env.TZ` in `vitest.config.ts` or `process.env.TZ` at the top of the test file **[check]** which one Node picks up before the first `Date`; changing it for all tests may shift other tests.
 - [x] `groupByDay` unchanged after the `dayKey` move (the existing tests pass).
-- [ ] Locale parity test covers the new keys.
+- [x] Locale parity test covers the new keys.
 
 Server: none for Phases 1 to 3 (no server change). Phase 4: the two-team agenda test above.
 

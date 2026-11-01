@@ -35,9 +35,9 @@ const draw = (note: { id: number; media?: string | null; frame?: number | null }
 const library = useNoteLibrary()
 const notes = useRemote(
   async () => (isLocal.value ? [] : library.list({ archer: props.archerId, session: props.sessionId, sessionEvent: props.event?.id })),
-  { pollMs: REFRESH_MS, keepPolling: () => !isLocal.value },
+  { pollMs: REFRESH_MS, keepPolling: () => !isLocal.value, watch: [isLocal] },
 )
-const teams = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)))
+const teams = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)), { watch: [isLocal] })
 // A note written here goes up in the background; when it has, the server's list has it.
 const { uploaded, pendingFor } = useNotes()
 watch(uploaded, notes.reload)
