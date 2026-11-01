@@ -604,6 +604,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodePreview'
           description: ''
+  /api/devices/:
+    put:
+      operationId: devices_update
+      description: |-
+        Register this phone, or tell the server it is still there. Safe to repeat. A token that belongs to another person moves
+        to the caller (the phone changed account).
+      tags:
+      - devices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+        '201':
+          description: No response body
+    delete:
+      operationId: devices_destroy
+      description: Remove this phone. Only the caller's own; a token that is unknown
+        or someone else's is answered the same.
+      tags:
+      - devices
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/evaluation-templates/{id}/:
     get:
       operationId: evaluation_templates_retrieve
@@ -4444,6 +4482,29 @@ components:
       - notes_about_me
       - sessions
       - shots
+    DeviceRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          description: The Firebase token of this phone
+          maxLength: 512
+        replaces:
+          type: string
+          description: The token this one replaces (Firebase changed it)
+          maxLength: 512
+        app_id:
+          type: string
+          description: de.fletchr.app, or de.fletchr.app.dev for the debug app
+          maxLength: 100
+        language:
+          type: string
+          description: 'The app''s language, for the text of the notifications: `en`
+            or `de`'
+          maxLength: 10
+      required:
+      - token
     EmailChangeRequest:
       type: object
       description: 'Changing the login needs the current password, even when signed
@@ -4922,8 +4983,12 @@ components:
           type: string
         min_app_version:
           type: string
+        push:
+          type: boolean
+          description: Whether the server can send push notifications
       required:
       - min_app_version
+      - push
       - status
       - version
     Invite:
@@ -5884,6 +5949,15 @@ components:
             * `coaches` - coaches
             * `team` - team
             * `everyone` - everyone
+        push_notes:
+          type: boolean
+          description: Notify me when a coach shares a note with me
+        push_evaluations:
+          type: boolean
+          description: Notify me when a coach shares an evaluation with me
+        push_team:
+          type: boolean
+          description: Notify me when somebody uses an invite or claim code I made
         video_allowed:
           type: boolean
           readOnly: true
@@ -5933,6 +6007,15 @@ components:
             * `coaches` - coaches
             * `team` - team
             * `everyone` - everyone
+        push_notes:
+          type: boolean
+          description: Notify me when a coach shares a note with me
+        push_evaluations:
+          type: boolean
+          description: Notify me when a coach shares an evaluation with me
+        push_team:
+          type: boolean
+          description: Notify me when somebody uses an invite or claim code I made
     Ranking:
       type: object
       properties:

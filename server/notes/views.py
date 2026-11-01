@@ -18,6 +18,8 @@ from training.models import TrainingSession
 from training.schedule import rows_of_session
 
 from .access import visible_notes
+from push import notify
+
 from .models import Note
 from .serializers import NoteSerializer, NoteTeamSerializer
 
@@ -85,12 +87,15 @@ class NoteViewSet(viewsets.ModelViewSet):
         return visible_notes(self.request.user).select_related("author__profile", "archer__profile", "media", "event__team")
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        note = serializer.save(author=self.request.user)
+        notify.note_saved(note, was_readable=False)
 
     def perform_update(self, serializer):
         was_shared = serializer.instance.visibility == Note.Visibility.SHARED
+        was_readable = notify.note_readable_by_archer(serializer.instance)
         note = serializer.save()
         forget_withdrawn(note, was_shared)
+        notify.note_saved(note, was_readable)
 
     def perform_destroy(self, instance):
         with transaction.atomic():
@@ -121,8 +126,10 @@ class NotePutView(APIView):
         serializer = NoteSerializer(note, data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         was_shared = note is not None and note.visibility == Note.Visibility.SHARED
+        was_readable = note is not None and notify.note_readable_by_archer(note)
         saved = serializer.save(author=request.user, uid=uid) if note is None else serializer.save()
         forget_withdrawn(saved, was_shared)
+        notify.note_saved(saved, was_readable)
         return Response(NoteSerializer(saved, context=context).data, status=200 if note else 201)
 
 

@@ -242,7 +242,7 @@ NO_TRAINING_DATA = {
     "api/health/", "api/gone/", "api/register/", "api/auth/google/", "api/invites/redeem/", "api/codes/preview/", "api/claims/redeem/",
     "api/password-reset/", "api/password-reset/confirm/", "api/token/", "api/token/refresh/", "api/token/blacklist/", "api/schema/", "api/faces/",
     "api/me/", "api/me/avatar/", "api/me/password/", "api/me/email/", "api/me/delete-data/", "api/me/delete-account/",
-    "api/me/export/", "api/me/export/media/", "api/me/export/media/file/",  # own data only
+    "api/me/export/", "api/me/export/media/", "api/me/export/media/file/", "api/devices/",  # own data only
     "api/users/<int:user_id>/avatar/", "api/archers/<int:user_id>/", "api/archers/<int:user_id>/video-consent/",
     "api/teams/", "api/teams/<int:team_id>/", "api/teams/<int:team_id>/membership/", "api/teams/<int:team_id>/members/",
     "api/teams/<int:team_id>/members/<int:user_id>/", "api/teams/<int:team_id>/archers/", "api/teams/<int:team_id>/archers/<int:user_id>/",

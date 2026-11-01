@@ -16,6 +16,7 @@ urlpatterns = [
     path("api/", include("evaluations.urls")),
     path("api/", include("privacy.urls")),
     path("api/", include("media.urls")),
+    path("api/", include("push.urls")),
     path("api/token/", TokenObtainPairView.as_view()),
     path("api/token/refresh/", SafeTokenRefreshView.as_view()),
     path("api/token/blacklist/", TokenBlacklistView.as_view()),

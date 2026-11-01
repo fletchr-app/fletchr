@@ -25,6 +25,7 @@ services:
       DJANGO_EMAIL_USER: ${DJANGO_EMAIL_USER:-}
       DJANGO_EMAIL_PASSWORD: ${DJANGO_EMAIL_PASSWORD:-}
       DJANGO_SITE_URL: ${DJANGO_SITE_URL:-}
+      DJANGO_FCM_CREDENTIALS: ${DJANGO_FCM_CREDENTIALS:-}
       DJANGO_EMAIL_FROM: ${DJANGO_EMAIL_FROM:-Fletchr <noreply@fletchr.de>}
       # Three workers for two CPUs; a slow request does not block the others.
       # The access log shows the client's address (nginx passes it in X-Real-IP), not Docker's gateway.
@@ -34,6 +35,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./data/django:/data
+      # The Firebase key for push notifications (SELFHOSTING.md, section 9); the folder may be empty.
+      - ./secrets:/run/secrets:ro
     # Logs rotate: the disk is not endless.
     logging:
       driver: json-file

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 14:17+0100\n"
+"POT-Creation-Date: 2026-11-01 16:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:95
+#: core/access.py:97
 msgid "Invalid or expired invite code"
 msgstr ""
 
-#: core/access.py:97
+#: core/access.py:99
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/access.py:126 training/views.py:160
+#: core/access.py:129 training/views.py:160
 msgid "Only the archer can choose who sees this"
 msgstr ""
 
-#: core/access.py:128
+#: core/access.py:131
 msgid "Not available yet"
 msgstr ""
 
@@ -49,11 +49,11 @@ msgstr ""
 msgid "The picture is larger than 512 KB"
 msgstr ""
 
-#: core/claims.py:49 core/claims.py:52 core/resets.py:57 core/views.py:156
+#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:160
 msgid "Invalid or expired code"
 msgstr ""
 
-#: core/claims.py:57
+#: core/claims.py:59
 msgid ""
 "You are a coach in this team. A profile of an archer can only be taken "
 "over by an archer."
@@ -106,31 +106,31 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr ""
 
-#: core/serializers.py:79
+#: core/serializers.py:84
 msgid "An account with this email already exists"
 msgstr ""
 
-#: core/serializers.py:112
+#: core/serializers.py:117
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:125
+#: core/serializers.py:130
 msgid "Give a name or show_ranking"
 msgstr ""
 
-#: core/serializers.py:187 core/serializers.py:202
+#: core/serializers.py:192 core/serializers.py:207
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:252 privacy/serializers.py:17
+#: core/serializers.py:257 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:262
+#: core/serializers.py:267
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:276
+#: core/serializers.py:281
 msgid "This address is not available"
 msgstr ""
 
@@ -158,88 +158,88 @@ msgid ""
 "with your Google sign-in."
 msgstr ""
 
-#: core/transfer.py:128
+#: core/transfer.py:129
 msgid "Source and target are the same account"
 msgstr ""
 
-#: core/transfer.py:131
+#: core/transfer.py:132
 #, python-format
 msgid "%(email)s is a profile without an account or an admin of the site"
 msgstr ""
 
-#: core/transfer.py:133
+#: core/transfer.py:134
 #, python-format
 msgid "%(email)s is deactivated"
 msgstr ""
 
-#: core/transfer.py:137
+#: core/transfer.py:138
 #, python-format
 msgid ""
 "%(email)s already has data (%(what)s). Only an account without data can "
 "receive one."
 msgstr ""
 
-#: core/transfer.py:156
+#: core/transfer.py:157
 #, python-format
 msgid ""
 "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one "
 "of them first."
 msgstr ""
 
-#: core/views.py:206
+#: core/views.py:210
 msgid "No picture sent"
 msgstr ""
 
-#: core/views.py:257
+#: core/views.py:261
 msgid "This account signs in with Google and has no password."
 msgstr ""
 
-#: core/views.py:352
+#: core/views.py:357
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:398
+#: core/views.py:403
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:407
+#: core/views.py:412
 msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:433
+#: core/views.py:438
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:439 core/views.py:453
+#: core/views.py:444 core/views.py:458
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:450
+#: core/views.py:455
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:464 core/views.py:481
+#: core/views.py:469 core/views.py:486
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:489
+#: core/views.py:494
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:616
+#: core/views.py:621
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:628
+#: core/views.py:633
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:640
+#: core/views.py:645
 msgid "This account no longer exists"
 msgstr ""
 
@@ -450,15 +450,15 @@ msgstr ""
 msgid "This form belongs to another team"
 msgstr ""
 
-#: evaluations/views.py:27
+#: evaluations/views.py:29
 msgid "Only coaches can change the forms of a team"
 msgstr ""
 
-#: evaluations/views.py:54
+#: evaluations/views.py:56
 msgid "A form needs a name and criteria"
 msgstr ""
 
-#: evaluations/views.py:95
+#: evaluations/views.py:97
 msgid "Evaluations were made with this form, so it stays"
 msgstr ""
 
@@ -501,7 +501,7 @@ msgstr ""
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
-#: media/views.py:98 notes/views.py:139 training/schedule_views.py:268
+#: media/views.py:98 notes/views.py:146 training/schedule_views.py:268
 #: training/views.py:154
 msgid "Give the id of the archer"
 msgstr ""
@@ -596,6 +596,30 @@ msgstr ""
 msgid ""
 "You are the only admin of %(teams)s. Make someone else an admin there "
 "first."
+msgstr ""
+
+#: push/notify.py:33
+msgid "New note from your coach"
+msgstr ""
+
+#: push/notify.py:33
+msgid "Tap to read it."
+msgstr ""
+
+#: push/notify.py:34
+msgid "New evaluation"
+msgstr ""
+
+#: push/notify.py:34
+msgid "Your coach shared an evaluation with you."
+msgstr ""
+
+#: push/notify.py:35
+msgid "Someone joined your team"
+msgstr ""
+
+#: push/notify.py:35
+msgid "Tap to see your team."
 msgstr ""
 
 #: training/schedule.py:88

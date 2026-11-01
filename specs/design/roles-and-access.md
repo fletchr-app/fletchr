@@ -22,4 +22,6 @@ Access control is enforced on the server in Django REST Framework (permission cl
 
 **Team ranking.** The ranking of archers in a team is coach-only and off by default; an admin switches it on in the team settings (`show_ranking`), so young teams do not get a table that orders them.
 
+**Notifications follow the read rule.** A push goes to an archer only for a note or an evaluation they can read, and only when it becomes readable; private and coach-only notes and evaluations never notify ([push-notifications.md](push-notifications.md)).
+
 **Schedule and training events (#104).** Every member of a team reads its slots and events. Coaches and admins write them (`core.access.can_plan`). A session is linked to an event by its owner (or by the coach who opened it, or the coach of a profile without an account); a note or a photo by a coach of the event's team for an archer of that team, or by the archer for their own photo (`can_tag`). A link adds no visibility: an archer still reads only the `shared` notes about them, the coaches the rest. See [schedule-and-events.md](schedule-and-events.md).

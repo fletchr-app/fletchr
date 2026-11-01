@@ -12,6 +12,8 @@ from rest_framework.views import APIView
 from core.access import is_coach_in, teams_of
 from core.models import COACH_ROLES, Role, TeamMember
 
+from push import notify
+
 from .defaults import default_criteria, default_name, localize, localize_name
 from .models import Evaluation, Template, TemplateVersion
 from .serializers import EvaluationSerializer, TemplateSerializer, TemplateWriteSerializer, clean_criteria
@@ -151,4 +153,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        evaluation = serializer.save(author=self.request.user)
+        notify.evaluation_saved(evaluation, was_shared=False)
+
+    def perform_update(self, serializer):
+        was_shared = notify.evaluation_shared(serializer.instance)
+        evaluation = serializer.save()
+        notify.evaluation_saved(evaluation, was_shared)

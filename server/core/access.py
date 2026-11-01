@@ -5,6 +5,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from push import notify
+
 from .audience import ACCEPTED, AUDIENCES, at_least, clamp  # noqa: F401  (the order lives in audience.py)
 from .models import COACH_ROLES, Invite, Role, Team, TeamMember, User, normalize_code
 
@@ -99,6 +101,7 @@ def redeem_invite(code, user):
     invite.used_by = user
     invite.used_at = timezone.now()
     invite.save(update_fields=["used_by", "used_at"])
+    notify.code_used(invite.created_by_id, invite.team, user)
     return invite.team
 
 

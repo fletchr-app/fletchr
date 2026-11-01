@@ -230,6 +230,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/devices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Register this phone, or tell the server it is still there. Safe to repeat. A token that belongs to another person moves
+         *     to the caller (the phone changed account).
+         */
+        put: operations["devices_update"];
+        post?: never;
+        /** @description Remove this phone. Only the caller's own; a token that is unknown or someone else's is answered the same. */
+        delete: operations["devices_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/evaluation-templates/{id}/": {
         parameters: {
             query?: never;
@@ -1924,6 +1945,16 @@ export interface components {
             /** @description Evaluations about me, by coaches and by me */
             evaluations: number;
         };
+        DeviceRequest: {
+            /** @description The Firebase token of this phone */
+            token: string;
+            /** @description The token this one replaces (Firebase changed it) */
+            replaces?: string;
+            /** @description de.fletchr.app, or de.fletchr.app.dev for the debug app */
+            app_id?: string;
+            /** @description The app's language, for the text of the notifications: `en` or `de` */
+            language?: string;
+        };
         /** @description Changing the login needs the current password, even when signed in: a stolen phone must not be enough. */
         EmailChangeRequest: {
             current_password: string;
@@ -2145,6 +2176,8 @@ export interface components {
             status: string;
             version: string;
             min_app_version: string;
+            /** @description Whether the server can send push notifications */
+            push: boolean;
         };
         Invite: {
             readonly id: number;
@@ -2621,6 +2654,12 @@ export interface components {
              *     * `everyone` - everyone
              */
             training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
+            /** @description Notify me when a coach shares a note with me */
+            push_notes?: boolean;
+            /** @description Notify me when a coach shares an evaluation with me */
+            push_evaluations?: boolean;
+            /** @description Notify me when somebody uses an invite or claim code I made */
+            push_team?: boolean;
             /** @description False for an archer under 18 whose parents' consent is not on record */
             readonly video_allowed: boolean;
             /** @description False for an archer under 18 whose parents' consent is not on record */
@@ -2644,6 +2683,12 @@ export interface components {
              *     * `everyone` - everyone
              */
             training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
+            /** @description Notify me when a coach shares a note with me */
+            push_notes?: boolean;
+            /** @description Notify me when a coach shares an evaluation with me */
+            push_evaluations?: boolean;
+            /** @description Notify me when somebody uses an invite or claim code I made */
+            push_team?: boolean;
         };
         Ranking: {
             days: number;
@@ -3795,6 +3840,55 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CodePreview"];
                 };
+            };
+        };
+    };
+    devices_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DeviceRequest"];
+                "multipart/form-data": components["schemas"]["DeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    devices_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

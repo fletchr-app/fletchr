@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "notes",
     "evaluations",
     "privacy",
+    "push",
     "media",
 ]
 
@@ -230,11 +231,15 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {"plain": {"format": "%(levelname)s %(name)s: %(message)s"}},
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
-    "loggers": {name: {"handlers": ["console"], "level": "INFO"} for name in ("core", "privacy", "training")},
+    "loggers": {name: {"handlers": ["console"], "level": "INFO"} for name in ("core", "privacy", "training", "push")},
 }
 
 # Web client ID(s) of the Google project. Set only on the official server: without it Google sign-in is off and the
 # endpoint answers 404 (Google sign-in is not offered for self-hosted servers, specs/plans/2026-10-28-google-sign-in.md).
+# Path of the Firebase service-account key (JSON) that sends push notifications. Unset: push is off, `/api/devices/` answers 404
+# and `/api/health/` says `push: false` (specs/design/push-notifications.md). Set only where the app was built for the same Firebase project.
+FCM_CREDENTIALS = os.environ.get("DJANGO_FCM_CREDENTIALS", "")
+
 GOOGLE_CLIENT_IDS = [x.strip() for x in os.environ.get("DJANGO_GOOGLE_CLIENT_IDS", "").split(",") if x.strip()]
 
 # The oldest app that still works with this server. `/api/health/` tells the app, which then asks the person to update.

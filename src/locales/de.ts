@@ -873,6 +873,31 @@ export default {
     calendarName: 'Fletchr',
     entryNote: 'Team {team}, aus der Fletchr-App',
   },
+  push: {
+    channel: { notes: 'Notizen', evaluations: 'Bewertungen', team: 'Team' },
+    channelHint: {
+      notes: 'Ein Trainer hat eine Notiz mit dir geteilt',
+      evaluations: 'Ein Trainer hat eine Bewertung mit dir geteilt',
+      team: 'Jemand hat eine Einladung oder einen Übernahmecode von dir benutzt',
+    },
+    offer: {
+      title: 'Benachrichtigungen?',
+      message: 'Fletchr kann dir Bescheid geben, wenn dein Trainer eine Notiz oder eine Bewertung mit dir teilt. Die Benachrichtigung sagt nur, dass es etwas Neues gibt, nicht was.',
+      allow: 'Erlauben',
+      later: 'Jetzt nicht',
+    },
+    open: 'Öffnen',
+    settings: {
+      title: 'Benachrichtigungen',
+      notes: 'Neue Notizen von deinem Trainer',
+      evaluations: 'Neue Bewertungen',
+      team: 'Einladungen und Codes benutzt',
+      teamHint: 'Für Trainer: wenn jemand mit einer Einladung oder einem Übernahmecode von dir beitritt.',
+      denied: 'Benachrichtigungen sind für Fletchr auf diesem Handy aus. Schalte sie in den Systemeinstellungen des Handys ein.',
+      allow: 'Benachrichtigungen erlauben',
+      hint: 'Die Benachrichtigung sagt nur, dass es etwas Neues gibt. Zum Ändern ist eine Verbindung nötig.',
+    },
+  },
   settings: {
     title: 'Einstellungen',
     training: 'Training',
