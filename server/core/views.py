@@ -28,7 +28,7 @@ from push.models import Device
 
 from . import access, avatar, claims, mail, resets, social
 from .serializers import avatar_url
-from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
+from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, display_name, normalize_code
 from .serializers import (
     ArcherNameSerializer,
     ManagedArcherSerializer,
@@ -573,7 +573,7 @@ def consent_data(profile) -> dict:
     return {
         "video_allowed": profile.video_allowed,
         "video_consent_at": profile.video_consent_at,
-        "video_consent_by": (by.profile.name or by.email) if by else None,
+        "video_consent_by": display_name(by) if by else None,
     }
 
 

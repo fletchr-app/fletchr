@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Every account has a name** (#140): the profile no longer accepts an empty name, and accounts that had none get the part of their email before the `@` (what a new Google account gets too; change it in the profile). Where a name is missing anyway, screens show that part and never the whole address, so archers no longer see a coach's email in a note, evaluation or session. One migration (`core/0013`).
+
 - **Team list for archers** (#80): the Team tab shows for everybody with an account. Archers see the people in their team (name, role, picture) and the schedule. Who sees your name and picture is a setting (Settings, "My name and picture are seen by": My team, My coaches or Only me). The default is My team, so after the update the members of your teams see your name and picture unless you change it. Archers no longer see the email addresses of coaches and admins. New endpoint `/api/teams/<id>/roster/`, one migration (`core/0012`). Old apps keep working; they show no Team tab to archers and no setting.
 
 ## 0.18.1 (2026-11-01)

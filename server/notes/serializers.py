@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from core.access import archers_visible_to, can_tag, note_teams
-from core.models import COACH_ROLES, Team, TeamMember, User
+from core.models import COACH_ROLES, Team, TeamMember, User, display_name
 from media.access import media_link, visible_media
 from media.models import Media
 from training.serializers import EventInfoSerializer, EventLinkSerializer, SessionRefField, event_info
@@ -87,10 +87,10 @@ class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
         return event_info(note.event)
 
     def get_author_name(self, note) -> str:
-        return (note.author.profile.name or note.author.email) if note.author else "Former coach"
+        return display_name(note.author) if note.author else "Former coach"
 
     def get_archer_name(self, note) -> str:
-        return note.archer.profile.name or note.archer.email
+        return display_name(note.archer)
 
     def get_can_edit(self, note) -> bool:
         return note.author_id == self.context["request"].user.id
