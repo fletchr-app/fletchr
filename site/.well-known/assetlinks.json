@@ -3,6 +3,18 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
+      "package_name": "de.fletchr.app",
+      "sha256_cert_fingerprints": [
+        "DD:22:FF:04:BD:5F:D5:70:9A:90:2F:FB:3D:A6:95:3B:E4:E9:46:F9:17:B6:9B:EA:63:E5:64:8B:0B:52:39:4F",
+        "C5:83:32:D3:70:48:97:61:F0:B2:1B:75:5F:58:46:AD:B2:0E:58:B7:61:B7:18:5D:94:B1:3E:8F:29:32:C5:36",
+        "CE:A6:6E:3B:24:13:05:F6:E2:C8:03:15:CA:EF:71:CD:13:24:23:49:89:F9:C1:8C:77:43:CD:03:87:92:52:E8"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
       "package_name": "de.fletchr.app.dev",
       "sha256_cert_fingerprints": [
         "5B:FA:B6:97:34:C5:8C:12:B6:7B:4E:F5:89:45:B5:D7:BA:57:D2:7A:88:00:CC:68:07:90:01:C7:F9:8F:00:6E"
