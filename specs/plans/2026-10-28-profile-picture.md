@@ -1,6 +1,6 @@
 # Profile picture, visible to coaches (#79)
 
-Status: planned, decisions made 2026-10-28, not started
+Status: implemented (#85), decisions made 2026-10-28
 Date: 2026-10-28
 
 ## Scope

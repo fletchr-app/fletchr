@@ -98,7 +98,7 @@ From `GET /api/events/agenda/` for yesterday to plus 119 days (the 120-day maxim
 
 ### Phase 0: spike on a real device (throwaway branch, no merge)
 
-- [ ] `npm install @ebarooni/capacitor-calendar@8.10.0`, permissions in the manifest, `npx cap sync android`, debug APK.
+- [x] `npm install @ebarooni/capacitor-calendar@8.10.0`, permissions in the manifest, `npx cap sync android`, debug APK.
 - [x] Done through the real feature on a phone against a throwaway server (calendar, weekly series, a one-off, cancelling an occurrence: fails, see "Spike result").
 - [ ] Google Calendar (Pixel or any phone with it) and Samsung Calendar: is the local calendar listed and shown without the user doing anything? If hidden: can the user switch it on, and where?
 - [ ] Does Google Calendar sync it to the web or another phone? Expected: no **[inferred]**; write down what happens.
@@ -129,13 +129,13 @@ From `GET /api/events/agenda/` for yesterday to plus 119 days (the 120-day maxim
 ## Tests
 
 Vitest:
-- [ ] `parseTag`: our line found at the end; other text, no tag, a tag-like line in the middle ignored.
-- [ ] `hash` changes with title, location, times, `valid_until`, the reminder, the language's text; not with `updated_at`.
+- [x] `parseTag`: our line found at the end; other text, no tag, a tag-like line in the middle ignored.
+- [x] `hash` changes with title, location, times, `valid_until`, the reminder, the language's text; not with `updated_at`.
 - [x] `desiredEntries`: every item that is not cancelled becomes one entry (virtual or row); camp over three days one entry; local time kept across the time change.
 - [x] `plan`: a cancelled, moved or paused training is removed (moved: removed and created again), the others stay.
-- [ ] `plan`: empty device creates all; same state does nothing (idempotent, run twice); changed hash removes and creates; removed slot and left team remove; two masters with the same key keep one; untagged entries untouched.
-- [ ] `useDeviceCalendar` with a fake backend: denied permission keeps it off; two syncs at once run one after the other; offline changes nothing.
-- [ ] Locale parity test covers the new keys.
+- [x] `plan`: empty device creates all; same state does nothing (idempotent, run twice); changed hash removes and creates; removed slot and left team remove; two masters with the same key keep one; untagged entries untouched.
+- [x] `useDeviceCalendar` with a fake backend: denied permission keeps it off; two syncs at once run one after the other; offline changes nothing.
+- [x] Locale parity test covers the new keys.
 
 Server: none (no server change).
 
@@ -151,12 +151,12 @@ Phone (Android, after Phase 3):
 
 ## Docs to update
 
-- [ ] `specs/design/schedule-and-events.md`: section "Device calendar" (calendar, tags, sync rules, triggers); remove #107 from "Not built".
-- [ ] `specs/design/screens.md`: the settings toggle.
-- [ ] `specs/plans/index.md`: status of this plan.
-- [ ] AGENTS.md: `device-calendar-native.ts` in the list of `src/lib` files that may import Capacitor.
-- [ ] `CHANGELOG.md`: trainings in the phone's calendar (Android).
-- [ ] No ADR: the decision is in #107 and a line in the design doc is enough (like #106).
+- [x] `specs/design/schedule-and-events.md`: section "Device calendar" (calendar, tags, sync rules, triggers); remove #107 from "Not built".
+- [x] `specs/design/screens.md`: the settings toggle.
+- [x] `specs/plans/index.md`: status of this plan.
+- [x] AGENTS.md: `device-calendar-native.ts` in the list of `src/lib` files that may import Capacitor.
+- [x] `CHANGELOG.md`: trainings in the phone's calendar (Android).
+- [x] No ADR: the decision is in #107 and a line in the design doc is enough (like #106).
 
 ## Risks
 

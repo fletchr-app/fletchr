@@ -44,4 +44,4 @@ Settings, Teams: "Trainings in the phone's calendar" (a switch, with a reminder 
 
 ## Not built
 
-Offline use (cached agenda, notes queued with an event) waits for #84 and its team cache. A session upload that the server refuses because of its event is not retried without it (a photo is). Tournament results, group notes that every participant reads. An iCal feed per team (#106) is not planned: it needs a secret URL, a new way into the data; the device calendar (below) covers the need without one. A calendar over all of a person's teams is open (Phase 4 of the plan).
+Offline use (cached agenda, notes queued with an event) waits for #84 and its team cache. A session upload that the server refuses because of its event is not retried without it (a photo is). Tournament results, group notes that every participant reads. An iCal feed per team (#106) is not planned: it needs a secret URL, a new way into the data; the device calendar (below) covers the need without one. A calendar over all of a person's teams is dropped until a coach with several teams asks (Phase 4 of the plan).
