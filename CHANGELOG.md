@@ -2,6 +2,12 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.17.2 (2026-11-01)
+
+- **Password reset link** (#19): the reset mail can carry a link, `https://fletchr.de/reset/<code>`. On the phone it opens the app on the reset screen with the code filled in; without the app the page shows the code. The address the code was sent to is kept on the phone for the hour the code works, and asked for when it is missing. The mail has the link only when the server knows its website (`DJANGO_SITE_URL`, SELFHOSTING.md, section 7).
+
+- **Links in invite texts** (#56): the share text of an invite or claim code contains `https://fletchr.de/join/<code>` on the official server, and the link opens the app (the signing and upload certificates are in `assetlinks.json`). A link tapped twice works the second time too.
+
 ## 0.17.1 (2026-11-01)
 
 - **Home reloads after a connection loss** (#132): an error on Home goes away by itself when the connection returns or the app comes back to the front. A token refresh that hangs while the connection switches now ends after 10 seconds instead of blocking every request.
