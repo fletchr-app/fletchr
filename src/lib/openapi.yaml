@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.17.1
+  version: 0.17.2
 paths:
   /api/archers/{user_id}/:
     get:

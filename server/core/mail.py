@@ -26,17 +26,24 @@ def send(to, subject, body):
 
 
 def send_reset_code(user, code):
-    send(
-        user.email,
-        gettext("Fletchr: reset your password"),
-        gettext(
+    shown = f"{code[:4]}-{code[4:]}"
+    if settings.SITE_URL:
+        body = gettext(
+            "Someone asked to reset the password of your Fletchr account.\n\n"
+            "On your phone, tap this link to open the app:\n%(link)s\n\n"
+            "Or type your code in the app.\n"
+            "Your code: %(code)s\n\n"
+            "It works for one hour. If this was not you, ignore this mail: "
+            "your password stays as it is."
+        ) % {"link": f"{settings.SITE_URL}/reset/{code}", "code": shown}
+    else:
+        body = gettext(
             "Someone asked to reset the password of your Fletchr account.\n\n"
             "Your code: %(code)s\n\n"
             "Type it in the app. It works for one hour. If this was not you, ignore this mail: "
             "your password stays as it is."
-        )
-        % {"code": f"{code[:4]}-{code[4:]}"},
-    )
+        ) % {"code": shown}
+    send(user.email, gettext("Fletchr: reset your password"), body)
 
 
 def send_password_changed(user):

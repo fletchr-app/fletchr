@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Fletchr Dev</string>
     <string name="title_activity_main">Fletchr Dev</string>
+    <!-- Its own scheme, so the "Open in the app" buttons of the website open the Play app and not a chooser on a phone with both. -->
+    <string name="custom_url_scheme">de.fletchr.app.dev</string>
 </resources>

@@ -140,3 +140,27 @@ def test_the_mail_follows_the_language_of_the_request(client_for, make_user):
     make_user("me@x.test")
     client_for().post(ASK, {"email": "me@x.test"}, format="json", HTTP_ACCEPT_LANGUAGE="de")
     assert "Passwort" in mail.outbox[0].subject
+
+
+def test_the_mail_has_a_link_when_the_site_is_known(client_for, make_user, settings):
+    settings.SITE_URL = "https://fletchr.de"
+    make_user("me@x.test")
+    ask(client_for)
+    link = re.search(r"https://fletchr\.de/reset/(\S+)", mail.outbox[-1].body)
+    assert link and link.group(1) == code_in_mail().replace("-", "")
+    assert confirm(client_for, link.group(1)).status_code == 204  # the code in the link is the code
+
+
+def test_the_german_mail_has_the_link_too(client_for, make_user, settings):
+    settings.SITE_URL = "https://fletchr.de"
+    make_user("me@x.test")
+    client_for().post(ASK, {"email": "me@x.test"}, format="json", HTTP_ACCEPT_LANGUAGE="de")
+    assert "Tippe auf deinem Handy" in mail.outbox[-1].body
+    assert "https://fletchr.de/reset/" in mail.outbox[-1].body
+
+
+def test_the_mail_has_no_link_without_a_site(client_for, make_user, settings):
+    settings.SITE_URL = ""
+    make_user("me@x.test")
+    ask(client_for)
+    assert "http" not in mail.outbox[-1].body

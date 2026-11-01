@@ -24,20 +24,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Invite links: https://fletchr.de/join/<code> (needs /.well-known/assetlinks.json on that domain, see docs/self-hosting.md) ... -->
+            <!-- Invite and password reset links: https://fletchr.de/join/<code>, https://fletchr.de/reset/<code> (needs /.well-known/assetlinks.json on that domain, see SELFHOSTING.md) ... -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="fletchr.de" android:pathPrefix="/join/" />
+                <data android:scheme="https" android:host="fletchr.de" android:pathPrefix="/reset/" />
             </intent-filter>
 
-            <!-- ... and the join page's "Open in the app" button -->
+            <!-- ... and the "Open in the app" button of the join and reset pages -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="@string/custom_url_scheme" android:host="join" />
+                <data android:scheme="@string/custom_url_scheme" android:host="reset" />
             </intent-filter>
 
         </activity>

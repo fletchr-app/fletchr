@@ -137,17 +137,22 @@ The server mails a code for "Forgot password?" and a notice when a password was 
 3. In `deploy/.env.prod` fill `DJANGO_EMAIL_HOST`, `DJANGO_EMAIL_PORT` (465 with `DJANGO_EMAIL_SECURITY=ssl`, or 587 with `starttls`), `DJANGO_EMAIL_USER`, `DJANGO_EMAIL_PASSWORD` and `DJANGO_EMAIL_FROM` (see `.env.prod.example`), then update.
 4. Try it: "Forgot password?" in the app with a Gmail address. In Gmail, "Show original" must say `SPF: PASS` and `DKIM: PASS`. If nothing arrives, look in `docker compose logs django` for "Could not send mail".
 
-## 7. The website and invite links
+## 7. The website, invite and reset links
 
-The static site in `site/` has German and English pages: a landing page, Impressum/imprint, privacy policy, the "delete your account" page (Google Play asks for its address) and the invite-link page. It is plain HTML with no build step: copy the files to the web root of your domain. **Before you publish it, replace the operator details (name and address in the Impressum and privacy pages, contact address, hosting text) with your own**, and have the privacy text checked for your installation.
+The static site in `site/` has German and English pages: a landing page, Impressum/imprint, privacy policy, the "delete your account" page (Google Play asks for its address) and the invite-link and reset-link pages. It is plain HTML with no build step: copy the files to the web root of your domain. **Before you publish it, replace the operator details (name and address in the Impressum and privacy pages, contact address, hosting text) with your own**, and have the privacy text checked for your installation.
 
 `deploy/site.sh` copies `site/` to a web root owned by another user (a panel's system user) with `sudo rsync`; it takes the folder from `SITE_ROOT` in `deploy/.env.prod` (see the comments in the script) and asks before it deletes anything. Any other way to publish static files works as well.
 
-Invite links need one rewrite: `/join/<code>` must be answered with the page `/join/index.html`, which reads the code from the address. `site/.htaccess` does that on Apache. With nginx alone:
+Invite and reset links need one rewrite each: `/join/<code>` must be answered with the page `/join/index.html` and `/reset/<code>` with `/reset/index.html`, which read the code from the address. `site/.htaccess` does that on Apache. With nginx alone:
 
 ```nginx
 location ^~ /join/ {
     try_files /join/index.html =404;
+    add_header Cache-Control "no-store";
+    add_header Referrer-Policy "no-referrer" always;
+}
+location ^~ /reset/ {
+    try_files /reset/index.html =404;
     add_header Cache-Control "no-store";
     add_header Referrer-Policy "no-referrer" always;
 }
@@ -160,9 +165,9 @@ error_page 404 /404.html;
 
 `deploy/nginx/03-fletchr-site.conf` is a complete nginx example for the site. For the join page to ask the server what a code is for, add the website's origin to `DJANGO_CORS_ORIGINS` in `deploy/.env.prod` (for example `https://localhost,https://example.org`) and update.
 
-### Opening invite links in the app
+### Opening invite and reset links in the app
 
-On a phone with the app, `https://example.org/join/<code>` opens the app (Android App Links) with the code filled in; otherwise the page shows what the code is for. Android checks `https://example.org/.well-known/assetlinks.json` against the key the app is signed with. Fill `site/.well-known/assetlinks.json`:
+On a phone with the app, `https://example.org/join/<code>` opens the app (Android App Links) with the code filled in; otherwise the page shows what the code is for. The same goes for `https://example.org/reset/<code>`, the link in the password reset mail: it opens the reset screen with the code filled in. The reset page asks the server nothing, so a mail program that looks at the link in advance uses nothing up. Android checks `https://example.org/.well-known/assetlinks.json` against the key the app is signed with. Fill `site/.well-known/assetlinks.json`:
 
 ```json
 [{
@@ -175,7 +180,11 @@ On a phone with the app, `https://example.org/join/<code>` opens the app (Androi
 }]
 ```
 
-The fingerprint comes from `keytool -list -v -keystore release.jks` for your own release key, or from the Play Console (App signing) for a Play Store build. The debug key can be listed as a second entry for testing.
+The fingerprint comes from `keytool -list -v -keystore release.jks` for your own release key, or from the Play Console (App integrity, App signing) for a Play Store build. For Fletchr's own build list the **app signing key** and the **upload key** (both SHA-256, in one `sha256_cert_fingerprints` list); a debug build (`de.fletchr.app.dev`, its own entry) can be listed with the debug key for testing.
+
+Check on the phone that Android accepted it: `adb shell pm verify-app-links --re-verify de.fletchr.app`, then `adb shell pm get-app-links de.fletchr.app` should show `fletchr.de: verified`. A wrong fingerprint fails without a message: the link just opens in the browser.
+
+The mail carries the link only when the server knows the website: set `DJANGO_SITE_URL` in `deploy/.env.prod` (for Fletchr `https://fletchr.de`) **after** the reset page is published. Empty, the mail has the code only. A self-hosted build has to name its own host in the manifest and in `src/lib/app-link.ts`; the official app only verifies `fletchr.de`.
 
 ### Web server logs
 

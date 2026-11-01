@@ -6,6 +6,8 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useAuth } from '@/composables/useAuth'
+import { useServer } from '@/composables/useServer'
+import { joinUrl } from '@/lib/app-link'
 import type { components } from '@/lib/api-types'
 import { formatCode } from '@/lib/codes'
 import { untilDate } from '@/lib/team-admin'
@@ -17,13 +19,15 @@ const emit = defineEmits<{ changed: [] }>()
 
 const { t, locale } = useI18n()
 const { api } = useAuth()
+const { isOverride } = useServer() // a link to fletchr.de only means something for a code of the official server
 const native = Capacitor.isNativePlatform()
 const note = ref<string | null>(null)
 const confirmCancel = ref(false)
 
 // In the browser the text is copied; on a phone the share sheet opens.
 async function share() {
-  const message = t('teams.inviteText', { team: props.teamName, code: formatCode(props.invite.code), until: untilDate(props.invite.expires_at, locale.value) })
+  const words = { team: props.teamName, code: formatCode(props.invite.code), until: untilDate(props.invite.expires_at, locale.value) }
+  const message = isOverride.value ? t('teams.inviteText', words) : t('teams.inviteTextLink', { ...words, link: joinUrl(props.invite.code) })
   try {
     if (native) {
       await Share.share({ text: message })
