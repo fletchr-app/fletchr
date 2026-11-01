@@ -26,8 +26,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "video_allowed", "avatar_allowed", "avatar_url"]
-        extra_kwargs = {"training_visibility": {"help_text": "Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now"}}
+        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "push_notes", "push_evaluations", "push_team", "video_allowed", "avatar_allowed", "avatar_url"]
+        extra_kwargs = {
+            "training_visibility": {"help_text": "Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now"},
+            "push_notes": {"help_text": "Notify me when a coach shares a note with me"},
+            "push_evaluations": {"help_text": "Notify me when a coach shares an evaluation with me"},
+            "push_team": {"help_text": "Notify me when somebody uses an invite or claim code I made"},
+        }
 
     def validate_training_visibility(self, value):
         user = self.context["request"].user

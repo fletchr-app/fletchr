@@ -13,6 +13,7 @@ name: Release Android
 #             ANDROID_KEY_ALIAS
 #             ANDROID_KEY_PASSWORD
 #             PLAY_SERVICE_ACCOUNT_JSON  service account with "Release to testing tracks" in the Play Console
+#             GOOGLE_SERVICES_JSON_BASE64  base64 of google-services.json from the Firebase project (push notifications, SELFHOSTING.md section 9; required: the build fails without it)
 #   variables VITE_GOOGLE_WEB_CLIENT_ID  the web client ID, as in the official server's DJANGO_GOOGLE_CLIENT_IDS (required: the build fails without it)
 on:
   push:
@@ -67,11 +68,20 @@ jobs:
           VITE_GOOGLE_WEB_CLIENT_ID: ${{ vars.VITE_GOOGLE_WEB_CLIENT_ID }}
         run: '[ -n "$VITE_GOOGLE_WEB_CLIENT_ID" ] || { echo "::error::set the variable VITE_GOOGLE_WEB_CLIENT_ID in the release environment"; exit 1; }'
 
+      # Without it the app builds without push and nothing says so. The file is written next to the sources and never committed.
+      - name: Firebase config for push notifications
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          [ -n "$GOOGLE_SERVICES_JSON_BASE64" ] || { echo "::error::set the secret GOOGLE_SERVICES_JSON_BASE64 in the release environment"; exit 1; }
+          (umask 077; printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json)
+
       # The Play build talks to the official server, never the localhost default of .env.example.
       - name: Build the web app and sync it into android/
         env:
           VITE_SERVER_URL: https://app.fletchr.de
           VITE_GOOGLE_WEB_CLIENT_ID: ${{ vars.VITE_GOOGLE_WEB_CLIENT_ID }}
+          VITE_PUSH: '1'
         run: |
           npm run build-only
           npx cap sync android

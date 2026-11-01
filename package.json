@@ -1,6 +1,6 @@
 {
   "name": "fletchr",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "type": "module",
@@ -28,6 +28,7 @@
     "@capacitor/filesystem": "^8.1.5",
     "@capacitor/network": "^8.0.1",
     "@capacitor/preferences": "^8.0.1",
+    "@capacitor/push-notifications": "^8.1.3",
     "@capacitor/share": "^8.0.3",
     "@capacitor/status-bar": "^8.0.4",
     "@capgo/capacitor-social-login": "^8.7.5",

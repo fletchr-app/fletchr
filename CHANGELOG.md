@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.18.0 (2026-11-01)
+
+- **Push notifications, Android** (#26, #27): a notification tells you when a coach shares a note or an evaluation with you, and a coach hears when someone uses an invite or claim code they made. The text is general ("New note from your coach"), never the note itself or a name. Tapping it opens the note, the evaluation or the team. Home asks once whether to allow them, and Settings has a switch for each kind. Private and coach-only notes never notify. They come through Firebase Cloud Messaging (Google), only after you allow them, and only on the official server: a self-hosted server needs its own Firebase project and app build (SELFHOSTING.md, section 9). The server sends none until it has a Firebase key.
+
 ## 0.17.2 (2026-11-01)
 
 - **Password reset link** (#19): the reset mail can carry a link, `https://fletchr.de/reset/<code>`. On the phone it opens the app on the reset screen with the code filled in; without the app the page shows the code. The address the code was sent to is kept on the phone for the hour the code works, and asked for when it is missing. The mail has the link only when the server knows its website (`DJANGO_SITE_URL`, SELFHOSTING.md, section 7).

@@ -44,6 +44,13 @@
 
         </activity>
 
+        <!-- Push notifications (specs/design/push-notifications.md). Firebase makes no token and sends nothing to Google until the app
+             calls register(), which happens only after the person allowed notifications. The channels are made by the app. -->
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_fletchr" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_color" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="notes" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -68,4 +75,6 @@
     <!-- Trainings in the phone's calendar (Settings): asked for only when the person turns it on -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <!-- Notifications (Android 13 and later): asked for when the person agrees in the app -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

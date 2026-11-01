@@ -9,6 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
+import { usePushTaps } from '@/composables/usePush'
 import { useTeams } from '@/composables/useTeams'
 
 const route = useRoute()
@@ -26,6 +27,7 @@ watch(status, (s) => {
 })
 
 useAppLinks() // invite and password reset links open the app on the right screen with the code filled in
+usePushTaps() // a tap on a notification opens the screen it is about
 
 // The tab bar is for signed-in users and for those who use the app without an account.
 const showTabs = computed(() => route.meta.tab === true && (status.value === 'signedIn' || status.value === 'local'))

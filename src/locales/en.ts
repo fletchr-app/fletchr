@@ -869,6 +869,31 @@ export default {
     calendarName: 'Fletchr',
     entryNote: 'Team {team}, from the Fletchr app',
   },
+  push: {
+    channel: { notes: 'Notes', evaluations: 'Evaluations', team: 'Team' },
+    channelHint: {
+      notes: 'A coach shared a note with you',
+      evaluations: 'A coach shared an evaluation with you',
+      team: 'Somebody used an invite or claim code you made',
+    },
+    offer: {
+      title: 'Notifications?',
+      message: 'Fletchr can tell you when your coach shares a note or an evaluation with you. The notification only says that there is something new, not what.',
+      allow: 'Allow',
+      later: 'Not now',
+    },
+    open: 'Open',
+    settings: {
+      title: 'Notifications',
+      notes: 'New notes from your coach',
+      evaluations: 'New evaluations',
+      team: 'Invites and codes used',
+      teamHint: 'For coaches: when somebody joins with an invite or claim code you made.',
+      denied: 'Notifications are off for Fletchr on this phone. Turn them on in the system settings of the phone.',
+      allow: 'Allow notifications',
+      hint: 'The notification says only that there is something new. Needs a connection to change.',
+    },
+  },
   settings: {
     title: 'Settings',
     training: 'Training',

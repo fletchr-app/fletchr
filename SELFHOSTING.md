@@ -215,3 +215,25 @@ FLETCHR_KEY_PASSWORD=...
 ```
 
 For Google Play, enrol in Play App Signing: the key above then only signs the upload, and Google signs what users get with its own key (whose fingerprint is the one for Google sign-in above).
+
+## 9. Push notifications (optional)
+
+The server can tell a phone when a coach shares a note or an evaluation, or when someone uses an invite or claim code. It does so through Google's Firebase Cloud Messaging (FCM). It is **off by default**: without a key the server sends nothing, `GET /api/health/` says `"push": false`, and the app hides the settings for it.
+
+**The official app cannot receive pushes from your server.** A phone token belongs to one Firebase project, and the official app is built for the official one. To use push on your own server you need your own Firebase project and your own build of the app:
+
+1. In the [Firebase console](https://console.firebase.google.com/) create a project (do not turn on Google Analytics) and add an Android app with your application id (`de.fletchr.app`, or your own). Download `google-services.json` into `android/app/` (it is ignored by git).
+2. In the Google Cloud console (IAM) create a service account with only the role "Firebase Cloud Messaging API Admin" and make a JSON key for it. Check that the "Firebase Cloud Messaging API (V1)" is enabled.
+3. Put the key on the server, readable by you only, and name it in `deploy/.env.prod`:
+
+```bash
+mkdir -p deploy/secrets && chmod 700 deploy/secrets
+cp fcm.json deploy/secrets/fcm.json && chmod 600 deploy/secrets/fcm.json
+# deploy/.env.prod
+DJANGO_FCM_CREDENTIALS=/run/secrets/fcm.json
+```
+
+4. Restart (`docker compose -f docker-compose.prod.yml up -d`) and check `curl https://app.example.org/api/health/`: `"push": true`. If the key cannot be read, the server logs one error at the first use and runs with push off.
+5. Build the app with `VITE_PUSH=1` in `.env` (see `.env.example`), then `npx cap sync android` and the build of section 8. Never build with `VITE_PUSH=1` without `google-services.json`: asking Firebase to register without it crashes the app.
+
+What goes to Google: the phone's Firebase token and the notification (a generic title and text such as "New note from your coach", and ids). No note text, names or team names. Each person can switch each type off in Settings, and sign-out or account deletion removes the phone. `deploy/secrets/` holds a credential: include it in your backups knowingly, or keep a copy of the key elsewhere. Tell your users about Google as a processor in your privacy policy.

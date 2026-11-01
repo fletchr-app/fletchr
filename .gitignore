@@ -20,6 +20,8 @@ android/capacitor-cordova-android-plugins/
 *.keystore
 *.p8
 *.p12
+deploy/secrets/
+android/app/google-services.json
 *.key
 *.mobileprovision
 

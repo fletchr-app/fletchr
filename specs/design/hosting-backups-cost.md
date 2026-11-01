@@ -1,6 +1,6 @@
 # Self-hosted deployment, backups and cost
 
-Status: implemented, except push notifications (not set up)
+Status: implemented; push notifications are described in [push-notifications.md](push-notifications.md)
 Date: 2026-10-23
 Updated: 2026-10-28
 
@@ -12,7 +12,7 @@ The step-by-step operator guide is [SELFHOSTING.md](../../SELFHOSTING.md).
 - **Backups** (`deploy/backup.sh`): nightly, first a consistent snapshot of the database (14 daily SQLite copies kept on the disk), then, with `deploy/.env.backup` set up, an encrypted restic backup of the copies and the uploads to a storage box. restic is incremental, so each video is copied only once. 30 daily and 12 monthly copies kept. Data an archer has deleted stays in older backups until they rotate out (at most about a year); the privacy texts say so. The script was tested against a local repository, including a restore; the off-site setup on the real server is still open.
 - **Monitoring**: a free uptime check (e.g. Uptime Kuma or a hosted pinger) and unattended security updates on the server.
 - **Email**: the password-reset code and the "password was changed" notice are sent by the server itself through a mailbox of the domain. Sign-in uses password and email only.
-- **Push notifications**: Firebase Cloud Messaging (Android) and Apple's push service (iOS) through `@capacitor/push-notifications`, and standard Web Push for the web app and iPhone home-screen app, sent by the server, for "new coach note" and "new evaluation" alerts. Needs a Firebase project and an Apple key. Not built: there is no push code in the app or the server yet (milestone 4).
+- **Push notifications**: Android through Firebase Cloud Messaging's HTTP v1 API (`@capacitor/push-notifications` in the app), sent by the server for a new shared note, a shared evaluation and a used invite or claim code; see [push-notifications.md](push-notifications.md). Off without a Firebase key. Apple's push service (iOS) and standard Web Push are not built.
 
 **Same setup locally and on the server.** Local and server differ in the compose file (`docker-compose.yml` with Caddy, `docker-compose.prod.yml` behind your web server) and the `.env` file:
 

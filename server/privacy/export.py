@@ -128,11 +128,18 @@ def export_user_data(user) -> dict:
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
             "training_visibility": profile.training_visibility,
+            "push_notes": profile.push_notes,
+            "push_evaluations": profile.push_evaluations,
+            "push_team": profile.push_team,
             "avatar": media_zip.AVATAR_NAME if profile.avatar else None,  # the name in the zip of the files
             "avatar_updated_at": profile.avatar_updated_at,
             "video_consent_at": profile.video_consent_at,
             "video_consent_by": (profile.video_consent_by.profile.name or profile.video_consent_by.email) if profile.video_consent_by else None,
         },
+        "devices": [  # the phones that get notifications; the token is an address, not part of the export
+            {"app_id": d.app_id, "language": d.language, "created_at": d.created_at, "last_seen_at": d.last_seen_at}
+            for d in user.push_devices.order_by("created_at")
+        ],
         "sign_in": [  # how Google (or another provider) knows this account; no token is kept
             {"provider": i.provider, "subject": i.subject, "created_at": i.created_at}
             for i in user.social_identities.order_by("created_at", "id")

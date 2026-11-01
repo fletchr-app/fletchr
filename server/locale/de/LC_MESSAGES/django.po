@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 14:17+0100\n"
+"POT-Creation-Date: 2026-11-01 16:49+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -18,19 +18,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:95
+#: core/access.py:97
 msgid "Invalid or expired invite code"
 msgstr "Ungültiger oder abgelaufener Einladungscode"
 
-#: core/access.py:97
+#: core/access.py:99
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/access.py:126 training/views.py:160
+#: core/access.py:129 training/views.py:160
 msgid "Only the archer can choose who sees this"
 msgstr "Nur der Schütze legt fest, wer das sieht"
 
-#: core/access.py:128
+#: core/access.py:131
 msgid "Not available yet"
 msgstr "Noch nicht verfügbar"
 
@@ -50,11 +50,11 @@ msgstr "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der E
 msgid "The picture is larger than 512 KB"
 msgstr "Das Bild ist größer als 512 KB"
 
-#: core/claims.py:49 core/claims.py:52 core/resets.py:57 core/views.py:156
+#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:160
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
-#: core/claims.py:57
+#: core/claims.py:59
 msgid "You are a coach in this team. A profile of an archer can only be taken over by an archer."
 msgstr ""
 "Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
@@ -125,31 +125,31 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr "Gib ein Geburtsdatum in der Vergangenheit ein"
 
-#: core/serializers.py:79
+#: core/serializers.py:84
 msgid "An account with this email already exists"
 msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
 
-#: core/serializers.py:112
+#: core/serializers.py:117
 msgid "A team needs a name"
 msgstr "Ein Team braucht einen Namen"
 
-#: core/serializers.py:125
+#: core/serializers.py:130
 msgid "Give a name or show_ranking"
 msgstr "Gib einen Namen oder show_ranking an"
 
-#: core/serializers.py:187 core/serializers.py:202
+#: core/serializers.py:192 core/serializers.py:207
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:252 privacy/serializers.py:17
+#: core/serializers.py:257 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:262
+#: core/serializers.py:267
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:276
+#: core/serializers.py:281
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
@@ -175,80 +175,80 @@ msgstr ""
 "Diese E-Mail-Adresse hat schon ein Konto. Bitte einen Admin, es mit deiner Google-Anmeldung zu "
 "verbinden."
 
-#: core/transfer.py:128
+#: core/transfer.py:129
 msgid "Source and target are the same account"
 msgstr "Quelle und Ziel sind dasselbe Konto"
 
-#: core/transfer.py:131
+#: core/transfer.py:132
 #, python-format
 msgid "%(email)s is a profile without an account or an admin of the site"
 msgstr "%(email)s ist ein Profil ohne Konto oder ein Admin der Seite"
 
-#: core/transfer.py:133
+#: core/transfer.py:134
 #, python-format
 msgid "%(email)s is deactivated"
 msgstr "%(email)s ist deaktiviert"
 
-#: core/transfer.py:137
+#: core/transfer.py:138
 #, python-format
 msgid "%(email)s already has data (%(what)s). Only an account without data can receive one."
 msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen."
 
-#: core/transfer.py:156
+#: core/transfer.py:157
 #, python-format
 msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
 msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
 
-#: core/views.py:206
+#: core/views.py:210
 msgid "No picture sent"
 msgstr "Es wurde kein Bild gesendet"
 
-#: core/views.py:257
+#: core/views.py:261
 msgid "This account signs in with Google and has no password."
 msgstr "Dieses Konto meldet sich mit Google an und hat kein Passwort."
 
-#: core/views.py:352
+#: core/views.py:357
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:398
+#: core/views.py:403
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
-#: core/views.py:407
+#: core/views.py:412
 msgid "Only team admins can change the team"
 msgstr "Nur Team-Admins können das Team ändern"
 
-#: core/views.py:433
+#: core/views.py:438
 msgid "Only team admins can change roles"
 msgstr "Nur Team-Admins können Rollen ändern"
 
-#: core/views.py:439 core/views.py:453
+#: core/views.py:444 core/views.py:458
 msgid "A team needs at least one admin"
 msgstr "Ein Team braucht mindestens einen Admin"
 
-#: core/views.py:450
+#: core/views.py:455
 msgid "Only team admins can remove members"
 msgstr "Nur Team-Admins können Mitglieder entfernen"
 
-#: core/views.py:464 core/views.py:481
+#: core/views.py:469 core/views.py:486
 msgid "Only team admins can manage invites"
 msgstr "Nur Team-Admins können Einladungen verwalten"
 
-#: core/views.py:489
+#: core/views.py:494
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:616
+#: core/views.py:621
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:628
+#: core/views.py:633
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:640
+#: core/views.py:645
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
@@ -459,15 +459,15 @@ msgstr "Gib an, welches Formular benutzt wird"
 msgid "This form belongs to another team"
 msgstr "Dieses Formular gehört zu einem anderen Team"
 
-#: evaluations/views.py:27
+#: evaluations/views.py:29
 msgid "Only coaches can change the forms of a team"
 msgstr "Nur Trainer können die Formulare eines Teams ändern"
 
-#: evaluations/views.py:54
+#: evaluations/views.py:56
 msgid "A form needs a name and criteria"
 msgstr "Ein Formular braucht einen Namen und Kriterien"
 
-#: evaluations/views.py:95
+#: evaluations/views.py:97
 msgid "Evaluations were made with this form, so it stays"
 msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 
@@ -510,7 +510,7 @@ msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 msgid "Only the archer or whoever added it can change a photo or video"
 msgstr "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern"
 
-#: media/views.py:98 notes/views.py:139 training/schedule_views.py:268 training/views.py:154
+#: media/views.py:98 notes/views.py:146 training/schedule_views.py:268 training/views.py:154
 msgid "Give the id of the archer"
 msgstr "Gib die ID des Schützen an"
 
@@ -604,6 +604,30 @@ msgstr "Tippe zur Bestätigung \"%(word)s\" ein"
 #, python-format
 msgid "You are the only admin of %(teams)s. Make someone else an admin there first."
 msgstr "Du bist der einzige Admin von %(teams)s. Mach dort zuerst jemand anderen zum Admin."
+
+#: push/notify.py:33
+msgid "New note from your coach"
+msgstr "Neue Notiz von deinem Trainer"
+
+#: push/notify.py:33
+msgid "Tap to read it."
+msgstr "Tippe, um sie zu lesen."
+
+#: push/notify.py:34
+msgid "New evaluation"
+msgstr "Neue Bewertung"
+
+#: push/notify.py:34
+msgid "Your coach shared an evaluation with you."
+msgstr "Dein Trainer hat eine Bewertung mit dir geteilt."
+
+#: push/notify.py:35
+msgid "Someone joined your team"
+msgstr "Jemand ist deinem Team beigetreten"
+
+#: push/notify.py:35
+msgid "Tap to see your team."
+msgstr "Tippe, um dein Team zu sehen."
 
 #: training/schedule.py:88
 msgid "The slot has no training on this date"
