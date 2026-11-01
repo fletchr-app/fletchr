@@ -41,7 +41,7 @@ const remote = useRemote(async () => {
   const { from, to } = nearWindow(props.session)
   const query = { owner: props.owner, without_session: true, ...(props.eventId ? { not_in_event: props.eventId } : {}), taken_after: new Date(from).toISOString(), taken_before: new Date(to).toISOString() }
   return (await api.GET('/api/media/', { params: { query } })).data ?? null
-})
+}, { watch: [isLocal] })
 watch(media.uploaded, remote.reload)
 
 const previews = ref<Record<string, string>>({})

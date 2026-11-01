@@ -22,12 +22,14 @@ const { visibility: defaultVisibility } = useTrainingVisibility()
 const remote = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/sessions/', { params: { query: { owner: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
   keepPolling: () => !isLocal.value,
+  watch: [isLocal], // the screen stays alive when someone signs out: it must not keep the account's list
 })
 
 // Trainings of your team with notes or photos of yours and no session of yours: they show between the sessions.
 const events = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/events/mine/', { params: { query: { archer: Number(userId.value) } } })).data ?? null)), {
   pollMs: REFRESH_MS,
   keepPolling: () => !isLocal.value,
+  watch: [isLocal],
 })
 
 // Your own sessions. Ones a coach logged for an archer (owner set) are on that archer's page.
