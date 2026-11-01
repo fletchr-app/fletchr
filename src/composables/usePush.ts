@@ -1,7 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { type ActionPerformed, PushNotifications, type PushNotificationSchema } from '@capacitor/push-notifications';
-import { alertController, toastController } from '@ionic/vue';
+import { toastController } from '@ionic/vue';
 import { computed, effectScope, onBeforeUnmount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -9,7 +9,6 @@ import { authReady, setBeforeSignOut, useAuth } from '@/composables/useAuth';
 import { useLog } from '@/composables/useLog';
 import { useNoteLibrary } from '@/composables/useNoteLibrary';
 import { useServer, useServerPush } from '@/composables/useServer';
-import { useTeams } from '@/composables/useTeams';
 import { currentLanguage, i18n, t } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { localStore } from '@/lib/local-store';
@@ -20,7 +19,7 @@ import { type PushData, pushTarget } from '@/lib/push-target';
 // (VITE_PUSH=1, google-services.json), on a phone. Without Firebase the plugin must not even be asked to register, it crashes the app.
 const BUILT = import.meta.env.VITE_PUSH === '1' && Capacitor.isNativePlatform();
 const TOKEN_KEY = 'pushToken';
-const ASKED_KEY = 'pushAsked';
+const ENABLED_KEY = 'pushEnabled';
 const CHANNELS = ['notes', 'evaluations', 'team'] as const;
 export type PushType = (typeof CHANNELS)[number];
 
@@ -32,8 +31,10 @@ const serverPush = useServerPush();
 const available = computed(() => BUILT && !isOverride.value && serverPush.value);
 /** What Android says: `prompt` (not asked, or asked once), `denied`, `granted`; `unknown` until read. */
 const permission = ref<'unknown' | 'prompt' | 'denied' | 'granted'>('unknown');
-/** The person said "Not now" to the explanation on Home, or allowed: it is not shown again. */
-const asked = ref(true);
+/** The main switch in Settings, kept on this phone. Android's permission can stay granted after the person turned it off. */
+const enabled = ref(false);
+/** The switch as the person sees it: on only while Android allows it too (it can be taken back in the system settings). */
+const on = computed(() => enabled.value && permission.value === 'granted');
 /** The switches in Settings (kept on the server, one choice for all phones). */
 const prefs = ref<Record<PushType, boolean>>({ notes: true, evaluations: true, team: true });
 const prefsError = ref('');
@@ -75,7 +76,7 @@ async function sendToken(next: string) {
 }
 
 async function register() {
-  if (!shouldRegister({ available: available.value, signedIn: status.value === 'signedIn', granted: permission.value === 'granted' })) return;
+  if (!shouldRegister({ available: available.value, signedIn: status.value === 'signedIn', granted: on.value })) return;
   try {
     await createChannels();
     await PushNotifications.register();
@@ -109,46 +110,50 @@ async function loadPrefs() {
   }
 }
 
-/** Needs a connection, the server is the one that skips the notification. Turning one on without the permission asks for it first. */
-async function setPref(type: PushType, on: boolean) {
+/** Needs a connection, the server is the one that skips the notification. */
+async function setPref(type: PushType, value: boolean) {
   prefsError.value = '';
-  if (on && permission.value !== 'granted') await ask();
   try {
-    const { data, error } = await api.PATCH('/api/me/', { body: { profile: { [SWITCH[type]]: on } } });
-    if (data) prefs.value = { ...prefs.value, [type]: on };
+    const { data, error } = await api.PATCH('/api/me/', { body: { profile: { [SWITCH[type]]: value } } });
+    if (data) prefs.value = { ...prefs.value, [type]: value };
     else prefsError.value = errorMessage(error);
   } catch {
     prefsError.value = errorMessage(undefined);
   }
 }
 
-/** Once, on Home: say what the notifications are for before Android asks. For someone who is in a team, because only then there is anyone to send one. */
-async function offer() {
-  const { teams } = useTeams();
-  if (!available.value || status.value !== 'signedIn' || permission.value !== 'prompt' || asked.value || teams.value.length === 0) return;
-  asked.value = true;
-  void localStore.set(ASKED_KEY, '1').catch(() => {});
-  const alert = await alertController.create({
-    header: t('push.offer.title'),
-    message: t('push.offer.message'),
-    buttons: [
-      { text: t('push.offer.later'), role: 'cancel' },
-      { text: t('push.offer.allow'), role: 'confirm' },
-    ],
-  });
-  await alert.present();
-  if ((await alert.onDidDismiss()).role === 'confirm') await ask();
+/**
+ * The main switch of this phone. Turning it on asks Android for the permission (nothing is asked before); if it is refused the
+ * switch stays off. Turning it off removes the phone from the server and from Firebase. Returns whether it is on now.
+ */
+async function setEnabled(value: boolean): Promise<boolean> {
+  if (value) {
+    if (permission.value !== 'granted' && !(await ask())) return false;
+    enabled.value = true;
+    await localStore.set(ENABLED_KEY, '1').catch(() => {});
+  } else {
+    enabled.value = false;
+    await localStore.set(ENABLED_KEY, '0').catch(() => {});
+    await forget();
+  }
+  return on.value === value;
+}
+
+/** A phone that allowed notifications before the switch existed (0.18.0 asked on Home) keeps getting them. */
+async function start() {
+  const saved = await localStore.get(ENABLED_KEY).catch(() => null);
+  await readPermission();
+  enabled.value = saved === null ? permission.value === 'granted' : saved === '1';
 }
 
 if (BUILT) {
   void localStore.get(TOKEN_KEY).then((saved) => (token ??= saved));
-  void localStore.get(ASKED_KEY).then((saved) => (asked.value = saved === '1'));
-  void readPermission();
+  void start();
   setBeforeSignOut(forget);
   effectScope(true).run(() => {
     void PushNotifications.addListener('registration', ({ value }) => void sendToken(value));
     void PushNotifications.addListener('registrationError', () => {});
-    watch([available, status, permission], ([, now], [, before]) => {
+    watch([available, status, permission, enabled], ([, now], [, before]) => {
       // Signed out without signing out here (the password was changed elsewhere): the phone leaves Firebase too.
       if (before === 'signedIn' && now !== 'signedIn') void leave();
       else void register();
@@ -166,7 +171,7 @@ if (BUILT) {
 }
 
 export function usePush() {
-  return { available, permission, prefs, prefsError, setPref, ask, offer };
+  return { available, permission, on, prefs, prefsError, setPref, setEnabled };
 }
 
 /** Taps on notifications. Called once, from App.vue: it needs the router. A tap that starts the app arrives as soon as this listens. */

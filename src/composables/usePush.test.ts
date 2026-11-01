@@ -194,11 +194,62 @@ test('a switch that the server refused stays as it was', async () => {
   assert.ok(push.prefsError.value);
 });
 
-test('turning a switch on without the permission asks for it first', async () => {
+test('a phone that allowed notifications before the main switch existed keeps them on', async () => {
+  const push = await load();
+  await tick();
+  assert.equal(push.on.value, true);
+  assert.equal(plugin.register.mock.calls.length, 1);
+});
+
+test('the main switch off is remembered: no registration, and nothing is asked', async () => {
+  disk.set('pushEnabled', '0');
+  const push = await load();
+  await tick();
+  assert.equal(push.on.value, false);
+  assert.equal(plugin.register.mock.calls.length, 0);
+  assert.equal(plugin.requestPermissions.mock.calls.length, 0);
+});
+
+test('without the permission nothing is asked until the main switch is turned on', async () => {
+  plugin.checkPermissions.mockResolvedValue({ receive: 'prompt' });
+  const push = await load();
+  await tick();
+  assert.equal(plugin.requestPermissions.mock.calls.length, 0);
+  assert.equal(await push.setEnabled(true), true);
+  assert.equal(plugin.requestPermissions.mock.calls.length, 1);
+  assert.equal(disk.get('pushEnabled'), '1');
+  await tick();
+  assert.equal(plugin.register.mock.calls.length, 1);
+});
+
+test('refused by Android: the main switch stays off', async () => {
+  plugin.checkPermissions.mockResolvedValue({ receive: 'prompt' });
+  plugin.requestPermissions.mockResolvedValue({ receive: 'denied' });
+  const push = await load();
+  await tick();
+  assert.equal(await push.setEnabled(true), false);
+  assert.equal(push.on.value, false);
+  assert.equal(push.permission.value, 'denied');
+  assert.equal(plugin.register.mock.calls.length, 0);
+  assert.notEqual(disk.get('pushEnabled'), '1');
+});
+
+test('the main switch off removes the phone from the server and Firebase', async () => {
+  disk.set('pushToken', 'token-1');
+  const push = await load();
+  await tick();
+  calls.length = 0;
+  assert.equal(await push.setEnabled(false), true);
+  assert.deepEqual(calls, ['delete', 'unregister']);
+  assert.equal(disk.get('pushEnabled'), '0');
+  assert.equal(push.on.value, false);
+});
+
+test('turning a type switch on asks nothing, the main switch did that', async () => {
   plugin.checkPermissions.mockResolvedValue({ receive: 'prompt' });
   const push = await load();
   await tick();
   await push.setPref('notes', true);
-  assert.equal(plugin.requestPermissions.mock.calls.length, 1);
+  assert.equal(plugin.requestPermissions.mock.calls.length, 0);
   assert.equal(PATCH.mock.calls.length, 1);
 });

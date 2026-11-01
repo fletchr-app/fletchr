@@ -13,7 +13,6 @@ import VersionBanner from '@/components/VersionBanner.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useOnReconnect } from '@/composables/useOnReconnect'
-import { usePush } from '@/composables/usePush'
 import { useRemote } from '@/composables/useRemote'
 import { useTeams } from '@/composables/useTeams'
 import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
@@ -26,7 +25,6 @@ const { api, userId, isLocal } = useAuth()
 const me = ref<Me | null>(null)
 const { t } = useI18n()
 const { teams, loaded, load } = useTeams()
-const { offer: offerPush } = usePush()
 const error = ref<string | null>(null)
 
 // Your own sessions, the same list as the Training tab: those on the device (also the ones not uploaded yet) and the server's.
@@ -60,7 +58,7 @@ onIonViewWillEnter(() => {
   shown.value++
   if (firstVisit) firstVisit = false
   else remote.reload()
-  return Promise.resolve(loadProfile()).then(offerPush) // the teams are known by then: the explanation of the notifications is for someone in a team
+  return loadProfile()
 })
 // A load that failed offline is tried again when the connection returns or the app comes back.
 useOnReconnect(() => {
