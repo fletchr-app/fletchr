@@ -2,6 +2,16 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.17.1 (2026-11-01)
+
+- **Home reloads after a connection loss** (#132): an error on Home goes away by itself when the connection returns or the app comes back to the front. A token refresh that hangs while the connection switches now ends after 10 seconds instead of blocking every request.
+
+- **Camps in the schedule** (#133): a multi-day camp says "from <time>" on its first day, "all day" in between and "to <time>" on its last day.
+
+- **New one-off in month view** (#137): the form starts on the day you picked.
+
+- **Fixes**: a coach's session that was merged on the server disappears from the coach's list (#131); the Training list no longer keeps the previous account's sessions after sign-out (#134); "move to session" for a photo works (#135).
+
 ## 0.17.0 (2026-10-31)
 
 - **Trainings in the phone's calendar, Android** (#107): Settings has a switch that writes the trainings, competitions and camps of your teams into a calendar of its own on the phone ("Fletchr", on this phone only). Every training is an entry of its own, so a cancelled or moved one simply disappears. Optional reminder. Turning it off or signing out removes the calendar. Needs the calendar permission, asked when you turn it on.
