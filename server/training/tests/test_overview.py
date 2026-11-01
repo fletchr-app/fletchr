@@ -88,8 +88,8 @@ def test_sessions_carry_the_archers_name(client_for, club):
 
 
 @pytest.mark.django_db
-def test_name_falls_back_to_email(client_for, club):
+def test_name_falls_back_to_the_part_before_the_at(client_for, club):
     club["archer1"].profile.name = ""
     club["archer1"].profile.save()
     make_session(club["archer1"])
-    assert client_for(club["archer1"]).get("/api/sessions/").data[0]["owner_name"] == "archer1@a.test"
+    assert client_for(club["archer1"]).get("/api/sessions/").data[0]["owner_name"] == "archer1"

@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 import ErrorText from '@/components/ErrorText.vue'
 import InvitesSection from '@/components/InvitesSection.vue'
 import MembersSection from '@/components/MembersSection.vue'
+import TeamRoster from '@/components/TeamRoster.vue'
 import SlotEditor from '@/components/SlotEditor.vue'
 import TeamLeaveDelete from '@/components/TeamLeaveDelete.vue'
 import TeamRankingToggle from '@/components/TeamRankingToggle.vue'
@@ -52,8 +53,9 @@ function reload() {
       <template v-if="team.data.value">
         <TeamRename v-if="isAdmin" :key="team.data.value.name" :team-id="teamId" :name="team.data.value.name" @changed="reload" />
         <TeamRankingToggle v-if="isAdmin" :team-id="teamId" :on="!!team.data.value.show_ranking" @changed="reload" />
+        <TeamRoster v-if="!isCoach" :team-id="teamId" />
         <MembersSection
-          v-if="members.data.value"
+          v-if="isCoach && members.data.value"
           :team-id="teamId"
           :members="members.data.value"
           :is-admin="isAdmin"

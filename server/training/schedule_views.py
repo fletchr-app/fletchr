@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import archers_visible_to, can_plan, is_coach_in, teams_of
-from core.models import Team, User
+from core.models import Team, User, display_name
 from media.access import visible_media
 from media.moves import move_to_session
 from notes.access import visible_notes
@@ -242,7 +242,7 @@ class EventArchersView(APIView):
         users = User.objects.filter(pk__in={*sessions, *notes, *media}).select_related("profile").filter(pk__in=visible)
         rows = [
             {
-                "user_id": u.pk, "name": u.profile.name or u.email, "managed": u.is_managed, "sessions": sessions.get(u.pk, []),
+                "user_id": u.pk, "name": display_name(u), "managed": u.is_managed, "sessions": sessions.get(u.pk, []),
                 "notes": notes.get(u.pk, 0), "media": media.get(u.pk, 0),
             }
             for u in users

@@ -6,6 +6,7 @@ from math import hypot, isfinite
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from core.models import display_name
 from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
@@ -275,12 +276,12 @@ class SetupInfoSerializer(serializers.Serializer):
 
 
 def owner_name(session):
-    return session.owner.profile.name or session.owner.email
+    return display_name(session.owner)
 
 
 def opened_by_name(session):
     user = session.opened_by
-    return None if user is None else user.profile.name or user.email
+    return None if user is None else display_name(user)
 
 
 class SessionSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):

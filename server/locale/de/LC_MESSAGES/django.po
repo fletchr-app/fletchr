@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 16:49+0100\n"
+"POT-Creation-Date: 2026-11-01 18:27+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,11 +26,11 @@ msgstr "Ungültiger oder abgelaufener Einladungscode"
 msgid "You are already a member of this team"
 msgstr "Du bist schon Mitglied dieses Teams"
 
-#: core/access.py:129 training/views.py:160
+#: core/access.py:157 training/views.py:160
 msgid "Only the archer can choose who sees this"
 msgstr "Nur der Schütze legt fest, wer das sieht"
 
-#: core/access.py:131
+#: core/access.py:159 core/serializers.py:50
 msgid "Not available yet"
 msgstr "Noch nicht verfügbar"
 
@@ -50,7 +50,7 @@ msgstr "Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der E
 msgid "The picture is larger than 512 KB"
 msgstr "Das Bild ist größer als 512 KB"
 
-#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:160
+#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:161
 msgid "Invalid or expired code"
 msgstr "Ungültiger oder abgelaufener Code"
 
@@ -125,31 +125,35 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr "Gib ein Geburtsdatum in der Vergangenheit ein"
 
-#: core/serializers.py:84
+#: core/serializers.py:41
+msgid "Enter your name"
+msgstr "Gib deinen Namen ein"
+
+#: core/serializers.py:96
 msgid "An account with this email already exists"
 msgstr "Ein Konto mit dieser E-Mail-Adresse gibt es schon"
 
-#: core/serializers.py:117
+#: core/serializers.py:129
 msgid "A team needs a name"
 msgstr "Ein Team braucht einen Namen"
 
-#: core/serializers.py:130
+#: core/serializers.py:142
 msgid "Give a name or show_ranking"
 msgstr "Gib einen Namen oder show_ranking an"
 
-#: core/serializers.py:192 core/serializers.py:207
+#: core/serializers.py:223 core/serializers.py:238
 msgid "An archer needs a name"
 msgstr "Ein Schütze braucht einen Namen"
 
-#: core/serializers.py:257 privacy/serializers.py:17
+#: core/serializers.py:288 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr "Falsches Passwort"
 
-#: core/serializers.py:267
+#: core/serializers.py:298
 msgid "Choose a different password"
 msgstr "Wähle ein anderes Passwort"
 
-#: core/serializers.py:281
+#: core/serializers.py:312
 msgid "This address is not available"
 msgstr "Diese Adresse ist nicht verfügbar"
 
@@ -199,64 +203,64 @@ msgstr "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eine
 msgid "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first."
 msgstr "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon."
 
-#: core/views.py:210
+#: core/views.py:211
 msgid "No picture sent"
 msgstr "Es wurde kein Bild gesendet"
 
-#: core/views.py:261
+#: core/views.py:262
 msgid "This account signs in with Google and has no password."
 msgstr "Dieses Konto meldet sich mit Google an und hat kein Passwort."
 
-#: core/views.py:357
+#: core/views.py:358
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr "Du verwaltest schon %(n)s Teams"
 
-#: core/views.py:403
+#: core/views.py:404
 msgid "Only team admins can delete the team"
 msgstr "Nur Team-Admins können das Team löschen"
 
-#: core/views.py:412
+#: core/views.py:413
 msgid "Only team admins can change the team"
 msgstr "Nur Team-Admins können das Team ändern"
 
-#: core/views.py:438
+#: core/views.py:458
 msgid "Only team admins can change roles"
 msgstr "Nur Team-Admins können Rollen ändern"
 
-#: core/views.py:444 core/views.py:458
+#: core/views.py:464 core/views.py:478
 msgid "A team needs at least one admin"
 msgstr "Ein Team braucht mindestens einen Admin"
 
-#: core/views.py:455
+#: core/views.py:475
 msgid "Only team admins can remove members"
 msgstr "Nur Team-Admins können Mitglieder entfernen"
 
-#: core/views.py:469 core/views.py:486
+#: core/views.py:489 core/views.py:506
 msgid "Only team admins can manage invites"
 msgstr "Nur Team-Admins können Einladungen verwalten"
 
-#: core/views.py:494
+#: core/views.py:514
 msgid "Only coaches can manage the archers of a team"
 msgstr "Nur Trainer können die Schützen eines Teams verwalten"
 
-#: core/views.py:621
+#: core/views.py:641
 msgid "Only coaches can choose this: archers' sessions are always visible to their coaches"
 msgstr "Nur Trainer können das wählen: Die Trainings von Schützen sind für ihre Trainer immer sichtbar"
 
-#: core/views.py:633
+#: core/views.py:653
 msgid "You are the only admin. Make someone else an admin first, or delete the team."
 msgstr "Du bist der einzige Admin. Mach zuerst jemand anderen zum Admin oder lösche das Team."
 
-#: core/views.py:645
+#: core/views.py:665
 msgid "This account no longer exists"
 msgstr "Dieses Konto gibt es nicht mehr"
 
-#: equipment/serializers.py:62 training/serializers.py:211
+#: equipment/serializers.py:62 training/serializers.py:212
 msgid "Not your bow"
 msgstr "Das ist nicht dein Bogen"
 
-#: equipment/serializers.py:67 training/serializers.py:216
+#: equipment/serializers.py:67 training/serializers.py:217
 msgid "Not your arrow set"
 msgstr "Das ist nicht dein Pfeilsatz"
 
@@ -471,38 +475,38 @@ msgstr "Ein Formular braucht einen Namen und Kriterien"
 msgid "Evaluations were made with this form, so it stays"
 msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
 
-#: media/serializers.py:73
+#: media/serializers.py:74
 msgid "This session belongs to another archer"
 msgstr "Dieses Training gehört einem anderen Schützen"
 
-#: media/serializers.py:92
+#: media/serializers.py:93
 msgid "A video must be an MP4 file"
 msgstr "Ein Video muss eine MP4-Datei sein"
 
-#: media/serializers.py:94
+#: media/serializers.py:95
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr "Das Video ist größer als %(n)s MB"
 
-#: media/serializers.py:98
+#: media/serializers.py:99
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr "Das Video ist länger als %(n)s Sekunden"
 
-#: media/serializers.py:101
+#: media/serializers.py:102
 msgid "A photo must be a JPEG file"
 msgstr "Ein Foto muss eine JPEG-Datei sein"
 
-#: media/serializers.py:103
+#: media/serializers.py:104
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr "Das Foto ist größer als %(n)s MB"
 
-#: media/serializers.py:107
+#: media/serializers.py:108
 msgid "The preview must be a small JPEG file"
 msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 
-#: media/serializers.py:110
+#: media/serializers.py:111
 msgid "There is no room left for this archer's photos and videos"
 msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
 
@@ -720,59 +724,59 @@ msgstr "Nur Trainer können sehen, wer teilgenommen hat"
 msgid "Only the archer or a coach of the team can do this"
 msgstr "Das kann nur der Schütze oder ein Trainer des Teams"
 
-#: training/serializers.py:39
+#: training/serializers.py:40
 msgid "Give both x and y, or neither"
 msgstr "Gib x und y an, oder keines von beiden"
 
-#: training/serializers.py:41
+#: training/serializers.py:42
 msgid "Position is out of range"
 msgstr "Die Position liegt außerhalb des Bereichs"
 
-#: training/serializers.py:55 training/views.py:417 training/views.py:478
+#: training/serializers.py:56 training/views.py:417 training/views.py:478
 msgid "Unknown target face"
 msgstr "Unbekannte Scheibe"
 
-#: training/serializers.py:62
+#: training/serializers.py:63
 msgid "More shots than arrows per end"
 msgstr "Mehr Schüsse als Pfeile pro Passe"
 
-#: training/serializers.py:65
+#: training/serializers.py:66
 msgid "Duplicate shot id"
 msgstr "Doppelte Schuss-ID"
 
-#: training/serializers.py:74
+#: training/serializers.py:75
 #, python-format
 msgid "Shot %(n)s: this face has no spot %(spot)s"
 msgstr "Schuss %(n)s: Diese Scheibe hat keinen Spot %(spot)s"
 
-#: training/serializers.py:90
+#: training/serializers.py:91
 #, python-format
 msgid "Shot %(n)s: this face has no scores, place the arrow on it"
 msgstr "Schuss %(n)s: Diese Scheibe hat keine Werte, setze den Pfeil auf die Scheibe"
 
-#: training/serializers.py:95
+#: training/serializers.py:96
 #, python-format
 msgid "Shot %(n)s: %(value)s is not a score on this face"
 msgstr "Schuss %(n)s: %(value)s ist kein Wert auf dieser Scheibe"
 
-#: training/serializers.py:97
+#: training/serializers.py:98
 #, python-format
 msgid "Shot %(n)s: this face has no X ring"
 msgstr "Schuss %(n)s: Diese Scheibe hat keinen X-Ring"
 
-#: training/serializers.py:226
+#: training/serializers.py:227
 msgid "Send the revision either by id or by uid, not both"
 msgstr "Sende die Version entweder mit der ID oder mit der UID, nicht mit beidem"
 
-#: training/serializers.py:232
+#: training/serializers.py:233
 msgid "The type can't change once there are results"
 msgstr "Die Art des Trainings kann nach den ersten Ergebnissen nicht mehr geändert werden"
 
-#: training/serializers.py:237
+#: training/serializers.py:238
 msgid "Arrows go with a bow: choose the bow too"
 msgstr "Pfeile gehören zu einem Bogen: Wähle auch den Bogen"
 
-#: training/serializers.py:242
+#: training/serializers.py:243
 msgid "The end can't be before the start"
 msgstr "Das Ende darf nicht vor dem Beginn liegen"
 

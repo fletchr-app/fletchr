@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from core.access import note_teams, teams_of
-from core.models import COACH_ROLES, Team, TeamMember, User
+from core.models import COACH_ROLES, Team, TeamMember, User, display_name
 from media.access import visible_media
 from media.models import Media
 
@@ -176,10 +176,10 @@ class EvaluationSerializer(serializers.ModelSerializer):
         return localize(ev.template_version.criteria)
 
     def get_author_name(self, ev) -> str:
-        return (ev.author.profile.name or ev.author.email) if ev.author else "Former coach"
+        return display_name(ev.author) if ev.author else "Former coach"
 
     def get_archer_name(self, ev) -> str:
-        return ev.archer.profile.name or ev.archer.email
+        return display_name(ev.archer)
 
     def get_can_edit(self, ev) -> bool:
         return ev.author_id == self.context["request"].user.id

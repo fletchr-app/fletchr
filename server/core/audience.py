@@ -6,6 +6,10 @@ AUDIENCES = ("me", "coaches", "team", "everyone")
 # Only these are accepted by the serializers until the wider levels are built.
 ACCEPTED = ("me", "coaches")
 DEFAULT = "coaches"
+# Who sees a person's name and picture (`Profile.visibility`). `everyone` waits for a feed and a way to list people
+# outside a team (#77).
+PROFILE_ACCEPTED = ("me", "coaches", "team")
+PROFILE_DEFAULT = "team"
 
 
 def at_least(level):

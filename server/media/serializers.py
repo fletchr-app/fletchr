@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from core.access import check_visibility
 from core.audience import AUDIENCES
+from core.models import display_name
 from training.models import TrainingSession
 from training.serializers import EventInfoSerializerMixin, EventLinkSerializer, SessionRefField
 
@@ -31,11 +32,11 @@ class MediaSerializer(EventInfoSerializerMixin, serializers.ModelSerializer):
         ]
 
     def get_owner_name(self, media) -> str:
-        return media.owner.profile.name or media.owner.email
+        return display_name(media.owner)
 
     def get_uploaded_by_name(self, media) -> str:
         who = media.uploaded_by
-        return (who.profile.name or who.email) if who else ""
+        return display_name(who) if who else ""
 
     def get_file_url(self, media) -> str:
         return media_link(self.context["request"], media, "file")

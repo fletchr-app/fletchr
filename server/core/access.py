@@ -105,20 +105,48 @@ def redeem_invite(code, user):
     return invite.team
 
 
+def relation_to(viewer, person):
+    """How `viewer` stands to `person`, the widest of: `me` (the same user), `coaches` (the viewer is coach or admin in a
+    team the person is in), `team` (they share a team), or None. See `relations_of` for many people at once."""
+    if viewer.pk == person.pk:
+        return "me"
+    roles = TeamMember.objects.filter(user=viewer, team__in=TeamMember.objects.filter(user=person).values("team")).values_list("role", flat=True)
+    roles = list(roles)
+    if not roles:
+        return None
+    return "coaches" if any(r in COACH_ROLES for r in roles) else "team"
+
+
+def relations_of(viewer):
+    """`relation_to` for everybody who shares a team with `viewer`, in one query: {user id: relation}."""
+    mine = dict(TeamMember.objects.filter(user=viewer).values_list("team_id", "role"))
+    relations = {viewer.pk: "me"}
+    for user_id, team_id in TeamMember.objects.filter(team__in=mine).exclude(user=viewer).values_list("user_id", "team_id"):
+        if mine[team_id] in COACH_ROLES:
+            relations[user_id] = "coaches"
+        else:
+            relations.setdefault(user_id, "team")
+    return relations
+
+
+def sees_person(relation, profile, managed=False):
+    """Whether a viewer in `relation` to a person sees their name and picture in the roster: the person's `visibility`
+    must reach that far (`team` reaches the team and the coaches, `coaches` only the coaches, `me` only themselves).
+    A profile without an account has no say: only its coaches see it."""
+    if relation is None:
+        return False
+    if managed:
+        return relation == "coaches"
+    return profile.visibility in at_least(relation)
+
+
 def can_see_avatar(viewer, person):
-    """The person's picture is for themselves, for the coaches and admins of their teams, and for the archers of those
-    teams (their coaches' pictures). Hidden for an archer under 18 without consent on record. MemberSerializer applies
-    the same rule per team: keep them together."""
+    """The picture follows the person's `visibility` (`sees_person`). Hidden for an archer under 18 without consent on
+    record. MemberSerializer and the roster apply the same rule through `relations_of`: keep them together."""
     profile = person.profile
     if not profile.avatar or not profile.avatar_allowed:
         return False
-    if viewer.pk == person.pk:
-        return True
-    mine, theirs = TeamMember.objects.filter(user=viewer), TeamMember.objects.filter(user=person)
-    return (
-        mine.filter(role__in=COACH_ROLES, team__in=theirs.values("team")).exists()
-        or theirs.filter(role__in=COACH_ROLES, team__in=mine.values("team")).exists()
-    )
+    return sees_person(relation_to(viewer, person), profile, person.is_managed)
 
 
 def check_visibility(value, writer, owner):

@@ -321,7 +321,10 @@ export default {
   },
   team: {
     title: 'Team',
-    notCoach: 'You are not a coach in any team.',
+    noTeam: 'You are not in a team yet.',
+    joinTeam: 'Join a team',
+    roster: 'Team members',
+    noName: 'Team member',
   },
   training: {
     title: 'Training',
@@ -842,8 +845,8 @@ export default {
     change: 'Change picture',
     failed: 'Could not set the picture',
     needsConsent: 'A picture of an archer under 18 needs the consent of the parents. A coach records it on the archer\'s page.',
-    whoSees: 'Optional. You, and the coaches and admins of your teams see it. Archers see the picture of their coaches and admins, not of other archers.',
-    whoSeesArcher: 'Optional. The coaches and admins of the team see it.',
+    whoSees: 'Optional. You see it, and the people of your teams as far as your setting allows (Settings: My name and picture are seen by).',
+    whoSeesArcher: 'Optional. The coaches and admins of the team see it, and nobody else.',
   },
   serverAddress: {
     empty: 'Enter the address of the server.',
@@ -894,6 +897,9 @@ export default {
     training: 'Training',
     equipment: 'My equipment',
     trainingVisibility: 'New sessions are seen by',
+    profileVisibility: 'My name and picture are seen by',
+    profileVisibilityOptions: { team: 'My team', coaches: 'My coaches', me: 'Only me' },
+    profileVisibilityHint: 'Name and picture only, not your training. Coaches always see the names of the archers in their team. Needs a connection.',
     trainingVisibilityHint: 'Applies to new sessions and to photos and videos that are in no session, including the ones you have already: they all follow it. You can change a session on its notes screen. Needs a connection.',
     teams: 'Teams',
     joinTeam: 'Join a team',

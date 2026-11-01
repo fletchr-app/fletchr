@@ -2,7 +2,7 @@
 
 from django.utils import timezone
 
-from core.models import TeamMember
+from core.models import TeamMember, display_name
 from evaluations.defaults import localize
 from evaluations.models import Evaluation
 from equipment.models import ArrowSet, Bow, Setup
@@ -66,7 +66,7 @@ def _media(media):
         "bytes": media.size,
         "note": media.note,
         "visibility": media.visibility,  # only for a clip in no session; null follows `profile.training_visibility`
-        "added_by": (media.uploaded_by.profile.name or media.uploaded_by.email) if media.uploaded_by else None,
+        "added_by": display_name(media.uploaded_by) if media.uploaded_by else None,
         "created_at": media.created_at,
     }
 
@@ -79,8 +79,8 @@ def _evaluation(ev):
         "kind": ev.kind,
         "date": ev.date,
         "form": {"name": ev.template_version.name, "version": ev.template_version.number, "scale": ev.template_version.scale},
-        "author": (ev.author.profile.name or ev.author.email) if ev.author else "Former coach",
-        "about": ev.archer.profile.name or ev.archer.email,
+        "author": display_name(ev.author) if ev.author else "Former coach",
+        "about": display_name(ev.archer),
         "visibility": ev.visibility,
         "comment": ev.comment,
         "goals": ev.goals,
@@ -128,13 +128,14 @@ def export_user_data(user) -> dict:
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
             "training_visibility": profile.training_visibility,
+            "visibility": profile.visibility,
             "push_notes": profile.push_notes,
             "push_evaluations": profile.push_evaluations,
             "push_team": profile.push_team,
             "avatar": media_zip.AVATAR_NAME if profile.avatar else None,  # the name in the zip of the files
             "avatar_updated_at": profile.avatar_updated_at,
             "video_consent_at": profile.video_consent_at,
-            "video_consent_by": (profile.video_consent_by.profile.name or profile.video_consent_by.email) if profile.video_consent_by else None,
+            "video_consent_by": display_name(profile.video_consent_by) if profile.video_consent_by else None,
         },
         "devices": [  # the phones that get notifications; the token is an address, not part of the export
             {"app_id": d.app_id, "language": d.language, "created_at": d.created_at, "last_seen_at": d.last_seen_at}
@@ -167,7 +168,7 @@ def export_user_data(user) -> dict:
         "evaluations_about_me": [_evaluation(e) for e in _evaluations(archer=user)],
         "evaluations_i_wrote": [_evaluation(e) for e in _evaluations(author=user).exclude(archer=user)],
         "notes_about_me": [
-            _note(n, author=(n.author.profile.name or n.author.email) if n.author else "Former coach") for n in about
+            _note(n, author=display_name(n.author) if n.author else "Former coach") for n in about
         ],
-        "notes_i_wrote": [_note(n, about=n.archer.profile.name or n.archer.email) for n in wrote],
+        "notes_i_wrote": [_note(n, about=display_name(n.archer)) for n in wrote],
     }

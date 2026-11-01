@@ -245,7 +245,7 @@ NO_TRAINING_DATA = {
     "api/me/export/", "api/me/export/media/", "api/me/export/media/file/", "api/devices/",  # own data only
     "api/users/<int:user_id>/avatar/", "api/archers/<int:user_id>/", "api/archers/<int:user_id>/video-consent/",
     "api/teams/", "api/teams/<int:team_id>/", "api/teams/<int:team_id>/membership/", "api/teams/<int:team_id>/members/",
-    "api/teams/<int:team_id>/members/<int:user_id>/", "api/teams/<int:team_id>/archers/", "api/teams/<int:team_id>/archers/<int:user_id>/",
+    "api/teams/<int:team_id>/members/<int:user_id>/", "api/teams/<int:team_id>/roster/", "api/teams/<int:team_id>/archers/", "api/teams/<int:team_id>/archers/<int:user_id>/",
     "api/teams/<int:team_id>/archers/<int:user_id>/avatar/", "api/teams/<int:team_id>/archers/<int:user_id>/claim-code/",
     "api/teams/<int:team_id>/invites/", "api/teams/<int:team_id>/invites/<int:pk>/",
     "api/bows/<uuid:uid>/", "api/arrow-sets/<uuid:uid>/", "api/^bows/$", "api/^bows/(?P<pk>[^/.]+)/$", "api/^bows/(?P<pk>[^/.]+)/revisions/$",

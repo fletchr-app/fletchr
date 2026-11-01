@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.18.1
+  version: 0.19.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -3226,6 +3226,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/Ranking'
           description: ''
+  /api/teams/{team_id}/roster/:
+    get:
+      operationId: teams_roster_list
+      description: |-
+        The members of a team as the other members see them: name, role and picture, no email. Left out: profiles
+        without an account, and everybody whose `visibility` does not reach the viewer (themselves are always in it).
+        Coaches and admins have the full list, with addresses, in `members/`.
+      parameters:
+      - in: path
+        name: team_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RosterMember'
+          description: ''
   /api/token/:
     post:
       operationId: token_create
@@ -5322,8 +5348,9 @@ components:
           readOnly: true
         email:
           type: string
+          description: Empty for an archer without an account, and for a viewer who
+            is an archer (only coaches and admins see addresses)
           readOnly: true
-          description: Empty for an archer without an account
         managed:
           type: boolean
           readOnly: true
@@ -5949,6 +5976,16 @@ components:
             * `coaches` - coaches
             * `team` - team
             * `everyone` - everyone
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityA4eEnum'
+          description: |-
+            Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
         push_notes:
           type: boolean
           description: Notify me when a coach shares a note with me
@@ -6002,6 +6039,16 @@ components:
           - $ref: '#/components/schemas/TrainingVisibilityEnum'
           description: |-
             Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now
+
+            * `me` - me
+            * `coaches` - coaches
+            * `team` - team
+            * `everyone` - everyone
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityA4eEnum'
+          description: |-
+            Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now
 
             * `me` - me
             * `coaches` - coaches
@@ -6160,6 +6207,30 @@ components:
         * `archer` - Archer
         * `coach` - Coach
         * `admin` - Admin
+    RosterMember:
+      type: object
+      description: 'What a team member sees of another: name, role and picture. No
+        email.'
+      properties:
+        user_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          description: Empty if the person has not set a name; the app shows a placeholder
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        avatar_url:
+          type: string
+          description: Empty if there is no picture or the viewer may not see it;
+            opens for an hour
+          readOnly: true
+      required:
+      - avatar_url
+      - name
+      - role
+      - user_id
     Score:
       type: object
       properties:

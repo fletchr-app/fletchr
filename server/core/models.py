@@ -99,13 +99,15 @@ class Profile(models.Model):
     avatar_updated_at = models.DateTimeField(null=True, blank=True)
     # The visibility new sessions start with (specs/design/session-visibility.md). Never above `coaches` for now.
     training_visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.DEFAULT)
+    # Who sees this person's name and picture in the team roster (not their training data, that is `training_visibility`).
+    visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.PROFILE_DEFAULT)
     # Which notifications this person wants (push/notify.py). One choice for all their phones.
     push_notes = models.BooleanField(default=True)
     push_evaluations = models.BooleanField(default=True)
     push_team = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name or self.user.email
+        return display_name(self.user)
 
     @property
     def age(self):
@@ -134,6 +136,12 @@ def remove_avatar_file(sender, instance, **kwargs):
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+
+
+def display_name(user):
+    """The name to show for a user. Every account has one; the part of the email before the `@` is the last resort
+    (the same rule as a new Google account), never the whole address."""
+    return user.profile.name or user.email.split("@")[0]
 
 
 class Role(models.TextChoices):

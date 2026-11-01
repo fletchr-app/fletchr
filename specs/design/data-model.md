@@ -4,7 +4,7 @@ Status: implemented, except where marked planned (checked against the models 202
 Date: 2026-10-23
 Updated: 2026-10-31
 
-- **profiles**: id, name, avatar (one JPEG of at most 512 px, `avatars/<user id>/<random>.jpg`) and `avatar_updated_at`, dominant hand/eye, date of birth (optional), preferred units, video consent (`video_consent_at`, `video_consent_by`). A profile picture is planned, there is no field yet `training_visibility` (`me` | `coaches`, default `coaches`): what a new session starts with, see [session-visibility.md](session-visibility.md).
+- **profiles**: id, name, avatar (one JPEG of at most 512 px, `avatars/<user id>/<random>.jpg`) and `avatar_updated_at`, dominant hand/eye, date of birth (optional), preferred units, video consent (`video_consent_at`, `video_consent_by`). `visibility` (`team` | `coaches` | `me`, default `team`): who sees the name and picture in the roster, see [roles-and-access.md](roles-and-access.md). `training_visibility` (`me` | `coaches`, default `coaches`): what a new session starts with, see [session-visibility.md](session-visibility.md).
 - **teams** (with `show_ranking`), **team_members** (team_id, profile_id, role: archer | coach | admin, also-shoots flag)
 - **bows**: owner, name, type (recurve, compound, barebow, longbow, traditional), riser, limbs, draw weight, draw length, brace height, tiller, plunger, sight, stabilisers, release/tab, notes, active flag
 - **arrow_sets**: owner, shaft model, spine, length, point weight, nock, fletching, count

@@ -28,7 +28,7 @@ from push.models import Device
 
 from . import access, avatar, claims, mail, resets, social
 from .serializers import avatar_url
-from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, normalize_code
+from .models import COACH_ROLES, ClaimCode, Invite, Role, Team, TeamMember, User, display_name, normalize_code
 from .serializers import (
     ArcherNameSerializer,
     ManagedArcherSerializer,
@@ -44,6 +44,7 @@ from .serializers import (
     TokenPairSerializer,
     InviteSerializer,
     MemberSerializer,
+    RosterMemberSerializer,
     MembershipSettingsSerializer,
     MeSerializer,
     RoleChangeSerializer,
@@ -429,6 +430,25 @@ class MemberListView(generics.ListAPIView):
         return access.members_visible_to(self.request.user, team).order_by("user__profile__name", "user__email")
 
 
+class RosterView(generics.ListAPIView):
+    """The members of a team as the other members see them: name, role and picture, no email. Left out: profiles
+    without an account, and everybody whose `visibility` does not reach the viewer (themselves are always in it).
+    Coaches and admins have the full list, with addresses, in `members/`."""
+
+    serializer_class = RosterMemberSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return TeamMember.objects.none()
+        team = get_my_team(self.request, self.kwargs["team_id"])
+        relations = access.relations_of(self.request.user)
+        members = TeamMember.objects.filter(team=team, user__is_managed=False).select_related("user__profile")
+        order = {Role.ADMIN: 0, Role.COACH: 1, Role.ARCHER: 2}
+        shown = [m for m in members if access.sees_person(relations.get(m.user_id), m.user.profile)]
+        return sorted(shown, key=lambda m: (order[m.role], m.user.profile.name.lower(), m.user_id))
+
+
 class MemberDetailView(APIView):
     @extend_schema(request=RoleChangeSerializer, responses=MemberSerializer)
     def patch(self, request, team_id, user_id):
@@ -553,7 +573,7 @@ def consent_data(profile) -> dict:
     return {
         "video_allowed": profile.video_allowed,
         "video_consent_at": profile.video_consent_at,
-        "video_consent_by": (by.profile.name or by.email) if by else None,
+        "video_consent_by": display_name(by) if by else None,
     }
 
 
