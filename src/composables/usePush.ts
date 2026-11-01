@@ -63,7 +63,10 @@ async function createChannels() {
 }
 
 /** Tell the server about this phone (Firebase gave a token, or it is still the same). Safe to repeat. */
+let sending: string | null = null;
 async function sendToken(next: string) {
+  if (sending === next) return; // Firebase can report the same token twice at once
+  sending = next;
   try {
     const { id } = await CapacitorApp.getInfo();
     const { response } = await api.PUT('/api/devices/', { body: registrationBody(next, token, id, currentLanguage()) });
@@ -72,6 +75,8 @@ async function sendToken(next: string) {
     await localStore.set(TOKEN_KEY, next);
   } catch {
     // Offline: the next start, return to the app or language change tries again.
+  } finally {
+    sending = null;
   }
 }
 

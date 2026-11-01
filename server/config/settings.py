@@ -114,6 +114,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": DATA_DIR / "db.sqlite3",
+        # A write transaction starts with the write lock: two requests that read and then write (a phone registering twice at once)
+        # wait for each other instead of one failing at once with "database is locked".
+        "OPTIONS": {"transaction_mode": "IMMEDIATE", "timeout": 20},
     }
 }
 

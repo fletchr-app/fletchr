@@ -65,7 +65,7 @@ def send(token, message):
     if codes & GONE_CODES or (answer.status_code == 404 and error.get("status") == "NOT_FOUND"):
         return GONE
     if answer.status_code in (401, 403):
-        log.error("Firebase refused the credentials (%s): check DJANGO_FCM_CREDENTIALS", answer.status_code)
+        log.error("Firebase refused the credentials (%s): %s", answer.status_code, error.get("message", "")[:300])
     elif answer.status_code == 400:
         log.error("Firebase refused a message: %s", error.get("message", ""))
     else:
