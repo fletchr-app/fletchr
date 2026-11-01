@@ -39,7 +39,7 @@ Expensive (data moves to the new account): `transfer_account <from> <to> [--dry-
 
 - The target must have no data of its own (no sessions, equipment, photos, notes or evaluations about it); a fresh account made with an invite qualifies. Profiles without an account and staff accounts are refused.
 - Team memberships move; in a team both are in with the same role the target's row stays, with different roles the transfer is refused.
-- The profile (name, hand, eye, date of birth, units, consent, picture) is copied to the target, the source profile is blanked. The source is deactivated, its tokens are blacklisted, its Google identity stays on it (and can no longer sign in).
+- The profile (name, hand, eye, date of birth, units, who sees name and picture, consent, picture) is copied to the target, the source profile is blanked. The source is deactivated, its tokens are blacklisted, its Google identity stays on it (and can no longer sign in).
 - What moves is **discovered**, not listed: `core/transfer.py` walks every relation to `User` and `HANDLERS` has one entry per relation (move, special, or ignore with a reason). `core/tests/test_transfer_guard.py` fails when a new model points at a user, a `Profile` field is new, or a `FileField` is new and nobody said what to do. Add the entry in the same change.
 - Files on disk keep names with the old user id after a move (as in `claim_profile`). Fine for serving; if a later change derives paths from the owner id, it breaks transferred files.
 

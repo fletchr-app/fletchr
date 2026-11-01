@@ -17,6 +17,7 @@ import { useNotes } from '@/composables/useNotes'
 import { usePush } from '@/composables/usePush'
 import { useServer, useServerHealth } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
+import { PROFILE_VISIBILITIES, useProfileVisibility } from '@/composables/useProfileVisibility'
 import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { useUnits } from '@/composables/useUnits'
 import { useUploadSettings } from '@/composables/useUploadSettings'
@@ -59,6 +60,7 @@ const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
 const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
 const VISIBILITIES: Visibility[] = ['coaches', 'me']
+const { visibility: profileVisibility, error: profileVisibilityError, save: saveProfileVisibility } = useProfileVisibility()
 const push = usePush()
 const PUSH_TYPES = ['notes', 'evaluations', 'team'] as const
 // Android asks when the switch is turned on. After two refusals it shows no dialog, and only the system settings help.
@@ -117,6 +119,20 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       </IonList>
       <div v-if="!isLocal" class="muted px-3">{{ $t('settings.trainingVisibilityHint') }}</div>
       <ErrorText :message="visibilityError" />
+      <IonList v-if="!isLocal && profileVisibility" inset>
+        <IonItem lines="none">
+          <IonSelect
+            :value="profileVisibility"
+            :label="$t('settings.profileVisibility')"
+            interface="action-sheet"
+            @ion-change="$event.detail.value !== profileVisibility && saveProfileVisibility($event.detail.value)"
+          >
+            <IonSelectOption v-for="v in PROFILE_VISIBILITIES" :key="v" :value="v">{{ $t(`settings.profileVisibilityOptions.${v}`) }}</IonSelectOption>
+          </IonSelect>
+        </IonItem>
+      </IonList>
+      <div v-if="!isLocal && profileVisibility" class="muted px-3">{{ $t('settings.profileVisibilityHint') }}</div>
+      <ErrorText :message="profileVisibilityError" />
       <IonList v-if="push.available.value" inset>
         <IonListHeader>{{ $t('push.settings.title') }}</IonListHeader>
         <IonItem :lines="push.on.value ? 'full' : 'none'" class="ion-text-wrap">

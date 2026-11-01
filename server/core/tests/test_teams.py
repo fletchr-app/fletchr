@@ -25,7 +25,8 @@ def test_coach_and_admin_see_all_members(client_for, club):
 
 def test_archer_sees_staff_and_self_but_not_other_archers(client_for, club):
     res = client_for(club["archer1"]).get(f"/api/teams/{club['a'].pk}/members/")
-    assert emails(res) == {"admin@a.test", "coach@a.test", "archer1@a.test"}
+    assert {m["user_id"] for m in res.data} == {club[k].pk for k in ("admin", "coach", "archer1")}
+    assert emails(res) == {"", "archer1@a.test"}  # no addresses of the staff (#80)
 
 
 def test_non_member_gets_404_for_team_resources(client_for, club):

@@ -1306,6 +1306,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teams/{team_id}/roster/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The members of a team as the other members see them: name, role and picture, no email. Left out: profiles
+         *     without an account, and everybody whose `visibility` does not reach the viewer (themselves are always in it).
+         *     Coaches and admins have the full list, with addresses, in `members/`.
+         */
+        get: operations["teams_roster_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/token/": {
         parameters: {
             query?: never;
@@ -2333,7 +2354,7 @@ export interface components {
         Member: {
             readonly user_id: number;
             readonly name: string;
-            /** @description Empty for an archer without an account */
+            /** @description Empty for an archer without an account, and for a viewer who is an archer (only coaches and admins see addresses) */
             readonly email: string;
             /** @description A profile kept by a coach, without an account */
             readonly managed: boolean;
@@ -2654,6 +2675,15 @@ export interface components {
              *     * `everyone` - everyone
              */
             training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
+            /**
+             * @description Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            visibility?: components["schemas"]["VisibilityA4eEnum"];
             /** @description Notify me when a coach shares a note with me */
             push_notes?: boolean;
             /** @description Notify me when a coach shares an evaluation with me */
@@ -2683,6 +2713,15 @@ export interface components {
              *     * `everyone` - everyone
              */
             training_visibility?: components["schemas"]["TrainingVisibilityEnum"];
+            /**
+             * @description Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now
+             *
+             *     * `me` - me
+             *     * `coaches` - coaches
+             *     * `team` - team
+             *     * `everyone` - everyone
+             */
+            visibility?: components["schemas"]["VisibilityA4eEnum"];
             /** @description Notify me when a coach shares a note with me */
             push_notes?: boolean;
             /** @description Notify me when a coach shares an evaluation with me */
@@ -2752,6 +2791,15 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "archer" | "coach" | "admin";
+        /** @description What a team member sees of another: name, role and picture. No email. */
+        RosterMember: {
+            readonly user_id: number;
+            /** @description Empty if the person has not set a name; the app shows a placeholder */
+            readonly name: string;
+            role: components["schemas"]["RoleEnum"];
+            /** @description Empty if there is no picture or the viewer may not see it; opens for an hour */
+            readonly avatar_url: string;
+        };
         Score: {
             criterion: string;
             /** Format: int64 */
@@ -6115,6 +6163,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ranking"];
+                };
+            };
+        };
+    };
+    teams_roster_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterMember"][];
                 };
             };
         };
