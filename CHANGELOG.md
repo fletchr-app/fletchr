@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.19.2 (2026-11-01)
+
+- **Releases reach the closed test**: the release workflow now uploads each version to the internal track and to the closed test in one step. No change in the app or the server.
+
 ## 0.19.1 (2026-11-01)
 
 - **Deleting your account leaves the screen**: after "Delete my account" the app stayed on the "Your data" screen, although the account was gone and you were signed out. It now goes back to the start screen.
