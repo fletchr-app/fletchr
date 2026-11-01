@@ -30,7 +30,7 @@ Design: [push-notifications.md](../design/push-notifications.md). Decision: [001
 - [x] `@capacitor/push-notifications`, `cap sync`, manifest (permission, meta-data, icon), `MainActivity` launch intent
 - [x] `push-target.ts`, `push-registration.ts` with tests; `usePush.ts` with tests (mocked plugin)
 - [x] Sign-out hook in `useAuth`, `push` in `useServer`
-- [x] Home: one-time explanation; Settings: list of switches and the permission hint
+- [x] Settings: main switch (asks Android when turned on), switches per kind, permission hint. (0.18.0 asked once on Home with an explanation; replaced by the main switch)
 - [x] Texts (English, German)
 - [x] `release-android.yml`: secret `GOOGLE_SERVICES_JSON_BASE64`, `VITE_PUSH=1`
 
@@ -46,7 +46,7 @@ Design: [push-notifications.md](../design/push-notifications.md). Decision: [001
 - [ ] Phone test (below), then a release (new plugin, so a new app version), changelog entry
 
 ### Phone test (Dev app first, then the Play build)
-- [ ] Android 13 and later: the explanation, the system dialog, two refusals lead to the hint in Settings; Android 12 registers without a dialog
+- [ ] Android 13 and later: the main switch in Settings asks, two refusals lead to the hint; Android 12 turns on without a dialog; turning it off stops pushes
 - [ ] A note shared from a second phone: lock screen text, icon, channel, device language
 - [ ] A tap opens the right screen with the app in the background, killed, and on another screen; foreground toast and note refresh
 - [ ] Coach-only and private notes show nothing

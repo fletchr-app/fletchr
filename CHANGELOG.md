@@ -2,6 +2,12 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.18.1 (2026-11-01)
+
+- **Notifications are switched on in Settings** (#27): Settings has a switch "Notifications on this phone". Android asks for the permission when you turn it on, and nothing asks before. The explanation on Home is gone. The switches for notes, evaluations and used codes show while the main switch is on. A phone that allowed notifications in 0.18.0 keeps them.
+
+- **Fixes**: a phone that registered for notifications twice at once could fail with "database is locked", and the server now waits for the write lock instead (this applies to all writes). A refusal by Firebase says why in the server log.
+
 ## 0.18.0 (2026-11-01)
 
 - **Push notifications, Android** (#26, #27): a notification tells you when a coach shares a note or an evaluation with you, and a coach hears when someone uses an invite or claim code they made. The text is general ("New note from your coach"), never the note itself or a name. Tapping it opens the note, the evaluation or the team. Home asks once whether to allow them, and Settings has a switch for each kind. Private and coach-only notes never notify. They come through Firebase Cloud Messaging (Google), only after you allow them, and only on the official server: a self-hosted server needs its own Firebase project and app build (SELFHOSTING.md, section 9). The server sends none until it has a Firebase key.

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { alertController, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonSelect, IonSelectOption, IonToggle } from '@ionic/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
@@ -61,6 +61,15 @@ const { visibility: trainingVisibility, error: visibilityError, save: saveVisibi
 const VISIBILITIES: Visibility[] = ['coaches', 'me']
 const push = usePush()
 const PUSH_TYPES = ['notes', 'evaluations', 'team'] as const
+// Android asks when the switch is turned on. After two refusals it shows no dialog, and only the system settings help.
+const deniedHint = ref(false)
+async function toggleNotifications(event: CustomEvent<{ checked: boolean }>) {
+  if (event.detail.checked === push.on.value) return
+  const now = await push.setEnabled(event.detail.checked)
+  deniedHint.value = event.detail.checked && !now && push.permission.value === 'denied'
+  // Refused: the switch must not stay on
+  ;(event.target as HTMLIonToggleElement).checked = now
+}
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
 const kept = useKeptMedia()
 const calendar = useDeviceCalendar()
@@ -110,23 +119,37 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       <ErrorText :message="visibilityError" />
       <IonList v-if="push.available.value" inset>
         <IonListHeader>{{ $t('push.settings.title') }}</IonListHeader>
-        <IonItem v-for="type in PUSH_TYPES" :key="type" lines="full" class="ion-text-wrap">
+        <IonItem :lines="push.on.value ? 'full' : 'none'" class="ion-text-wrap">
           <IonToggle
-            :checked="push.prefs.value[type]"
+            :checked="push.on.value"
             label-placement="start"
             justify="space-between"
-            @ion-change="$event.detail.checked !== push.prefs.value[type] && push.setPref(type, $event.detail.checked)"
+            @ion-change="toggleNotifications"
           >
             <IonLabel class="ion-text-wrap">
-              {{ $t(`push.settings.${type}`) }}
-              <p v-if="type === 'team'" class="muted">{{ $t('push.settings.teamHint') }}</p>
+              {{ $t('push.settings.enable') }}
+              <p class="muted">{{ $t('push.settings.enableHint') }}</p>
             </IonLabel>
           </IonToggle>
         </IonItem>
-        <IonItem v-if="push.permission.value === 'denied'" lines="none" class="ion-text-wrap"><IonLabel class="ion-text-wrap">{{ $t('push.settings.denied') }}</IonLabel></IonItem>
-        <IonItem v-else-if="push.permission.value === 'prompt'" lines="none" button @click="push.ask()"><IonLabel>{{ $t('push.settings.allow') }}</IonLabel></IonItem>
+        <template v-if="push.on.value">
+          <IonItem v-for="type in PUSH_TYPES" :key="type" lines="full" class="ion-text-wrap">
+            <IonToggle
+              :checked="push.prefs.value[type]"
+              label-placement="start"
+              justify="space-between"
+              @ion-change="$event.detail.checked !== push.prefs.value[type] && push.setPref(type, $event.detail.checked)"
+            >
+              <IonLabel class="ion-text-wrap">
+                {{ $t(`push.settings.${type}`) }}
+                <p v-if="type === 'team'" class="muted">{{ $t('push.settings.teamHint') }}</p>
+              </IonLabel>
+            </IonToggle>
+          </IonItem>
+        </template>
+        <IonItem v-if="deniedHint" lines="none" class="ion-text-wrap"><IonLabel class="ion-text-wrap">{{ $t('push.settings.denied') }}</IonLabel></IonItem>
       </IonList>
-      <div v-if="push.available.value" class="muted px-3">{{ $t('push.settings.hint') }}</div>
+      <div v-if="push.available.value && push.on.value" class="muted px-3">{{ $t('push.settings.hint') }}</div>
       <ErrorText :message="push.prefsError.value" />
       <template v-if="isLocal">
         <IonList inset>
