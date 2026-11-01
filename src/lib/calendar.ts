@@ -61,6 +61,18 @@ export function daysOf(item: Pick<AgendaItem, 'start' | 'end'>): string[] {
   return days;
 }
 
+/**
+ * What `day` shows of an item's times: `span` both ends (one-day items), `from` the start only (first day of a camp), `whole` neither
+ * (a day in between), `to` the end only (last day). A last day that ends at midnight is not shown with a time.
+ */
+export function dayPart(item: Pick<AgendaItem, 'start' | 'end'>, day: string): 'span' | 'from' | 'whole' | 'to' {
+  const days = daysOf(item);
+  if (days.length === 1) return 'span';
+  if (day === days[0]) return 'from';
+  if (day !== days.at(-1)) return 'whole';
+  return new Date(item.end).getTime() === parse(dayKey(item.end)).getTime() ? 'whole' : 'to';
+}
+
 /** For each day with something on: how many trainings take place and how many are cancelled. */
 export function dotsByDay(items: readonly AgendaItem[]): Map<string, { count: number; cancelled: number }> {
   const dots = new Map<string, { count: number; cancelled: number }>();
