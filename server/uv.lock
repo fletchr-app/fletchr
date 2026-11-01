@@ -347,7 +347,7 @@ wheels = [
 
 [[package]]
 name = "fletchr-server"
-version = "0.18.0"
+version = "0.18.1"
 source = { virtual = "." }
 dependencies = [
     { name = "django" },
