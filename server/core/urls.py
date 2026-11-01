@@ -23,6 +23,7 @@ urlpatterns = [
     path("teams/<int:team_id>/", views.TeamDetailView.as_view()),
     path("teams/<int:team_id>/membership/", views.MyMembershipView.as_view()),
     path("teams/<int:team_id>/members/", views.MemberListView.as_view()),
+    path("teams/<int:team_id>/roster/", views.RosterView.as_view()),
     path("teams/<int:team_id>/members/<int:user_id>/", views.MemberDetailView.as_view()),
     path("teams/<int:team_id>/archers/", views.ManagedArcherListView.as_view()),
     path("teams/<int:team_id>/archers/<int:user_id>/", views.ManagedArcherDetailView.as_view()),

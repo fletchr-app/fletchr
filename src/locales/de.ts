@@ -325,7 +325,10 @@ export default {
   },
   team: {
     title: 'Team',
-    notCoach: 'Du bist in keinem Team Trainer.',
+    noTeam: 'Du bist noch in keinem Team.',
+    joinTeam: 'Einem Team beitreten',
+    roster: 'Teammitglieder',
+    noName: 'Teammitglied',
   },
   training: {
     title: 'Training',
@@ -846,8 +849,8 @@ export default {
     change: 'Bild ändern',
     failed: 'Das Bild konnte nicht gesetzt werden',
     needsConsent: 'Für ein Bild eines Schützen unter 18 braucht es die Einwilligung der Eltern. Ein Trainer hält sie auf der Seite des Schützen fest.',
-    whoSees: 'Freiwillig. Du sowie die Trainer und Admins deiner Teams sehen es. Schützen sehen das Bild ihrer Trainer und Admins, nicht das anderer Schützen.',
-    whoSeesArcher: 'Freiwillig. Die Trainer und Admins des Teams sehen es.',
+    whoSees: 'Freiwillig. Du siehst es, und die Leute deiner Teams so weit, wie deine Einstellung es erlaubt (Einstellungen: Mein Name und mein Bild sehen).',
+    whoSeesArcher: 'Freiwillig. Die Trainer und Admins des Teams sehen es, sonst niemand.',
   },
   serverAddress: {
     empty: 'Gib die Adresse des Servers ein.',
@@ -898,6 +901,9 @@ export default {
     training: 'Training',
     equipment: 'Meine Ausrüstung',
     trainingVisibility: 'Neue Trainings sehen',
+    profileVisibility: 'Mein Name und mein Bild sehen',
+    profileVisibilityOptions: { team: 'Mein Team', coaches: 'Meine Trainer', me: 'Nur ich' },
+    profileVisibilityHint: 'Nur Name und Bild, nicht dein Training. Trainer sehen die Namen der Schützen in ihrem Team immer. Braucht eine Verbindung.',
     trainingVisibilityHint: 'Gilt für neue Trainings und für Fotos und Videos ohne Training, auch die schon vorhandenen: sie folgen alle dieser Einstellung. Ein einzelnes Training änderst du auf seiner Notizen-Seite. Braucht eine Verbindung.',
     teams: 'Teams',
     joinTeam: 'Team beitreten',

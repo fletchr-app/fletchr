@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
-from . import access
+from . import access, audience
 from .avatar import sign_link
 from .models import COACH_ROLES, ClaimCode, Invite, Profile, Role, Team, TeamMember, User
 
@@ -26,9 +26,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "push_notes", "push_evaluations", "push_team", "video_allowed", "avatar_allowed", "avatar_url"]
+        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "visibility", "push_notes", "push_evaluations", "push_team", "video_allowed", "avatar_allowed", "avatar_url"]
         extra_kwargs = {
             "training_visibility": {"help_text": "Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now"},
+            "visibility": {"help_text": "Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now"},
             "push_notes": {"help_text": "Notify me when a coach shares a note with me"},
             "push_evaluations": {"help_text": "Notify me when a coach shares an evaluation with me"},
             "push_team": {"help_text": "Notify me when somebody uses an invite or claim code I made"},
@@ -37,6 +38,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     def validate_training_visibility(self, value):
         user = self.context["request"].user
         return access.check_visibility(value, user, user)
+
+    def validate_visibility(self, value):
+        if value not in audience.PROFILE_ACCEPTED:
+            raise serializers.ValidationError(gettext("Not available yet"))
+        return value
 
     def get_avatar_url(self, profile) -> str:
         request = self.context.get("request")
@@ -144,7 +150,7 @@ class MembershipSettingsSerializer(serializers.ModelSerializer):
 class MemberSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     name = serializers.CharField(source="user.profile.name", read_only=True)
-    email = serializers.SerializerMethodField(help_text="Empty for an archer without an account")
+    email = serializers.SerializerMethodField(help_text="Empty for an archer without an account, and for a viewer who is an archer (only coaches and admins see addresses)")
     managed = serializers.BooleanField(source="user.is_managed", read_only=True, help_text="A profile kept by a coach, without an account")
 
     avatar_url = serializers.SerializerMethodField(help_text="Empty if there is no picture or the viewer may not see it; opens for an hour")
@@ -153,25 +159,44 @@ class MemberSerializer(serializers.ModelSerializer):
         model = TeamMember
         fields = ["user_id", "name", "email", "managed", "role", "also_shoots", "joined_at", "avatar_url"]
 
+    def _relations(self):
+        request = self.context["request"]
+        return self.context.setdefault("_relations", access.relations_of(request.user))
+
     def get_avatar_url(self, member) -> str:
-        """The rule of access.can_see_avatar, for a member of a team the viewer is in: themselves, or the viewer coaches
-        the team, or the member does. The viewer's role in each team is read once per request."""
+        """The rule of access.can_see_avatar (`sees_person`), with the viewer's relations read once per request."""
         request = self.context.get("request")
         profile = member.user.profile
         if request is None or not profile.avatar or not profile.avatar_allowed:
             return ""
-        roles = self.context.setdefault("_viewer_roles", {})
-        if member.team_id not in roles:
-            roles[member.team_id] = access.role_in(request.user, member.team_id)
-        viewer_role = roles[member.team_id]
-        if viewer_role is None:
+        if not access.sees_person(self._relations().get(member.user_id), profile, member.user.is_managed):
             return ""
-        if member.user_id == request.user.pk or viewer_role in COACH_ROLES or member.role in COACH_ROLES:
-            return avatar_url(request, member.user_id)
-        return ""
+        return avatar_url(request, member.user_id)
 
     def get_email(self, obj) -> str:
-        return "" if obj.user.is_managed else obj.user.email
+        """Only for the viewer themselves and for the coaches and admins of the team: archers see no addresses."""
+        request = self.context.get("request")
+        if obj.user.is_managed or request is None:
+            return ""
+        roles = self.context.setdefault("_viewer_roles", {})
+        if obj.team_id not in roles:
+            roles[obj.team_id] = access.role_in(request.user, obj.team_id)
+        if obj.user_id == request.user.pk or roles[obj.team_id] in COACH_ROLES:
+            return obj.user.email
+        return ""
+
+
+class RosterMemberSerializer(MemberSerializer):
+    """What a team member sees of another: name, role and picture. No email."""
+
+    name = serializers.SerializerMethodField(help_text="Empty if the person has not set a name; the app shows a placeholder")
+
+    class Meta:
+        model = TeamMember
+        fields = ["user_id", "name", "role", "avatar_url"]
+
+    def get_name(self, member) -> str:
+        return member.user.profile.name
 
 
 class InviteSerializer(serializers.ModelSerializer):

@@ -25,7 +25,7 @@ const open = ref<number | null>(null)
         <AppAvatar slot="start" :name="m.name || m.email" :url="m.avatar_url" />
         <IonLabel class="ion-text-wrap">
           <h3>{{ m.name || m.email }}{{ m.user_id === myId ? ` (${$t('teams.you')})` : '' }}</h3>
-          <p>{{ $t(`roles.${m.role}`) }} · {{ m.email }}{{ m.also_shoots ? ` · ${$t('teams.sharesTraining')}` : '' }}</p>
+          <p>{{ $t(`roles.${m.role}`) }}{{ m.email ? ` · ${m.email}` : '' }}{{ m.also_shoots ? ` · ${$t('teams.sharesTraining')}` : '' }}</p>
         </IonLabel>
         <IonIcon v-if="isAdmin" slot="end" :icon="open === m.user_id ? chevronUp : chevronDown" />
       </IonItem>

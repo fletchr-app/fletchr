@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from core import avatar
-from core.models import ClaimCode, Role, Team, TeamMember, User
+from core.models import ClaimCode, Profile, Role, Team, TeamMember, User
 from core.tests.test_video_consent import born
 
 
@@ -152,10 +152,18 @@ def test_the_coach_and_the_admin_of_the_team_see_it(api, club, picture):
         assert api(who).get(person(club, "archer1")).status_code == 200
 
 
-def test_another_archer_and_the_coach_of_another_team_get_404(api, club, picture):
+def test_the_coach_of_another_team_gets_404(api, club, picture):
     uid = club["archer1"].pk
-    for who in ("archer2", "b_archer", "b_admin"):
+    for who in ("b_archer", "b_admin"):
         assert api(who).get(f"/api/users/{uid}/avatar/").status_code == 404
+
+
+def test_a_teammate_sees_it_by_default_and_not_when_it_is_for_the_coaches(api, club, picture):
+    """The matrix of settings is in test_roster.py."""
+    uid = club["archer1"].pk
+    assert api("archer2").get(f"/api/users/{uid}/avatar/").status_code == 200
+    Profile.objects.filter(user=club["archer1"]).update(visibility="coaches")
+    assert api("archer2").get(f"/api/users/{uid}/avatar/").status_code == 404
 
 
 def test_signed_out_without_a_token_gets_404(client_for, club, picture):

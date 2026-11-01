@@ -58,7 +58,7 @@ HANDLERS: dict[str, object] = {
 }
 
 # Profile fields: copied from the source (the source wins), or left alone. A field in neither list fails the guard test.
-COPY_FIELDS = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "push_notes", "push_evaluations", "push_team", "video_consent_at", "video_consent_by"]
+COPY_FIELDS = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "visibility", "push_notes", "push_evaluations", "push_team", "video_consent_at", "video_consent_by"]
 SKIP_FIELDS = ["id", "user", "avatar", "avatar_updated_at"]  # the avatar is a file: see FILE_FIELDS
 
 # Every FileField of the project and what happens to its file.

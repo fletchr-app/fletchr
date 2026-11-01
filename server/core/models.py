@@ -99,6 +99,8 @@ class Profile(models.Model):
     avatar_updated_at = models.DateTimeField(null=True, blank=True)
     # The visibility new sessions start with (specs/design/session-visibility.md). Never above `coaches` for now.
     training_visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.DEFAULT)
+    # Who sees this person's name and picture in the team roster (not their training data, that is `training_visibility`).
+    visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.PROFILE_DEFAULT)
     # Which notifications this person wants (push/notify.py). One choice for all their phones.
     push_notes = models.BooleanField(default=True)
     push_evaluations = models.BooleanField(default=True)

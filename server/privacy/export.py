@@ -128,6 +128,7 @@ def export_user_data(user) -> dict:
             "date_of_birth": profile.date_of_birth,
             "units": profile.units,
             "training_visibility": profile.training_visibility,
+            "visibility": profile.visibility,
             "push_notes": profile.push_notes,
             "push_evaluations": profile.push_evaluations,
             "push_team": profile.push_team,

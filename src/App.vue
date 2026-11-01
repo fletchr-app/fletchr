@@ -10,12 +10,10 @@ import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { usePushTaps } from '@/composables/usePush'
-import { useTeams } from '@/composables/useTeams'
 
 const route = useRoute()
 const router = useRouter()
 const { status } = useAuth()
-const { isCoach } = useTeams()
 useMediaLibrary() // starts keeping the list of your photos and videos on the phone
 useNoteLibrary() // starts keeping your notes on the phone
 useDeviceCalendar() // starts keeping the phone's calendar in step, when it is turned on
@@ -50,7 +48,7 @@ const showTabs = computed(() => route.meta.tab === true && (status.value === 'si
           <IonIcon :icon="statsChart" />
           <IonLabel>{{ $t('tabs.statistics') }}</IonLabel>
         </IonTabButton>
-        <IonTabButton v-if="isCoach" tab="team" href="/team">
+        <IonTabButton v-if="status === 'signedIn'" tab="team" href="/team">
           <IonIcon :icon="people" />
           <IonLabel>{{ $t('tabs.team') }}</IonLabel>
         </IonTabButton>
