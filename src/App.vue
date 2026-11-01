@@ -21,6 +21,8 @@ useDeviceCalendar() // starts keeping the phone's calendar in step, when it is t
 // Signing in or out moves you to the right side of the app, wherever you were.
 watch(status, (s) => {
   if (s === 'signedOut' && (route.meta.auth === 'in' || route.meta.auth === 'account')) void router.replace('/sign-in')
+  // Signing out lands in local mode (no signed-out state in between), and a screen that needs an account has to go.
+  if (s === 'local' && route.meta.auth === 'account') void router.replace('/')
   if (s === 'signedIn' && route.meta.auth === 'out') void router.replace('/')
 })
 
