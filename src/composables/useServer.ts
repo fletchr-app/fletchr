@@ -72,7 +72,7 @@ export async function checkServer(address: string, timeoutMs = 8000): Promise<'o
 
 // What the server says about itself: its version and the oldest app that works with it. Asked once per address and
 // again when the app comes back to the front (the server may have been updated meanwhile). An unreachable server says nothing.
-type ServerInfo = { version: string | null; minApp: string | null };
+type ServerInfo = { version: string | null; minApp: string | null; push: boolean };
 const info = ref<ServerInfo | null>(null);
 let asked: AbortController | null = null;
 
@@ -85,8 +85,8 @@ function askServer() {
   const controller = (asked = new AbortController());
   fetch(`${url.value}/api/health/`, { signal: controller.signal })
     .then((res) => (res.ok ? res.json() : null))
-    .then((body: { version?: string; min_app_version?: string } | null) => {
-      if (!controller.signal.aborted) info.value = body ? { version: body.version ?? null, minApp: body.min_app_version ?? null } : null;
+    .then((body: { version?: string; min_app_version?: string; push?: boolean } | null) => {
+      if (!controller.signal.aborted) info.value = body ? { version: body.version ?? null, minApp: body.min_app_version ?? null, push: body.push === true } : null;
     })
     .catch(() => {});
 }
@@ -98,6 +98,11 @@ effectScope(true).run(() => {
 /** The version the server reports (null while unknown or when it cannot be reached). */
 export function useServerVersion() {
   return computed(() => info.value?.version ?? null);
+}
+
+/** Whether the server can send push notifications (false while unknown). */
+export function useServerPush() {
+  return computed(() => info.value?.push === true);
 }
 
 /** Whether this app fits the server: 'ok', 'appTooOld' or 'serverOlder' (see lib/version.ts). */

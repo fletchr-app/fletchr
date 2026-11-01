@@ -73,4 +73,5 @@ def confirm_reset(email, code, new_password):
         for token in OutstandingToken.objects.filter(user=user):
             BlacklistedToken.objects.get_or_create(token=token)
         user.password_resets.all().delete()
+        user.push_devices.all().delete()  # every phone is signed out
     mail.send_password_changed(user)

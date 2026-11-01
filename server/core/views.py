@@ -23,6 +23,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from media.files import serve
+from push import fcm
+from push.models import Device
 
 from . import access, avatar, claims, mail, resets, social
 from .serializers import avatar_url
@@ -56,11 +58,13 @@ from .serializers import (
 logger = logging.getLogger("core")
 
 
-@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField(), "min_app_version": serializers.CharField()}))
+@extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField(), "version": serializers.CharField(), "min_app_version": serializers.CharField(), "push": serializers.BooleanField(help_text="Whether the server can send push notifications")}))
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
-    return Response({"status": "ok", "version": settings.SPECTACULAR_SETTINGS["VERSION"], "min_app_version": settings.MIN_APP_VERSION})
+    return Response(
+        {"status": "ok", "version": settings.SPECTACULAR_SETTINGS["VERSION"], "min_app_version": settings.MIN_APP_VERSION, "push": fcm.available()}
+    )
 
 
 class RegisterView(APIView):
@@ -277,6 +281,7 @@ class ChangePasswordView(APIView):
         user.save(update_fields=["password"])
         for token in OutstandingToken.objects.filter(user=user):
             BlacklistedToken.objects.get_or_create(token=token)
+        Device.objects.filter(user=user).delete()  # the other phones are signed out; this one registers again at once
         mail.send_password_changed(user)
         refresh = RefreshToken.for_user(user)
         return Response({"access": str(refresh.access_token), "refresh": str(refresh)})

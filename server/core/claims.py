@@ -5,6 +5,8 @@ from django.db import transaction
 
 from django.utils import timezone
 
+from push import notify
+
 from .models import COACH_ROLES, ClaimCode, Role, Team, TeamMember, Tombstone, User, normalize_code
 
 
@@ -74,6 +76,7 @@ def claim_profile(code, user):
         profile.profile.avatar = ""
         profile.profile.save(update_fields=["avatar"])
     profile.delete()  # its claim codes go with it
+    notify.code_used(claim.created_by_id, team, user)
     return team
 
 

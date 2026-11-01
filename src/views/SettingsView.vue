@@ -14,6 +14,7 @@ import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
+import { usePush } from '@/composables/usePush'
 import { useServer, useServerHealth } from '@/composables/useServer'
 import { type ThemeMode, useTheme } from '@/composables/useTheme'
 import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
@@ -58,6 +59,8 @@ const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
 const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
 const VISIBILITIES: Visibility[] = ['coaches', 'me']
+const push = usePush()
+const PUSH_TYPES = ['notes', 'evaluations', 'team'] as const
 const { videosWifiOnly, setVideosWifiOnly } = useUploadSettings()
 const kept = useKeptMedia()
 const calendar = useDeviceCalendar()
@@ -105,6 +108,26 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       </IonList>
       <div v-if="!isLocal" class="muted px-3">{{ $t('settings.trainingVisibilityHint') }}</div>
       <ErrorText :message="visibilityError" />
+      <IonList v-if="push.available.value" inset>
+        <IonListHeader>{{ $t('push.settings.title') }}</IonListHeader>
+        <IonItem v-for="type in PUSH_TYPES" :key="type" lines="full" class="ion-text-wrap">
+          <IonToggle
+            :checked="push.prefs.value[type]"
+            label-placement="start"
+            justify="space-between"
+            @ion-change="$event.detail.checked !== push.prefs.value[type] && push.setPref(type, $event.detail.checked)"
+          >
+            <IonLabel class="ion-text-wrap">
+              {{ $t(`push.settings.${type}`) }}
+              <p v-if="type === 'team'" class="muted">{{ $t('push.settings.teamHint') }}</p>
+            </IonLabel>
+          </IonToggle>
+        </IonItem>
+        <IonItem v-if="push.permission.value === 'denied'" lines="none" class="ion-text-wrap"><IonLabel class="ion-text-wrap">{{ $t('push.settings.denied') }}</IonLabel></IonItem>
+        <IonItem v-else-if="push.permission.value === 'prompt'" lines="none" button @click="push.ask()"><IonLabel>{{ $t('push.settings.allow') }}</IonLabel></IonItem>
+      </IonList>
+      <div v-if="push.available.value" class="muted px-3">{{ $t('push.settings.hint') }}</div>
+      <ErrorText :message="push.prefsError.value" />
       <template v-if="isLocal">
         <IonList inset>
           <IonListHeader>{{ $t('settings.account') }}</IonListHeader>

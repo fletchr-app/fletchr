@@ -17,6 +17,10 @@ Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-
 - With `DJANGO_SITE_URL` set (official server: `https://fletchr.de`) the mail also carries `<site>/reset/<code>`. Android opens it in the app (App Links, `site/.well-known/assetlinks.json`); otherwise `site/reset/index.html` shows the code and a button. Plan: [2026-11-01-app-links-and-reset-link.md](../plans/2026-11-01-app-links-and-reset-link.md).
 - The link carries only the code. The app keeps the address the code was sent to on the device for an hour (`src/lib/pending-reset.ts`) and asks for it when it has none. A reset link tapped while signed in only shows a hint.
 
+## Phones that get notifications
+
+Signing out removes the phone from the server (`DELETE /api/devices/`) before the tokens go, then from Firebase. A password change or reset deletes every phone of the account (the other sessions are signed out; the phone that changed the password registers again at once). Deleting the account deletes them too. An account transfer leaves them with the deactivated source; the target registers its own phones. See [push-notifications.md](push-notifications.md).
+
 ## Without an account (#93)
 
 The app can be used without an account or server: a phone with no account starts in it, and signing out ends in it. It is a state next to signed in (`local`; `signedOut` is only passed through), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in or registering with local data asks once whether to upload it to the account (counts, the account's email, "Share your existing sessions with your coaches?" with no preselection; Upload, Keep on this phone only, Cancel). For a registration the question comes before the request, so Cancel creates no account; for a sign-in it comes after the credentials are accepted, and Cancel revokes the tokens. Nothing is asked when the local owner holds nothing. Details in [local-mode.md](local-mode.md#signing-in-or-registering-with-local-data-built-not-run-on-a-phone).
