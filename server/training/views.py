@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 
 from core.access import archers_visible_to, is_coach_in
 from core.claims import can_write_sessions_of
-from core.models import COACH_ROLES, Role, Team, TeamMember, User
+from core.models import COACH_ROLES, Role, Team, TeamMember, User, display_name
 
 from media.access import can_add_for
 from media.models import Media
@@ -328,7 +328,7 @@ class TeamOverviewView(APIView):
                 {
                     "user_id": m.user_id,
                     "role": m.role,
-                    "name": m.user.profile.name or m.user.email,
+                    "name": display_name(m.user),
                     "managed": m.user.is_managed,
                     "arrows_7d": m.arrows_7d,
                     "last_session": s
@@ -483,7 +483,7 @@ class TeamRankingView(APIView):
             .filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True))
             .select_related("user__profile")
         )
-        listed = [(m.user_id, m.user.profile.name or m.user.email, m.user.is_managed) for m in members]
+        listed = [(m.user_id, display_name(m.user), m.user.is_managed) for m in members]
         owners = [m[0] for m in listed]
         sessions = TrainingSession.objects.visible_to(request.user).filter(owner_id__in=owners)
         shots = Shot.objects.filter(end__session__in=sessions, end__session__started_at__gte=since).values_list(

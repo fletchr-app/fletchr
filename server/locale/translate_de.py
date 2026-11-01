@@ -9,6 +9,7 @@ DE = {
     "An account with this email already exists": "Ein Konto mit dieser E-Mail-Adresse gibt es schon",
     "A team needs a name": "Ein Team braucht einen Namen",
     "An archer needs a name": "Ein Schütze braucht einen Namen",
+    "Enter your name": "Gib deinen Namen ein",
     "Wrong password": "Falsches Passwort",
     "Choose a different password": "Wähle ein anderes Passwort",
     "This address is not available": "Diese Adresse ist nicht verfügbar",

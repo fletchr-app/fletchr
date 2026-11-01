@@ -35,6 +35,12 @@ class ProfileSerializer(serializers.ModelSerializer):
             "push_team": {"help_text": "Notify me when somebody uses an invite or claim code I made"},
         }
 
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError(gettext("Enter your name"))
+        return value
+
     def validate_training_visibility(self, value):
         user = self.context["request"].user
         return access.check_visibility(value, user, user)

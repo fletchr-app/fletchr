@@ -107,7 +107,7 @@ class Profile(models.Model):
     push_team = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name or self.user.email
+        return display_name(self.user)
 
     @property
     def age(self):
@@ -136,6 +136,12 @@ def remove_avatar_file(sender, instance, **kwargs):
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+
+
+def display_name(user):
+    """The name to show for a user. Every account has one; the part of the email before the `@` is the last resort
+    (the same rule as a new Google account), never the whole address."""
+    return user.profile.name or user.email.split("@")[0]
 
 
 class Role(models.TextChoices):
