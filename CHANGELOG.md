@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.19.1 (2026-11-01)
+
+- **Deleting your account leaves the screen**: after "Delete my account" the app stayed on the "Your data" screen, although the account was gone and you were signed out. It now goes back to the start screen.
+
 ## 0.19.0 (2026-11-01)
 
 - **Every account has a name** (#140): the profile no longer accepts an empty name, and accounts that had none get the part of their email before the `@` (what a new Google account gets too; change it in the profile). Where a name is missing anyway, screens show that part and never the whole address, so archers no longer see a coach's email in a note, evaluation or session. One migration (`core/0013`).
