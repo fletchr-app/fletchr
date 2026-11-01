@@ -14,7 +14,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { useSchedule } from '@/composables/useSchedule'
 import { addMonths, dotsByDay, daysOf, firstWeekday, monthGrid, rangeOf } from '@/lib/calendar'
-import { dayKey, fromLocalInput, groupByDay, toLocalInput } from '@/lib/schedule'
+import { dayKey, fromLocalInput, groupByDay, newEventTimes } from '@/lib/schedule'
 
 // What is on in a team, as a list (the last four weeks and the next eight, by day) or as a month with the trainings of one day below it. Coaches cancel, move and add trainings, and open one to
 // add notes and photos for an archer. Trainings from a slot are rows only once something is done to them.
@@ -97,10 +97,10 @@ async function add() {
   agenda.reload()
 }
 function startAdding() {
-  const now = new Date()
-  now.setHours(now.getHours() + 1, 0, 0, 0)
-  start.value = toLocalInput(now.toISOString())
-  end.value = toLocalInput(new Date(now.getTime() + 2 * 3_600_000).toISOString())
+  // In month mode the picked day, so a coach who chose a day does not have to change the date.
+  const times = newEventTimes(new Date(), mode.value === 'month' ? picked.value : undefined)
+  start.value = times.start
+  end.value = times.end
   location.value = ''
   adding.value = true
 }

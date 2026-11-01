@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { type AgendaItem, eventTitle, fromLocalInput, groupByDay, itemKey, preselected, suggestEvents, toLocalInput } from './schedule.ts';
+import { type AgendaItem, eventTitle, fromLocalInput, groupByDay, itemKey, newEventTimes, preselected, suggestEvents, toLocalInput } from './schedule.ts';
 
 const item = (id: string, start: string, end: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
   id, virtual: true, slot: 's', date: '2026-10-21', team: 1, team_name: 'Team A', kind: 'training', name: '', start, end, location: '', time_zone: 'Europe/Berlin', cancelled: false, ...extra,
@@ -65,4 +65,12 @@ test('the agenda is grouped by day in order', () => {
 test('only an occurrence that is no row yet is named by slot and date', () => {
   assert.deepEqual(itemKey(squad), { slot: 's', date: '2026-10-21' });
   assert.deepEqual(itemKey({ ...squad, virtual: false }), {});
+});
+
+test('newEventTimes: the next full hour for two hours, today or on the picked day', () => {
+  const now = new Date(2026, 10, 1, 13, 30);
+  assert.deepEqual(newEventTimes(now), { start: '2026-11-01T14:00', end: '2026-11-01T16:00' });
+  assert.deepEqual(newEventTimes(now, '2026-11-20'), { start: '2026-11-20T14:00', end: '2026-11-20T16:00' });
+  // late in the evening the end runs into the next day, the start stays on the picked day
+  assert.deepEqual(newEventTimes(new Date(2026, 10, 1, 22, 10), '2026-11-20'), { start: '2026-11-20T23:00', end: '2026-11-21T01:00' });
 });
