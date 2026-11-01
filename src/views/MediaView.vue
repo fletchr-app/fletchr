@@ -561,17 +561,6 @@ function removeSelected() {
         </div>
       </template>
     </div>
-    <SessionPicker
-      v-if="pickerItems"
-      open
-      :owner="pickerOwner"
-      :taken-at="pickerTakenAt"
-      :current="pickerCurrent"
-      :server-items="pickerItems.some((i) => !!i.remote)"
-      :removable="pickerRemovable"
-      @close="pickerItems = null"
-      @pick="moveTo"
-    />
     <IonModal :is-open="viewing !== null" class="viewer" @did-present="placeStrip" @did-dismiss="close">
       <IonHeader>
         <IonToolbar>
@@ -598,6 +587,18 @@ function removeSelected() {
         </div>
       </IonFooter>
     </IonModal>
+    <!-- After the viewer modal: Ionic moves an open modal out of this tree, and Vue inserts a new node before its next sibling. -->
+    <SessionPicker
+      v-if="pickerItems"
+      open
+      :owner="pickerOwner"
+      :taken-at="pickerTakenAt"
+      :current="pickerCurrent"
+      :server-items="pickerItems.some((i) => !!i.remote)"
+      :removable="pickerRemovable"
+      @close="pickerItems = null"
+      @pick="moveTo"
+    />
   </AppPage>
 </template>
 
