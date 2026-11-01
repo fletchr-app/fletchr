@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Passwort zurücksetzen · Fletchr</title>
+  <meta name="description" content="Passwort bei Fletchr zurücksetzen">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><a class="brand" href="/"><img src="/favicon.svg" alt="" width="36" height="36">Fletchr</a></header>
+  <main>
+    <h1 id="title">Passwort zurücksetzen</h1>
+    <p id="what" class="muted"></p>
+
+    <div class="card" id="codebox" hidden>
+      <div class="muted" id="codelabel">Dein Code</div>
+      <div class="code" id="code"></div>
+    </div>
+
+    <p id="actions" hidden>
+      <a class="button" id="open" href="#">In der App öffnen</a>
+    </p>
+    <p id="help" class="muted" hidden></p>
+    <script>
+      // German or English, by the browser's language. The code is the last part of the address: /reset/<code>.
+      // This page asks the server nothing: a mail program that looks at the link in advance must not use anything up.
+      const TEXT = {"de": {"h": "Passwort zurücksetzen", "what": "Öffne die Fletchr-App, um ein neues Passwort zu setzen.", "code": "Dein Code", "open": "In der App öffnen", "help": "Falls die App sich nicht öffnet: Öffne Fletchr, tippe bei der Anmeldung auf \"Passwort vergessen?\" und gib dort deine E-Mail-Adresse und den Code ein. Der Code gilt eine Stunde. Wenn du das nicht angefordert hast, ignoriere die Mail: dein Passwort bleibt, wie es ist.", "none": "Dieser Link enthält keinen Code."}, "en": {"h": "Reset your password", "what": "Open the Fletchr app to set a new password.", "code": "Your code", "open": "Open in the app", "help": "If the app does not open: open Fletchr, tap \"Forgot password?\" on the sign-in screen and enter your email address and the code. The code works for one hour. If you did not ask for this, ignore the mail: your password stays as it is.", "none": "This link has no code."}};
+      const lang = (navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en';
+      const T = TEXT[lang];
+      document.documentElement.lang = lang;
+      document.title = T.h + ' · Fletchr';
+      document.getElementById('title').textContent = T.h;
+      document.getElementById('codelabel').textContent = T.code;
+      document.getElementById('open').textContent = T.open;
+      document.getElementById('help').textContent = T.help;
+
+      const code = decodeURIComponent(location.pathname.replace(/^\/reset\/?/, ''))
+        .replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20);
+      const what = document.getElementById('what');
+
+      if (!code) {
+        what.textContent = T.none;
+      } else {
+        what.textContent = T.what;
+        document.getElementById('code').textContent = code.replace(/(.{4})(?=.)/g, '$1-');
+        document.getElementById('codebox').hidden = false;
+        document.getElementById('open').href = 'de.fletchr.app://reset/' + code;
+        document.getElementById('actions').hidden = false;
+        document.getElementById('help').hidden = false;
+      }
+    </script>
+  </main>
+  <footer>
+    <a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a><a href="/konto-loeschen/">Konto löschen</a>
+  </footer>
+</body>
+</html>

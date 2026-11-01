@@ -24,6 +24,7 @@ services:
       DJANGO_EMAIL_SECURITY: ${DJANGO_EMAIL_SECURITY:-starttls}
       DJANGO_EMAIL_USER: ${DJANGO_EMAIL_USER:-}
       DJANGO_EMAIL_PASSWORD: ${DJANGO_EMAIL_PASSWORD:-}
+      DJANGO_SITE_URL: ${DJANGO_SITE_URL:-}
       DJANGO_EMAIL_FROM: ${DJANGO_EMAIL_FROM:-Fletchr <noreply@fletchr.de>}
       # Three workers for two CPUs; a slow request does not block the others.
       # The access log shows the client's address (nginx passes it in X-Real-IP), not Docker's gateway.

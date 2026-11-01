@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue'
 import { home, listCircle, people, settings, statsChart } from 'ionicons/icons'
-import { App as CapacitorApp } from '@capacitor/app'
-import { computed, onBeforeUnmount, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useAppLinks } from '@/composables/useAppLinks'
 import { useAuth } from '@/composables/useAuth'
 import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useTeams } from '@/composables/useTeams'
-import { codeFromUrl } from '@/lib/invite-link'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,18 +25,7 @@ watch(status, (s) => {
   if (s === 'signedIn' && route.meta.auth === 'out') void router.replace('/')
 })
 
-// An invite link opens the app on the right screen with the code filled in: signed in, you join; otherwise you register.
-// While the app runs the link arrives as an event; when the link started the app, it has to be asked for.
-let lastLink = ''
-function openInvite(url: string | undefined) {
-  const code = url ? codeFromUrl(url) : null
-  if (!code || url === lastLink) return
-  lastLink = url!
-  void router.isReady().then(() => router.push({ path: status.value === 'signedIn' ? '/join-team' : '/register', query: { code } }))
-}
-const linkListener = CapacitorApp.addListener('appUrlOpen', ({ url }) => openInvite(url))
-void CapacitorApp.getLaunchUrl().then((launch) => openInvite(launch?.url))
-onBeforeUnmount(() => void linkListener.then((l) => l.remove()))
+useAppLinks() // invite and password reset links open the app on the right screen with the code filled in
 
 // The tab bar is for signed-in users and for those who use the app without an account.
 const showTabs = computed(() => route.meta.tab === true && (status.value === 'signedIn' || status.value === 'local'))

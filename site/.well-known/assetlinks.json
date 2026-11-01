@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "de.fletchr.app.dev",
+      "sha256_cert_fingerprints": [
+        "5B:FA:B6:97:34:C5:8C:12:B6:7B:4E:F5:89:45:B5:D7:BA:57:D2:7A:88:00:CC:68:07:90:01:C7:F9:8F:00:6E"
+      ]
+    }
+  }
+]

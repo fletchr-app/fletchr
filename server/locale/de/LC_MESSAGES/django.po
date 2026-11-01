@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 08:16+0100\n"
+"POT-Creation-Date: 2026-11-01 14:17+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -60,11 +60,31 @@ msgstr ""
 "Du bist in diesem Team Trainer. Das Profil eines Schützen kann nur von einem Schützen übernommen "
 "werden."
 
-#: core/mail.py:31
-msgid "Fletchr: reset your password"
-msgstr "Fletchr: Passwort zurücksetzen"
+#: core/mail.py:32
+#, python-format
+msgid ""
+"Someone asked to reset the password of your Fletchr account.\n"
+"\n"
+"On your phone, tap this link to open the app:\n"
+"%(link)s\n"
+"\n"
+"Or type your code in the app.\n"
+"Your code: %(code)s\n"
+"\n"
+"It works for one hour. If this was not you, ignore this mail: your password stays as it is."
+msgstr ""
+"Jemand hat darum gebeten, das Passwort deines Fletchr-Kontos zurückzusetzen.\n"
+"\n"
+"Tippe auf deinem Handy auf diesen Link, um die App zu öffnen:\n"
+"%(link)s\n"
+"\n"
+"Oder gib deinen Code in der App ein.\n"
+"Dein Code: %(code)s\n"
+"\n"
+"Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein Passwort bleibt, wie es "
+"ist."
 
-#: core/mail.py:33
+#: core/mail.py:41
 #, python-format
 msgid ""
 "Someone asked to reset the password of your Fletchr account.\n"
@@ -81,11 +101,15 @@ msgstr ""
 "Gib ihn in der App ein. Er gilt eine Stunde. Wenn du das nicht warst, ignoriere diese Mail: Dein "
 "Passwort bleibt, wie es ist."
 
-#: core/mail.py:45
+#: core/mail.py:46
+msgid "Fletchr: reset your password"
+msgstr "Fletchr: Passwort zurücksetzen"
+
+#: core/mail.py:52
 msgid "Fletchr: your password was changed"
 msgstr "Fletchr: Dein Passwort wurde geändert"
 
-#: core/mail.py:47
+#: core/mail.py:54
 msgid ""
 "The password of your Fletchr account was changed just now.\n"
 "\n"

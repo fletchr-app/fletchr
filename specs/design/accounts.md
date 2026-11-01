@@ -11,6 +11,12 @@ Decision: [ADR 0005](../adrs/0005-sign-in-methods-are-separate.md). Plan: [2026-
 - A new Google account gets the verified email of the token, a name from the token, an unusable password and the team of the code. It cannot set a password or change its email (`has_password` is false in `/api/me/`; the endpoints answer `password_not_set`). Reset sends no mail for it. Export, "delete my data" and "delete account" take a fresh Google token (`id_token`) instead of the password.
 - Code: `server/core/social.py` (one verifier per provider, `sign_in` for all), app: `src/lib/social-login.ts`, `useAuth().signInWithGoogle`, `useProof`.
 
+## Password reset by mail
+
+- `POST /api/password-reset/` mails an 8-character code (valid one hour, five wrong tries, three requests per hour); `POST /api/password-reset/confirm/` takes address, code and new password. Code: `server/core/resets.py`, `mail.py`.
+- With `DJANGO_SITE_URL` set (official server: `https://fletchr.de`) the mail also carries `<site>/reset/<code>`. Android opens it in the app (App Links, `site/.well-known/assetlinks.json`); otherwise `site/reset/index.html` shows the code and a button. Plan: [2026-11-01-app-links-and-reset-link.md](../plans/2026-11-01-app-links-and-reset-link.md).
+- The link carries only the code. The app keeps the address the code was sent to on the device for an hour (`src/lib/pending-reset.ts`) and asks for it when it has none. A reset link tapped while signed in only shows a hint.
+
 ## Without an account (#93)
 
 The app can be used without an account or server: a phone with no account starts in it, and signing out ends in it. It is a state next to signed in (`local`; `signedOut` is only passed through), described in [offline-sync.md](offline-sync.md#without-an-account-93). Signing in or registering with local data asks once whether to upload it to the account (counts, the account's email, "Share your existing sessions with your coaches?" with no preselection; Upload, Keep on this phone only, Cancel). For a registration the question comes before the request, so Cancel creates no account; for a sign-in it comes after the credentials are accepted, and Cancel revokes the tokens. Nothing is asked when the local owner holds nothing. Details in [local-mode.md](local-mode.md#signing-in-or-registering-with-local-data-built-not-run-on-a-phone).
