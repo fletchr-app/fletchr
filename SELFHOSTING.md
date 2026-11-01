@@ -224,7 +224,7 @@ The server can tell a phone when a coach shares a note or an evaluation, or when
 
 1. In the [Firebase console](https://console.firebase.google.com/) create a project (do not turn on Google Analytics) and add an Android app with your application id (`de.fletchr.app`, or your own). Download `google-services.json` into `android/app/` (it is ignored by git).
 2. In the Google Cloud console (IAM) create a service account with only the role "Firebase Cloud Messaging API Admin" and make a JSON key for it. Check that the "Firebase Cloud Messaging API (V1)" is enabled.
-3. Put the key on the server, readable by you only, and name it in `deploy/.env.prod`:
+3. Put the key on the server, readable by you only, and name it in `deploy/.env.prod`. Create `deploy/secrets/` yourself before the first start of 0.18 or later, even if you do not use push: otherwise Docker creates it owned by root (fix with `sudo chown $USER: deploy/secrets`).
 
 ```bash
 mkdir -p deploy/secrets && chmod 700 deploy/secrets
