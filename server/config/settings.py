@@ -203,6 +203,9 @@ if os.environ.get("DJANGO_EMAIL_HOST"):
 else:
     MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
 DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_EMAIL_FROM", "Fletchr <noreply@fletchr.de>")
+# The website that opens links in the app (https://fletchr.de/reset/<code>). Empty: the mails carry the code only, which is
+# right for a self-hosted server, because the official app only verifies fletchr.de.
+SITE_URL = os.environ.get("DJANGO_SITE_URL", "").rstrip("/")
 
 
 REST_FRAMEWORK = {

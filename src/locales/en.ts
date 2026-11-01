@@ -25,6 +25,8 @@ export default {
       code: 'Code from the mail',
       setPassword: 'Set new password',
       newCode: 'Send a new code',
+      fromLink: 'The code from the link is filled in. Choose a new password.',
+      signedIn: 'You are signed in. Sign out first to reset the password.',
       google: 'Signed up with Google? Use the Google button on the sign-in screen.',
     },
     google: {
@@ -714,6 +716,8 @@ export default {
     delete: 'Delete team',
     deleteHeader: 'Delete this team?',
     deleteMessage: 'This removes the team for everybody: all memberships, invites, the coach notes written in it and the profiles of archers without an account. People\'s own accounts, sessions and equipment stay. It cannot be undone. Type the name to confirm: {name}',
+    inviteTextLink: 'Join {team} on Fletchr: {link}\nOr open the app, tap "I have an invite code" and enter {code}. The code works until {until}.',
+    claimTextLink: 'Your coach in {team} keeps your training notes on Fletchr. To take them over, open {link}\nOr open the app, tap "I have an invite code" and enter {code}. If you already have an account, use Settings, "Join a team". The code works until {until}.',
     inviteText: 'Join {team} on Fletchr: open the app, tap "I have an invite code" and enter {code}. The code works until {until}.',
     claimText: 'Your coach in {team} keeps your training notes on Fletchr. To take them over, open the app, tap "I have an invite code" and enter {code}. If you already have an account, use Settings, "Join a team". The code works until {until}.',
   },

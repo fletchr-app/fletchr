@@ -29,6 +29,8 @@ export default {
       code: 'Code aus der Mail',
       setPassword: 'Neues Passwort setzen',
       newCode: 'Neuen Code senden',
+      fromLink: 'Der Code aus dem Link ist eingetragen. Wähle ein neues Passwort.',
+      signedIn: 'Du bist angemeldet. Melde dich zuerst ab, um das Passwort zurückzusetzen.',
       google: 'Mit Google angemeldet? Nimm den Google-Knopf auf der Anmeldeseite.',
     },
     google: {
@@ -718,6 +720,8 @@ export default {
     delete: 'Team löschen',
     deleteHeader: 'Dieses Team löschen?',
     deleteMessage: 'Das Team wird für alle gelöscht: alle Mitgliedschaften, Einladungen, die darin geschriebenen Trainernotizen und die Profile von Schützen ohne Konto. Die Konten, Trainings und die Ausrüstung der Leute bleiben. Das kann nicht rückgängig gemacht werden. Tippe zur Bestätigung den Namen ein: {name}',
+    inviteTextLink: 'Tritt {team} bei Fletchr bei: {link}\nOder öffne die App, tippe auf "Ich habe einen Einladungscode" und gib {code} ein. Der Code gilt bis {until}.',
+    claimTextLink: 'Dein Trainer im Team {team} führt deine Trainingsnotizen bei Fletchr. Um sie zu übernehmen, öffne {link}\nOder öffne die App, tippe auf "Ich habe einen Einladungscode" und gib {code} ein. Wenn du schon ein Konto hast, gehe zu Einstellungen, "Team beitreten". Der Code gilt bis {until}.',
     inviteText: 'Tritt {team} bei Fletchr bei: Öffne die App, tippe auf "Ich habe einen Einladungscode" und gib {code} ein. Der Code gilt bis {until}.',
     claimText: 'Dein Trainer im Team {team} führt deine Trainingsnotizen bei Fletchr. Um sie zu übernehmen, öffne die App, tippe auf "Ich habe einen Einladungscode" und gib {code} ein. Wenn du schon ein Konto hast, gehe zu Einstellungen, "Team beitreten". Der Code gilt bis {until}.',
   },

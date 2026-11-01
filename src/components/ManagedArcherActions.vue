@@ -10,6 +10,8 @@ import { useRouter } from 'vue-router'
 import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useServer } from '@/composables/useServer'
+import { joinUrl } from '@/lib/app-link'
 import { errorMessage } from '@/lib/errors'
 import { formatCode } from '@/lib/codes'
 import { untilDate } from '@/lib/team-admin'
@@ -21,6 +23,7 @@ const emit = defineEmits<{ renamed: [] }>()
 const { t, locale } = useI18n()
 const router = useRouter()
 const { api } = useAuth()
+const { isOverride } = useServer() // a link to fletchr.de only means something for a code of the official server
 const native = Capacitor.isNativePlatform()
 const path = { team_id: props.teamId, user_id: props.archerId }
 const claim = ref<{ code: string; expires_at: string } | null>(null)
@@ -42,7 +45,8 @@ async function makeCode() {
 // In the browser the text is copied; on a phone the share sheet opens.
 async function share() {
   if (!claim.value) return
-  const message = t('teams.claimText', { team: props.teamName, code: formatCode(claim.value.code), until: untilDate(claim.value.expires_at, locale.value) })
+  const words = { team: props.teamName, code: formatCode(claim.value.code), until: untilDate(claim.value.expires_at, locale.value) }
+  const message = isOverride.value ? t('teams.claimText', words) : t('teams.claimTextLink', { ...words, link: joinUrl(claim.value.code) })
   try {
     if (native) await Share.share({ text: message })
     else {

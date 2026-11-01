@@ -1,8 +1,10 @@
-# Apache (Plesk's default): every /join/<code> is answered with the one join page, which reads the code itself.
+# Apache (Plesk's default): every /join/<code> and /reset/<code> is answered with the one page, which reads the code itself.
 RewriteEngine On
 # Not the page itself: in .htaccess the rewritten address is matched again, and would loop.
 RewriteCond %{REQUEST_URI} !^/join/index\.html$
 RewriteRule ^join/.+$ /join/index.html [L]
+RewriteCond %{REQUEST_URI} !^/reset/index\.html$
+RewriteRule ^reset/.+$ /reset/index.html [L]
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   # Pages and the style sheet: the browser asks the server each time (a short "not modified" when nothing changed),
