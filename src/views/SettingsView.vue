@@ -5,6 +5,8 @@ import { computed, ref } from 'vue'
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
 import ErrorText from '@/components/ErrorText.vue'
+import ShareTraining from '@/components/ShareTraining.vue'
+import { useTeams } from '@/composables/useTeams'
 import { useAuth } from '@/composables/useAuth'
 import { useCreateTeam } from '@/composables/useCreateTeam'
 import { REMINDER_CHOICES, useDeviceCalendar } from '@/composables/useDeviceCalendar'
@@ -33,6 +35,8 @@ const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
 const notes = useNotes()
+const { teams } = useTeams()
+const coachedTeams = computed(() => teams.value.filter((x) => x.my_role !== 'archer'))
 
 // Signing out empties the screens (the account's data stays on the phone under its key and comes back at the next sign-in), so it always asks.
 // What has not reached the server stays too, but the person should know before leaving.
@@ -180,7 +184,13 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       <IonList inset>
         <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
         <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
-        <IonItem button detail :lines="calendar.supported ? 'full' : 'none'" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+        <IonItem button detail :lines="calendar.supported || coachedTeams.length > 0 ? 'full' : 'none'" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+        <IonItem v-for="team in coachedTeams" :key="team.id" :lines="calendar.supported ? 'full' : 'none'" class="ion-text-wrap">
+          <div class="w-100 py-2">
+            <div class="muted">{{ team.name }}</div>
+            <ShareTraining :team="team" />
+          </div>
+        </IonItem>
         <template v-if="calendar.supported">
           <IonItem :lines="calendar.enabled.value ? 'full' : 'none'" class="ion-text-wrap">
             <IonToggle :checked="calendar.enabled.value" @ion-change="toggleCalendar">

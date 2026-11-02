@@ -41,6 +41,7 @@ DE = {
     "The event is in another team than the note": "Der Termin gehört zu einem anderen Team als die Notiz",
     "The slot has no training on this date": "Der Wochentermin hat an diesem Datum keinen Termin",
     "No such event": "Diesen Termin gibt es nicht",
+    "You cannot link this to that training": "Das kannst du nicht mit diesem Termin verknüpfen",
     "The team of a slot cannot change": "Das Team eines Wochentermins lässt sich nicht ändern",
     "The end must be after the start": "Das Ende muss nach dem Beginn liegen",
     "The last day can't be before the first day": "Der letzte Tag darf nicht vor dem ersten liegen",

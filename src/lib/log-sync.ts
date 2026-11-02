@@ -4,8 +4,8 @@ import { errorMessage } from './errors.ts';
 import type { Gear, LogAction, LogSession, LogState, Op } from './log-model.ts';
 import { fromServer } from './session-view.ts';
 
-/** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. */
-export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'failed'; message: string };
+/** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. `withoutEvent`: the server refused the team training it is linked to. */
+export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'withoutEvent' } | { kind: 'failed'; message: string };
 
 /** Names the equipment by the uids of its revisions when the copy has them (equipment made on the phone has no integer id), else by integer id as before. */
 function gearBody(gear: Gear) {
@@ -99,6 +99,8 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
     const { response, error, data } = result;
     if (response.ok) return op.kind === 'session' && !op.delete && data?.id && data.id !== op.sessionId ? { kind: 'ok', mergedInto: data.id } : { kind: 'ok' };
     if (op.kind === 'session' && !op.delete && response.status === 410) return { kind: 'gone' };
+    // The training is not usable for this archer (they left the team, or it was removed): the session is worth keeping without it.
+    if (op.kind === 'session' && !op.delete && response.status === 400 && session?.event && (error as { event?: unknown } | undefined)?.event) return { kind: 'withoutEvent' };
     // An end or volume entry of a session the server no longer has gets 404, like any session that is not yours.
     // The session itself says which: it answers 410 for a deleted one.
     if (op.kind !== 'session' && !op.delete && response.status === 404 && session && (await putSession(api, session)).response.status === 410) return { kind: 'gone' };
@@ -133,6 +135,7 @@ export async function drain(
       dispatch({ type: 'opDone', key: op.key, rev: op.rev });
       if (result.mergedInto) dispatch({ type: 'replaceSessionId', from: op.sessionId, to: result.mergedInto });
     } else if (result.kind === 'gone') dispatch({ type: 'sessionGone', id: op.sessionId });
+    else if (result.kind === 'withoutEvent') dispatch({ type: 'dropEvent', id: op.sessionId });
     else if (result.kind === 'failed') dispatch({ type: 'opFailed', key: op.key, rev: op.rev, error: result.message });
     else return;
   }

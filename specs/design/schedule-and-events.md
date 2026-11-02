@@ -17,7 +17,7 @@ A team has a schedule. A coach adds notes and photos to a team training without 
 
 - Nothing is linked by time alone. The app suggests the training whose time overlaps the session (or the note's `at`, or the photo's `taken_at`) and the user confirms or picks "None" (`src/lib/schedule.ts`). Exactly one overlap is preselected, else nothing is. Cancelled trainings are not suggested.
 - An archer links their own session (`SessionWriteSerializer.event`; the coach who opened a session may set it too). A coach links a note or a photo of an archer in a team they coach. A note on a photo or frame takes the photo's event when none is sent; if a clip's event changes, its notes of that team follow.
-- `core.access.can_tag(user, team, archer)` is the rule: a coach of the team for an archer of that team (`note_teams`), or the archer themselves when they train in the team.
+- `core.access.can_tag(user, team, archer)` is the rule: a coach of the team for an archer of that team (`note_teams`), or the archer themselves when they are a member of the team, whatever their role and `also_shoots` (a link is a label, not visibility). A team member who is refused gets "You cannot link this to that training"; anyone else gets "No such event", so other teams cannot be probed.
 
 ## Reading
 

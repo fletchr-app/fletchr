@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 18:27+0100\n"
+"POT-Creation-Date: 2026-11-02 21:06+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:97
+#: core/access.py:92
 msgid "Invalid or expired invite code"
 msgstr ""
 
-#: core/access.py:99
+#: core/access.py:94
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/access.py:157 training/views.py:160
+#: core/access.py:152 training/views.py:160
 msgid "Only the archer can choose who sees this"
 msgstr ""
 
-#: core/access.py:159 core/serializers.py:50
+#: core/access.py:154 core/serializers.py:50
 msgid "Not available yet"
 msgstr ""
 
@@ -247,11 +247,11 @@ msgstr ""
 msgid "This account no longer exists"
 msgstr ""
 
-#: equipment/serializers.py:62 training/serializers.py:212
+#: equipment/serializers.py:62 training/serializers.py:216
 msgid "Not your bow"
 msgstr ""
 
-#: equipment/serializers.py:67 training/serializers.py:217
+#: equipment/serializers.py:67 training/serializers.py:221
 msgid "Not your arrow set"
 msgstr ""
 
@@ -630,8 +630,12 @@ msgstr ""
 msgid "The slot has no training on this date"
 msgstr ""
 
-#: training/schedule.py:111 training/schedule.py:114
+#: training/schedule.py:112 training/schedule.py:117
 msgid "No such event"
+msgstr ""
+
+#: training/schedule.py:116
+msgid "You cannot link this to that training"
 msgstr ""
 
 #: training/schedule_serializers.py:25
@@ -753,19 +757,19 @@ msgstr ""
 msgid "Shot %(n)s: this face has no X ring"
 msgstr ""
 
-#: training/serializers.py:227
+#: training/serializers.py:231
 msgid "Send the revision either by id or by uid, not both"
 msgstr ""
 
-#: training/serializers.py:233
+#: training/serializers.py:237
 msgid "The type can't change once there are results"
 msgstr ""
 
-#: training/serializers.py:238
+#: training/serializers.py:242
 msgid "Arrows go with a bow: choose the bow too"
 msgstr ""
 
-#: training/serializers.py:243
+#: training/serializers.py:247
 msgid "The end can't be before the start"
 msgstr ""
 

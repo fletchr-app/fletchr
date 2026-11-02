@@ -62,6 +62,24 @@ def test_only_members_of_the_team_link_to_its_events(client_for, club, slot):
     assert client_for(club["archer1"]).put(f"/api/sessions/{new_id()}/", {**SESSION, **wrong_date}, format="json").status_code == 400
 
 
+def test_a_coach_who_does_not_share_links_their_own_session_and_clip_to_the_event(client_for, club, slot):
+    for who in ("coach", "admin"):
+        me = client_for(club[who])
+        res = me.put(f"/api/sessions/{new_id()}/", {**SESSION, **link(slot)}, format="json")
+        assert res.status_code == 201, res.data
+        assert res.data["event"] == str(occurrence_id(slot.pk, DAY))
+        assert put(me, photo(**link(slot))).status_code == 201
+    # a link is a label: the other coach does not get to see that training
+    seen = client_for(club["coach"]).get(f"/api/sessions/?event={occurrence_id(slot.pk, DAY)}").data
+    assert {x["owner"] for x in seen} == {club["coach"].pk}
+
+
+def test_a_stranger_gets_no_such_event(client_for, club, slot):
+    res = client_for(club["b_admin"]).put(f"/api/sessions/{new_id()}/", {**SESSION, **link(slot)}, format="json")
+    assert res.status_code == 400 and str(res.data["event"][0]) == "No such event"
+    assert not TrainingEvent.objects.exists()
+
+
 def test_the_coach_who_opened_a_session_may_set_the_event(client_for, club, event):
     sid = new_id()
     coach = client_for(club["coach"])

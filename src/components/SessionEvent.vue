@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import EventChips from '@/components/EventChips.vue'
 import { useAgenda } from '@/composables/useAgenda'
 import { useLog } from '@/composables/useLog'
+import { useTeams } from '@/composables/useTeams'
 import type { LogSession } from '@/lib/log-model'
 import { eventTitle } from '@/lib/schedule'
 
@@ -13,7 +14,10 @@ const props = defineProps<{ session: LogSession }>()
 const { t } = useI18n()
 const { setEvent } = useLog()
 const { suggest, load } = useAgenda()
+const { teams } = useTeams()
 const changing = ref(false)
+// A link is only a label: a coach who does not share their training is not seen by the other coaches, however it is linked.
+const hint = computed(() => !!props.session.event && !props.session.owner && teams.value.some((x) => x.my_role !== 'archer' && !x.also_shoots))
 
 onMounted(() => void load())
 const suggestions = computed(() => suggest(props.session.started_at, props.session.ended_at, { preferKind: props.session.type === 'competition' ? 'competition' : undefined }))
@@ -40,6 +44,7 @@ const chosen = computed({
       <a href="#" @click.prevent="setEvent(session.id, null)">{{ $t('event.unlink') }}</a>
     </div>
     <a v-else-if="!changing" href="#" @click.prevent="changing = true">{{ $t('event.link') }}</a>
+    <div v-if="hint" class="muted">{{ $t('event.shareHint') }}</div>
     <EventChips v-if="changing" v-model="chosen" :suggestions="suggestions" class="mt-2" />
   </div>
 </template>

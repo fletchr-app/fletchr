@@ -98,10 +98,11 @@ def materialise(slot, day):
     return event
 
 
-def resolve_event(event_id, slot_id=None, day=None, allowed=None):
+def resolve_event(event_id, slot_id=None, day=None, allowed=None, member=None):
     """The event row a write names: the existing row, or the occurrence of `slot_id` on `day` made real when
     `event_id` is its id. `allowed(team)` says whether the caller may use that team's events; it is asked before
-    anything is made. Anything else is a 400, the same for an event that does not exist and one you may not use."""
+    anything is made. Anything else is a 400, the same for an event that does not exist and one in a team the caller
+    is not in (`member(team)`), so other teams cannot be probed. A team member who is refused is told so."""
     event = TrainingEvent.objects.select_related("team").filter(pk=event_id).first()
     if event is not None:
         team, slot = event.team, None
@@ -111,6 +112,8 @@ def resolve_event(event_id, slot_id=None, day=None, allowed=None):
             raise ValidationError({"event": gettext("No such event")})
         team = slot.team
     if allowed is not None and not allowed(team):
+        if member is not None and member(team):
+            raise ValidationError({"event": gettext("You cannot link this to that training")})
         raise ValidationError({"event": gettext("No such event")})
     return event or materialise(slot, day)
 

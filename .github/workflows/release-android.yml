@@ -15,9 +15,12 @@ name: Release Android
 #             PLAY_SERVICE_ACCOUNT_JSON  service account with "Release to testing tracks" in the Play Console
 #             GOOGLE_SERVICES_JSON_BASE64  base64 of google-services.json from the Firebase project (push notifications, SELFHOSTING.md section 9; required: the build fails without it)
 #   variables VITE_GOOGLE_WEB_CLIENT_ID  the web client ID, as in the official server's DJANGO_GOOGLE_CLIENT_IDS (required: the build fails without it)
+# A release that changed nothing in the app (a server-only patch) is skipped: see the job "changes". To upload anyway, run this
+# workflow by hand (Actions, Run workflow) and pick the tag as the ref; that skips the comparison.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,13 +31,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  checks:
+  # Compares the tag with the previous release tag. Everything counts as an app change except the paths named here (server,
+  # deploy, site, worker, specs, docs, CI) and the version lines of package.json, package-lock.json and src/lib/openapi.yaml, so a new folder errs
+  # towards uploading.
+  changes:
     if: ${{ vars.PLAY_RELEASE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        run: |
+          prev=$(git tag --list 'v*' --sort=-v:refname | grep -vx "$GITHUB_REF_NAME" | head -1)
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || [ -z "$prev" ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(git diff --name-only "$prev" "$GITHUB_SHA" -- . \
+            ':!server' ':!deploy' ':!site' ':!worker' ':!specs' ':!.github' ':!.claude' \
+            ':!*.md' ':!LICENSE' ':!package.json' ':!package-lock.json' ':!src/lib/openapi.yaml')
+          for f in package.json package-lock.json src/lib/openapi.yaml; do
+            if git diff -U0 "$prev" "$GITHUB_SHA" -- "$f" | grep -E '^[+-] ' | grep -vqE '"version"|^[+-]  version: '; then files="$files $f"; fi
+          done
+          echo "changed since $prev: ${files:-nothing}"
+          if [ -n "$(echo $files)" ]; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; echo "::notice::no app change since $prev, nothing uploaded to Play"; fi
+
+  checks:
+    needs: changes
+    if: ${{ needs.changes.outputs.app == 'true' }}
     uses: ./.github/workflows/ci.yml
 
   bundle:
-    needs: checks
-    if: ${{ vars.PLAY_RELEASE_ENABLED == 'true' }}
+    needs: [changes, checks]
+    if: ${{ needs.changes.outputs.app == 'true' }}
     runs-on: ubuntu-latest
     environment: release
     steps:

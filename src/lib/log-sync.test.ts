@@ -423,6 +423,25 @@ test('the training a session is linked to is sent only when chosen, and null aft
   assert.equal((h.calls[3]!.body as { event: unknown }).event, null);
 });
 
+test('a session whose training the server refuses uploads without it, and its ends follow', async () => {
+  const h = harness((call, n) => (n === 1 ? json(400, { event: ['No such event'] }) : ok(call)));
+  h.dispatch({ type: 'startSession', session: { ...session, event: { id: 'ev1', slot: 'sl1', date: '2026-10-21' } } });
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => c.path), ['/api/sessions/s1/', '/api/sessions/s1/', '/api/sessions/s1/ends/e1/']);
+  assert.equal('event' in (h.calls[1]!.body as object), false);
+  assert.equal(h.state().sessions[0]!.event, undefined);
+  assert.deepEqual(h.queued(), []);
+});
+
+test('a 400 about something else than the training still fails the session', async () => {
+  const h = harness(() => json(400, { type: ['bad'] }));
+  h.dispatch({ type: 'startSession', session: { ...session, event: { id: 'ev1' } } });
+  await h.run();
+  assert.deepEqual(h.queued(), ['session!']);
+  assert.equal(h.state().sessions[0]!.event?.id, 'ev1');
+});
+
 test('a pull takes over the training a session is linked to, unless a change of it still waits', () => {
   const linked: LogSession = { ...session, event: { id: 'ev1', name: 'Squad' } };
   let state = reduce(EMPTY_LOG, { type: 'pulled', sessions: [linked] });
