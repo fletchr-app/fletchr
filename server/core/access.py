@@ -76,16 +76,11 @@ def can_plan(user, team):
     return is_coach_in(user, team)
 
 
-def shoots_in(user, team):
-    """Whether `user` trains in `team`: as an archer, or as a coach who turned on `also_shoots`."""
-    return TeamMember.objects.filter(team=team, user=user).filter(Q(role=Role.ARCHER) | Q(role__in=COACH_ROLES, also_shoots=True)).exists()
-
-
 def can_tag(user, team, archer):
     """Whether `user` may link a row about `archer` (a session, note or photo) to an event of `team`: the coach of the team
-    for an archer of that team, or the archer themselves when they train in that team."""
+    for an archer of that team, or anyone in the team for their own rows (a link is a label, not visibility)."""
     if user.pk == archer.pk:
-        return shoots_in(archer, team)
+        return teams_of(user).filter(pk=team.pk).exists()
     return note_teams(user, archer).filter(pk=team.pk).exists()
 
 

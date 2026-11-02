@@ -11,7 +11,7 @@ from equipment.models import ArrowSetRevision, BowRevision, Setup
 from targets.catalogue import get_face
 from targets.scoring import score
 
-from core.access import can_tag, check_visibility, starting_visibility
+from core.access import can_tag, check_visibility, starting_visibility, teams_of
 
 from .merge import has_results, resolve_session_id
 from .models import End, SessionTombstone, Shot, TrainingEvent, TrainingSession, TrainingSlot, VolumeEntry
@@ -148,7 +148,11 @@ class EventLinkSerializer(serializers.Serializer):
         slot, day = attrs.pop("event_slot", None), attrs.pop("event_date", None)
         if attrs.get("event") is not None:
             user = self.context["request"].user
-            attrs["event"] = resolve_event(attrs["event"], slot, day, allowed=lambda team: can_tag(user, team, archer))
+            attrs["event"] = resolve_event(
+                attrs["event"], slot, day,
+                allowed=lambda team: can_tag(user, team, archer),
+                member=lambda team: teams_of(user).filter(pk=team.pk).exists(),
+            )
         return attrs
 
 

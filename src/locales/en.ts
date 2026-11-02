@@ -401,6 +401,7 @@ export default {
     none: 'None',
     linked: 'Training: {name}, {date}',
     link: 'Link to a training',
+    shareHint: 'Other coaches only see this training if you turn on "Show my own training" in Settings.',
     change: 'Change',
     title: 'Training',
     newMediaFrom: 'New photos and videos are from',

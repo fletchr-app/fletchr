@@ -126,6 +126,8 @@ export type LogAction =
   | { type: 'saveVolume'; sessionId: string; entry: LogVolume }
   | { type: 'deleteVolume'; sessionId: string; entryId: string }
   | { type: 'deleteSession'; id: string }
+  /** The server refused the team training this session is linked to: take the link off here. The queued upload then goes without it. */
+  | { type: 'dropEvent'; id: string }
   | { type: 'opDone'; key: string; rev: number }
   | { type: 'opFailed'; key: string; rev: number; error: string }
   | { type: 'retryFailed' }
@@ -324,6 +326,8 @@ export function reduce(state: LogState, action: LogAction): LogState {
       const rest = { ...state, sessions: state.sessions.filter((s) => s.id !== action.id), outbox: state.outbox.filter((o) => o.sessionId !== action.id) };
       return queue(rest, 'session', action.id, undefined, true);
     }
+    case 'dropEvent':
+      return mapSession(state, action.id, ({ event: _event, ...s }) => s);
     case 'opDone':
       // An edit made during the upload has a newer rev and stays queued.
       return { ...state, outbox: state.outbox.filter((o) => !(o.key === action.key && o.rev === action.rev)) };

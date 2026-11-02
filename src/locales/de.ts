@@ -405,6 +405,7 @@ export default {
     none: 'Keiner',
     linked: 'Termin: {name}, {date}',
     link: 'Mit einem Termin verknüpfen',
+    shareHint: 'Andere Trainer sehen dieses Training nur, wenn du in den Einstellungen "Mein eigenes Training" einschaltest.',
     change: 'Ändern',
     title: 'Termin',
     newMediaFrom: 'Neue Fotos und Videos gehören zu',
