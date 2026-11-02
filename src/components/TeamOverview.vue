@@ -7,7 +7,6 @@ import AppButton from '@/components/AppButton.vue'
 
 import ErrorText from '@/components/ErrorText.vue'
 import { sessionTypeKey } from '@/lib/log-model'
-import ShareTraining from '@/components/ShareTraining.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import type { components } from '@/lib/api-types'
@@ -33,7 +32,6 @@ const shown = computed(() => (onlyIdle.value ? (data.value ?? []).filter((a) => 
     <AppButton secondary :router-link="`/team/${team.id}`">{{ team.my_role === 'admin' ? $t('teams.manage') : $t('teams.members') }}</AppButton>
     <AppButton secondary :router-link="`/team/${team.id}/agenda`">{{ $t('schedule.agenda') }}</AppButton>
     <AppButton v-if="team.show_ranking" secondary :router-link="`/team/${team.id}/ranking`">{{ $t('ranking.title') }}</AppButton>
-    <ShareTraining :team="team" />
     <AddArcher :team-id="team.id" @added="reload" />
     <ErrorText :message="error" />
     <div v-if="data?.length === 0">{{ $t('teams.noArchers') }}</div>
