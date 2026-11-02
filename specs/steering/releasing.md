@@ -36,6 +36,14 @@ git switch develop && git merge main      # keeps develop level with the merge c
 
 A fix to a released version that cannot wait for the work on `develop`: branch from `main` (`hotfix/…`), fix, bump PATCH, merge into `main`, tag, then merge `main` into `develop`.
 
+## Server-only and app-only releases
+
+The tag `vX.Y.Z` is always the trigger, for both sides, and the version stays one number. A patch may change only one side:
+
+- **Server only:** `release-android.yml` compares the tag with the previous release tag and skips itself when nothing in the app changed (the job `changes`). Play stays on the older version; the app only warns at a minor version or more behind. To upload anyway, run the workflow by hand with the tag as the ref.
+- **App only:** the server redeploys unchanged under the new tag (`deploy/update.sh` backs up first and goes back on failure).
+- An app change tolerates the previous minor of the server (servers of other operators lag); a server change tolerates every app from `MIN_APP_VERSION` on. The server deploys at once but phones update over weeks, so if an app change needs a server change, release the server first.
+
 ## The website
 
 `deploy/site.sh` copies what is checked out on the server, so the website changes with `main`, together with a release. To publish a text change earlier, check out `develop` on the server for the copy (`git switch develop && git pull && deploy/site.sh && git switch main`), or release.

@@ -75,7 +75,7 @@ Take option D: a member of a team may link their **own** session, photo or note 
 2. Wording: en "You cannot link this to that training", de "Das kannst du nicht mit diesem Termin verknüpfen".
 3. Hint for a coach who does not share: yes (`event.shareHint`, shown in `SessionEvent.vue`).
 4. Share toggle also in Settings (Teams list, one per team the user coaches); stays on the Team tab too.
-5. Everything on `develop` for the next release, no 0.19.3 hotfix. Until then phones on 0.19.2 stay stuck for coaches who do not share.
+5. Everything on `develop` for the next release, no 0.19.3 hotfix. Until then phones on 0.19.2 stay stuck for coaches who do not share. If a server-only 0.19.3 is wanted later, specs/steering/releasing.md ("Server-only and app-only releases") covers it: the Play upload skips itself when the app did not change. The headings "hotfix 0.19.3" above are the earlier proposal.
 
 Not done: the one-time notice "the link was removed" after the client drops a refused link (the drop is silent, as for media), and `SessionEvent.vue` for a session a coach opened for an archer still passes no team filter.
 
