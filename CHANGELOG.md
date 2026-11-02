@@ -2,6 +2,14 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.20.0 (2026-11-02)
+
+- **Coaches link their own sessions to a team training**: a coach or admin who does not share their training could not link their own session, photo or note to a training of the team; the session then stayed stuck in the upload banner. Any member of a team may now link their own entries to its trainings. Linking adds no visibility: other coaches still see the session only if you share your training.
+- **A refused link no longer blocks the upload**: when the server refuses the link to a training, the app uploads the session without it.
+- **Hint and toggle**: the picker tells a coach who does not share that other coaches only see the session if they share, and the sharing switch is now also in Settings.
+- **Releases**: the Play upload is skipped when a release changes nothing in the app (`specs/steering/releasing.md`).
+- No migration. Phones on 0.19.2 upload the stuck sessions with "Try again" once the server is updated.
+
 ## 0.19.2 (2026-11-01)
 
 - **Releases reach the closed test**: the release workflow now uploads each version to the internal track and to the closed test in one step. No change in the app or the server.
