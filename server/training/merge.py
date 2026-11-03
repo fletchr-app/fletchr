@@ -8,6 +8,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from media.models import Media
+
 from .models import SessionTombstone, TrainingSession
 
 # A session without `ended_at` counts as ending this long after it started, or a coach's session that
@@ -105,6 +107,15 @@ def merge_if_possible(session, viewer=None):
             return winner
         session.refresh_from_db()
     return session
+
+
+def delete_session(session):
+    """Delete a session and leave the tombstone the phones read: without it a phone with a change waiting uploads the session again."""
+    SessionTombstone.objects.update_or_create(pk=session.pk, defaults={"owner_id": session.owner_id, "merged_into": None, "at": timezone.now()})
+    with transaction.atomic():
+        # The photos and videos stay, out of the session. That is not a `save()`, so the phones are told here.
+        Media.objects.filter(session=session).update(updated_at=timezone.now())
+        session.delete()
 
 
 def resolve_session_id(session_id):

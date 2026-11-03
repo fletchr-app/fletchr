@@ -1,30 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import AppButton from '@/components/AppButton.vue'
 import { useAuth } from '@/composables/useAuth'
-import { useEquipment } from '@/composables/useEquipment'
-import { useLog } from '@/composables/useLog'
-import { useMedia } from '@/composables/useMedia'
-import { useNotes } from '@/composables/useNotes'
+import { useSyncStatus } from '@/composables/useSyncStatus'
+
+// `list` is set on the `/sync` screen itself, which does not link to itself.
+defineProps<{ list?: boolean }>()
 
 const { isLocal } = useAuth()
-const log = useLog()
-const media = useMedia()
-const equipment = useEquipment()
-const notes = useNotes()
-const conflicts = log.conflicts
-const waiting = computed(() => log.waiting.value + media.waiting.value.length + equipment.waiting.value + notes.waiting.value)
-const failed = computed(() => [
-  ...log.failed.value.map((o) => o.error),
-  ...media.failed.value.map((m) => m.error),
-  ...equipment.failed.value.map((o) => o.error),
-  ...notes.failed.value.map((n) => n.error),
-])
-// Videos held back for Wi-Fi: after the upload of local data they would otherwise wait unseen.
-const wifiWaiting = computed(() => media.waitingForWifi())
-const retryFailed = () => (log.retryFailed(), media.retryFailed(), equipment.retryFailed(), notes.retryFailed())
-const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipment.discardFailed(), notes.discardFailed())
+const { waiting, failed, conflicts, wifiWaiting, kinds, retryFailed, discardFailed, log } = useSyncStatus()
 </script>
 
 <!-- Shows what has not reached the server yet. Nothing is lost while it waits: it is all saved on the device. -->
@@ -43,5 +26,6 @@ const discardFailed = () => (log.discardFailed(), media.discardFailed(), equipme
       <AppButton secondary @click="retryFailed">{{ $t('common.tryAgain') }}</AppButton>
       <AppButton secondary @click="discardFailed">{{ $t('sync.giveUp') }}</AppButton>
     </template>
+    <a v-if="!list && kinds > 1" class="small" href="#" @click.prevent="$router.push('/sync')">{{ $t('sync.showList') }}</a>
   </div>
 </template>

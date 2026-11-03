@@ -1,9 +1,22 @@
 from django.contrib import admin
 
+from .merge import delete_session
 from .models import End, SessionTombstone, Shot, TrainingEvent, TrainingSession, TrainingSlot, VolumeEntry
 
-for model in (TrainingSession, SessionTombstone, End, Shot, VolumeEntry):
+for model in (SessionTombstone, End, Shot, VolumeEntry):
     admin.site.register(model)
+
+
+@admin.register(TrainingSession)
+class TrainingSessionAdmin(admin.ModelAdmin):
+    """Deleting here goes through `delete_session`, so the phones learn the session is gone (the API's delete does the same)."""
+
+    def delete_model(self, request, obj):
+        delete_session(obj)
+
+    def delete_queryset(self, request, queryset):
+        for session in queryset:
+            delete_session(session)
 
 
 @admin.register(TrainingSlot)

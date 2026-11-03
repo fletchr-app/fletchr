@@ -2,6 +2,12 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.21.0 (2026-11-03)
+
+- **Upload status list**: when more than one kind of item is waiting (sessions, photos, equipment, notes), the sync banner links to a list (Upload status) with the count per kind, the errors, and the conflicts.
+- **Deleting a session in the admin**: it now leaves the same tombstone as deleting it through the API. Before, a phone with a change waiting uploaded the session again as an empty shell.
+- App and server, no migration.
+
 ## 0.20.1 (2026-11-03)
 
 - **A session deleted on the server keeps its unsent results**: when the server deleted a session while results of it were still waiting on the phone, hearing it twice (from the list of deleted sessions and from the refused upload) dropped the kept session and its results. The session now stays, with the banner to keep it as a new one or discard it.
