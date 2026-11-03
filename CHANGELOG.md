@@ -2,6 +2,12 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.20.1 (2026-11-03)
+
+- **A session deleted on the server keeps its unsent results**: when the server deleted a session while results of it were still waiting on the phone, hearing it twice (from the list of deleted sessions and from the refused upload) dropped the kept session and its results. The session now stays, with the banner to keep it as a new one or discard it.
+- **Share toggle**: it is only in Settings now, no longer on the Team tab.
+- App only, no server change and no migration.
+
 ## 0.20.0 (2026-11-02)
 
 - **Coaches link their own sessions to a team training**: a coach or admin who does not share their training could not link their own session, photo or note to a training of the team; the session then stayed stuck in the upload banner. Any member of a team may now link their own entries to its trainings. Linking adds no visibility: other coaches still see the session only if you share your training.
