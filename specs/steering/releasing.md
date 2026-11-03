@@ -44,6 +44,10 @@ The tag `vX.Y.Z` is always the trigger, for both sides, and the version stays on
 - **App only:** the server redeploys unchanged under the new tag (`deploy/update.sh` backs up first and goes back on failure).
 - An app change tolerates the previous minor of the server (servers of other operators lag); a server change tolerates every app from `MIN_APP_VERSION` on. The server deploys at once but phones update over weeks, so if an app change needs a server change, release the server first.
 
+## How long old apps are served
+
+Proposed, not yet decided for 1.0: the server serves the current minor version of the app and the one before it. Raise `MIN_APP_VERSION` to the older of the two only when a server change would break the one before that, and not before that version has been on the closed or production track long enough for people to update (Google reviews each closed release, so testers lag by a day or more). Until 1.0 the group of apps is small enough to ask people to update by hand. Not enforced by a check: `Deploy` and `Release Android` run side by side, so a failed deploy after a successful upload leaves phones ahead of the server (the app shows the "server older" note at a minor version or more).
+
 ## The website
 
 `deploy/site.sh` copies what is checked out on the server, so the website changes with `main`, together with a release. To publish a text change earlier, check out `develop` on the server for the copy (`git switch develop && git pull && deploy/site.sh && git switch main`), or release.

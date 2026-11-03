@@ -79,7 +79,7 @@ Tests:
 - [x] `note-store.test.ts`: save, edit (drawing changes, immutable fields refused like `IMMUTABLE`), remove.
 - [x] `log-model.test.ts`, `log-sync.test.ts`, `media-queue.test.ts` unchanged and green.
 - [x] Server: migration backfills unique uids; uids are stable across a revision; `pytest`.
-- [ ] Phone: upgrade an installed app with a waiting session; it loads and uploads after the update.
+- [x] Phone: upgrade an installed app with a waiting session; it loads and uploads after the update. (Done on 2026-11-03: v0.11.0, the last release that kept the log in Preferences, built as the Dev app and signed in; a volume session with 12 arrows logged in airplane mode (2 uploads waiting); the current build installed over it with `adb install -r`, still offline. The session and both uploads were there, the log key was gone from Preferences and the file `files/stores/log…json` held it. After reconnecting the outbox emptied and the server had the session with 12 arrows. Not tried: a waiting photo, note or equipment edit across the upgrade. Also checked on 2026-11-03, 0.20.0 on the Dev app against the local server: a session and an end logged in airplane mode survive an app restart and upload after reconnecting; an end logged offline for a session deleted on the server stays as a "kept" session with the banner and uploads as a new one. That run found a bug: two `sessionGone` actions in a row (tombstone from the pull plus the refused upload) dropped the kept session and its end. Fixed in `log-model.ts`, pinned in `log-model.test.ts`.)
 
 ## Phase 1b: upload path (moved forward from Phases 2, 4 and 5; needed by #93)
 
@@ -155,13 +155,15 @@ Tests: server (repeated note `PUT` creates once; note on another archer's media 
 
 ## Phase 5: equipment pull, and evaluations (evaluations optional)
 
-Server:
+Progress: the equipment pull is done without deltas or tombstones. `useEquipment.refresh` reads the whole list of your bows and arrow sets (`pullEquipment`) on sign-in, on resume and on reconnect, and the `pulled` reducer in `equipment-store.ts` adds new items, takes changed values, and drops items the server no longer has unless a change for them is waiting (found on 2026-11-03 while starting this phase; the plan below was written before that). A person has a handful of items, so a delta pull would save almost nothing. Build `updated_at`, `updated_after` and tombstones only if lists grow or the pull gets slow. Checked on 2026-11-03 with the Dev app on a phone and the web app in a browser as the second device (same account, local server): a bow made in the browser appeared on the phone after the app came back to the front, a changed draw weight arrived as version 2, and a bow deleted in the browser disappeared. Not tried: an edit made on the phone while offline against an edit or delete on the other device.
+
+Server (only if the full list becomes too slow):
 - [ ] `equipment/migrations/0003_updated_at.py`: `updated_at` on `Bow`, `ArrowSet`; filter `updated_after`; tombstones on delete (`core.Tombstone`). (The `PUT` routes and revision uids are in Phase 1b.)
 - [ ] **Optional:** `evaluations/migrations/0003_uid.py` (`uid`, same three steps), `PUT /api/evaluations/<uuid:uid>/`, `updated_after`, tombstones. Templates stay online, versions cached read-only.
 - [ ] `npm run types:api`.
 
 App:
-- [ ] `useEquipment` pull (the queue is in Phase 1b).
+- [x] `useEquipment` pull (the queue is in Phase 1b): the full list, see above.
 - [ ] **Optional:** evaluations: `useEvaluations` store and queue; `EvaluationEditView`, `EvaluationListView`, `EvaluationView`, `useEvaluationDraft` (the draft becomes the queued item).
 - [ ] Conflict rule, equipment: last write wins on the item's fields; revisions only add, never conflict. Evaluations: last write wins per evaluation.
 

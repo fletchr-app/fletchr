@@ -270,6 +270,8 @@ export function reduce(state: LogState, action: LogAction): LogState {
       return { ...next, lastPull: action.lastPull ?? state.lastPull };
     }
     case 'sessionGone': {
+      // Told twice (the pull's tombstone and a refused upload): the first kept it and emptied the outbox, so the second must not drop it.
+      if (state.sessions.some((s) => s.id === action.id && s.gone)) return state;
       const unsent = state.outbox.some((o) => o.sessionId === action.id && !o.delete && (o.kind === 'end' || o.kind === 'volume'));
       const outbox = state.outbox.filter((o) => o.sessionId !== action.id);
       if (unsent && state.sessions.some((s) => s.id === action.id)) return mapSession({ ...state, outbox }, action.id, (s) => ({ ...s, gone: true }));

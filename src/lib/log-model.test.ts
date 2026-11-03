@@ -366,6 +366,11 @@ test('a session the server deleted is kept when results of it were not uploaded'
   assert.deepEqual(s.outbox, []);
 });
 
+test('a second word that the server deleted a session does not drop one already kept for its results', () => {
+  const s = run({ type: 'startSession', session: session() }, { type: 'saveEnd', sessionId: 's1', end: end('e1', 0) }, { type: 'sessionGone', id: 's1' }, { type: 'sessionGone', id: 's1' });
+  assert.deepEqual(s.sessions.map((x) => [x.id, x.gone, x.ends.length]), [['s1', true, 1]]);
+});
+
 test('keeping a deleted session as a new one queues the session and all its results', () => {
   const s = run(
     { type: 'startSession', session: session() },

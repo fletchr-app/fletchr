@@ -74,10 +74,19 @@ Take option D: a member of a team may link their **own** session, photo or note 
 1. Option D.
 2. Wording: en "You cannot link this to that training", de "Das kannst du nicht mit diesem Termin verknüpfen".
 3. Hint for a coach who does not share: yes (`event.shareHint`, shown in `SessionEvent.vue`).
-4. Share toggle also in Settings (Teams list, one per team the user coaches); stays on the Team tab too.
+4. Share toggle also in Settings (Teams list, one per team the user coaches); removed from the Team tab after 0.20.0 (Settings only).
 5. Everything on `develop` for the next release, no 0.19.3 hotfix. Until then phones on 0.19.2 stay stuck for coaches who do not share. If a server-only 0.19.3 is wanted later, specs/steering/releasing.md ("Server-only and app-only releases") covers it: the Play upload skips itself when the app did not change. The headings "hotfix 0.19.3" above are the earlier proposal.
 
 Not done: the one-time notice "the link was removed" after the client drops a refused link (the drop is silent, as for media), and `SessionEvent.vue` for a session a coach opened for an archer still passes no team filter.
+
+## Test on the phone (2026-11-02)
+
+Dev app 0.20.0 (`de.fletchr.app.dev`, built against `http://localhost:8080` with `adb reverse`, so the test login was typed on a localhost server; rebuilt with the LAN default afterwards) against the Docker dev stack on :8080, also 0.20.0. Account `tim@example.com`, admin of Demo Club, `also_shoots` off. Event "Test training" moved to overlap the session, since the picker only offers events that overlap the session time (`SessionEvent.vue`).
+
+- **Own session linked by a non-sharing admin: passed.** The session uploaded and the server row has the `event`. The hint (`event.shareHint`) showed under the link.
+- **Refused link: passed, with a gap.** The event was moved to a team Tim is not in; then the session was reopened on the phone. The upload went through and the local link was dropped, no banner (the 400 itself was not seen in a log). The server kept the link it already had, because the drop sends no `event`, and an app restart brought the link back with the next pull. For a session the server never had linked (the stuck 0.19.2 case) the drop sticks. Decision: no fix for now. Clearing the server's link on a refusal would erase a link the server itself accepted earlier; if it shows up in practice, make the phone take the server's value after a refusal.
+- **Not tested:** the stale failed upload of 0.19.2 that needs "Try again" (no phone in that state); linking another coach's clip or note and the new error text; the Settings toggle on this run (Tim saw it on his own phone).
+- **Left in the dev DB:** the test session, the event "Test training" (Demo Club), and a password set for `tim@example.com`.
 
 ## Open questions (answered above)
 
