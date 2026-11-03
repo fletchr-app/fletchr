@@ -103,12 +103,12 @@ Not covered here, decided in #93: what happens when the account that receives th
 
 ## Phase 2: shared pull step, read-only caches, sync status (pull step required by 3 and 4; caches optional)
 
-- [ ] `src/lib/pull.ts` (new, pure): runs registered pull steps in order, each `(api, owner, since) => actions | null`; one `since` per entity in a `sync:<owner>` store. Overlap: asks with `since − 60 s` and applies idempotently (Q9).
-- [ ] `src/composables/useSync.ts` (new): owns the triggers now in `useLog` (sign-in, `appStateChange`, `networkStatusChange`): pull everything, then drain the queues in order (below). `useLog` and `useMedia` register their pull and drain; their own `App`/`Network` listeners go.
-- [ ] Upload order from Phase 1b moves into `useSync`; evaluations go last.
+- [~] Not built, decided with Tim on 2026-11-03: the pulls and drains already run per store (`useLog`, `useMedia`, `useNotes`, `useEquipment`, the two libraries) and the conflict runs on a phone held, so a central runner would change working code for no gain a user sees. Revisit if a third place needs the same ordering. Original item: `src/lib/pull.ts` (new, pure): runs registered pull steps in order, each `(api, owner, since) => actions | null`; one `since` per entity in a `sync:<owner>` store. Overlap: asks with `since − 60 s` and applies idempotently (Q9).
+- [~] Not built (see above). `src/composables/useSync.ts` (new): owns the triggers now in `useLog` (sign-in, `appStateChange`, `networkStatusChange`): pull everything, then drain the queues in order (below). `useLog` and `useMedia` register their pull and drain; their own `App`/`Network` listeners go.
+- [~] Not built (see above). Upload order from Phase 1b moves into `useSync`; evaluations go last.
 - [ ] **Optional:** read-only caches: team list, members, roster (`useTeams`, `TeamOverview`, `TeamManageView` sources). Full replace on each pull, no deltas, so lost access removes rows (problem 4). Store `cache:<owner>:<name>`, removed on sign-out. Build when a coach asks for it.
 - [ ] **Optional (with the caches):** `useRemote` gets a `cache` key: show the cached value at once and mark it "as of <time>" when offline. Only for the cached entities, not all 22 files (Q10).
-- [ ] `SyncBanner` becomes the one place: conflicts added to the counts, and a link to a list (`/sync`, new `SyncView.vue`) when more than one kind is involved. Locales `sync.*` in `en.ts` and `de.ts`.
+- [x] (Done 2026-11-03, built and checked on a phone: with a session and a bow waiting offline the banner showed the link, the list showed one entry per kind, and after reconnecting it read "everything is uploaded".) `useSyncStatus` collects the four queues and the conflicts; `SyncBanner` uses it and links to `/sync` (`SyncView.vue`, read-only list by kind, retry and give up for all as in the banner) when more than one kind is involved; locales `sync.*`. Original item: `SyncBanner` becomes the one place: conflicts added to the counts, and a link to a list (`/sync`, new `SyncView.vue`) when more than one kind is involved. Locales `sync.*` in `en.ts` and `de.ts`.
 
 Server: none.
 

@@ -36,6 +36,7 @@ const router = createRouter({
     { path: '/archers/:id/stats', component: () => import('@/views/StatsView.vue'), meta: { title: 'Statistics', auth: 'account' } },
     { path: '/stats/heatmap', component: () => import('@/views/StatsHeatmapView.vue'), meta: { title: 'Heatmap', auth: 'in' } },
     { path: '/archers/:id/stats/heatmap', component: () => import('@/views/StatsHeatmapView.vue'), meta: { title: 'Heatmap', auth: 'account' } },
+    { path: '/sync', component: () => import('@/views/SyncView.vue'), meta: { title: 'Upload status', auth: 'in' } },
     { path: '/sessions/:id', component: () => import('@/views/SessionDetailView.vue'), meta: { title: 'Session', auth: 'account' } },
     { path: '/team', component: () => import('@/views/TeamListView.vue'), meta: { title: 'Team', auth: 'account', tab: true } },
     { path: '/team/:id', component: () => import('@/views/TeamManageView.vue'), meta: { title: 'Team', auth: 'account' } },
