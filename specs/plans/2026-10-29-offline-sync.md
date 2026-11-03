@@ -79,7 +79,7 @@ Tests:
 - [x] `note-store.test.ts`: save, edit (drawing changes, immutable fields refused like `IMMUTABLE`), remove.
 - [x] `log-model.test.ts`, `log-sync.test.ts`, `media-queue.test.ts` unchanged and green.
 - [x] Server: migration backfills unique uids; uids are stable across a revision; `pytest`.
-- [ ] Phone: upgrade an installed app with a waiting session; it loads and uploads after the update.
+- [ ] Phone: upgrade an installed app with a waiting session; it loads and uploads after the update. (Not done. Checked on 2026-11-03, 0.20.0 on the Dev app against the local server: a session and an end logged in airplane mode survive an app restart and upload after reconnecting; an end logged offline for a session deleted on the server stays as a "kept" session with the banner and uploads as a new one. That run found a bug: two `sessionGone` actions in a row (tombstone from the pull plus the refused upload) dropped the kept session and its end. Fixed in `log-model.ts`, pinned in `log-model.test.ts`.)
 
 ## Phase 1b: upload path (moved forward from Phases 2, 4 and 5; needed by #93)
 
