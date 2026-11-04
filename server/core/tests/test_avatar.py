@@ -218,6 +218,12 @@ def test_the_members_list_gives_the_link_only_to_who_may_follow_it(api, club, pi
     assert members(api, "archer2", club["a"])[co]
 
 
+def test_the_coach_overview_has_the_picture_of_each_archer_who_shares_it(api, club, picture):
+    put(api, "archer1")
+    rows = {r["user_id"]: r["avatar_url"] for r in api("coach").get(f"/api/teams/{club['a'].pk}/overview/").data}
+    assert rows[club["archer1"].pk] and not rows[club["archer2"].pk]
+
+
 def test_an_archer_does_not_get_another_archers_link(api, club, picture):
     assert not members(api, "archer2", club["a"]).get(club["archer1"].pk)
 

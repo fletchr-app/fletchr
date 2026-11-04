@@ -31,6 +31,7 @@ const letters = computed(() => initials(props.name))
   justify-content: center;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   font-weight: 600;
   color: var(--app-avatar-text, #fff);
   background: var(--app-avatar-bg, #6b7a90);

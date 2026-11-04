@@ -370,6 +370,7 @@ class ArcherOverviewSerializer(serializers.Serializer):
     managed = serializers.BooleanField(help_text="A profile kept by a coach, without an account")
     last_session = LastSessionSerializer(allow_null=True)
     arrows_7d = serializers.IntegerField(help_text="Arrows shot in sessions started in the last 7 days")
+    avatar_url = serializers.CharField(help_text="Empty if there is no picture or the viewer may not see it; opens for an hour")
 
 
 

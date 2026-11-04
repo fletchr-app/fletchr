@@ -3,6 +3,7 @@ import { IonChip, IonItem, IonLabel, IonList } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
 import AddArcher from '@/components/AddArcher.vue'
+import AppAvatar from '@/components/AppAvatar.vue'
 import AppButton from '@/components/AppButton.vue'
 
 import ErrorText from '@/components/ErrorText.vue'
@@ -46,6 +47,7 @@ const shown = computed(() => (onlyIdle.value ? (data.value ?? []).filter((a) => 
         detail
         lines="full"
       >
+        <AppAvatar slot="start" :name="archer.name" :url="archer.avatar_url" />
         <IonLabel class="ion-text-wrap">
           <h3>{{ archer.name }}{{ archer.role !== 'archer' ? ` (${$t('teams.coachSuffix')})` : '' }}{{ archer.managed ? ` (${$t('teams.noAccount')})` : '' }}{{ archer.last_session?.live ? `  ● ${$t('teams.shootingNow')}` : '' }}</h3>
           <p>
