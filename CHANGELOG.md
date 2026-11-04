@@ -2,6 +2,14 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.22.0 (2026-11-04)
+
+- **Session page split in two**: a session with ends that is being shot keeps one screen (plot, new end, finish). A finished one is a scrollable summary: figures, points per end, arrows per ring, first half against second half, the plot with group figures, notes and ratings, and the list of ends. Photos and notes are icons in the app bar; changing the setup, session notes, all ends, reopening and deleting are in a three-dot menu. Deleting asks in a dialog.
+- **Coaches see an archer's equipment**: the archer's page has an Equipment button with their bows and arrow sets (read-only).
+- **Team tab for coaches**: the archers show their pictures, or their initials in a circle. The buttons next to the team name are now a three-dot menu on its right.
+- **Deleting a bow or arrow set**: a setup that no session uses no longer blocks it. Before, the server said "used in a training" for gear that was only picked once.
+- App and server, no migration. The server gives the overview an `avatar_url`, so an older app simply shows no pictures.
+
 ## 0.21.0 (2026-11-03)
 
 - **Upload status list**: when more than one kind of item is waiting (sessions, photos, equipment, notes), the sync banner links to a list (Upload status) with the count per kind, the errors, and the conflicts.
