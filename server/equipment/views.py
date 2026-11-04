@@ -36,6 +36,8 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     filterset_fields = ["owner", "is_active"]
     model = None
     revision_serializer = None
+    revision_field = None
+    item_field = None
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -56,12 +58,18 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            return super().destroy(request, *args, **kwargs)
+            with transaction.atomic():
+                # A setup is made when a bow is picked, before any session uses it. Only a session keeps gear.
+                self.unused_setups(self.get_object()).delete()
+                return super().destroy(request, *args, **kwargs)
         except ProtectedError:
             return Response(
                 {"detail": gettext("This has been used in a session. Deactivate it instead of deleting it.")},
                 status=status.HTTP_409_CONFLICT,
             )
+
+    def unused_setups(self, item):
+        return Setup.objects.filter(**{f"{self.revision_field}__{self.item_field}": item, "sessions__isnull": True})
 
     @action(detail=True, methods=["get"])
     def revisions(self, request, pk=None):
@@ -73,6 +81,8 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["bows"])
 class BowViewSet(EquipmentViewSet):
     model = Bow
+    revision_field = "bow_revision"
+    item_field = "bow"
     serializer_class = BowSerializer
     revision_serializer = BowRevisionSerializer
 
@@ -85,6 +95,8 @@ class BowViewSet(EquipmentViewSet):
 @extend_schema(tags=["arrow-sets"])
 class ArrowSetViewSet(EquipmentViewSet):
     model = ArrowSet
+    revision_field = "arrow_set_revision"
+    item_field = "arrow_set"
     serializer_class = ArrowSetSerializer
     revision_serializer = ArrowSetRevisionSerializer
 
