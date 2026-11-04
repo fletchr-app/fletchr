@@ -27,7 +27,8 @@ def thumbnail_path(media, filename):
 class MediaQuerySet(models.QuerySet):
     def visible_to(self, viewer):
         """The clips `viewer` may see: their own, and those of the archers they coach when the clip's session is visible
-        to them; a clip in no session follows its own `visibility`, else the archer's default for training."""
+        to them; a clip in no session follows its own `visibility`, else the archer's default for training.
+        Whoever uploaded a clip always sees it (a coach for an archer whose training is private to them)."""
         from training.models import TrainingSession
 
         coached = Q(owner__in=archers_visible_to(viewer))
@@ -36,7 +37,7 @@ class MediaQuerySet(models.QuerySet):
         loose = Q(session__isnull=True) & (
             Q(visibility__in=shared) | Q(visibility__isnull=True, owner__profile__training_visibility__in=shared)
         )
-        return self.filter(Q(owner=viewer) | coached & (in_session | loose))
+        return self.filter(Q(owner=viewer) | Q(uploaded_by=viewer) | coached & (in_session | loose))
 
 
 class Media(models.Model):

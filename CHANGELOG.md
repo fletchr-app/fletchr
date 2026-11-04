@@ -2,6 +2,13 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## 0.23.0 (2026-11-04)
+
+- **Archer page as a profile**: for a coach, the page of an archer shows the picture as a cover (initials without one) and the name in the app bar, then equipment, latest training, latest evaluation, arrows this week, month and in total, the latest photos and the latest coach note. Each section has a plus for a new entry and an arrow to the rest, both only where they make sense. The buttons are gone: the rest is in a three-dot menu (open a session, change the picture, video consent, and for an archer without an account edit details, link, rename, delete). All trainings and the coach notes have their own pages. The plus of the photos opens the choice of the source on the media page.
+- **A photo a coach adds for an archer**: when the archer's training is private, the server saved the photo but then refused the coach to see it (500, then 404 on every retry), so the upload stayed stuck. Whoever uploads a photo or clip now always sees it.
+- **Notes on a photo that is still waiting**: a coach can write a note or draw on a photo of an archer before it is uploaded; it goes up after the photo.
+- Server and app, no migration. An older server keeps the upload stuck for coaches of private archers, and the app shows the "server is older" note.
+
 ## 0.22.0 (2026-11-04)
 
 - **Session page split in two**: a session with ends that is being shot keeps one screen (plot, new end, finish). A finished one is a scrollable summary: figures, points per end, arrows per ring, first half against second half, the plot with group figures, notes and ratings, and the list of ends. Photos and notes are icons in the app bar; changing the setup, session notes, all ends, reopening and deleting are in a three-dot menu. Deleting asks in a dialog.
