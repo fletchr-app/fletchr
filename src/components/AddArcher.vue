@@ -3,12 +3,12 @@ import { alertController } from '@ionic/vue'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import AppButton from '@/components/AppButton.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { errorMessage } from '@/lib/errors'
 
 // A coach adds an archer who has no account (yet): a profile for notes and sessions, which the archer can take over later.
+// The caller opens the dialog with `ask()` (the team menu); the component shows the error, if any.
 const props = defineProps<{ teamId: number }>()
 const emit = defineEmits<{ added: [] }>()
 
@@ -39,11 +39,10 @@ async function ask() {
   })
   await alert.present()
 }
+
+defineExpose({ ask })
 </script>
 
 <template>
-  <div class="d-flex flex-column gap-2">
-    <AppButton secondary @click="ask">{{ $t('teams.addArcher') }}</AppButton>
-    <ErrorText :message="error" />
-  </div>
+  <ErrorText :message="error" />
 </template>

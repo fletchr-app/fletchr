@@ -688,6 +688,7 @@ export default {
     },
   },
   teams: {
+    menu: 'Teammenü',
     manage: 'Team verwalten: Mitglieder, Einladungen, Name',
     members: 'Mitglieder',
     shareOwn: 'Mein eigenes Training den anderen Trainern dieses Teams zeigen',

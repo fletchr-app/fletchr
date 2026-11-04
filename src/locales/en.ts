@@ -684,6 +684,7 @@ export default {
     },
   },
   teams: {
+    menu: 'Team menu',
     manage: 'Manage team: members, invites, name',
     members: 'Members',
     shareOwn: 'Show my own training to the other coaches of this team',
