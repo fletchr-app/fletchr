@@ -138,12 +138,12 @@ watch(queuedNotes.uploaded, notes.reload)
 watch(() => !!queuedItem.value, notes.reload)
 const waiting = computed(() => waitingOnMedia(queuedNotes.notes.value, currentId.value))
 const teams = useRemote(
-  async () => (clip.value && !queuedItem.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
-  { watch: [clip, () => !!queuedItem.value] },
+  async () => (clip.value ? ((await api.GET('/api/notes/teams/', { params: { query: { archer: clip.value.owner } } })).data ?? null) : null),
+  { watch: [clip] },
 )
-// A coach of the archer may write notes; so may the archer, for themselves.
-// Without the server, only you can write, about your own: whose teams you coach in is not known on the phone.
-const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || (!queuedItem.value && !!teams.data.value?.length)))
+// A coach of the archer may write notes; so may the archer, for themselves. The teams come from the server and do not
+// depend on the photo, so a coach can write about a photo that is still waiting; without a connection only your own work.
+const canNote = computed(() => !!clip.value && (clip.value.owner === Number(userId.value) || !!teams.data.value?.length))
 const frameNotes = computed(() =>
   (notes.data.value ?? []).filter((n) => n.frame !== null && n.frame !== undefined).sort((a, b) => a.frame! - b.frame! || a.created_at.localeCompare(b.created_at)),
 )

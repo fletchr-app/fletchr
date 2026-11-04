@@ -212,6 +212,17 @@ def test_a_coach_adds_a_clip_for_an_archer_they_coach(api, club):
     assert api("coach").delete(f"/api/media/{clip}/").status_code == 204
 
 
+def test_a_coach_sees_what_they_added_for_an_archer_whose_training_is_private(api, club):
+    club["archer1"].profile.training_visibility = "me"
+    club["archer1"].profile.save()
+    res = put(api("coach"), photo(), owner=club["archer1"])
+    assert res.status_code == 201, res.data
+    clip = res.data["id"]
+    assert put(api("coach"), photo(), clip).status_code == 200, "repeating the upload must not fail"
+    assert api("coach").get(f"/api/media/{clip}/").status_code == 200
+    assert api("admin").get(f"/api/media/{clip}/").status_code == 404
+
+
 def test_the_archer_can_delete_what_a_coach_added(api, club):
     clip = put(api("coach"), video(), owner=club["archer1"]).data["id"]
     assert api("archer1").delete(f"/api/media/{clip}/").status_code == 204
