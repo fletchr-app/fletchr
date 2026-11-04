@@ -71,6 +71,7 @@ const rows = computed(() => sessionRows(local.value.filter((s) => s.owner === Nu
       <AppButton v-if="info.data.value" secondary :router-link="`/training/new?for=${id}&name=${encodeURIComponent(shownName)}&open=1&managed=${info.data.value.managed ? 1 : 0}`">{{ $t('archer.openSession') }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/stats?name=${encodeURIComponent(shownName)}`">{{ $t('archer.statistics') }}</AppButton>
       <AppButton v-if="writable.data.value?.length" :router-link="`/evaluate?archer=${id}&kind=coach&name=${encodeURIComponent(shownName)}`">{{ $t('evaluations.new') }}</AppButton>
+      <AppButton secondary :router-link="`/archers/${id}/equipment?name=${encodeURIComponent(shownName)}`">{{ $t('archer.equipment') }}</AppButton>
       <AppButton secondary :router-link="`/archers/${id}/evaluations?name=${encodeURIComponent(shownName)}`">{{ $t('evaluations.title') }}</AppButton>
       <AppButton secondary :router-link="`/media?owner=${id}&name=${encodeURIComponent(shownName)}`">{{ $t('media.title') }}</AppButton>
       <VideoConsent v-if="info.data.value && info.data.value.age !== null && info.data.value.age !== undefined && info.data.value.age < 18" :archer="info.data.value" @changed="info.reload" />

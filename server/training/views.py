@@ -15,8 +15,10 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core import access
 from core.access import archers_visible_to, is_coach_in
 from core.claims import can_write_sessions_of
+from core.serializers import avatar_url
 from core.models import COACH_ROLES, Role, Team, TeamMember, User, display_name
 
 from media.access import can_add_for
@@ -316,6 +318,14 @@ class TeamOverviewView(APIView):
         with_results = set(End.objects.filter(session__in=sessions).values_list("session_id", flat=True)) | set(
             VolumeEntry.objects.filter(session__in=sessions).values_list("session_id", flat=True)
         )
+        relations = access.relations_of(request.user)
+
+        def picture(m):
+            profile = m.user.profile
+            if not profile.avatar or not profile.avatar_allowed or not access.sees_person(relations.get(m.user_id), profile, m.user.is_managed):
+                return ""
+            return avatar_url(request, m.user_id)
+
         rows = []
         for m in members:
             s = sessions.get(m.last_session_id)
@@ -326,6 +336,7 @@ class TeamOverviewView(APIView):
                     "name": display_name(m.user),
                     "managed": m.user.is_managed,
                     "arrows_7d": m.arrows_7d,
+                    "avatar_url": picture(m),
                     "last_session": s
                     and {
                         "id": s.pk, "started_at": s.started_at, "ended_at": s.ended_at, "updated_at": s.updated_at,

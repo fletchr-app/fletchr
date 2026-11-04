@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.21.0
+  version: 0.22.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -3519,8 +3519,13 @@ components:
         arrows_7d:
           type: integer
           description: Arrows shot in sessions started in the last 7 days
+        avatar_url:
+          type: string
+          description: Empty if there is no picture or the viewer may not see it;
+            opens for an hour
       required:
       - arrows_7d
+      - avatar_url
       - last_session
       - managed
       - name

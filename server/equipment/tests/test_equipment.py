@@ -1,6 +1,10 @@
+import uuid
+
 import pytest
+from django.utils import timezone
 
 from equipment.models import ArrowSet, ArrowSetRevision, Bow, BowRevision, Setup
+from training.models import TrainingSession
 
 BOW = {"name": "Hoyt Formula", "type": "recurve", "draw_weight": "38.0", "tiller": "-2.5", "sight": "Shibuya"}
 ARROWS = {"name": "X10 600", "shaft_model": "Easton X10", "spine": "600", "point_weight": 100, "count": 12}
@@ -116,10 +120,22 @@ def test_unused_equipment_can_be_deleted_but_used_equipment_cannot(client_for, c
     client = client_for(club["archer1"])
     bow = create(client, {"url": "/api/bows/", "payload": BOW})
     other = create(client, {"url": "/api/bows/", "payload": BOW}, name="Spare")
-    client.post("/api/setups/", {"bow_revision": bow["revision"]}, format="json")
+    setup = client.post("/api/setups/", {"bow_revision": bow["revision"]}, format="json").data["id"]
+    TrainingSession.objects.create(id=uuid.uuid4(), owner=club["archer1"], started_at=timezone.now(), setup_id=setup)
     assert client.delete(f"/api/bows/{bow['id']}/").status_code == 409
     assert Bow.objects.filter(pk=bow["id"]).exists()
     assert client.delete(f"/api/bows/{other['id']}/").status_code == 204
+
+
+def test_a_setup_no_session_uses_does_not_block_deleting_the_gear(client_for, club):
+    client = client_for(club["archer1"])
+    bow = create(client, {"url": "/api/bows/", "payload": BOW})
+    arrows = create(client, {"url": "/api/arrow-sets/", "payload": ARROWS})
+    body = {"bow_revision": bow["revision"], "arrow_set_revision": arrows["revision"]}
+    client.post("/api/setups/", body, format="json")
+    assert client.delete(f"/api/arrow-sets/{arrows['id']}/").status_code == 204
+    assert client.delete(f"/api/bows/{bow['id']}/").status_code == 204
+    assert Setup.objects.count() == 0
 
 
 @pytest.fixture

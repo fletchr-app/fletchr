@@ -1480,6 +1480,8 @@ export interface components {
             last_session: components["schemas"]["LastSession"] | null;
             /** @description Arrows shot in sessions started in the last 7 days */
             arrows_7d: number;
+            /** @description Empty if there is no picture or the viewer may not see it; opens for an hour */
+            avatar_url: string;
         };
         ArrowOffset: {
             /** @description The number on the arrow */
