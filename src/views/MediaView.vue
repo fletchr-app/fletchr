@@ -192,6 +192,20 @@ async function chooseSource() {
   await sheet.present()
 }
 
+// Opened with the plus of the archer page: the choice of the source comes up at once, once it is known whether video is allowed.
+if (route.query.add) {
+  let shown = false
+  watch(
+    () => consent.loading.value,
+    (loading) => {
+      if (loading || shown) return
+      shown = true
+      void chooseSource()
+    },
+    { immediate: true },
+  )
+}
+
 async function add(source: PickSource) {
   adding.value = true
   addError.value = null

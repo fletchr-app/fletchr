@@ -13,7 +13,8 @@ import { pickMedia } from '@/lib/pick-media'
 
 // The picture of a person, with the buttons to take, choose or remove it. `archer` is the profile of an archer without
 // an account that a coach keeps; without it the picture is the signed-in person's own.
-const props = defineProps<{ name: string; url: string; allowed: boolean; archer?: { teamId: number; userId: number } }>()
+// `bare`: nothing is drawn but the error; the screen shows the picture itself and calls `choose` from a menu.
+const props = defineProps<{ name: string; url: string; allowed: boolean; archer?: { teamId: number; userId: number }; bare?: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
 
 const { t } = useI18n()
@@ -33,6 +34,8 @@ async function choose() {
   })
   await sheet.present()
 }
+
+defineExpose({ choose })
 
 async function set(source: 'photo' | 'gallery') {
   busy.value = true
@@ -74,10 +77,12 @@ async function remove() {
 
 <template>
   <div class="d-flex flex-column align-items-center gap-2">
-    <AppAvatar :name="name" :url="allowed ? url : ''" :size="96" />
-    <AppButton v-if="allowed" secondary :busy="busy" @click="choose">{{ url ? $t('avatar.change') : $t('avatar.add') }}</AppButton>
-    <div v-else class="muted text-center">{{ $t('avatar.needsConsent') }}</div>
-    <div class="faint text-center">{{ archer ? $t('avatar.whoSeesArcher') : $t('avatar.whoSees') }}</div>
+    <template v-if="!bare">
+      <AppAvatar :name="name" :url="allowed ? url : ''" :size="96" />
+      <AppButton v-if="allowed" secondary :busy="busy" @click="choose">{{ url ? $t('avatar.change') : $t('avatar.add') }}</AppButton>
+      <div v-else class="muted text-center">{{ $t('avatar.needsConsent') }}</div>
+      <div class="faint text-center">{{ archer ? $t('avatar.whoSeesArcher') : $t('avatar.whoSees') }}</div>
+    </template>
     <ErrorText :message="error" />
   </div>
 </template>
