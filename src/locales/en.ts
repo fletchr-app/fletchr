@@ -321,12 +321,8 @@ export default {
     unset: 'Session',
   },
   home: {
-    hello: 'Hello {name}',
     noTeam: 'You are not in a team yet. Under Settings you can join one with an invite code, or create your own.',
     yourTeams: 'Your teams',
-    thisWeek: 'This week',
-    arrowsShot: 'Arrows shot, scored or not.',
-    lastSession: 'Last session',
     noSessions: 'You have not logged a session yet.',
   },
   team: {
@@ -867,6 +863,7 @@ export default {
     },
   },
   profile: {
+    offlineEvaluations: 'Evaluations need a connection.',
     title: 'Profile',
   },
   avatar: {

@@ -1,37 +1,27 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
 import { playCircleOutline } from 'ionicons/icons'
-import { computed } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 import ErrorText from '@/components/ErrorText.vue'
 import SectionLink from '@/components/SectionLink.vue'
-import { useAuth } from '@/composables/useAuth'
-import { useRemote } from '@/composables/useRemote'
+import type { Tile } from '@/lib/profile'
 
-const SHOWN = 6
-
-// The latest photos and clips of an archer, newest first; the media page has the rest.
-const props = defineProps<{ archerId: number; name: string }>()
-const { api } = useAuth()
-const media = useRemote(async () => (await api.GET('/api/media/', { params: { query: { owner: props.archerId } } })).data ?? null)
-const latest = computed(() => (media.data.value ?? []).slice(0, SHOWN))
+// The latest photos and clips, newest first; the media page has the rest.
+defineProps<{ tiles: Tile[]; loaded: boolean; error: string | null; to?: RouteLocationRaw; add?: RouteLocationRaw }>()
 </script>
 
 <template>
   <div class="d-flex flex-column gap-2">
     <div class="d-flex align-items-center justify-content-between">
       <h2 class="h5 m-0">{{ $t('archer.latestPhotos') }}</h2>
-      <SectionLink
-        :add="`/media?owner=${archerId}&name=${encodeURIComponent(name)}&add=1`"
-        :add-label="$t('media.add')"
-        :to="latest.length ? `/media?owner=${archerId}&name=${encodeURIComponent(name)}` : undefined"
-      />
+      <SectionLink :add="add" :add-label="$t('media.add')" :to="to" />
     </div>
-    <ErrorText :message="media.error.value" />
-    <div v-if="media.data.value && latest.length === 0">{{ $t('media.empty') }}</div>
+    <ErrorText :message="error" />
+    <div v-if="loaded && tiles.length === 0">{{ $t('media.empty') }}</div>
     <div v-else class="grid">
-      <router-link v-for="m in latest" :key="m.id" :to="{ path: `/media/${m.id}`, query: { owner: String(archerId) } }" class="cell">
-        <img :src="m.thumbnail_url" alt="" loading="lazy" />
+      <router-link v-for="m in tiles" :key="m.id" :to="m.to" class="cell">
+        <img v-if="m.src" :src="m.src" alt="" loading="lazy" />
         <IonIcon v-if="m.kind === 'video'" :icon="playCircleOutline" class="play" />
       </router-link>
     </div>
