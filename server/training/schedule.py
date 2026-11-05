@@ -115,6 +115,11 @@ def resolve_event(event_id, slot_id=None, day=None, allowed=None, member=None):
         if member is not None and member(team):
             raise ValidationError({"event": gettext("You cannot link this to that training")})
         raise ValidationError({"event": gettext("No such event")})
+    if event is None and not is_occurrence(slot, day):
+        # The slot ended or pauses on that day since the phone saw it. Said on `event` too: a phone uploads the row
+        # again without the link when its event is refused.
+        message = gettext("The slot has no training on this date")
+        raise ValidationError({"event": message, "date": message})
     return event or materialise(slot, day)
 
 

@@ -413,6 +413,8 @@ export default {
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
     nothingThisDay: 'Nothing on this day.',
+    savedAsOf: 'Saved on this phone, as of {time}. Changes need a connection.',
+    notOnPhone: 'This month is not saved on the phone. The phone keeps a month back and three months ahead.',
   },
   event: {
     kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },

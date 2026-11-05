@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { type AgendaItem, eventTitle, fromLocalInput, groupByDay, itemKey, newEventTimes, preselected, suggestEvents, toLocalInput } from './schedule.ts';
+import { type AgendaItem, eventTitle, fromLocalInput, groupByDay, itemKey, linkOf, newEventTimes, preselected, suggestEvents, toLocalInput } from './schedule.ts';
 
 const item = (id: string, start: string, end: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
   id, virtual: true, slot: 's', date: '2026-10-21', team: 1, team_name: 'Team A', kind: 'training', name: '', start, end, location: '', time_zone: 'Europe/Berlin', cancelled: false, ...extra,
@@ -20,6 +20,12 @@ test('a session with an end is suggested when the two spans overlap, not when th
   assert.equal(suggestEvents([squad], '2026-10-21T17:00:00Z', '2026-10-21T18:30:00Z').length, 1);
   assert.equal(suggestEvents([squad], '2026-10-21T15:00:00Z', '2026-10-21T16:00:00Z').length, 0);
   assert.equal(suggestEvents([squad], '2026-10-21T17:30:00Z', '2026-10-21T19:00:00Z').length, 0);
+});
+
+test('a training from the copy on the phone that is no row yet links with its slot and date', () => {
+  const [suggested] = suggestEvents([squad], '2026-10-21T16:30:00Z');
+  assert.deepEqual(linkOf(suggested!), { id: 'squad', slot: 's', date: '2026-10-21', name: '', kind: 'training', start: squad.start, team: 1, team_name: 'Team A' });
+  assert.equal(linkOf({ ...squad, virtual: false, slot: null, date: null }).slot, null);
 });
 
 test('a cancelled training is not suggested', () => {

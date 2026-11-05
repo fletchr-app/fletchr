@@ -21,7 +21,7 @@ const plugin = {
   createChannel: vi.fn(),
 };
 let onRegistration: (token: { value: string }) => void = () => {};
-let setBeforeSignOut: (hook: () => Promise<void>) => void = () => {};
+let addBeforeSignOut: (hook: () => Promise<void>) => void = () => {};
 let signOutHook: (() => Promise<void>) | null = null;
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => true } }));
@@ -44,9 +44,9 @@ vi.mock('vue-router', () => ({ useRouter: () => ({}) }));
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({ api: { PUT, DELETE, GET, PATCH }, status: authStatus, userId: ref('7') }),
   authReady: async () => {},
-  setBeforeSignOut: (hook: () => Promise<void>) => {
+  addBeforeSignOut: (hook: () => Promise<void>) => {
     signOutHook = hook;
-    setBeforeSignOut(hook);
+    addBeforeSignOut(hook);
   },
 }));
 vi.mock('@/composables/useServer', () => ({ useServer: () => ({ isOverride }), useServerPush: () => serverPush }));

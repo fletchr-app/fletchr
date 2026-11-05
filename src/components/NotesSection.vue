@@ -7,6 +7,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
+import { useScheduleCache } from '@/composables/useScheduleCache'
 import { noteLink } from '@/lib/media-notes'
 import type { EventLink } from '@/lib/schedule'
 import { computed, watch } from 'vue'
@@ -18,7 +19,7 @@ const REFRESH_MS = 10000
 // write new ones (coach only unless they choose otherwise); an archer sees the notes shared with them.
 const props = withDefaults(defineProps<{ archerId: number; sessionId?: string; ends?: { id: string; index: number }[]; event?: EventLink | null }>(), { ends: () => [] })
 
-const { api, userId, isLocal } = useAuth()
+const { userId, isLocal } = useAuth()
 // Your own training: you write private notes for yourself, no team involved.
 const own = computed(() => props.archerId === Number(userId.value))
 const router = useRouter()
@@ -37,7 +38,9 @@ const notes = useRemote(
   async () => (isLocal.value ? [] : library.list({ archer: props.archerId, session: props.sessionId, sessionEvent: props.event?.id })),
   { pollMs: REFRESH_MS, keepPolling: () => !isLocal.value, watch: [isLocal] },
 )
-const teams = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/notes/teams/', { params: { query: { archer: props.archerId } } })).data ?? null)), { watch: [isLocal] })
+// Offline the teams come from the copy of the schedule, so a coach can still write a note about an archer of theirs.
+const { writableTeams } = useScheduleCache()
+const teams = useRemote(async () => (isLocal.value ? [] : await writableTeams(props.archerId)), { watch: [isLocal] })
 // A note written here goes up in the background; when it has, the server's list has it.
 const { uploaded, pendingFor } = useNotes()
 watch(uploaded, notes.reload)

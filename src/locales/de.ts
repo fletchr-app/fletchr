@@ -417,6 +417,8 @@ export default {
     previousMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     nothingThisDay: 'An diesem Tag ist nichts geplant.',
+    savedAsOf: 'Auf dem Telefon gespeichert, Stand {time}. Ändern geht nur mit Verbindung.',
+    notOnPhone: 'Dieser Monat ist nicht auf dem Telefon gespeichert. Das Telefon behält einen Monat zurück und drei Monate voraus.',
   },
   event: {
     kind: { training: 'Trainingstermin', competition: 'Wettkampf', camp: 'Lager' },

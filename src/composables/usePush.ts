@@ -5,7 +5,7 @@ import { toastController } from '@ionic/vue';
 import { computed, effectScope, onBeforeUnmount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { authReady, setBeforeSignOut, useAuth } from '@/composables/useAuth';
+import { authReady, addBeforeSignOut, useAuth } from '@/composables/useAuth';
 import { useLog } from '@/composables/useLog';
 import { useNoteLibrary } from '@/composables/useNoteLibrary';
 import { useServer, useServerPush } from '@/composables/useServer';
@@ -154,7 +154,7 @@ async function start() {
 if (BUILT) {
   void localStore.get(TOKEN_KEY).then((saved) => (token ??= saved));
   void start();
-  setBeforeSignOut(forget);
+  addBeforeSignOut(forget);
   effectScope(true).run(() => {
     void PushNotifications.addListener('registration', ({ value }) => void sendToken(value));
     void PushNotifications.addListener('registrationError', () => {});
