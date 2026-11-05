@@ -231,7 +231,7 @@ export default {
   },
   version: {
     appTooOld: 'Diese App ist zu alt für den Server. Bitte aktualisiere die App: Manches funktioniert vielleicht nicht oder wird nicht richtig gespeichert.',
-    serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
+    serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert, und eine Notiz mit Zeichnung aber ohne Text wird womöglich abgelehnt. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
   },
   media: {
     offlineList: 'Keine Verbindung. Das hat das Telefon gespeichert: nur kleine Bilder, Videos und ganze Fotos brauchen eine Verbindung.',
@@ -810,6 +810,7 @@ export default {
     team: 'Team',
     add: 'Notiz hinzufügen',
     noteEmpty: 'Schreib zuerst etwas.',
+    drawingOnly: 'Zeichnung',
     waitingToUpload: 'wartet auf den Upload',
     refused: 'vom Server abgelehnt',
     takeBack: 'Zurücknehmen',

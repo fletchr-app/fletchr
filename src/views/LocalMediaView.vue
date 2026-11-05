@@ -102,7 +102,7 @@ function remove() {
         <IonButton v-if="isPhoto" fill="outline" expand="block" class="m-0" @click="startDrawing(attached, null)"><IonIcon slot="start" :icon="createOutline" />{{ $t('media.drawPhoto') }}</IonButton>
         <div v-for="n in about" :key="n.uid" class="d-flex flex-column gap-1 py-1">
           <div class="muted">{{ new Date(n.created_at).toLocaleDateString() }}</div>
-          <LocalNoteText :uid="n.uid" :body="n.body">
+          <LocalNoteText :uid="n.uid" :body="n.body" :has-drawing="!!n.drawing">
             <IonButton v-if="isPhoto" fill="clear" size="small" class="m-0" @click="startDrawing(readDrawing(n.drawing).shapes, n.uid)">{{ $t('local.changeDrawing') }}</IonButton>
             <IonButton fill="clear" size="small" class="m-0" @click="notes.remove(n.uid)">{{ $t('local.deleteNote') }}</IonButton>
           </LocalNoteText>

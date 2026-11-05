@@ -86,7 +86,8 @@ const label = computed(() => {
 function add() {
   error.value = null
   const text = body.value.trim()
-  if (!text) return (error.value = t('notes.noteEmpty'))
+  // A drawing says it all: the text may be left out then.
+  if (!text && !props.on?.drawing?.shapes.length) return (error.value = t('notes.noteEmpty'))
   queueNote({
     archer: props.archerId,
     team: own.value ? null : noteTeam.value,

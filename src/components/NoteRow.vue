@@ -35,7 +35,7 @@ const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [not
 const { api } = useAuth()
 const library = useNoteLibrary()
 const editing = ref(false)
-const body = ref(props.note.body)
+const body = ref(props.note.body ?? '')
 // A note about yourself is always private: no choice of readers.
 const own = computed(() => props.note.team === null || props.note.team === undefined)
 const visibility = ref<Visibility>(props.note.visibility ?? 'coach_only')
@@ -106,7 +106,8 @@ const remove = () =>
       <AppButton @click="save">{{ $t('common.save') }}</AppButton>
       <AppButton secondary @click="editing = false">{{ $t('common.cancel') }}</AppButton>
     </template>
-    <div v-else style="white-space: pre-wrap">{{ note.body }}</div>
+    <div v-else-if="note.body" style="white-space: pre-wrap">{{ note.body }}</div>
+    <div v-else-if="note.drawing" class="muted">{{ $t('notes.drawingOnly') }}</div>
     <div v-if="linked && !editing" class="muted">{{ $t('event.linked', { name: eventTitleText, date: new Date(linked.start!).toLocaleDateString() }) }}</div>
     <button v-if="picture && isPhoto && note.picture" type="button" class="photo" :aria-label="$t('notes.openPhoto')" @click="emit('open', note)">
       <DrawnPicture :src="note.picture.thumbnail_url" :width="note.picture.width" :height="note.picture.height" :shapes="drawnShapes([note])" />

@@ -26,6 +26,28 @@ def test_a_drawing_on_a_photo_is_accepted(api, club):
     assert res.data["picture"]["kind"] == "photo" and "/thumbnail/?token=" in res.data["picture"]["thumbnail_url"]
 
 
+def test_a_drawing_needs_no_text(api, club):
+    photo = give(club["archer1"], "photo")
+    res = photo_note(api, club, photo, body="  ", drawing=DRAWING)
+    assert res.status_code == 201, res.data
+    assert res.data["body"] == ""
+    # the text can be left out altogether
+    body = {"archer": club["archer1"].pk, "media": str(give(club["archer1"], "photo").pk), "drawing": DRAWING}
+    assert api("coach").post("/api/notes/", body, format="json").status_code == 201
+
+
+def test_a_note_needs_text_or_a_drawing(api, club):
+    photo = give(club["archer1"], "photo")
+    assert photo_note(api, club, photo, body="  ").status_code == 400
+    assert photo_note(api, club, photo, body="", drawing=None).status_code == 400
+    # a drawing cannot be taken from a note that has no text, nor the text from one that has no drawing
+    note = photo_note(api, club, photo, body="", drawing=DRAWING).data["id"]
+    assert api("coach").patch(f"/api/notes/{note}/", {"drawing": None}, format="json").status_code == 400
+    assert api("coach").patch(f"/api/notes/{note}/", {"body": "Now with text"}, format="json").status_code == 200
+    assert api("coach").patch(f"/api/notes/{note}/", {"drawing": None}, format="json").status_code == 200
+    assert api("coach").patch(f"/api/notes/{note}/", {"body": ""}, format="json").status_code == 400
+
+
 def test_a_photo_you_cannot_see_is_refused_like_one_that_does_not_exist(api, club):
     photo = give(club["b_archer"], "photo")
     for about in ("b_archer", "archer1"):
