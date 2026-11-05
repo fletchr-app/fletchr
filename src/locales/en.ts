@@ -130,6 +130,9 @@ export default {
     deleteNote: 'Delete note',
     changeNote: 'Change note',
   },
+  connection: {
+    lost: 'No connection to the server. What you do is saved on this phone and goes up when the connection is back.',
+  },
   sync: {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',
     failed: '{n} item was refused by the server: {error} | {n} items were refused by the server: {error}',

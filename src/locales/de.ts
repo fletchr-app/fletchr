@@ -134,6 +134,9 @@ export default {
     deleteNote: 'Notiz löschen',
     changeNote: 'Notiz ändern',
   },
+  connection: {
+    lost: 'Keine Verbindung zum Server. Was du eingibst, wird auf dem Handy gespeichert und hochgeladen, sobald die Verbindung wieder da ist.',
+  },
   sync: {
     waiting: '{n} Eintrag wartet auf den Upload. Auf diesem Gerät gespeichert, wird er hochgeladen, sobald eine Verbindung besteht. | {n} Einträge warten auf den Upload. Auf diesem Gerät gespeichert, werden sie hochgeladen, sobald eine Verbindung besteht.',
     failed: '{n} Eintrag wurde vom Server abgelehnt: {error} | {n} Einträge wurden vom Server abgelehnt: {error}',

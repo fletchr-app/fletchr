@@ -1,6 +1,7 @@
 import createClient, { type Middleware } from 'openapi-fetch';
 
 import type { paths } from '@/lib/api-types';
+import { reachedServer } from '@/lib/connection';
 import { expiresAt } from '@/lib/jwt';
 import { loadTokens, saveTokens, type Tokens } from '@/lib/token-storage';
 
@@ -22,8 +23,20 @@ export class AuthSession {
   constructor(
     readonly url: string,
     language: () => string = () => 'en',
+    /** Told after every request whether the server answered (the banner without a connection). */
+    onReachable: (reached: boolean) => void = () => {},
   ) {
     this.api = createClient<paths>({ baseUrl: url });
+    const reach: Middleware = {
+      // Nothing is returned: a returned value would replace the response.
+      onResponse: ({ response }) => {
+        onReachable(reachedServer(response.status));
+      },
+      // No answer at all: no network, a stopped server, a timeout. The error goes on to the caller as before.
+      onError: () => {
+        onReachable(false);
+      },
+    };
     const auth: Middleware = {
       onRequest: async ({ request, schemaPath }) => {
         if (PUBLIC_PATHS.includes(schemaPath)) return;
@@ -39,6 +52,7 @@ export class AuthSession {
         return request;
       },
     };
+    this.api.use(reach);
     this.api.use(lang);
     this.api.use(auth);
     void loadTokens(url).then((tokens) => this.update({ loaded: true, tokens }, false));
