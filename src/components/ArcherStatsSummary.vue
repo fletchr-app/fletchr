@@ -1,35 +1,24 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+
 import ErrorText from '@/components/ErrorText.vue'
 import SectionLink from '@/components/SectionLink.vue'
-import { useAuth } from '@/composables/useAuth'
-import { useRemote } from '@/composables/useRemote'
+import type { StatsResult } from '@/lib/stats'
 
-const WEEKS = 1
-
-const timeZone = () => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-  } catch {
-    return 'UTC'
-  }
-}
-
-// The arrows an archer shot this week, this month and in total; the statistics page has the weekly chart and the scores.
-const props = defineProps<{ archerId: number; name: string }>()
-const { api } = useAuth()
-const stats = useRemote(async () => (await api.GET('/api/stats/', { params: { query: { owner: props.archerId, tz: timeZone(), weeks: WEEKS } } })).data ?? null)
+// The arrows shot this week, this month and in total; the statistics page has the weekly chart and the scores.
+defineProps<{ volume: StatsResult['volume'] | null; error: string | null; to?: RouteLocationRaw }>()
 </script>
 
 <template>
   <div class="d-flex flex-column gap-2">
     <div class="d-flex align-items-center justify-content-between">
       <h2 class="h5 m-0">{{ $t('stats.title') }}</h2>
-      <SectionLink v-if="stats.data.value?.volume.total" :to="`/archers/${archerId}/stats?name=${encodeURIComponent(name)}`" />
+      <SectionLink :to="to" />
     </div>
-    <ErrorText :message="stats.error.value" />
-    <template v-if="stats.data.value">
+    <ErrorText :message="error" />
+    <template v-if="volume">
       <div class="d-flex gap-3">
-        <div v-for="tile in [[$t('stats.thisWeek'), stats.data.value.volume.this_week], [$t('stats.thisMonth'), stats.data.value.volume.this_month], [$t('stats.allTime'), stats.data.value.volume.total]]" :key="tile[0]" class="flex-fill">
+        <div v-for="tile in [[$t('stats.thisWeek'), volume.this_week], [$t('stats.thisMonth'), volume.this_month], [$t('stats.allTime'), volume.total]]" :key="tile[0]" class="flex-fill">
           <div class="muted">{{ tile[0] }}</div>
           <div class="fs-2 fw-semibold">{{ tile[1] }}</div>
         </div>
