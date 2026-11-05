@@ -2,6 +2,7 @@
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue'
 
 import BrandMark from '@/components/BrandMark.vue'
+import ConnectionBanner from '@/components/ConnectionBanner.vue'
 
 // One screen: app bar with back button and title, and the content below. `fixed` is for a screen
 // that must not scroll (it sizes itself to the space it gets); `back` false for the tab screens. Those show the
@@ -19,6 +20,7 @@ withDefaults(defineProps<{ title: string; back?: boolean; backHref?: string; fix
         <IonTitle>{{ title }}</IonTitle>
         <IonButtons v-if="$slots.actions" slot="end"><slot name="actions" /></IonButtons>
       </IonToolbar>
+      <ConnectionBanner />
     </IonHeader>
     <IonContent :scroll-y="!fixed">
       <slot />

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onIonViewWillEnter } from '@ionic/vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import AppPage from '@/components/AppPage.vue'
 import ArcherProfile from '@/components/ArcherProfile.vue'
 import AvatarEditor from '@/components/AvatarEditor.vue'
 import ProfileMenu from '@/components/ProfileMenu.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useConnection } from '@/composables/useConnection'
 import { useOnReconnect } from '@/composables/useOnReconnect'
 import { useOwnProfile } from '@/composables/useProfile'
 
@@ -24,6 +25,9 @@ onIonViewWillEnter(() => {
 })
 // A load that failed offline is tried again when the connection returns or the app comes back.
 useOnReconnect(() => data.reload())
+// The server itself can come back without the phone's network changing (a restart, a stopped proxy): the banner's check finds out.
+const { reachable } = useConnection()
+watch(reachable, (now, before) => now && !before && data.reload())
 </script>
 
 <template>
