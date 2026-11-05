@@ -548,7 +548,7 @@ async function moveTo(session: string | null) {
         </div>
         <button v-if="choosing" type="button" class="use" @click="useFrame">{{ $t('evaluations.useFrame', { n: frame + 1 }) }}</button>
       </template>
-      <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body }}</button>
+      <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body || $t('notes.drawingOnly') }}</button>
       <template v-if="clip?.kind === 'video' && videoUrl">
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
         <div v-if="!drawing" ref="tape" class="tape" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">

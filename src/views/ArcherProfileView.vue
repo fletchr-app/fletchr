@@ -127,7 +127,7 @@ const consent = computed(() => {
         </div>
         <div v-if="latestNote" class="note">
           <div class="muted">{{ new Date(latestNote.created_at).toLocaleDateString() }}</div>
-          <div class="clamp">{{ latestNote.body }}</div>
+          <div class="clamp">{{ latestNote.body || $t('notes.drawingOnly') }}</div>
         </div>
         <div v-else-if="notes.data.value">{{ $t('archer.noNotes') }}</div>
       </div>

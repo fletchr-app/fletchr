@@ -53,3 +53,9 @@ test('imported notes are added once, the device keeps its own version of a note 
   const s = run({ type: 'add', note: note('a', { body: 'mine' }) }, { type: 'imported', notes: [note('a', { body: 'file' }), note('c')] });
   assert.deepEqual(s.notes.map((n) => [n.uid, n.body]), [['a', 'mine'], ['c', 'Watch the bow arm']]);
 });
+
+test('a note with a drawing may have no text, also after an edit', () => {
+  const drawing = { v: 1 as const, shapes: [{ t: 'line' as const, p: [[0, 0], [1, 1]] as [number, number][] }] };
+  const s = run({ type: 'add', note: note('a', { media: 'm1', body: '', drawing }) }, { type: 'edit', uid: 'a', patch: { body: '' } });
+  assert.deepEqual([s.notes[0].body, s.notes[0].drawing], ['', drawing]);
+});

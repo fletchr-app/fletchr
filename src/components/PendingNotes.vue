@@ -17,11 +17,11 @@ const pending = computed(() => pendingFor({ archer: props.archerId, session: pro
 <template>
   <div v-for="n in pending" :key="n.uid" class="d-flex flex-column gap-1 py-1">
     <div class="muted">{{ new Date(n.created_at).toLocaleDateString() }}{{ isLocal ? '' : ` · ${n.error ? $t('notes.refused') : $t('notes.waitingToUpload')}` }}</div>
-    <LocalNoteText v-if="isLocal" :uid="n.uid" :body="n.body">
+    <LocalNoteText v-if="isLocal" :uid="n.uid" :body="n.body" :has-drawing="!!n.drawing">
       <IonButton fill="clear" size="small" class="m-0" @click="remove(n.uid)">{{ $t('local.deleteNote') }}</IonButton>
     </LocalNoteText>
     <template v-else>
-      <div style="white-space: pre-wrap">{{ n.body }}</div>
+      <div style="white-space: pre-wrap">{{ n.body || $t('notes.drawingOnly') }}</div>
       <div v-if="n.error" class="text-danger">{{ n.error }}</div>
       <IonButton fill="clear" size="small" class="m-0 align-self-start" @click="remove(n.uid)">{{ $t('notes.takeBack') }}</IonButton>
     </template>

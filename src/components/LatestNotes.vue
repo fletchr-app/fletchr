@@ -18,7 +18,7 @@ const { data } = useRemote(() => library.list({ archer: props.userId, visibility
     <div class="fw-semibold">{{ $t('notes.fromCoaches') }}</div>
     <div v-for="note in data.slice(0, SHOWN)" :key="note.id">
       <div class="muted">{{ note.author_name }} · {{ new Date(note.created_at).toLocaleDateString() }}</div>
-      <div>{{ note.body }}</div>
+      <div>{{ note.body || $t('notes.drawingOnly') }}</div>
     </div>
   </div>
 </template>

@@ -2405,7 +2405,8 @@ export interface components {
             time_ms?: number | null;
             /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
-            body: string;
+            /** @description May be empty when the note has a drawing */
+            body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
             /**
              * Format: uuid
@@ -2454,7 +2455,8 @@ export interface components {
             time_ms?: number | null;
             /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
-            body: string;
+            /** @description May be empty when the note has a drawing */
+            body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
             /**
              * Format: uuid
@@ -2614,6 +2616,7 @@ export interface components {
             time_ms?: number | null;
             /** @description Lines, angles and circles on the photo or frame; see notes/drawing.py for the format */
             drawing?: unknown;
+            /** @description May be empty when the note has a drawing */
             body?: string;
             visibility?: components["schemas"]["NoteVisibilityEnum"];
             /**
