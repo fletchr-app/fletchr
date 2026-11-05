@@ -27,3 +27,7 @@ test('a local owner never shares a key with an account', () => {
 test('the same owner has a different key per store', () => {
   assert.notEqual(storeKey('log', account), storeKey('notes', account));
 });
+
+test('the schedule copy is kept per account like the other stores', () => {
+  assert.equal(storeKey('schedule', account), 'schedule:https://fletchr.example:42');
+});

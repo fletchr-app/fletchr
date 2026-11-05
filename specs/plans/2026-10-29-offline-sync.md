@@ -1,6 +1,6 @@
 # Work offline, sync both ways after reconnecting (#84)
 
-Status: phases 0, 1, 1b, 3 and 4 implemented; phase 2 (shared `useSync`, `/sync` list, optional caches) and phase 5 (equipment pull, optional evaluations) open; not checked on a phone
+Status: phases 0, 1, 1b, 3 and 4 implemented; phase 2 (shared `useSync` dropped, `/sync` list done, team cache needed by #104 Phase 6) and phase 5 (equipment pull, optional evaluations) open; not checked on a phone
 Date: 2026-10-29
 
 ## Scope
@@ -8,7 +8,7 @@ Date: 2026-10-29
 - The conventions of #84 for every synced entity: ids made by the app, repeatable `PUT /<entity>/<uuid>/`, pull with `updated_after` plus tombstones, one shared pull step, one written conflict rule per entity, one place for waiting/failed/conflicting items, server checks access again on upload.
 - Entities, first round: sessions/ends/volume both ways (#82), media both ways with play before upload (#83), notes with drawings queued (#83), equipment, evaluations, team/members/roster as a read-only cache.
 - Phased so the foundation ships first. Local-only mode (#93) needs more than the store: a local user later uploads everything once when they make an account, which is a one-way sync. So #93 needs Phase 1 (store, owner key, app-made ids), Phase 1b (upload path: equipment with app-made revision ids, notes queue, upload order, archer's own notes on the server) and the 410 fix (Phase 0). It does not need the pull step, tombstones, conflict rules, team caches or evaluations.
-- Priority: Phase 0, 1, 1b, 3 (sessions both ways), 4 (media). Phase 2 (pull step) is needed by 3 and 4 but its team caches and Phase 5 evaluations are **optional**: build them only when someone asks (local-only users have neither, and coaches on a range log rather than browse rosters).
+- Priority: Phase 0, 1, 1b, 3 (sessions both ways), 4 (media). Phase 2 (pull step) is needed by 3 and 4. Its team cache was optional and is now needed by [#104 Phase 6](2026-10-30-trainer-session.md#phase-6-offline) (suggesting a training and the agenda without a connection); Phase 5 evaluations stay **optional** (local-only users have neither).
 - Out of scope: a sync engine (as in the issue), statistics offline (server-computed, see Q10), push updates. Scoring on the device for #93 is not in this plan (see Risks).
 
 Markers: **[fact]** checked in the code, **[inferred]** my reading, not checked by running anything, **[check]** verify before relying on it.
@@ -101,13 +101,13 @@ Tests: offline new bow, session with it, both upload in order; revision uid kept
 
 Not covered here, decided in #93: what happens when the account that receives the upload already has data of its own (merge, refuse or ask).
 
-## Phase 2: shared pull step, read-only caches, sync status (pull step required by 3 and 4; caches optional)
+## Phase 2: shared pull step, read-only caches, sync status (pull step required by 3 and 4; team cache needed by #104 Phase 6)
 
 - [~] Not built, decided with Tim on 2026-11-03: the pulls and drains already run per store (`useLog`, `useMedia`, `useNotes`, `useEquipment`, the two libraries) and the conflict runs on a phone held, so a central runner would change working code for no gain a user sees. Revisit if a third place needs the same ordering. Original item: `src/lib/pull.ts` (new, pure): runs registered pull steps in order, each `(api, owner, since) => actions | null`; one `since` per entity in a `sync:<owner>` store. Overlap: asks with `since − 60 s` and applies idempotently (Q9).
 - [~] Not built (see above). `src/composables/useSync.ts` (new): owns the triggers now in `useLog` (sign-in, `appStateChange`, `networkStatusChange`): pull everything, then drain the queues in order (below). `useLog` and `useMedia` register their pull and drain; their own `App`/`Network` listeners go.
 - [~] Not built (see above). Upload order from Phase 1b moves into `useSync`; evaluations go last.
-- [ ] **Optional:** read-only caches: team list, members, roster (`useTeams`, `TeamOverview`, `TeamManageView` sources). Full replace on each pull, no deltas, so lost access removes rows (problem 4). Store `cache:<owner>:<name>`, removed on sign-out. Build when a coach asks for it.
-- [ ] **Optional (with the caches):** `useRemote` gets a `cache` key: show the cached value at once and mark it "as of <time>" when offline. Only for the cached entities, not all 22 files (Q10).
+- [x] **Needed by [#104 Phase 6](2026-10-30-trainer-session.md#phase-6-offline)** (no longer optional, 2026-11-05): read-only team cache. Built there as one `schedule` store (key `schedule:<owner>`, the `<name>:<owner>` form of the other stores, `useScheduleCache`): your teams, the agenda from 31 days back to 88 ahead, and the members of the teams you coach (Q3: id, name, role, `also_shoots`), full replace on each pull, no deltas, so lost access removes rows (problem 4). Removed on sign-out, since it holds other people's names (Q2 here). Roster statistics stay online.
+- [ ] **Optional:** `useRemote` gets a `cache` key: show the cached value at once and mark it "as of <time>" when offline. Only for the cached entities, not all 22 files (Q10). [#104 Phase 6](2026-10-30-trainer-session.md#phase-6-offline) does this for the agenda alone, the way `useNoteLibrary.list` does (server first, the copy when the request fails).
 - [x] (Done 2026-11-03, built and checked on a phone: with a session and a bow waiting offline the banner showed the link, the list showed one entry per kind, and after reconnecting it read "everything is uploaded".) `useSyncStatus` collects the four queues and the conflicts; `SyncBanner` uses it and links to `/sync` (`SyncView.vue`, read-only list by kind, retry and give up for all as in the banner) when more than one kind is involved; locales `sync.*`. Original item: `SyncBanner` becomes the one place: conflicts added to the counts, and a link to a list (`/sync`, new `SyncView.vue`) when more than one kind is involved. Locales `sync.*` in `en.ts` and `de.ts`.
 
 Server: none.
@@ -182,7 +182,7 @@ Tests: equipment edited on a second phone arrives; tombstone removes a deleted b
 - [x] 2. Phase 0 (410 fix), alone and first.
 - [x] 3. Phase 1 (app); its server part can go in the same release or the next.
 - [x] 4. Phase 1b (needs Phase 1 stores and server uids). **#93 can start after this**, plus the scoring check (Risks).
-- [ ] 5. Phase 2 pull step (needs Phase 1 store keys); caches only on demand.
+- [ ] 5. Phase 2 pull step (needs Phase 1 store keys; the central runner was dropped, see Phase 2); the team cache comes with [#104 Phase 6](2026-10-30-trainer-session.md#phase-6-offline).
 - [x] 6. Phase 3 (needs Phase 2 pull step).
 - [x] 7. Phase 4 (needs Phase 2 pull step). Can run beside Phase 3.
 - [ ] 8. Phase 5 equipment pull; evaluations only on demand.

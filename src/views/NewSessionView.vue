@@ -12,7 +12,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import FormField from '@/components/FormField.vue'
 import GearPicker from '@/components/GearPicker.vue'
 import { useAgenda } from '@/composables/useAgenda'
-import { useAuth } from '@/composables/useAuth'
+import { useScheduleCache } from '@/composables/useScheduleCache'
 import { useEquipment } from '@/composables/useEquipment'
 import { useLog } from '@/composables/useLog'
 import { useNumberArrows } from '@/composables/useNumberArrows'
@@ -55,14 +55,14 @@ const choice = computed(() => picked.value ?? defaultChoice(equipment.value, ses
 onMounted(() => void refreshEquipment())
 
 // The training of your team that takes place then, offered with "None". When exactly one overlaps it is preselected;
-// nothing is linked unless you confirm or choose. Without a connection (no schedule) the choice is not shown.
-const { api } = useAuth()
+// nothing is linked unless you confirm or choose. Without a connection the copy of the schedule on the phone is used.
 const { suggest, load: loadAgenda } = useAgenda()
+const { writableTeams } = useScheduleCache()
 // For an archer without an account or one you open a session for: only the teams you may write notes about them in.
 const archerTeams = ref<number[] | null>(null)
 onMounted(() => {
   void loadAgenda()
-  if (archer) void api.GET('/api/notes/teams/', { params: { query: { archer: archer.id } } }).then(({ data }) => (archerTeams.value = data?.map((team) => team.id) ?? null)).catch(() => {})
+  if (archer) void writableTeams(archer.id).then((teams) => (archerTeams.value = teams?.map((team) => team.id) ?? null))
 })
 const eventPicked = ref<EventLink | null | undefined>(undefined)
 const eventTouched = ref(false)

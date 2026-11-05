@@ -9,7 +9,7 @@ import { useTeams } from '@/composables/useTeams'
 
 const { teams, loaded, load } = useTeams()
 
-onIonViewWillEnter(load)
+onIonViewWillEnter(() => void load(false))
 </script>
 
 <template>

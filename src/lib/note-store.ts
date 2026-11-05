@@ -44,6 +44,8 @@ export type NoteAction =
   /** Notes from an exported file: new ones are added, those the device has already are left as they are. */
   | { type: 'imported'; notes: QueuedNote[] }
   | { type: 'failed'; uid: string; error: string }
+  /** The server refused the training of the note: it goes up again without it, in its team. */
+  | { type: 'dropEvent'; uid: string }
   | { type: 'retryFailed' }
   | { type: 'discardFailed' };
 
@@ -67,6 +69,8 @@ export function reduce(state: NotesState, action: NoteAction): NotesState {
     }
     case 'failed':
       return { notes: state.notes.map((n) => (n.uid === action.uid ? { ...n, error: action.error } : n)) };
+    case 'dropEvent':
+      return { notes: state.notes.map((n) => (n.uid === action.uid ? { ...n, event: undefined } : n)) };
     case 'retryFailed':
       return { notes: state.notes.map(({ error: _error, ...n }) => n) };
     case 'discardFailed':

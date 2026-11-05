@@ -206,14 +206,15 @@ async function signInWithGoogle(inviteCode?: string): Promise<GoogleResult> {
   }
 }
 
-// Work that needs the tokens and so has to be done before they go: `usePush` removes the phone from the server here.
-let beforeSignOut: (() => Promise<void>) | null = null;
-export function setBeforeSignOut(hook: () => Promise<void>) {
-  beforeSignOut = hook;
+// Work to do before the tokens and the owner go, one after the other: `usePush` removes the phone from the server, the
+// schedule copy (with the members of the teams you coach) is removed from the phone.
+const beforeSignOut: (() => Promise<void>)[] = [];
+export function addBeforeSignOut(hook: () => Promise<void>) {
+  beforeSignOut.push(hook);
 }
 
 async function signOut(): Promise<void> {
-  await beforeSignOut?.().catch(() => {});
+  for (const hook of beforeSignOut) await hook().catch(() => {});
   const refresh = session.value.getState().tokens?.refresh;
   await enterLocal(); // before the tokens go, so the app never shows a signed-out state and lands on Home
   session.value.setTokens(null);

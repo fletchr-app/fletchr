@@ -74,6 +74,20 @@ def test_a_coach_who_does_not_share_links_their_own_session_and_clip_to_the_even
     assert {x["owner"] for x in seen} == {club["coach"].pk}
 
 
+def test_a_date_that_is_no_longer_a_training_is_refused_on_event(client_for, club, slot):
+    # The phone saw the training, then the slot ended ("change from <date>"): the link is refused on `event`, so the phone
+    # sends the row again without it (sessions, photos and notes alike).
+    slot.valid_until = date(2026, 10, 1)
+    slot.save()
+    session = client_for(club["archer1"]).put(f"/api/sessions/{new_id()}/", {**SESSION, **link(slot)}, format="json")
+    assert session.status_code == 400 and "event" in session.data and "date" in session.data
+    clip = put(client_for(club["archer1"]), photo(**link(slot)))
+    assert clip.status_code == 400 and "event" in clip.data
+    note = write_note(client_for, club, **link(slot))
+    assert note.status_code == 400 and "event" in note.data
+    assert not TrainingEvent.objects.exists()
+
+
 def test_a_stranger_gets_no_such_event(client_for, club, slot):
     res = client_for(club["b_admin"]).put(f"/api/sessions/{new_id()}/", {**SESSION, **link(slot)}, format="json")
     assert res.status_code == 400 and str(res.data["event"][0]) == "No such event"
