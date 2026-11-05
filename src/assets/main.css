@@ -153,5 +153,8 @@ h2.h4,
 .row { display: flex; gap: 12px; }
 .row > .col-6 { flex: 1 1 0; min-width: 0; }
 
+/* The details of the connection banner are plain text with blank lines between the parts. */
+.connection-details .alert-message { white-space: pre-line; }
+
 /* Buttons side by side share the row. */
 .d-flex:not(.flex-column) > ion-button { flex: 1 1 0; min-width: 0; }

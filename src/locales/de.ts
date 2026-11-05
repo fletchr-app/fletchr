@@ -135,7 +135,9 @@ export default {
     changeNote: 'Notiz ändern',
   },
   connection: {
-    lost: 'Keine Verbindung zum Server. Was du eingibst, wird auf dem Handy gespeichert und hochgeladen, sobald die Verbindung wieder da ist.',
+    explain: 'Die App arbeitet solange mit dem, was auf dem Handy gespeichert ist. Was du eingibst, wird hier abgelegt und hochgeladen, sobald der Server wieder erreichbar ist.',
+    nothingWaiting: 'Nichts wartet auf den Upload.',
+    showList: 'Liste anzeigen',
   },
   sync: {
     waiting: '{n} Eintrag wartet auf den Upload. Auf diesem Gerät gespeichert, wird er hochgeladen, sobald eine Verbindung besteht. | {n} Einträge warten auf den Upload. Auf diesem Gerät gespeichert, werden sie hochgeladen, sobald eine Verbindung besteht.',

@@ -131,7 +131,9 @@ export default {
     changeNote: 'Change note',
   },
   connection: {
-    lost: 'No connection to the server. What you do is saved on this phone and goes up when the connection is back.',
+    explain: 'The app keeps working with what is saved on this phone. What you enter is stored here and goes up as soon as the server can be reached again.',
+    nothingWaiting: 'Nothing is waiting to upload.',
+    showList: 'Show the list',
   },
   sync: {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',
