@@ -227,7 +227,7 @@ export default {
   },
   version: {
     appTooOld: 'This app is too old for the server. Please update the app: things may not work, or may not be saved correctly.',
-    serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it. Ask whoever runs the server to update it.',
+    serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it, and a note with a drawing but no text may be refused. Ask whoever runs the server to update it.',
   },
   media: {
     offlineList: 'No connection. This is what the phone has kept: small pictures only, videos and full photos need a connection.',
@@ -802,6 +802,7 @@ export default {
     team: 'Team',
     add: 'Add note',
     noteEmpty: 'Write something first.',
+    drawingOnly: 'Drawing',
     waitingToUpload: 'waiting to upload',
     refused: 'refused by the server',
     takeBack: 'Take back',

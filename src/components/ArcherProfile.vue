@@ -142,7 +142,7 @@ const showNotes = computed(() => !own.value || id.value !== null)
       </div>
       <div v-if="data.latestNote" class="note">
         <div class="muted">{{ data.latestNote.author_name && own ? `${data.latestNote.author_name} · ` : '' }}{{ new Date(data.latestNote.created_at).toLocaleDateString() }}</div>
-        <div class="clamp">{{ data.latestNote.body }}</div>
+        <div class="clamp">{{ data.latestNote.body || $t('notes.drawingOnly') }}</div>
       </div>
       <div v-else-if="data.notesLoaded">{{ $t('archer.noNotes') }}</div>
     </div>
