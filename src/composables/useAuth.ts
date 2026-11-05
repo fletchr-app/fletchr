@@ -10,6 +10,7 @@ import { jwtPayload, userIdOf } from '@/lib/jwt';
 import { beforeRequest, type ClaimGate, type Decision, decide, enter } from '@/lib/claim-flow';
 import type { Tokens } from '@/lib/token-storage';
 import { useServer } from '@/composables/useServer';
+import { reportReachable } from '@/composables/useConnection';
 import { googleErrorKey } from '@/lib/google-errors';
 import { GOOGLE_WEB_CLIENT_ID, googleIdToken } from '@/lib/social-login';
 import { useLocalMode } from '@/composables/useLocalMode';
@@ -20,12 +21,12 @@ export type RegisterBody = components['schemas']['RegisterRequest'];
 const { url, isOverride, setUrl } = useServer();
 
 // A new session per server address, so switching servers signs out.
-const session = shallowRef(new AuthSession(url.value, currentLanguage));
+const session = shallowRef(new AuthSession(url.value, currentLanguage, reportReachable));
 const state = shallowRef(session.value.getState());
 let unsubscribe = session.value.subscribe(() => (state.value = session.value.getState()));
 watch(url, (next) => {
   unsubscribe();
-  session.value = new AuthSession(next, currentLanguage);
+  session.value = new AuthSession(next, currentLanguage, reportReachable);
   state.value = session.value.getState();
   unsubscribe = session.value.subscribe(() => (state.value = session.value.getState()));
 });
