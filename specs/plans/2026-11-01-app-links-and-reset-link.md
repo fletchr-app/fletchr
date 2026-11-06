@@ -1,6 +1,6 @@
 # App Links and a reset link in the mail (#56, #19)
 
-Status: implemented in the app, server and website; **open for Tim**: the Play fingerprints in `assetlinks.json`, publishing the site, `DJANGO_SITE_URL`, a phone test with the Play build.
+Status: implemented in the app, server and website; fingerprints, site and `DJANGO_SITE_URL` done; **open**: a phone test with the Play build.
 Date: 2026-11-01
 
 ## Decisions
@@ -23,9 +23,9 @@ Date: 2026-11-01
 - [x] Server: `SITE_URL`, mail text with the link (English and German), tests
 - [x] Website: `site/reset/index.html`, `.htaccess`, nginx example, SELFHOSTING.md section 7
 - [x] Phone check with the Dev app (`adb shell am start -a android.intent.action.VIEW -d "de.fletchr.app.dev://reset/ABCD1234"`): signed in shows the hint, signed out opens the reset screen on the code step with the code filled in
-- [ ] **Tim**: SHA-256 of the app signing key and of the upload key (Play Console, App integrity) into `site/.well-known/assetlinks.json` (a statement for `de.fletchr.app`; today only the Dev app is listed). Read the certificate of the installed Play build too (`adb shell pm path de.fletchr.app`, pull `base.apk`, `apksigner verify --print-certs`), as with the SHA-1 in `specs/design/accounts.md`
-- [ ] **Tim**: publish the site (`deploy/site.sh`), check `curl -i https://fletchr.de/.well-known/assetlinks.json`, then on the phone `adb shell pm verify-app-links --re-verify de.fletchr.app` and `pm get-app-links de.fletchr.app` (`fletchr.de: verified`)
-- [ ] **Tim**: `DJANGO_SITE_URL=https://fletchr.de` in `deploy/.env.prod` on the server, **after** the reset page is live
+- [x] **Tim**: SHA-256 of the app signing key and of the upload key (Play Console, App integrity) into `site/.well-known/assetlinks.json` (a statement for `de.fletchr.app`; today only the Dev app is listed). Read the certificate of the installed Play build too (`adb shell pm path de.fletchr.app`, pull `base.apk`, `apksigner verify --print-certs`), as with the SHA-1 in `specs/design/accounts.md`
+- [x] **Tim**: publish the site (`deploy/site.sh`), check `curl -i https://fletchr.de/.well-known/assetlinks.json`, then on the phone `adb shell pm verify-app-links --re-verify de.fletchr.app` and `pm get-app-links de.fletchr.app` (`fletchr.de: verified`)
+- [x] **Tim**: `DJANGO_SITE_URL=https://fletchr.de` in `deploy/.env.prod` on the server, **after** the reset page is live
 - [ ] **Tim**: with the Play build: an invite link from a messenger opens the app; a real reset mail in Gmail opens the reset screen with the code, with the app running and closed; with the app uninstalled the link shows the page
 - [ ] Release (new manifest filter, so a new app version), changelog entry
 - [ ] Later: a Play Store button on the pages once the listing is public

@@ -1,6 +1,6 @@
 # Push notifications (#26, #27)
 
-Status: implemented in the server and app; **open for Tim**: Firebase project, keys, privacy pages, Play data safety form, phone test. Not yet built with Firebase.
+Status: implemented in the server and app; Firebase project, keys and privacy pages done; **open**: phone test.
 Date: 2026-11-01
 
 Design: [push-notifications.md](../design/push-notifications.md). Decision: [0010](../adrs/0010-push-via-fcm-http-v1.md).
@@ -38,11 +38,11 @@ Design: [push-notifications.md](../design/push-notifications.md). Decision: [001
 - [x] Design doc, ADR 0010, `SELFHOSTING.md` section 9, indexes
 
 ### Tim
-- [ ] Firebase project (no Analytics), two Android apps, combined `google-services.json` in `android/app/` and as the secret `GOOGLE_SERVICES_JSON_BASE64` in the `release` environment, `VITE_PUSH=1` in the local `.env`. **Before the next release tag**: the workflow fails without the secret
-- [ ] Service account with only "Firebase Cloud Messaging API Admin", JSON key to `deploy/secrets/fcm.json` on the server (chmod 600), `DJANGO_FCM_CREDENTIALS=/run/secrets/fcm.json` in `deploy/.env.prod`, then `update.sh`
-- [ ] Accept the Firebase data processing terms
-- [ ] Play data safety form: device or other IDs, app functionality
-- [ ] Privacy pages (`site/datenschutz`, `site/en/privacy`): the push section, and the sentence about no third-party library that sends data; then `deploy/site.sh`
+- [x] Firebase project (no Analytics), two Android apps, combined `google-services.json` in `android/app/` and as the secret `GOOGLE_SERVICES_JSON_BASE64` in the `release` environment, `VITE_PUSH=1` in the local `.env`. **Before the next release tag**: the workflow fails without the secret
+- [x] Service account with only "Firebase Cloud Messaging API Admin", JSON key to `deploy/secrets/fcm.json` on the server (chmod 600), `DJANGO_FCM_CREDENTIALS=/run/secrets/fcm.json` in `deploy/.env.prod`, then `update.sh`
+- [x] Accept the Firebase data processing terms
+- [x] Play data safety form: device or other IDs, app functionality
+- [x] Privacy pages (`site/datenschutz`, `site/en/privacy`): the push section, and the sentence about no third-party library that sends data; then `deploy/site.sh`
 - [ ] Phone test (below), then a release (new plugin, so a new app version), changelog entry
 
 ### Phone test (Dev app first, then the Play build)
