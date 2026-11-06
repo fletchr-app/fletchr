@@ -54,6 +54,7 @@ Team progress (`TeamProgressView`) reads evaluations only, not sessions **[fact]
 
 - Session screens: a toggle "Coaches can see this session" (on = `coaches`, off = `me`), and a lock mark on private sessions in the lists.
 - Settings: the default for new sessions (account only).
+- Photo or video in no session: the full-screen view has a Me / Coaches choice for the owner, at any time (on the server or still queued on the phone). Without a choice of its own, it shows the default from Settings. A clip in a session shows a line that it follows the session.
 - A session logged offline leaves `visibility` out until the archer changes it, so the server applies the default; the pull takes the server's value. Same pattern as the other optional fields in `log-model.ts`.
 - Coaches see nothing new: private sessions just are not there.
 

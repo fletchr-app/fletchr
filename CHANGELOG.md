@@ -2,6 +2,10 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+- **Who sees a photo or video** (#150): in the full-screen view you can change at any time whether your coaches see a photo or video that is in no session. A clip you set yourself keeps its choice, also after a change in Settings.
+
 ## 0.24.0 (2026-11-06)
 
 - **Start page is your profile** (#143): Home shows the same profile a coach sees of an archer, for yourself. Sessions, equipment, photos and the arrow numbers come from the phone first, so it works offline and without an account. The server adds the picture, evaluations, goals, the latest coach note and your teams.

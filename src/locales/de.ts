@@ -944,7 +944,7 @@ export default {
     profileVisibility: 'Mein Name und mein Bild sehen',
     profileVisibilityOptions: { team: 'Mein Team', coaches: 'Meine Trainer', me: 'Nur ich' },
     profileVisibilityHint: 'Nur Name und Bild, nicht dein Training. Trainer sehen die Namen der Schützen in ihrem Team immer. Braucht eine Verbindung.',
-    trainingVisibilityHint: 'Gilt für neue Trainings und für Fotos und Videos ohne Training, auch die schon vorhandenen: sie folgen alle dieser Einstellung. Ein einzelnes Training änderst du auf seiner Notizen-Seite. Braucht eine Verbindung.',
+    trainingVisibilityHint: 'Gilt für neue Trainings und für Fotos und Videos ohne Training, für die du nichts Eigenes gewählt hast. Was du selbst gewählt hast, bleibt. Ein einzelnes Training änderst du auf seiner Notizen-Seite, ein Foto oder Video in der Vollbildansicht. Braucht eine Verbindung.',
     teams: 'Teams',
     joinTeam: 'Team beitreten',
     createTeam: 'Team anlegen',
@@ -998,6 +998,9 @@ export default {
     sessionToggle: 'Trainer können dieses Training sehen',
     sessionHint: 'Ausgeschaltet bleiben das Training, seine Ergebnisse, Fotos und Videos vor deinen Trainern verborgen. Notizen, die ein Trainer dazu geschrieben hat, sind für ihn dann auch nicht sichtbar, bis du es wieder einschaltest.',
     private: 'Privat, deine Trainer sehen dieses Training nicht',
+    clipLabel: 'Wer dieses Foto oder Video sieht',
+    clipFollowsSession: 'Dieses Foto oder Video folgt seinem Training. Wer das Training sieht, änderst du auf dessen Notizen-Seite.',
+    clipFailed: 'Nicht geändert. Das braucht eine Verbindung.',
   },
   details: {
     title: 'Notizen zum Training',

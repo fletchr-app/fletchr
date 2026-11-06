@@ -3,7 +3,7 @@ import createClient from 'openapi-fetch';
 import { test } from 'vitest';
 
 import type { paths } from './api-types.ts';
-import { afterUpload, drainMedia, mediaForm, type MediaSendResult, moveQueued, type QueuedMedia, renameSession, sendMedia } from './media-queue.ts';
+import { afterUpload, drainMedia, mediaForm, type MediaSendResult, moveQueued, type QueuedMedia, renameSession, sendMedia, setQueuedVisibility } from './media-queue.ts';
 
 const item = (id: string, extra: Partial<QueuedMedia> = {}): QueuedMedia => ({
   id, kind: 'photo', owner: null, session: null, taken_at: '2026-10-24T10:00:00Z', width: 800, height: 600, ...extra,
@@ -228,3 +228,14 @@ test('a training the server refuses is dropped and the clip is sent again withou
   assert.deepEqual(h.log, ['no event a', 'done a']);
   assert.equal(h.queue().length, 0);
 });
+
+test('setQueuedVisibility sets the visibility of one item only', () => {
+  const next = setQueuedVisibility([item('a'), item('b')], 'b', 'coaches')
+  assert.equal(next[0]!.visibility, undefined)
+  assert.equal(next[1]!.visibility, 'coaches')
+})
+
+test('a queued clip with a visibility sends it when it is in no session', () => {
+  const form = mediaForm(item('a', { visibility: 'me', uploaded: true }), null, true)
+  assert.equal(form.get('visibility'), 'me')
+})

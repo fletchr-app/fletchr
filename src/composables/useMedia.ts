@@ -9,8 +9,9 @@ import { useLog } from '@/composables/useLog';
 import { useUploadSettings } from '@/composables/useUploadSettings';
 import { t } from '@/i18n';
 import { loadFiles, removeFiles, saveFiles } from '@/lib/media-files';
+import type { Visibility } from '@/lib/log-model';
 import { storeKey } from '@/lib/store-owner';
-import { afterUpload, drainMedia, type MediaFiles, moveQueued, type QueuedMedia, renameSession, sendMedia } from '@/lib/media-queue';
+import { afterUpload, drainMedia, type MediaFiles, moveQueued, type QueuedMedia, renameSession, sendMedia, setQueuedVisibility } from '@/lib/media-queue';
 import { newId } from '@/lib/uuid';
 
 // Photos and videos waiting to be uploaded, kept on the device like the training log and sent whenever there is a connection.
@@ -107,6 +108,8 @@ const actions = {
   remove,
   /** Queued items go to another session (null: none); an item that is being uploaded right now follows after its upload. */
   move: (ids: string[], session: string | null) => set(moveQueued(items.value, ids, session)),
+  /** A queued clip in no session: who sees it after its upload. */
+  setVisibility: (id: string, visibility: Visibility) => set(setQueuedVisibility(items.value, id, visibility)),
   retryFailed: () => {
     set(items.value.map(({ error: _, ...rest }) => rest));
     void flush();

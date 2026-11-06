@@ -44,6 +44,11 @@ export function moveQueued(items: QueuedMedia[], ids: string[], session: string 
   return items.map((i) => (ids.includes(i.id) ? { ...i, session } : i));
 }
 
+/** The queued item `id` is seen by `visibility` once it is uploaded (it only counts for a clip in no session). */
+export function setQueuedVisibility(items: QueuedMedia[], id: string, visibility: Visibility): QueuedMedia[] {
+  return items.map((i) => (i.id === id ? { ...i, visibility } : i));
+}
+
 /**
  * The upload of `sent` went through. Whatever was sent has reached the server, but the item may have been moved while the
  * request was running: then it stays, as an item that only has to tell the server its session.

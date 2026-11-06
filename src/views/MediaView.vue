@@ -36,6 +36,7 @@ import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useNotes } from '@/composables/useNotes'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
+import { useTrainingVisibility } from '@/composables/useTrainingVisibility'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
@@ -44,6 +45,7 @@ import { prepareImage } from '@/lib/image'
 import { type EventLink, linkOf, preselected } from '@/lib/schedule'
 import { drawnShapes, waitingOnMedia } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
+import type { Visibility } from '@/lib/log-model'
 import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
 import { canRecordVideo, type Picked, pickMedia, type PickSource } from '@/lib/pick-media'
@@ -481,6 +483,41 @@ const taken = (item: Shown | null) => {
   return when ? new Date(when).toLocaleString() : ''
 }
 
+// Who sees a clip that is in no session: the owner can change it at any time. A clip in a session follows the session.
+const { visibility: defaultVisibility } = useTrainingVisibility()
+const chosen = ref<Record<string, Visibility>>({})
+const ownClipOutsideSession = (item: Shown) =>
+  !picking && !item.preparing && sessionOf(item) === null && (item.queued ? (item.queued.owner ?? me.value) === me.value : item.remote?.can_edit === true && item.remote.owner === me.value)
+const visibilityOf = (item: Shown): Visibility => chosen.value[item.key] ?? item.queued?.visibility ?? (item.remote?.visibility as Visibility | null | undefined) ?? defaultVisibility.value
+const visibilityError = ref('')
+const visibilityOptions = computed(() => [
+  { value: 'me' as const, label: t('visibility.me') },
+  { value: 'coaches' as const, label: t('visibility.coaches') },
+])
+async function setVisibility(item: Shown, value: Visibility) {
+  visibilityError.value = ''
+  if (item.queued) {
+    media.setVisibility(item.queued.id, value)
+    chosen.value = { ...chosen.value, [item.key]: value }
+    return
+  }
+  try {
+    const { response } = await api.PUT('/api/media/{media_id}/', {
+      params: { path: { media_id: item.remote!.id } },
+      body: {},
+      bodySerializer: () => {
+        const form = new FormData()
+        form.append('visibility', value)
+        return form
+      },
+    })
+    if (response.ok) chosen.value = { ...chosen.value, [item.key]: value }
+    else visibilityError.value = t('visibility.clipFailed')
+  } catch {
+    visibilityError.value = t('visibility.clipFailed')
+  }
+}
+
 // Moving into a session, one photo from its full-screen view or several selected in the grid.
 const { move } = useMoveMedia()
 const selecting = ref(false)
@@ -598,6 +635,11 @@ function removeSelected() {
           <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
           <ErrorText :message="deleteError" />
           <AppButton v-if="notesButton" secondary @click="openNotes">{{ $t('media.openNotes') }}{{ notesCount > 0 ? ` (${notesCount})` : '' }}</AppButton>
+          <div v-if="viewing && ownClipOutsideSession(viewing)">
+            <ChipGroup :model-value="visibilityOf(viewing)" :label="$t('visibility.clipLabel')" :options="visibilityOptions" @update:model-value="(v) => setVisibility(viewing!, v as Visibility)" />
+            <ErrorText :message="visibilityError" />
+          </div>
+          <div v-else-if="viewing && sessionOf(viewing)" class="faint">{{ $t('visibility.clipFollowsSession') }}</div>
           <AppButton v-if="canMoveViewing" secondary @click="pickerItems = [viewing!]">{{ viewing && sessionOf(viewing) ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}</AppButton>
           <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? (notesCount > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</AppButton>
         </div>
