@@ -69,72 +69,72 @@ Exceptions:
 ## Checklist
 
 ### Server: model and migration
-- [ ] `core/audience.py`: `PROFILE_ACCEPTED = ("me", "coaches", "team")`, `PROFILE_DEFAULT = "team"`, with a comment that `everyone` waits for #77.
-- [ ] `core/models.py`: `Profile.visibility = CharField(max_length=10, choices=audience.CHOICES, default=audience.PROFILE_DEFAULT)` with a comment: who sees name and picture, not training data.
-- [ ] Migration `core/0012_profile_visibility`: `AddField` with default `team`, which fills existing rows [inferred]. No data migration.
-- [ ] `core/transfer.py`: `visibility` into `COPY_FIELDS`.
-- [ ] `privacy/export.py`: `"visibility": profile.visibility` in the `profile` block. `FORMAT_VERSION` stays (a new key only).
+- [x] `core/audience.py`: `PROFILE_ACCEPTED = ("me", "coaches", "team")`, `PROFILE_DEFAULT = "team"`, with a comment that `everyone` waits for #77.
+- [x] `core/models.py`: `Profile.visibility = CharField(max_length=10, choices=audience.CHOICES, default=audience.PROFILE_DEFAULT)` with a comment: who sees name and picture, not training data.
+- [x] Migration `core/0012_profile_visibility`: `AddField` with default `team`, which fills existing rows [inferred]. No data migration.
+- [x] `core/transfer.py`: `visibility` into `COPY_FIELDS`.
+- [x] `privacy/export.py`: `"visibility": profile.visibility` in the `profile` block. `FORMAT_VERSION` stays (a new key only).
 
 ### Server: access
-- [ ] `core/access.py`: `relations_of(viewer) -> dict[int, str]`: one query over the memberships of the viewer's teams, giving the widest relation per user id. Plus `sees_person(relation, profile, is_managed) -> bool`, which holds the table and exceptions above.
-- [ ] Rewrite `can_see_avatar(viewer, person)` on top of these (relation for one person, picture and consent checks, then `sees_person`). Both serializers use the same helpers, which ends the rule drift risk of #79.
-- [ ] `members_visible_to` unchanged: coaches all, archers staff and self.
+- [x] `core/access.py`: `relations_of(viewer) -> dict[int, str]`: one query over the memberships of the viewer's teams, giving the widest relation per user id. Plus `sees_person(relation, profile, is_managed) -> bool`, which holds the table and exceptions above.
+- [x] Rewrite `can_see_avatar(viewer, person)` on top of these (relation for one person, picture and consent checks, then `sees_person`). Both serializers use the same helpers, which ends the rule drift risk of #79.
+- [x] `members_visible_to` unchanged: coaches all, archers staff and self.
 
 ### Server: API
-- [ ] `RosterMemberSerializer(user_id, name, role, avatar_url)` in `core/serializers.py`. `avatar_url` is empty when there is no picture or the viewer may not see it. `name` is never replaced by the email.
-- [ ] `RosterView` (`GET /api/teams/<int:team_id>/roster/`): `get_my_team` (404 for non-members); `TeamMember` of the team, `user__is_managed=False`, `select_related("user__profile")`; filter in Python with `relations_of(request.user)` (one query) and `sees_person`; order by role (admin, coach, archer), then name. The viewer is always in it. Same for coaches (their full list stays `/members/`). Not paginated, like `/members/`. `extend_schema` with a docstring of the rule.
-- [ ] `core/urls.py`: `teams/<int:team_id>/roster/`.
-- [ ] `MemberSerializer.get_email`: `""` unless the viewer is coach or admin in `member.team` (role cached per request, as `get_avatar_url` does now) or it is the viewer themselves. Update the `help_text`: "Empty for an archer without an account, and for viewers who are archers".
-- [ ] `MemberSerializer.get_avatar_url`: use `relations_of` (cached in the context) and `sees_person`.
-- [ ] `ProfileSerializer`: `visibility` in `fields`, `help_text` "Who sees my name and picture: `team`, `coaches` or `me`. `everyone` is refused for now". `validate_visibility` refuses anything not in `PROFILE_ACCEPTED` with `gettext("Not available yet")` (already translated) [check that the DRF choice error and this one do not both fire].
-- [ ] `ArcherView` keeps using `can_see_avatar` (coach-only route, it picks up the new rule).
-- [ ] `training/tests/test_visibility.py`: add `api/teams/<int:team_id>/roster/` to `NO_TRAINING_DATA` (names and pictures, no training data).
-- [ ] `npm run types:api`.
+- [x] `RosterMemberSerializer(user_id, name, role, avatar_url)` in `core/serializers.py`. `avatar_url` is empty when there is no picture or the viewer may not see it. `name` is never replaced by the email.
+- [x] `RosterView` (`GET /api/teams/<int:team_id>/roster/`): `get_my_team` (404 for non-members); `TeamMember` of the team, `user__is_managed=False`, `select_related("user__profile")`; filter in Python with `relations_of(request.user)` (one query) and `sees_person`; order by role (admin, coach, archer), then name. The viewer is always in it. Same for coaches (their full list stays `/members/`). Not paginated, like `/members/`. `extend_schema` with a docstring of the rule.
+- [x] `core/urls.py`: `teams/<int:team_id>/roster/`.
+- [x] `MemberSerializer.get_email`: `""` unless the viewer is coach or admin in `member.team` (role cached per request, as `get_avatar_url` does now) or it is the viewer themselves. Update the `help_text`: "Empty for an archer without an account, and for viewers who are archers".
+- [x] `MemberSerializer.get_avatar_url`: use `relations_of` (cached in the context) and `sees_person`.
+- [x] `ProfileSerializer`: `visibility` in `fields`, `help_text` "Who sees my name and picture: `team`, `coaches` or `me`. `everyone` is refused for now". `validate_visibility` refuses anything not in `PROFILE_ACCEPTED` with `gettext("Not available yet")` (already translated) [check that the DRF choice error and this one do not both fire].
+- [x] `ArcherView` keeps using `can_see_avatar` (coach-only route, it picks up the new rule).
+- [x] `training/tests/test_visibility.py`: add `api/teams/<int:team_id>/roster/` to `NO_TRAINING_DATA` (names and pictures, no training data).
+- [x] `npm run types:api`.
 
 ### App
-- [ ] `App.vue`: Team tab `v-if="status === 'signedIn'"` instead of `isCoach`. Local mode stays without it (status `local`). Keep `isCoach` in `useTeams` for other uses [check where else it is used].
-- [ ] `TeamListView.vue`: for each team, `TeamOverview` when coach or admin, else a new `TeamRoster` card. No teams: "You are not in a team yet" and a "Join a team" button (`/join-team`). Replace `team.notCoach`. Load on `onIonViewWillEnter`, no polling: every fetch signs new picture links, so polling would download the pictures again.
-- [ ] `src/components/TeamRoster.vue`: team name, list of `AppAvatar` + name + role (+ "(you)"), "Schedule" button (`/team/:id/agenda`), "Team" button (`/team/:id`). Empty name: placeholder text. Error from the server shown with `ErrorText` (old server: 404).
-- [ ] `TeamManageView.vue`: for an archer viewer, show the roster list (shared list component) instead of `MembersSection`. For coaches, nothing changes. Archers then no longer depend on `/members/` [inferred].
-- [ ] `MembersSection.vue`: no `· email` when it is empty.
-- [ ] `src/lib/team-admin.ts`: `sortMembers` with `email` optional (roster has none); a Vitest case for that.
-- [ ] `ProfileView.vue`: `ChipGroup` "Who sees my name and picture" (team / coaches / only me) with a hint line, loaded from `/api/me/` and saved with the profile button. Hidden when `/api/me/` has no `visibility` (old server ignores the field and would save nothing quietly).
-- [ ] `AvatarEditor` / `avatar.whoSees`: the text follows the chosen setting (or points to it).
-- [ ] `AGENTS.md`: tab bar "Team" for everybody with an account.
+- [x] `App.vue`: Team tab `v-if="status === 'signedIn'"` instead of `isCoach`. Local mode stays without it (status `local`). Keep `isCoach` in `useTeams` for other uses [check where else it is used].
+- [x] `TeamListView.vue`: for each team, `TeamOverview` when coach or admin, else a new `TeamRoster` card. No teams: "You are not in a team yet" and a "Join a team" button (`/join-team`). Replace `team.notCoach`. Load on `onIonViewWillEnter`, no polling: every fetch signs new picture links, so polling would download the pictures again.
+- [x] `src/components/TeamRoster.vue`: team name, list of `AppAvatar` + name + role (+ "(you)"), "Schedule" button (`/team/:id/agenda`), "Team" button (`/team/:id`). Empty name: placeholder text. Error from the server shown with `ErrorText` (old server: 404).
+- [x] `TeamManageView.vue`: for an archer viewer, show the roster list (shared list component) instead of `MembersSection`. For coaches, nothing changes. Archers then no longer depend on `/members/` [inferred].
+- [x] `MembersSection.vue`: no `· email` when it is empty.
+- [x] `src/lib/team-admin.ts`: `sortMembers` with `email` optional (roster has none); a Vitest case for that.
+- [x] `ProfileView.vue`: `ChipGroup` "Who sees my name and picture" (team / coaches / only me) with a hint line, loaded from `/api/me/` and saved with the profile button. Hidden when `/api/me/` has no `visibility` (old server ignores the field and would save nothing quietly). (Done in Settings instead, see Status.)
+- [x] `AvatarEditor` / `avatar.whoSees`: the text follows the chosen setting (or points to it). (Text points to the Settings option.)
+- [x] `AGENTS.md`: tab bar "Team" for everybody with an account.
 
 ### Texts (`src/locales/en.ts`, `de.ts`)
-- [ ] `profile.visibility` (label), `profile.visibilityTeam` ("Show me to my team" / "Mich meinem Team zeigen"), `profile.visibilityCoaches` ("Show me to my coaches" / "Mich meinen Trainern zeigen"), `profile.visibilityMe` ("Show me only to myself" / "Mich nur mir selbst zeigen"), `profile.visibilityHint` (name and picture only, not training; coaches always see the names of their archers).
-- [ ] `team.noTeam`, `team.joinTeam`, `team.roster` ("Team members" / "Teammitglieder"), `team.noName` placeholder; remove `team.notCoach`.
-- [ ] `avatar.whoSees` and `avatar.whoSeesArcher` updated.
-- [ ] Server: no new `gettext` strings expected [check `test_translations.py` passes].
+- [x] `profile.visibility` (label), `profile.visibilityTeam` ("Show me to my team" / "Mich meinem Team zeigen"), `profile.visibilityCoaches` ("Show me to my coaches" / "Mich meinen Trainern zeigen"), `profile.visibilityMe` ("Show me only to myself" / "Mich nur mir selbst zeigen"), `profile.visibilityHint` (name and picture only, not training; coaches always see the names of their archers).
+- [x] `team.noTeam`, `team.joinTeam`, `team.roster` ("Team members" / "Teammitglieder"), `team.noName` placeholder; remove `team.notCoach`.
+- [x] `avatar.whoSees` and `avatar.whoSeesArcher` updated.
+- [x] Server: no new `gettext` strings expected [check `test_translations.py` passes].
 
 ### Privacy and docs
-- [ ] `site/datenschutz/index.html` and `site/en/privacy/index.html`: in the account and picture items, say who sees the name and picture (the team by default; choose coaches or only yourself on the profile screen; coaches always see their archers' names; email addresses only for coaches and admins of the team). Then `deploy/site.sh` (Tim).
-- [ ] `specs/design/roles-and-access.md`: the picture paragraph replaced by the rule above; one sentence that archers now see each other's name and picture within a team, on purpose (the note the issue puts in `docs/plan.md`); archers see no email addresses.
-- [ ] `specs/design/data-model.md`: `visibility` on profiles; drop "A profile picture is planned, there is no field yet".
-- [ ] `specs/design/screens.md`: Team tab for everybody, roster for archers.
-- [ ] `specs/design/accounts.md`: transfer copies `visibility` (the profile list in "Expensive").
-- [ ] `CHANGELOG.md`; `specs/plans/index.md`; close #80 with a note that "everybody" is deferred to #77.
+- [x] `site/datenschutz/index.html` and `site/en/privacy/index.html`: in the account and picture items, say who sees the name and picture (the team by default; choose coaches or only yourself on the profile screen; coaches always see their archers' names; email addresses only for coaches and admins of the team). Then `deploy/site.sh` (Tim).
+- [x] `specs/design/roles-and-access.md`: the picture paragraph replaced by the rule above; one sentence that archers now see each other's name and picture within a team, on purpose (the note the issue puts in `docs/plan.md`); archers see no email addresses.
+- [x] `specs/design/data-model.md`: `visibility` on profiles; drop "A profile picture is planned, there is no field yet".
+- [x] `specs/design/screens.md`: Team tab for everybody, roster for archers.
+- [x] `specs/design/accounts.md`: transfer copies `visibility` (the profile list in "Expensive").
+- [x] `CHANGELOG.md`; `specs/plans/index.md`; close #80 with a note that "everybody" is deferred to #77.
 
 ## Tests
 
 Server, new `server/core/tests/test_roster.py` (fixture `club` plus a user in no team and a managed profile in team A):
 
-- [ ] Matrix, roster: P = `archer1` with each of the 3 settings x viewers `archer1` (self), `archer2` (teammate), `coach` and `admin` (coaches of P's team), `b_archer` / `b_admin` (other team: 404 for team A's roster), user in no team (404). Listed or not, per the table.
-- [ ] Matrix, picture: the same 3 x viewers on `/api/users/<id>/avatar/` (sign-in header and signed token): 200 or 404, and `avatar_url` empty or set in the roster and in `/members/`.
-- [ ] P = `coach` with each setting: picture for `archer1` and for `admin` per the table; name still in `/members/` for archers (open question 1).
-- [ ] Coaches see the names of archers with `me` in `/members/`, with an empty `avatar_url`.
-- [ ] Managed profile: never in the roster (coach viewer too); its picture is 404 for a teammate archer even with the default `team`; 200 for the coach.
-- [ ] Roster responses have exactly the keys `user_id`, `name`, `role`, `avatar_url` (no email anywhere in the body).
-- [ ] `/members/`: `email` is `""` for every row to an archer viewer, filled for coach and admin viewers, `""` for managed profiles.
-- [ ] Under 18 without consent: hidden from everybody whatever the setting.
-- [ ] Settings: a new user has `team`; `PATCH /api/me/` accepts the three values and refuses `everyone` and junk with 400.
-- [ ] A link signed before a change to `me` stops working (file view checks again).
-- [ ] Query count for the roster with 20 members (`django_assert_max_num_queries`).
-- [ ] Update `test_avatar.py:155` and `:213` ("another archer gets 404"): now it depends on the setting.
-- [ ] `test_teams.py`: archer still sees staff and self in `/members/`, now without emails.
+- [x] Matrix, roster: P = `archer1` with each of the 3 settings x viewers `archer1` (self), `archer2` (teammate), `coach` and `admin` (coaches of P's team), `b_archer` / `b_admin` (other team: 404 for team A's roster), user in no team (404). Listed or not, per the table.
+- [x] Matrix, picture: the same 3 x viewers on `/api/users/<id>/avatar/` (sign-in header and signed token): 200 or 404, and `avatar_url` empty or set in the roster and in `/members/`.
+- [x] P = `coach` with each setting: picture for `archer1` and for `admin` per the table; name still in `/members/` for archers (open question 1).
+- [x] Coaches see the names of archers with `me` in `/members/`, with an empty `avatar_url`.
+- [x] Managed profile: never in the roster (coach viewer too); its picture is 404 for a teammate archer even with the default `team`; 200 for the coach.
+- [x] Roster responses have exactly the keys `user_id`, `name`, `role`, `avatar_url` (no email anywhere in the body).
+- [x] `/members/`: `email` is `""` for every row to an archer viewer, filled for coach and admin viewers, `""` for managed profiles.
+- [x] Under 18 without consent: hidden from everybody whatever the setting.
+- [x] Settings: a new user has `team`; `PATCH /api/me/` accepts the three values and refuses `everyone` and junk with 400.
+- [x] A link signed before a change to `me` stops working (file view checks again).
+- [x] Query count for the roster with 20 members (`django_assert_max_num_queries`).
+- [x] Update `test_avatar.py:155` and `:213` ("another archer gets 404"): now it depends on the setting.
+- [x] `test_teams.py`: archer still sees staff and self in `/members/`, now without emails.
 - [ ] Transfer copies `visibility` (`test_transfer.py`); export has `profile.visibility` (`test_export.py`); `test_transfer_guard.py` passes.
-- [ ] `test_visibility.py` route classification passes.
+- [x] `test_visibility.py` route classification passes.
 
 App (Vitest): `sortMembers` without email. Check on the phone: the Team tab as an archer, as a coach, as someone in no team; no Team tab in local mode; the setting saved and applied (second phone or account).
 

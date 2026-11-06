@@ -1,6 +1,6 @@
 # Work offline, sync both ways after reconnecting (#84)
 
-Status: phases 0, 1, 1b, 3 and 4 implemented; phase 2 (shared `useSync` dropped, `/sync` list done, team cache needed by #104 Phase 6) and phase 5 (equipment pull, optional evaluations) open; not checked on a phone
+Status: phases 0, 1, 1b, 3 and 4 implemented; phase 2 (shared `useSync` dropped, `/sync` list done, team cache built in #104 Phase 6) and phase 5 (equipment pull as the full list; evaluations optional, not built; server deltas only if the list gets too slow) done. Some unticked items below are obsolete for that reason
 Date: 2026-10-29
 
 ## Scope

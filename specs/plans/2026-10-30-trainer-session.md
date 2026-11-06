@@ -1,6 +1,6 @@
 # Team schedule and training events: shared label for sessions, notes and media (#104)
 
-Status: phases 1 to 5 implemented (PR for #104); phase 6 (offline) planned, not started (rewritten 2026-11-05 after a phone test)
+Status: phases 1 to 5 implemented (PR for #104); phase 6 (offline) implemented 2026-11-06 (19929f7, in Unreleased); its checklist below is not ticked yet
 Date: 2026-10-30
 Updated: 2026-10-30 (reworked after the design discussion: events are a shared label, not a shared session); 2026-11-05 (Phase 6 rewritten)
 

@@ -1,6 +1,6 @@
 # A coach links their own session to a team training
 
-Status: implemented on `develop`, not committed, not released (decided 2026-11-02, see "Decisions").
+Status: implemented and released in 0.20.0 (317dc32; decided 2026-11-02, see "Decisions"). Open items below: some tests, the optional hint, and the rollout steps for phones on 0.19.2.
 Date: 2026-11-02
 
 Design: [schedule-and-events.md](../design/schedule-and-events.md), [roles-and-access.md](../design/roles-and-access.md), ADR [0008-events-are-labels.md](../adrs/0008-events-are-labels.md).
@@ -36,31 +36,31 @@ Take option D: a member of a team may link their **own** session, photo or note 
 
 ### Server (hotfix 0.19.3, branch `hotfix/…` from `main` per specs/steering/releasing.md:37)
 
-- [ ] `server/core/access.py`: `can_tag` for `user == archer` returns `TeamMember.objects.filter(team=team, user=archer).exists()`. Remove `shoots_in` (no other caller) and fix the docstring.
-- [ ] `server/training/schedule.py` `resolve_event`: keep "No such event" when the event does not exist **or the caller is not a member of its team** (no probing of other teams). When the caller is a member and `allowed(team)` is false, raise `{"event": gettext("You cannot link this to that training")}` [check wording with Tim]. Pass the caller in (e.g. `member=lambda team: teams_of(user).filter(pk=team.pk).exists()` from `take_event`) instead of guessing inside. Update the docstring.
-- [ ] `server/locale`: extract, add the German text to `translate_de.py` (proposal: "Das kannst du nicht mit diesem Termin verknüpfen"), compile, commit `.mo` (specs/steering/i18n.md:26-33).
-- [ ] Tests, `server/training/tests/test_event_links.py`:
-  - [ ] a coach and an admin without `also_shoots` link their own session to an occurrence (201/200, row made);
-  - [ ] the same for their own clip and their own note;
+- [x] `server/core/access.py`: `can_tag` for `user == archer` returns `TeamMember.objects.filter(team=team, user=archer).exists()`. Remove `shoots_in` (no other caller) and fix the docstring.
+- [x] `server/training/schedule.py` `resolve_event`: keep "No such event" when the event does not exist **or the caller is not a member of its team** (no probing of other teams). When the caller is a member and `allowed(team)` is false, raise `{"event": gettext("You cannot link this to that training")}` [check wording with Tim]. Pass the caller in (e.g. `member=lambda team: teams_of(user).filter(pk=team.pk).exists()` from `take_event`) instead of guessing inside. Update the docstring.
+- [x] `server/locale`: extract, add the German text to `translate_de.py` (proposal: "Das kannst du nicht mit diesem Termin verknüpfen"), compile, commit `.mo` (specs/steering/i18n.md:26-33).
+- [x] Tests, `server/training/tests/test_event_links.py`:
+  - [x] a coach and an admin without `also_shoots` link their own session to an occurrence (201/200, row made);
+  - [x] the same for their own clip and their own note;
   - [ ] after that, another coach still does not see that session (`/api/sessions/`, event `/archers/`, team overview, ranking);
-  - [ ] a non-member still gets "No such event" and no `TrainingEvent` is made (extends `test_only_members_of_the_team_link_to_its_events`);
+  - [x] a non-member still gets "No such event" and no `TrainingEvent` is made (extends `test_only_members_of_the_team_link_to_its_events`);
   - [ ] a coach linking a non-sharing coach's clip or note gets the new message, a non-member coach gets "No such event".
-- [ ] `server/core/tests/test_also_shoots.py`: still green unchanged [check].
-- [ ] `cd server && uv run pytest`.
-- [ ] `npm run types:api`: no schema change expected (no field changes); run it to confirm the diff is empty, or only help text.
-- [ ] No migration.
-- [ ] Docs: schedule-and-events.md:20 and roles-and-access.md:27 (`can_tag`: own rows for every member of the team; `also_shoots` only for sharing and participant lists).
+- [x] `server/core/tests/test_also_shoots.py`: still green unchanged [check].
+- [x] `cd server && uv run pytest`.
+- [x] `npm run types:api`: no schema change expected (no field changes); run it to confirm the diff is empty, or only help text.
+- [x] No migration.
+- [x] Docs: schedule-and-events.md:20 and roles-and-access.md:27 (`can_tag`: own rows for every member of the team; `also_shoots` only for sharing and participant lists).
 
 ### App (0.19.3 together, or the next minor)
 
-- [ ] `src/lib/log-sync.ts` `send`: on 400 with an `event` key in the error for a session PUT that sent an event, return `{ kind: 'withoutEvent' }`; `drain` dispatches a new `dropEvent` action (`event: undefined`, so nothing is sent and the server keeps its value) and goes on, so the session and its ends upload. Mirror `media-queue.ts`.
-- [ ] `src/lib/log-model.ts`: `dropEvent` action, and a flag on the session so the app can say once "The link to <training> was removed: <server message>" [check where: SyncBanner or the session screen].
+- [x] `src/lib/log-sync.ts` `send`: on 400 with an `event` key in the error for a session PUT that sent an event, return `{ kind: 'withoutEvent' }`; `drain` dispatches a new `dropEvent` action (`event: undefined`, so nothing is sent and the server keeps its value) and goes on, so the session and its ends upload. Mirror `media-queue.ts`.
+- [x] `src/lib/log-model.ts`: `dropEvent` action, and a flag on the session so the app can say once "The link to <training> was removed: <server message>" [check where: SyncBanner or the session screen].
 - [ ] Ends of a session whose PUT was refused for the event: covered by the above, since the session op is first in the outbox [check in a test].
-- [ ] `src/lib/note-sync.ts`: no automatic drop [inference: a note can take its team from the event, notes/serializers.py:132-135, so dropping it changes the note's team and who reads it]; the new server message is enough there.
+- [x] `src/lib/note-sync.ts`: no automatic drop [inference: a note can take its team from the event, notes/serializers.py:132-135, so dropping it changes the note's team and who reads it]; the new server message is enough there.
 - [ ] Picker: no change needed for own sessions after the server fix [inference: agenda = your teams, every member may link]. Check `SessionEvent.vue:19` for a session a coach opened for an archer: it passes no `teams`, unlike NewSessionView.vue:73 [check: pass the `note_teams` list there too].
 - [ ] Optional hint for a non-sharing coach (see trade-offs), keys in `src/locales/en.ts` and `de.ts`.
 - [ ] Tests: `src/lib/log-sync.test.ts` (refused event: session resent without `event`, ends follow, other 400s still `failed`), `log-model` reducer test for `dropEvent`.
-- [ ] `npm run type-check`, `npm test`.
+- [x] `npm run type-check`, `npm test`.
 
 ### Rollout and recovery for phones on 0.19.2
 

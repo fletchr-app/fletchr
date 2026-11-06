@@ -25,59 +25,59 @@ Split `ArcherProfileView` into a page shell and one profile component that takes
 
 ### 1. Pure helpers (`src/lib/profile.ts`, no Vue)
 
-- [ ] `currentGear(bows, arrowSets)`: first active bow and arrow set, taking either the device shape (`values`) or the server shape [check the `itemsOf` shape in `equipment-store.ts`]; move `summary()` from `ArcherEquipmentSummary.vue` here (it takes field specs and a label function, returns the "38 lb · Shibuya" parts, no sentences).
-- [ ] `latestTiles(queue, library, n)`: queued first, then the library newest first, no duplicates by id, max `n`; each tile with `src`, `kind`, and the target route (local: `/local-media/:id`; queued clip or library item: `/media/:id`; queued photo signed in: `/media` [check what MediaPlayerView does with a queued photo]).
-- [ ] `sectionLinks(...)`: for each section whether plus and arrow show, from `own`, `isLocal`, `hasAccount`, `count`, `canWrite`. One table, so the "no arrow without content, plus only when allowed" rule is tested once.
-- [ ] Tests `src/lib/profile.test.ts`: gear from both shapes, inactive skipped; tiles merge and order, queued item also in the library shows once; links per mode (own signed in, own local, coach with and without note rights, empty sections).
+- [x] `currentGear(bows, arrowSets)`: first active bow and arrow set, taking either the device shape (`values`) or the server shape [check the `itemsOf` shape in `equipment-store.ts`]; move `summary()` from `ArcherEquipmentSummary.vue` here (it takes field specs and a label function, returns the "38 lb · Shibuya" parts, no sentences).
+- [x] `latestTiles(queue, library, n)`: queued first, then the library newest first, no duplicates by id, max `n`; each tile with `src`, `kind`, and the target route (local: `/local-media/:id`; queued clip or library item: `/media/:id`; queued photo signed in: `/media` [check what MediaPlayerView does with a queued photo]).
+- [x] `sectionLinks(...)`: for each section whether plus and arrow show, from `own`, `isLocal`, `hasAccount`, `count`, `canWrite`. One table, so the "no arrow without content, plus only when allowed" rule is tested once.
+- [x] Tests `src/lib/profile.test.ts`: gear from both shapes, inactive skipped; tiles merge and order, queued item also in the library shows once; links per mode (own signed in, own local, coach with and without note rights, empty sections).
 
 ### 2. Data composables (`src/composables/useProfile.ts`)
 
-- [ ] One return type `ProfileData`: `name`, `avatarUrl`, `profileLine`, `sessionRows`, `gear`, `volume` (`this_week`, `this_month`, `total`), `tiles`, `evaluations`, `goals`, `latestNote`, `teams`, `links`, `errors`, `reload()`.
-- [ ] `useArcherProfile(id)`: today's reads moved out of `ArcherProfileView` and the `Archer*` components, same endpoints and polling. No behaviour change for coaches.
-- [ ] `useOwnProfile()`:
-  - [ ] sessions: the `HomeView` code (`sessionRows(local own, remote, gone, [], undefined, visibility)`), remote skipped in local mode.
-  - [ ] gear from `useEquipment`, volume from `computeStats(fromLog(sessions), now, tz, 1).volume`, watched on `sessions`.
-  - [ ] tiles from `useMedia().items` (own only, `owner` empty or me) and `useMediaLibrary()`; local mode: queue only.
-  - [ ] latest note from `useNoteLibrary().list({ archer: me, visibility: 'shared' })` (works offline); none in local mode.
-  - [ ] `/api/me/`, evaluations and teams only when `status === 'signedIn'`; evaluations fetched once and passed to goals (today `LatestGoals` fetches the same list again).
-  - [ ] Follows `isLocal` and `userId` (sign-in, sign-out, account change): the Home screen stays alive, so nothing is read once in setup. Reload on `onIonViewWillEnter` (not the first) and `useOnReconnect`, as `HomeView` does now.
-- [ ] Tests `src/composables/useProfile.test.ts` (pattern of `usePush.test.ts`, `vi.mock` for `useAuth`, `useLog`, `useEquipment`, `useMedia`, `useMediaLibrary`, `useNoteLibrary`): own + local makes no `api` call and fills sessions, gear, volume, tiles from the mocks; own + signed in offline (api rejects) still fills them; archer source calls the server endpoints with `owner=<id>`. This is the "data source switch" test the issue asks for.
+- [x] One return type `ProfileData`: `name`, `avatarUrl`, `profileLine`, `sessionRows`, `gear`, `volume` (`this_week`, `this_month`, `total`), `tiles`, `evaluations`, `goals`, `latestNote`, `teams`, `links`, `errors`, `reload()`.
+- [x] `useArcherProfile(id)`: today's reads moved out of `ArcherProfileView` and the `Archer*` components, same endpoints and polling. No behaviour change for coaches.
+- [x] `useOwnProfile()`:
+  - [x] sessions: the `HomeView` code (`sessionRows(local own, remote, gone, [], undefined, visibility)`), remote skipped in local mode.
+  - [x] gear from `useEquipment`, volume from `computeStats(fromLog(sessions), now, tz, 1).volume`, watched on `sessions`.
+  - [x] tiles from `useMedia().items` (own only, `owner` empty or me) and `useMediaLibrary()`; local mode: queue only.
+  - [x] latest note from `useNoteLibrary().list({ archer: me, visibility: 'shared' })` (works offline); none in local mode.
+  - [x] `/api/me/`, evaluations and teams only when `status === 'signedIn'`; evaluations fetched once and passed to goals (today `LatestGoals` fetches the same list again).
+  - [x] Follows `isLocal` and `userId` (sign-in, sign-out, account change): the Home screen stays alive, so nothing is read once in setup. Reload on `onIonViewWillEnter` (not the first) and `useOnReconnect`, as `HomeView` does now.
+- [x] Tests `src/composables/useProfile.test.ts` (pattern of `usePush.test.ts`, `vi.mock` for `useAuth`, `useLog`, `useEquipment`, `useMedia`, `useMediaLibrary`, `useNoteLibrary`): own + local makes no `api` call and fills sessions, gear, volume, tiles from the mocks; own + signed in offline (api rejects) still fills them; archer source calls the server endpoints with `owner=<id>`. This is the "data source switch" test the issue asks for.
 
 ### 3. Components
 
-- [ ] `src/components/ArcherProfile.vue`: the body of today's `ArcherProfileView` (cover, initials, profile line, consent, sections), props `data: ProfileData`, `own: boolean`.
-- [ ] Sections take props instead of fetching: `ArcherEquipmentSummary` (gear, link), `ArcherEvaluations` (list, links), `ArcherStatsSummary` (volume, link), `ArcherPhotos` (tiles, links). Latest training and coach note stay inline or become `ProfileTraining.vue` / `ProfileNote.vue` [inference: cleaner, since both differ per source].
-- [ ] `LatestGoals` takes the evaluation list as a prop; placed right after Evaluations (open question 3). `LatestNotes` is no longer used: remove it if nothing else imports it [check].
-- [ ] Own differences:
-  - [ ] Equipment arrow: `/equipment` (editable); plus: none, or `/equipment` new bow [open question 4].
-  - [ ] Latest training plus `/training/new`, arrow `/training` when more than one.
-  - [ ] Evaluations plus `/evaluate?archer=<me>&kind=self` (`evaluations.newSelf` as label), arrow `/archers/<me>/evaluations`. Hidden in local mode.
-  - [ ] Statistics arrow `/stats`.
-  - [ ] Photos plus `/media?add=1`, arrow `/media`.
-  - [ ] Notes: heading `notes.fromCoaches`, read only, no plus; arrow per open question 5. Hidden in local mode.
-  - [ ] Team list as the last section (account only), with `home.noTeam` when there is none.
-  - [ ] `VersionBanner` and the error at the top.
-- [ ] `src/components/ProfileMenu.vue` for the own app bar menu: "Change picture" / "Add picture" (`avatar.change`/`avatar.add`, through `AvatarEditor bare` without `archer`), "Hand, eye, date of birth" to `/profile`. Account only; in local mode no menu [open question 2].
-- [ ] `HomeView.vue`: `AppPage` title per open question 1, `ArcherProfile` with `useOwnProfile()`, `:back="false"` stays.
-- [ ] `ArcherProfileView.vue`: shell with `useArcherProfile(id)` and `ArcherMenu`.
+- [x] `src/components/ArcherProfile.vue`: the body of today's `ArcherProfileView` (cover, initials, profile line, consent, sections), props `data: ProfileData`, `own: boolean`.
+- [x] Sections take props instead of fetching: `ArcherEquipmentSummary` (gear, link), `ArcherEvaluations` (list, links), `ArcherStatsSummary` (volume, link), `ArcherPhotos` (tiles, links). Latest training and coach note stay inline or become `ProfileTraining.vue` / `ProfileNote.vue` [inference: cleaner, since both differ per source].
+- [x] `LatestGoals` takes the evaluation list as a prop; placed right after Evaluations (open question 3). `LatestNotes` is no longer used: remove it if nothing else imports it [check].
+- [x] Own differences:
+  - [x] Equipment arrow: `/equipment` (editable); plus: none, or `/equipment` new bow [open question 4].
+  - [x] Latest training plus `/training/new`, arrow `/training` when more than one.
+  - [x] Evaluations plus `/evaluate?archer=<me>&kind=self` (`evaluations.newSelf` as label), arrow `/archers/<me>/evaluations`. Hidden in local mode.
+  - [x] Statistics arrow `/stats`.
+  - [x] Photos plus `/media?add=1`, arrow `/media`.
+  - [x] Notes: heading `notes.fromCoaches`, read only, no plus; arrow per open question 5. Hidden in local mode.
+  - [x] Team list as the last section (account only), with `home.noTeam` when there is none.
+  - [x] `VersionBanner` and the error at the top.
+- [x] `src/components/ProfileMenu.vue` for the own app bar menu: "Change picture" / "Add picture" (`avatar.change`/`avatar.add`, through `AvatarEditor bare` without `archer`), "Hand, eye, date of birth" to `/profile`. Account only; in local mode no menu [open question 2].
+- [x] `HomeView.vue`: `AppPage` title per open question 1, `ArcherProfile` with `useOwnProfile()`, `:back="false"` stays.
+- [x] `ArcherProfileView.vue`: shell with `useArcherProfile(id)` and `ArcherMenu`.
 
 ### 4. Texts (en and de)
 
-- [ ] Remove keys only Home used: `home.hello`, `home.thisWeek`, `home.arrowsShot`, `home.lastSession` [check no other user with grep]; keep `home.noTeam`, `home.yourTeams`, `home.noSessions`.
-- [ ] New keys as needed, e.g. `profile.offlineEvaluations` ("Evaluations need a connection.") [check wording with Tim], a title for the own menu. Both `src/locales/en.ts` and `de.ts`; `npm test` has the key parity check [check it exists, otherwise compare by hand].
+- [x] Remove keys only Home used: `home.hello`, `home.thisWeek`, `home.arrowsShot`, `home.lastSession` [check no other user with grep]; keep `home.noTeam`, `home.yourTeams`, `home.noSessions`.
+- [x] New keys as needed, e.g. `profile.offlineEvaluations` ("Evaluations need a connection.") [check wording with Tim], a title for the own menu. Both `src/locales/en.ts` and `de.ts`; `npm test` has the key parity check [check it exists, otherwise compare by hand].
 
 ### 5. Docs
 
-- [ ] `specs/design/screens.md`: Home (Archer 1) becomes the own profile; a paragraph "Start page" next to "Archer page (coach)", with the own differences and the offline and local rules; the "Without an account" paragraph updated.
-- [ ] `specs/design/local-mode.md`: Home is the profile without evaluations, notes, picture and team.
-- [ ] This plan's status, and `specs/plans/index.md`.
+- [x] `specs/design/screens.md`: Home (Archer 1) becomes the own profile; a paragraph "Start page" next to "Archer page (coach)", with the own differences and the offline and local rules; the "Without an account" paragraph updated.
+- [x] `specs/design/local-mode.md`: Home is the profile without evaluations, notes, picture and team.
+- [x] This plan's status, and `specs/plans/index.md`.
 
 ### 6. Checks
 
-- [ ] `npm run type-check`, `npm test`.
-- [ ] `cd server && uv run pytest`: no server change, run to confirm.
-- [ ] `npm run types:api`: not needed (no serializer or view change).
-- [ ] No Capacitor plugin: `npx cap sync android` only as part of the normal build.
+- [x] `npm run type-check`, `npm test`.
+- [x] `cd server && uv run pytest`: no server change, run to confirm.
+- [x] `npm run types:api`: not needed (no serializer or view change).
+- [x] No Capacitor plugin: `npx cap sync android` only as part of the normal build.
 - [ ] Phone (Dev app against the :8080 stack): archer, coach, local mode, airplane mode with sessions and photos waiting, sign-out and sign-in while Home is alive in the stack.
 
 ## Risks
