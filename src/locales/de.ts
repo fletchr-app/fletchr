@@ -255,7 +255,7 @@ export default {
     noNotesPhoto: 'Noch keine Notizen zu diesem Foto.',
     notesAfterUpload: 'Wartet auf den Upload. Notizen und Zeichnungen gehen, sobald es hochgeladen ist.',
     notesPhoto: 'Notizen zu diesem Foto',
-    openNotes: 'Notizen',
+    previewOnly: 'Nur die Vorschau ist auf diesem Handy',
     moveToSession: 'In ein Training verschieben',
     moveToOtherSession: 'In ein anderes Training verschieben',
     removeFromSession: 'Aus dem Training nehmen',

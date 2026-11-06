@@ -36,6 +36,15 @@ export function stepped(frame: number, delta: number, total: number): number {
   return clamp(Math.round(frame) + delta, 0, total - 1)
 }
 
+/**
+ * A swipe on the picture: -1 for the one before (finger to the right), 1 for the next (finger to the left), 0 when it
+ * was a tap, too short, too slow or more up and down than sideways.
+ */
+export function swipeStep(dx: number, dy: number, ms: number): -1 | 0 | 1 {
+  if (ms > 600 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return 0
+  return dx < 0 ? 1 : -1
+}
+
 /** Seconds with milliseconds, like the clock of a stopwatch: 1.250. */
 export function clock(seconds: number): string {
   return Math.max(0, seconds).toFixed(3)

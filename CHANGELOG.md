@@ -7,6 +7,7 @@ What changed in each release. The version number and how a release is made: `spe
 - **Who sees a photo or video** (#150): in the full-screen view you can change at any time whether your coaches see a photo or video that is in no session. A clip you set yourself keeps its choice, also after a change in Settings.
 - **Photo and video screens use icons** (#157): in the player and in the viewer of the photo grid, who sees it (eye), move into a training and delete are icons in the app bar instead of big buttons, so the picture gets more room. The player has the "who sees this" choice now too, and deleting asks first.
 - **Deleting a training deletes its notes** (#154): the notes written on the training and its ends, and still on the device, go with it instead of staying behind unseen. Notes on a photo stay with the photo.
+- **One screen for photos and clips** (#159): a photo in the photo grid opens in the player now, like a clip. Swipe left or right on the picture for the next or previous one, photos and clips. The old swipe viewer is gone. A photo that failed while it was prepared shows its error and can be deleted from the grid. An upload error shows in the player. Offline, a photo the phone did not keep shows its preview with a small cloud-off mark. When you choose a frame for an evaluation, photos are dimmed.
 - **Backup screen** (#150): the line "On this phone" counts equipment too (bows and arrow sets are in the backup file).
 
 ## 0.24.0 (2026-11-06)

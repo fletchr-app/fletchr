@@ -251,7 +251,7 @@ export default {
     noNotesPhoto: 'No notes on this photo yet.',
     notesAfterUpload: 'Waiting to upload. Notes and drawings can be added once it is up.',
     notesPhoto: 'Notes on this photo',
-    openNotes: 'Notes',
+    previewOnly: 'Only the preview is on this phone',
     moveToSession: 'Move to session',
     moveToOtherSession: 'Move to another session',
     removeFromSession: 'Remove from session',
