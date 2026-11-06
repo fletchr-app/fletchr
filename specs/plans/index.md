@@ -25,3 +25,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-11-02-coach-session-event-link.md](2026-11-02-coach-session-event-link.md): a coach or admin links their own session, photo or note to a team training without `also_shoots`; distinct error for a refused link; upload fallback that drops a refused link. **implemented, released in 0.20.0**
 - [2026-11-05-start-page-profile.md](2026-11-05-start-page-profile.md): Home becomes the archer profile for every user, own data from the device first, section components with a data source switch (#143). **implemented**
 - [2026-11-06-move-drawing-points.md](2026-11-06-move-drawing-points.md): Move tool for the points of a drawing, loupe while drawing. **implemented, not yet checked on a phone**
+- [2026-11-06-merge-photo-viewer.md](2026-11-06-merge-photo-viewer.md): the grid opens photos in the player, the swipe viewer goes, simple swipe in the player (#159). **plan, decisions open**
