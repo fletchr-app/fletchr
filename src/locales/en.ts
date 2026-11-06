@@ -940,7 +940,7 @@ export default {
     profileVisibility: 'My name and picture are seen by',
     profileVisibilityOptions: { team: 'My team', coaches: 'My coaches', me: 'Only me' },
     profileVisibilityHint: 'Name and picture only, not your training. Coaches always see the names of the archers in their team. Needs a connection.',
-    trainingVisibilityHint: 'Applies to new sessions and to photos and videos that are in no session, including the ones you have already: they all follow it. You can change a session on its notes screen. Needs a connection.',
+    trainingVisibilityHint: 'Applies to new sessions and to photos and videos that are in no session and have no choice of their own. A photo or video you set yourself keeps it. You can change a session on its notes screen and a photo or video in its full-screen view. Needs a connection.',
     teams: 'Teams',
     joinTeam: 'Join a team',
     createTeam: 'Create a team',
@@ -994,6 +994,9 @@ export default {
     sessionToggle: 'Coaches can see this session',
     sessionHint: 'Off keeps the session, its results, photos and videos from your coaches. Notes a coach wrote on it are hidden from them too, until you turn this on again.',
     private: 'Private, your coaches cannot see this session',
+    clipLabel: 'Who can see this photo or video',
+    clipFollowsSession: 'This photo or video follows its training. Change who sees the training on its notes screen.',
+    clipFailed: 'Not changed. This needs a connection.',
   },
   details: {
     title: 'Session notes',
