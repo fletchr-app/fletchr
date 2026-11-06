@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
-import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline, swapHorizontalOutline, trashOutline } from 'ionicons/icons'
+import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -11,8 +11,10 @@ import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
 import MediaEvent from '@/components/MediaEvent.vue'
+import MediaActions from '@/components/MediaActions.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useClipVisibility } from '@/composables/useClipVisibility'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
 import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMedia } from '@/composables/useMedia'
@@ -481,10 +483,10 @@ watch(currentId, () => {
 })
 
 const title = computed(() => (clip.value ? new Date(clip.value.taken_at).toLocaleString() : ''))
-const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
+// Asked by the bin icon (MediaActions), so this only deletes.
 async function remove() {
-  if (!confirmDelete.value) return (confirmDelete.value = true)
+  deleteError.value = null
   if (queuedItem.value) {
     media.remove(currentId.value)
     return router.back()
@@ -494,7 +496,12 @@ async function remove() {
   kept.forget([currentId.value])
   router.back()
 }
-watch(currentId, () => (confirmDelete.value = false))
+
+// Who sees a clip that is in no session: the owner can change it at any time (a clip in a session follows the session).
+const clipVisibility = useClipVisibility()
+const ownOutsideSession = computed(() => !!clip.value?.can_edit && clip.value.owner === Number(userId.value) && !clip.value.session && !choosing.value)
+const shownVisibility = computed(() => (ownOutsideSession.value && clip.value ? clipVisibility.effective(currentId.value, queuedItem.value ? queuedItem.value.visibility : clip.value.visibility) : null))
+const moveLabel = computed(() => (clip.value?.can_edit && !choosing.value ? (clip.value.session ? t('media.moveToOtherSession') : t('media.moveToSession')) : undefined))
 
 // Into a session, or out of it. The notes on the clip go with it (the server moves them).
 const { move: moveMedia } = useMoveMedia()
@@ -512,6 +519,19 @@ async function moveTo(session: string | null) {
 
 <template>
   <AppPage :title="title" fixed back-href="/media">
+    <template #actions>
+      <MediaActions
+        id="player"
+        :visibility="shownVisibility"
+        :follows-session="!!(clip?.session && clip.can_edit)"
+        :move-label="moveLabel"
+        :deletable="!!clip?.can_edit"
+        :notes="notes.data.value?.length ?? 0"
+        @visibility="(v) => clipVisibility.save({ id: currentId, queued: !!queuedItem }, v)"
+        @move="pickerOpen = true"
+        @delete="remove"
+      />
+    </template>
     <div class="player">
       <ErrorText v-if="error && !clip" :message="error" class="px-3 pt-3" />
       <ErrorText :message="loadError" class="px-3 pt-3" />
@@ -607,13 +627,8 @@ async function moveTo(session: string | null) {
       <div v-if="queuedItem && !canNote" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
       <MediaEvent v-if="clip && !queuedItem" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
+      <ErrorText :message="clipVisibility.error.value" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
-      <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
-        <IonIcon :icon="swapHorizontalOutline" /> {{ clip.session ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}
-      </button>
-      <button v-if="clip?.can_edit" type="button" class="remove" @click="remove">
-        <IonIcon :icon="trashOutline" /> {{ confirmDelete ? ((notes.data.value?.length ?? 0) > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}
-      </button>
     </div>
     <SessionPicker
       v-if="clip"
@@ -724,8 +739,7 @@ async function moveTo(session: string | null) {
   justify-content: space-around;
   padding-inline: 8px;
 }
-.controls button,
-.remove {
+.controls button {
   min-width: 48px;
   height: 48px;
   border: 0;
@@ -793,9 +807,5 @@ async function moveTo(session: string | null) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.remove {
-  align-self: center;
-  font-size: 1rem;
 }
 </style>

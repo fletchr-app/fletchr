@@ -235,6 +235,9 @@ export default {
     serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it, and a note with a drawing but no text may be refused. Ask whoever runs the server to update it.',
   },
   media: {
+    deleteTitle: 'Delete this photo or video?',
+    deleteMessage: 'It is removed for good.',
+    deleteMessageNotes: 'It is removed for good, with its notes and drawings.',
     offlineList: 'No connection. This is what the phone has kept: small pictures only, videos and full photos need a connection.',
     draw: 'Draw on this frame',
     drawPhoto: 'Draw on this photo',

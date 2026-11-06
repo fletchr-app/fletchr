@@ -239,6 +239,9 @@ export default {
     serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert, und eine Notiz mit Zeichnung aber ohne Text wird womöglich abgelehnt. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
   },
   media: {
+    deleteTitle: 'Dieses Foto oder Video löschen?',
+    deleteMessage: 'Es wird endgültig gelöscht.',
+    deleteMessageNotes: 'Es wird endgültig gelöscht, mit seinen Notizen und Zeichnungen.',
     offlineList: 'Keine Verbindung. Das hat das Telefon gespeichert: nur kleine Bilder, Videos und ganze Fotos brauchen eine Verbindung.',
     draw: 'Auf diesem Bild zeichnen',
     drawPhoto: 'Auf dem Foto zeichnen',
