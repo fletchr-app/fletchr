@@ -533,6 +533,7 @@ export default {
   gear: {
     none: 'None',
     noBows: 'No bows on this device yet. Add them under Equipment, with a connection, and they will be here next time.',
+    noBowsLocal: 'No bows on this device yet. Add them under Equipment and they will be here next time.',
     bow: 'Bow',
     arrowSet: 'Arrow set',
   },

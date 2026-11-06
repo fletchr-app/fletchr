@@ -3,19 +3,21 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import ChipGroup from '@/components/ChipGroup.vue'
+import { useAuth } from '@/composables/useAuth'
 import type { Equipment } from '@/lib/log-model'
 
 const props = defineProps<{ equipment: Equipment; bowKey: string | null; arrowSetKey: string | null }>()
 const emit = defineEmits<{ change: [bowKey: string | null, arrowSetKey: string | null] }>()
 
 const { t } = useI18n()
+const { isLocal } = useAuth()
 const none = computed(() => ({ value: '', label: t('gear.none') }))
 </script>
 
 <!-- Choose the bow and arrow set from the copy of your equipment on this device. Arrows are offered once a bow is chosen. -->
 <template>
   <div v-if="equipment.bows.length === 0" class="faint">
-    {{ $t('gear.noBows') }}
+    {{ $t(isLocal ? 'gear.noBowsLocal' : 'gear.noBows') }}
   </div>
   <template v-else>
     <ChipGroup

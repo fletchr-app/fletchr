@@ -537,6 +537,7 @@ export default {
   gear: {
     none: 'Keiner',
     noBows: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, mit Verbindung, dann sind sie beim nächsten Mal hier.',
+    noBowsLocal: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, dann sind sie beim nächsten Mal hier.',
     bow: 'Bogen',
     arrowSet: 'Pfeilsatz',
   },
