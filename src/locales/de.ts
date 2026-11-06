@@ -105,7 +105,7 @@ export default {
     signInRow: 'Anmelden oder registrieren',
     dataTitle: 'Sicherung',
     onThisPhone: 'Auf diesem Handy',
-    onThisPhoneText: '{sessions}, {notes}, {media}.',
+    onThisPhoneText: '{sessions}, {equipment}, {notes}, {media}.',
     noCopy: 'Es gibt keine zweite Kopie. Wenn du dieses Handy verlierst oder zurücksetzt oder die App deinstallierst, sind diese Daten weg, es sei denn, du hast eine Sicherungsdatei. Beim Anmelden mit einem Konto kannst du sie hochladen.',
     exportTitle: 'Export',
     exportText: 'Speichert deine Trainings, deine Ausrüstung und deine Notizen (mit Zeichnungen) in einer Datei. Bewahre sie sicher auf, zum Beispiel im Cloud-Speicher oder per Mail an dich selbst.',
