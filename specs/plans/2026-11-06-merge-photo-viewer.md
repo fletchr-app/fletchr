@@ -94,7 +94,7 @@ Trade-offs of A to know about: page push animation instead of a modal; the playe
 ## Decisions (Tim, 2026-11-06)
 
 1. **A**: merge, with a simple swipe.
-2. **Swipe for photos and for clips.** On a clip the swipe is on the picture only, not on the tape or the jog strip, and not while drawing. Unsure: whether a swipe on the clip's picture clashes with scrubbing or pausing by touch; check on the phone first. If it does, fall back to photos only and say so here.
+2. **Swipe for photos and for clips.** On a clip the swipe is on the picture only, not on the tape or the jog strip, and not while drawing. Inferred: no clash, because only the tape has pointer handlers (`MediaPlayerView.vue:575`); check on the phone first. If it does, fall back to photos only and say so here.
 3. **After a delete: back to the grid.**
 4. **Pick mode: photos are dimmed in the grid and do not open.** Picking a photo as evidence is a separate feature, issue #161.
-5. **Offline preview of a photo that is not kept: no text.** A small icon on the preview, with an accessibility label only. Which icon is still open (a "cloud off" mark is the first guess).
+5. **Offline preview of a photo that is not kept: no text.** A small icon on the preview, with an accessibility label only. The icon is "cloud off" (`cloudOfflineOutline` in ionicons).
