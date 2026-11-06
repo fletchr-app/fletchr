@@ -40,15 +40,16 @@ export function clipOfKept(known: Omit<Media, 'file_url' | 'thumbnail_url'>, url
 
 /**
  * The photos and clips next to the one on show, in the order of the media screen: what waits on the phone first, then
- * what the server listed. `filter` is what the player was opened with: a session, or an archer.
+ * what the server listed. `filter` is what the player was opened with: a session, or an archer (with `unattached`:
+ * only what is in no session, like the chip of the media screen).
  */
 export function playerSiblings(
   queued: QueuedMedia[],
   listed: { id: string; kind: string }[],
-  filter: { session?: string; owner?: number },
+  filter: { session?: string; owner?: number; unattached?: boolean },
   me: number,
 ): { id: string; kind: string }[] {
-  const mine = queued.filter((q) => (filter.session ? q.session === filter.session : (q.owner ?? me) === filter.owner));
+  const mine = queued.filter((q) => (filter.session ? q.session === filter.session : (q.owner ?? me) === filter.owner && (!filter.unattached || q.session === null)));
   const ids = new Set(mine.map((q) => q.id));
   return [...mine.map((q) => ({ id: q.id, kind: q.kind })), ...listed.filter((m) => !ids.has(m.id))];
 }
