@@ -24,6 +24,12 @@ test('what waits comes first in the player, then what the server listed, without
   assert.deepEqual(playerSiblings(queued, listed, { session: 's1' }, 7).map((m) => m.id), ['q1', 'q3', 'r1']);
 });
 
+test('with the "not in a session" chip on, what waits in a session is left out', () => {
+  const queued = [item('q1'), item('q2', { session: 's1' }), item('q3', { kind: 'photo' })];
+  assert.deepEqual(playerSiblings(queued, [], { owner: 7, unattached: true }, 7).map((m) => m.id), ['q1', 'q3']);
+  assert.deepEqual(playerSiblings(queued, [], { owner: 7 }, 7).map((m) => m.id), ['q1', 'q2', 'q3']);
+});
+
 test('without a session the clips of that archer are meant, no archer is yourself', () => {
   const queued = [item('q1'), item('q2', { owner: 9 }), item('q3', { session: 's1' })];
   assert.deepEqual(playerSiblings(queued, [], { owner: 7 }, 7).map((m) => m.id), ['q1', 'q3']);
