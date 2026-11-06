@@ -4,17 +4,17 @@ import { arrowUndoOutline } from 'ionicons/icons'
 import { useI18n } from 'vue-i18n'
 
 import ErrorText from '@/components/ErrorText.vue'
-import { COLOURS, type Tool } from '@/lib/drawing'
+import { COLOURS, type Mode } from '@/lib/drawing'
 
-// The tools for drawing on a photo or a frame: line, angle, circle, five colours, undo, cancel and done.
+// The tools for drawing on a photo or a frame: line, angle, circle, move, five colours, undo, cancel and done.
 defineProps<{ count: number; error: string | null; doneLabel: string }>()
-const tool = defineModel<Tool>('tool', { required: true })
+const tool = defineModel<Mode>('tool', { required: true })
 const colour = defineModel<string>('colour', { required: true })
 const emit = defineEmits<{ undo: []; cancel: []; done: [] }>()
 
 const { t } = useI18n()
-const TOOLS: Tool[] = ['line', 'angle', 'circle']
-const toolLabel = (x: Tool) => t(`media.tool.${x}`)
+const TOOLS: Mode[] = ['line', 'angle', 'circle', 'move']
+const toolLabel = (x: Mode) => t(`media.tool.${x}`)
 </script>
 
 <template>

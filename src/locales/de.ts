@@ -246,7 +246,7 @@ export default {
     drawingDone: 'Fertig',
     drawingAttached: 'Eine Zeichnung mit {n} Formen gehört zur nächsten Notiz.',
     drawingRemove: 'Entfernen',
-    tool: { line: 'Linie', angle: 'Winkel', circle: 'Kreis' },
+    tool: { line: 'Linie', angle: 'Winkel', circle: 'Kreis', move: 'Verschieben' },
     noNotes: 'Noch keine Notizen zu diesem Video.',
     notes: 'Notizen zu diesem Video',
     noNotesPhoto: 'Noch keine Notizen zu diesem Foto.',
