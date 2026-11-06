@@ -2,11 +2,15 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
-## Unreleased
+## 0.24.0 (2026-11-06)
 
+- **Start page is your profile** (#143): Home shows the same profile a coach sees of an archer, for yourself. Sessions, equipment, photos and the arrow numbers come from the phone first, so it works offline and without an account. The server adds the picture, evaluations, goals, the latest coach note and your teams.
+- **Notes with only a drawing** (#144): a drawing on a photo or a video frame needs no text. Lists show "Drawing" for a note without text. Needs the new server.
+- **Server not reachable**: when you are signed in and the server does not answer, a red line says so. Tap it to see what waits to upload.
+- **New session starts at the current time again** after a session was started (#93).
 - **Team schedule offline** (#104, phase 6): your teams, their trainings from a month back to three months ahead and the members of the teams you coach are kept on the phone. Without a connection the Team tab lists your teams, the new session form, "Change" on a session, the note form and the photo upload still suggest the training, and the agenda opens read only with "Saved on this phone, as of <time>" (changes still need a connection). A coach can write a note about an archer of their team offline. Sessions backdated up to a month now get their training suggested online too. The copy is pulled on sign-in, when the app comes back and when the connection returns, and removed on sign-out.
 - **A link the server refuses** (the archer left the team, or the training's slot ended since the phone saw it): a note now goes up without the link, like a session or a photo, instead of staying failed. The server answers a date that is no longer a training on `event` (and still on `date`), so this also works for apps already out.
-- App and server, no migration. No API change.
+- Server and app, no migration.
 
 ## 0.23.0 (2026-11-04)
 
