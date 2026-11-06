@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { type RouteLocationRaw, useRouter } from 'vue-router'
 
 import { useLog } from '@/composables/useLog'
+import { useNotes } from '@/composables/useNotes'
 import { type LogSession, usesEnds } from '@/lib/log-model'
 
 // The right of the app bar of a session: photos and notes as icons, the rest in a menu. What the menu offers depends on
@@ -16,6 +17,7 @@ const emit = defineEmits<{ reopen: [] }>()
 const { t } = useI18n()
 const router = useRouter()
 const { deleteSession } = useLog()
+const { removeAboutSession: removeNotesAbout } = useNotes()
 const id = computed(() => props.session.id)
 const live = computed(() => !props.session.ended_at && usesEnds(props.session.type) && props.session.ends.length > 0)
 // Sessions without ends (volume, technique) have their own button at the bottom.
@@ -32,6 +34,7 @@ async function remove() {
         role: 'destructive',
         handler: () => {
           deleteSession(id.value)
+          removeNotesAbout(id.value)
           void router.replace('/training')
         },
       },

@@ -364,7 +364,7 @@ export default {
   },
   session: {
     menu: 'Trainingsmenü',
-    deleteMessage: 'Fotos und Videos bleiben erhalten, ohne Training.',
+    deleteMessage: 'Seine Notizen auf diesem Gerät werden mitgelöscht. Fotos und Videos bleiben erhalten, ohne Training.',
     notOnDevice: 'Dieses Training ist nicht auf diesem Gerät.',
     ends: 'Passen',
     delete: 'Training löschen',

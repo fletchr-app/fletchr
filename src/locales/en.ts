@@ -360,7 +360,7 @@ export default {
   },
   session: {
     menu: 'Session menu',
-    deleteMessage: 'Its photos and videos stay, without a session.',
+    deleteMessage: 'Its notes on this device go with it. Its photos and videos stay, without a session.',
     notOnDevice: 'This session is not on this device.',
     ends: 'Ends',
     delete: 'Delete session',
