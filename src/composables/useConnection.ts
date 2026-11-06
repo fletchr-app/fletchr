@@ -1,7 +1,8 @@
 import { App } from '@capacitor/app'
 import { Network } from '@capacitor/network'
-import { effectScope, ref, watch } from 'vue'
+import { effectScope, watch } from 'vue'
 
+import { reachable, reportReachable } from '@/composables/reachability'
 import { useServer } from '@/composables/useServer'
 import { reachedServer, RECHECK_MS } from '@/lib/connection'
 
@@ -10,11 +11,9 @@ import { reachedServer, RECHECK_MS } from '@/lib/connection'
 // network returns finds out when it is back. The device's own network going away counts at once.
 const HEALTH_TIMEOUT_MS = 6000
 const { url } = useServer()
-const reachable = ref(true)
 let timer: ReturnType<typeof setInterval> | null = null
 
-/** The outcome of a request, from the API client. */
-export const reportReachable = (reached: boolean) => (reachable.value = reached)
+export { reportReachable }
 
 async function check() {
   try {
