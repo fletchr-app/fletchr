@@ -49,6 +49,16 @@ test('a note on the device can be edited, and goes with its photo', () => {
   assert.deepEqual(reduce(s, { type: 'removeAboutMedia', media: 'm1' }).notes.map((n) => n.uid), ['b']);
 });
 
+test('deleting a training removes its notes and those of its ends, not those on a photo', () => {
+  const s = run(
+    { type: 'add', note: note('a', { session: 's1' }) },
+    { type: 'add', note: note('b', { session: 's1', end: 'e1' }) },
+    { type: 'add', note: note('c', { session: 's1', media: 'm1' }) },
+    { type: 'add', note: note('d', { session: 's2' }) },
+  );
+  assert.deepEqual(reduce(s, { type: 'removeAboutSession', session: 's1' }).notes.map((n) => n.uid), ['c', 'd']);
+});
+
 test('imported notes are added once, the device keeps its own version of a note it has', () => {
   const s = run({ type: 'add', note: note('a', { body: 'mine' }) }, { type: 'imported', notes: [note('a', { body: 'file' }), note('c')] });
   assert.deepEqual(s.notes.map((n) => [n.uid, n.body]), [['a', 'mine'], ['c', 'Watch the bow arm']]);

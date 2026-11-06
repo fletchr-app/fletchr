@@ -6,12 +6,14 @@ import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/AppButton.vue'
 import EndRows from '@/components/EndRows.vue'
 import { useLog } from '@/composables/useLog'
+import { useNotes } from '@/composables/useNotes'
 import type { LogEnd } from '@/lib/log-model'
 
 // All ends of a session, and deleting the session.
 const route = useRoute()
 const router = useRouter()
 const { loaded, sessions, deleteSession } = useLog()
+const { removeAboutSession: removeNotesAbout } = useNotes()
 const confirmDelete = ref(false)
 
 const sessionId = route.params.id as string
@@ -26,6 +28,7 @@ function edit(end: LogEnd) {
 
 function remove() {
   deleteSession(session.value!.id)
+  removeNotesAbout(session.value!.id)
   void router.replace('/training')
 }
 </script>
