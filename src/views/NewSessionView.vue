@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IonDatetime, IonDatetimeButton, IonModal, IonSelect, IonSelectOption, IonToggle } from '@ionic/vue'
+import { IonDatetime, IonDatetimeButton, IonModal, IonSelect, IonSelectOption, IonToggle, onIonViewWillEnter } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -91,7 +91,15 @@ const error = ref<string | null>(null)
 // When the training took place. Until you change it, it is now. A start in the past makes a finished session.
 const startLocal = ref(toLocalValue(new Date()))
 const duration = ref(String(DEFAULT_DURATION_MIN))
-const range = startRange(new Date())
+const range = ref(startRange(new Date()))
+// Ionic keeps this screen alive after a session was started (the route is replaced), so setup does not run again:
+// without this the next new session would start at the time of the first one.
+onIonViewWillEnter(() => {
+  const now = new Date()
+  startLocal.value = toLocalValue(now)
+  duration.value = String(DEFAULT_DURATION_MIN)
+  range.value = startRange(now)
+})
 const DURATIONS = DURATIONS_MIN.map((value) => ({ value: String(value), label: value % 60 === 0 ? `${value / 60} h` : `${(value / 60).toString().replace('.', locale.value === 'de' ? ',' : '.')} h` }))
 const past = computed(() => isPast(new Date(startLocal.value), new Date()))
 
