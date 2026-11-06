@@ -21,7 +21,7 @@ import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
-import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
+import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
@@ -173,7 +173,7 @@ function jump(f: number) {
 const canDraw = computed(() => !!clip.value && canNote.value)
 const drawing = ref<{ shapes: Shape[]; noteId: number | null } | null>(null)
 const attached = ref<Shape[]>([]) // drawn, not yet saved with a note
-const tool = ref<Tool>('line')
+const tool = ref<Mode>('line')
 const colour = ref<string>(COLOURS[0])
 const drawError = ref<string | null>(null)
 function startDrawing(shapes: Shape[], noteId: number | null) {
@@ -250,6 +250,7 @@ const pictureBox = computed(() => {
 })
 
 const video = ref<HTMLVideoElement | null>(null)
+const photoImg = ref<HTMLImageElement | null>(null)
 const duration = ref(0)
 const fps = computed(() => (clip.value ? frameRate(clip.value) : 30))
 const decodedFrames = ref(0) // the number of frames in the file, once the decoder has read it
@@ -534,11 +535,11 @@ async function moveTo(session: string | null) {
           ></video>
           <img v-else :src="clip.thumbnail_url" alt="" />
           <canvas v-show="canvasOn" ref="canvas"></canvas>
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @add="drawing?.shapes.push($event)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :loupe="() => (canvasOn ? canvas : video)" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
         <div v-else-if="isPhoto && clip" class="picture" :style="pictureBox">
-          <img :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @add="drawing?.shapes.push($event)" />
+          <img ref="photoImg" :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :loupe="() => photoImg" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
       </div>
       <template v-if="clip?.kind === 'video' && videoUrl">

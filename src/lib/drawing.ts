@@ -2,6 +2,8 @@
 // any screen; an angle or a length has to be worked out in the real shape of the picture, not in those fractions.
 
 export type Tool = 'line' | 'angle' | 'circle'
+/** What a finger does on the picture: draws one of the tools, or moves a point that is already there. */
+export type Mode = Tool | 'move'
 export type Point = [number, number]
 export type Shape = { t: Tool; p: Point[]; c?: string }
 export type Drawing = { v: 1; shapes: Shape[] }
@@ -46,3 +48,22 @@ export function fitted(box: { width: number; height: number }, ratio: number): {
   if (box.width <= 0 || box.height <= 0 || !(ratio > 0)) return { width: 0, height: 0 }
   return box.width / box.height > ratio ? { width: box.height * ratio, height: box.height } : { width: box.width, height: box.width / ratio }
 }
+
+/** The point of a shape that is nearest to `at` and within `reach` pixels (the picture being `size` pixels on the screen), or null. A shape drawn later wins a tie. */
+export function nearestPoint(shapes: Shape[], at: Point, size: { width: number; height: number }, reach: number): { shape: number; point: number } | null {
+  let best: { shape: number; point: number } | null = null
+  let bestDistance = reach
+  shapes.forEach((s, shape) =>
+    s.p.forEach((q, point) => {
+      const d = Math.hypot((q[0] - at[0]) * size.width, (q[1] - at[1]) * size.height)
+      if (d <= bestDistance) {
+        bestDistance = d
+        best = { shape, point }
+      }
+    }),
+  )
+  return best
+}
+
+/** The shape with one of its points somewhere else. The old shape is left alone (it may belong to a saved note). */
+export const movedPoint = (shape: Shape, point: number, to: Point): Shape => ({ ...shape, p: shape.p.map((q, i) => (i === point ? to : q)) })

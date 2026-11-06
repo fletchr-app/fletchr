@@ -242,7 +242,7 @@ export default {
     drawingDone: 'Done',
     drawingAttached: 'A drawing with {n} shapes goes with the next note.',
     drawingRemove: 'Remove',
-    tool: { line: 'Line', angle: 'Angle', circle: 'Circle' },
+    tool: { line: 'Line', angle: 'Angle', circle: 'Circle', move: 'Move' },
     noNotes: 'No notes on this clip yet.',
     notes: 'Notes on this clip',
     noNotesPhoto: 'No notes on this photo yet.',
