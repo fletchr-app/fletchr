@@ -25,7 +25,7 @@ const error = ref<string | null>(null)
 const message = ref<string | null>(null)
 const busy = ref(false)
 const picker = ref<HTMLInputElement | null>(null)
-const counts = computed(() => ({ sessions: log.sessions.value.length, notes: notes.notes.value.length, media: media.items.value.length }))
+const counts = computed(() => ({ sessions: log.sessions.value.length, equipment: equipment.allItems().length, notes: notes.notes.value.length, media: media.items.value.length }))
 const device = (): LocalData => ({ sessions: log.sessions.value, equipment: equipment.allItems(), notes: notes.notes.value })
 
 async function exportAll() {
@@ -75,7 +75,7 @@ async function importFile(event: Event) {
     <div class="screen">
       <section class="d-flex flex-column gap-2">
         <h2 class="h5 m-0">{{ $t('local.onThisPhone') }}</h2>
-        <p class="m-0">{{ $t('local.onThisPhoneText', { sessions: $t('local.n.sessions', counts.sessions), notes: $t('local.n.notes', counts.notes), media: $t('local.n.media', counts.media) }) }}</p>
+        <p class="m-0">{{ $t('local.onThisPhoneText', { sessions: $t('local.n.sessions', counts.sessions), equipment: $t('local.n.equipment', counts.equipment), notes: $t('local.n.notes', counts.notes), media: $t('local.n.media', counts.media) }) }}</p>
         <p class="m-0">{{ $t('local.noCopy') }}</p>
       </section>
       <section class="d-flex flex-column gap-2">

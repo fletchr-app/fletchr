@@ -101,7 +101,7 @@ export default {
     signInRow: 'Sign in or register',
     dataTitle: 'Backup',
     onThisPhone: 'On this phone',
-    onThisPhoneText: '{sessions}, {notes}, {media}.',
+    onThisPhoneText: '{sessions}, {equipment}, {notes}, {media}.',
     noCopy: 'There is no other copy. If you lose or reset this phone, or uninstall the app, this data is gone unless you have a backup file. Signing in to an account offers to upload it.',
     exportTitle: 'Export',
     exportText: 'Saves your sessions, equipment and notes (with drawings) to a file. Keep it somewhere safe, for example in your cloud storage or mailed to yourself.',
