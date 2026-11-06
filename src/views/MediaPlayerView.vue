@@ -23,7 +23,7 @@ import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
-import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape } from '@/lib/drawing'
+import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
@@ -252,7 +252,8 @@ const pictureBox = computed(() => {
 })
 
 const video = ref<HTMLVideoElement | null>(null)
-const photoImg = ref<HTMLImageElement | null>(null)
+// While a finger draws, the picture is magnified around the point that is drawn (DrawingLayer tells where).
+const zoomAt = ref<{ x: number; y: number } | null>(null)
 const duration = ref(0)
 const fps = computed(() => (clip.value ? frameRate(clip.value) : 30))
 const decodedFrames = ref(0) // the number of frames in the file, once the decoder has read it
@@ -536,7 +537,7 @@ async function moveTo(session: string | null) {
       <ErrorText v-if="error && !clip" :message="error" class="px-3 pt-3" />
       <ErrorText :message="loadError" class="px-3 pt-3" />
       <div ref="stage" class="stage">
-        <div v-if="clip?.kind === 'video'" class="picture" :style="pictureBox">
+        <div v-if="clip?.kind === 'video'" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
           <video
             v-if="videoUrl"
             v-show="!canvasOn"
@@ -555,11 +556,11 @@ async function moveTo(session: string | null) {
           ></video>
           <img v-else :src="clip.thumbnail_url" alt="" />
           <canvas v-show="canvasOn" ref="canvas"></canvas>
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :loupe="() => (canvasOn ? canvas : video)" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
-        <div v-else-if="isPhoto && clip" class="picture" :style="pictureBox">
-          <img ref="photoImg" :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :loupe="() => photoImg" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+        <div v-else-if="isPhoto && clip" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
+          <img :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
       </div>
       <template v-if="clip?.kind === 'video' && videoUrl">
@@ -677,6 +678,7 @@ async function moveTo(session: string | null) {
   align-items: center;
   justify-content: center;
   background: #000;
+  overflow: hidden; /* the magnified picture stays inside the stage */
 }
 .picture {
   position: relative;

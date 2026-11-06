@@ -1,28 +1,35 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { angleDegrees, circleRadii, clamp01, type Mode, movedPoint, nearestPoint, POINTS, type Point, pointOn, type Shape } from '@/lib/drawing'
+import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedPoint, nearestPoint, POINTS, type Point, pointOn, type Shape, ZOOM } from '@/lib/drawing'
 
 // Lines, angles and circles over a picture. The layer has the shape of the picture, so the points (fractions of it) are
 // drawn where they were put. With `editing` a finger draws: drag for a line or a circle, three taps for an angle. With
-// the tool `move` it takes hold of a point that is already there and drags it. While a finger is down, a loupe above it
-// shows the picture around the point (needs `loupe`, which gives the <img>, <video> or <canvas> the picture is in).
-const props = withDefaults(
-  defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string; loupe?: () => CanvasImageSource | null }>(),
-  { editing: false, tool: 'line', colour: '#ff3b30', loupe: undefined },
-)
-const emit = defineEmits<{ add: [shape: Shape]; change: [index: number, shape: Shape] }>()
+// the tool `move` it takes hold of a point that is already there and drags it. While a finger is down, the point that is
+// drawn sits a little above the finger (marked by a cross) and the picture is magnified around it: the parent applies
+// the `zoom` it is told about (`zoomStyle` in lib/drawing) to the box that holds the picture and this layer, and clips it.
+const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string }>(), {
+  editing: false,
+  tool: 'line',
+  colour: '#ff3b30',
+})
+const emit = defineEmits<{
+  add: [shape: Shape]
+  change: [index: number, shape: Shape]
+  /** Where the picture is magnified around (pixels of the picture), or null when no finger is down. */
+  zoom: [at: { x: number; y: number } | null]
+}>()
 
 const REACH = 28 // pixels: how far from a point a finger may touch it to take hold of it
-const LOUPE = 104 // pixels across
-const ZOOM = 3
-const LIFT = 84 // pixels between the finger and the middle of the loupe
 
 const root = ref<HTMLElement | null>(null)
 const pending = ref<Point[]>([]) // the points of the shape that is being drawn
 const cursor = ref<Point | null>(null)
+const tip = ref<Point | null>(null) // the point that is drawn while a finger is down
 let dragging = false
-let grabbed: { shape: number; point: number; dx: number; dy: number } | null = null
+let grabbed: { shape: number; point: number } | null = null
+// The size of the layer before the zoom: while the picture is magnified the layer is too, so it is measured when the finger goes down.
+let box: { left: number; top: number; width: number; height: number } | null = null
 watch(() => [props.tool, props.editing], () => (pending.value = []))
 
 const preview = computed<Shape | null>(() => {
@@ -32,88 +39,58 @@ const preview = computed<Shape | null>(() => {
 const all = computed(() => (preview.value ? [...props.shapes, preview.value] : props.shapes))
 const handles = computed(() => (props.editing && props.tool === 'move' ? props.shapes.flatMap((s) => s.p) : []))
 
-function at(e: PointerEvent): Point {
-  return pointOn(root.value!.getBoundingClientRect(), e.clientX, e.clientY)
+/** The point a finger means: LIFT pixels above it. */
+function meant(e: PointerEvent): Point {
+  return pointOn(box!, e.clientX, e.clientY - LIFT)
 }
-
-// The loupe: where it sits (in pixels of the layer) and the point of the picture it shows.
-const loupeAt = ref<{ left: number; top: number; p: Point } | null>(null)
-const loupeCanvas = ref<HTMLCanvasElement | null>(null)
-function showLoupe(e: PointerEvent, p: Point) {
-  if (!props.loupe) return
-  const rect = root.value!.getBoundingClientRect()
-  const x = Math.min(rect.width - LOUPE / 2, Math.max(LOUPE / 2, e.clientX - rect.left))
-  const y = e.clientY - rect.top
-  const above = y - LIFT - LOUPE / 2 >= 0 // near the top edge it goes below the finger instead
-  loupeAt.value = { left: x - LOUPE / 2, top: (above ? y - LIFT : y + LIFT) - LOUPE / 2, p }
+function aim(p: Point) {
+  tip.value = p
+  emit('zoom', { x: p[0] * box!.width, y: p[1] * box!.height })
 }
-function sizeOf(source: CanvasImageSource): { width: number; height: number } {
-  if (source instanceof HTMLVideoElement) return { width: source.videoWidth, height: source.videoHeight }
-  if (source instanceof HTMLImageElement) return { width: source.naturalWidth, height: source.naturalHeight }
-  if (source instanceof HTMLCanvasElement) return { width: source.width, height: source.height }
-  return { width: 0, height: 0 }
+function release() {
+  tip.value = null
+  emit('zoom', null)
 }
-watch(
-  loupeAt,
-  (l) => {
-    const canvas = loupeCanvas.value
-    const source = props.loupe?.()
-    const context = canvas?.getContext('2d')
-    if (!l || !canvas || !source || !context) return
-    const natural = sizeOf(source)
-    const rect = root.value!.getBoundingClientRect()
-    if (!natural.width || !natural.height || !rect.width || !rect.height) return
-    const sw = (natural.width * LOUPE) / ZOOM / rect.width
-    const sh = (natural.height * LOUPE) / ZOOM / rect.height
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    try {
-      context.drawImage(source, l.p[0] * natural.width - sw / 2, l.p[1] * natural.height - sh / 2, sw, sh, 0, 0, canvas.width, canvas.height)
-    } catch {
-      // a picture that cannot be read yet: the loupe stays empty
-    }
-  },
-  { flush: 'post' },
-)
 
 function down(e: PointerEvent) {
   if (!props.editing) return
-  const here = at(e)
+  box = root.value!.getBoundingClientRect()
   if (props.tool === 'move') {
-    const hit = nearestPoint(props.shapes, here, root.value!.getBoundingClientRect(), REACH)
+    const hit = nearestPoint(props.shapes, pointOn(box, e.clientX, e.clientY), box, REACH)
     if (!hit) return
-    const point = props.shapes[hit.shape]!.p[hit.point]!
-    grabbed = { ...hit, dx: point[0] - here[0], dy: point[1] - here[1] }
+    grabbed = hit
     root.value!.setPointerCapture(e.pointerId)
-    showLoupe(e, point)
+    const to = meant(e)
+    emit('change', hit.shape, movedPoint(props.shapes[hit.shape]!, hit.point, to))
+    aim(to)
     return
   }
   root.value!.setPointerCapture(e.pointerId)
   dragging = true
-  cursor.value = here
-  showLoupe(e, here)
+  cursor.value = meant(e)
+  aim(cursor.value)
   if (props.tool !== 'angle') pending.value = [cursor.value]
 }
 function move(e: PointerEvent) {
   if (!props.editing) return
   if (grabbed) {
-    const here = at(e)
-    const to: Point = [clamp01(here[0] + grabbed.dx), clamp01(here[1] + grabbed.dy)]
+    const to = meant(e)
     emit('change', grabbed.shape, movedPoint(props.shapes[grabbed.shape]!, grabbed.point, to))
-    showLoupe(e, to)
+    aim(to)
   } else if (dragging) {
-    cursor.value = at(e)
-    showLoupe(e, cursor.value)
+    cursor.value = meant(e)
+    aim(cursor.value)
   }
 }
 function up(e: PointerEvent) {
-  loupeAt.value = null
+  release()
   if (grabbed) {
     grabbed = null
     return
   }
   if (!props.editing || !dragging || props.tool === 'move') return
   dragging = false
-  const here = at(e)
+  const here = meant(e)
   if (props.tool === 'angle') {
     pending.value = [...pending.value, here]
     if (pending.value.length === POINTS.angle) finish(pending.value)
@@ -144,7 +121,7 @@ const labels = computed(() =>
 </script>
 
 <template>
-  <div ref="root" class="layer" :class="{ editing }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
+  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': tip ? 1 / ZOOM : 1 }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
     <svg viewBox="0 0 1 1" preserveAspectRatio="none">
       <template v-for="(s, i) in all" :key="i">
         <line v-if="s.t === 'line' && s.p.length === 2" :x1="s.p[0]![0]" :y1="s.p[0]![1]" :x2="s.p[1]![0]" :y2="s.p[1]![1]" :stroke="colourOf(s)" />
@@ -162,9 +139,7 @@ const labels = computed(() =>
     </svg>
     <span v-for="(h, i) in handles" :key="`h${i}`" class="handle" :style="{ left: pct(h[0]), top: pct(h[1]) }"></span>
     <span v-for="(l, i) in labels" :key="i" class="label" :style="{ left: pct(l.at[0]), top: pct(l.at[1]), color: l.colour }">{{ l.text }}</span>
-    <div v-if="loupeAt" class="loupe" :style="{ left: `${loupeAt.left}px`, top: `${loupeAt.top}px`, width: `${LOUPE}px`, height: `${LOUPE}px` }">
-      <canvas ref="loupeCanvas" :width="LOUPE * 2" :height="LOUPE * 2"></canvas>
-    </div>
+    <span v-if="tip" class="cross" :style="{ left: pct(tip[0]), top: pct(tip[1]) }"></span>
   </div>
 </template>
 
@@ -192,6 +167,7 @@ svg :where(line, polyline, ellipse) {
   vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 70%));
 }
+/* While the picture is magnified, marks keep their size on the screen (--inv is 1 / zoom). */
 .handle {
   position: absolute;
   width: 14px;
@@ -202,43 +178,39 @@ svg :where(line, polyline, ellipse) {
   border: 2px solid #000;
   opacity: 0.85;
   pointer-events: none;
+  transform: scale(var(--inv, 1));
 }
-.loupe {
+.cross {
   position: absolute;
-  z-index: 2;
-  border-radius: 50%;
-  border: 3px solid #fff;
-  box-shadow: 0 0 6px rgb(0 0 0 / 70%);
-  background: #000;
-  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
   pointer-events: none;
+  transform: scale(var(--inv, 1));
 }
-.loupe canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.loupe::before,
-.loupe::after {
+.cross::before,
+.cross::after {
   content: '';
   position: absolute;
   background: #ff3b30;
+  box-shadow: 0 0 2px rgb(0 0 0 / 70%);
 }
-.loupe::before {
+.cross::before {
   left: 50%;
-  top: calc(50% - 8px);
+  top: 0;
   width: 1px;
-  height: 16px;
+  height: 100%;
 }
-.loupe::after {
+.cross::after {
   top: 50%;
-  left: calc(50% - 8px);
+  left: 0;
   height: 1px;
-  width: 16px;
+  width: 100%;
 }
 .label {
   position: absolute;
-  transform: translate(10px, -26px);
+  transform-origin: 0 100%;
+  transform: translate(10px, -26px) scale(var(--inv, 1));
   font-weight: 700;
   font-size: 1rem;
   text-shadow: 0 0 3px #000;
