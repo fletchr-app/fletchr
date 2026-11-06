@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -13,11 +13,14 @@ import MonthGrid from '@/components/MonthGrid.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useRemote } from '@/composables/useRemote'
 import { useSchedule } from '@/composables/useSchedule'
+import { useScheduleCache } from '@/composables/useScheduleCache'
 import { addMonths, dotsByDay, daysOf, firstWeekday, monthGrid, rangeOf } from '@/lib/calendar'
 import { dayKey, fromLocalInput, groupByDay, newEventTimes } from '@/lib/schedule'
+import { covers, itemsFor } from '@/lib/schedule-cache'
 
 // What is on in a team, as a list (the last four weeks and the next eight, by day) or as a month with the trainings of one day below it. Coaches cancel, move and add trainings, and open one to
 // add notes and photos for an archer. Trainings from a slot are rows only once something is done to them.
+// Without a connection the copy on the phone is shown, read only: every change needs the server.
 const DAY_MS = 86_400_000
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -25,8 +28,20 @@ const teamId = Number(route.params.id)
 const { api } = useAuth()
 const { addEvent } = useSchedule()
 
-const team = useRemote(async () => (await api.GET('/api/teams/{team_id}/', { params: { path: { team_id: teamId } } })).data ?? null)
-const isCoach = computed(() => team.data.value?.my_role !== undefined && team.data.value.my_role !== 'archer')
+const cache = useScheduleCache()
+/** True while what is shown is the copy on the phone, because the server could not be reached. */
+const offline = ref(false)
+const cachedTeam = () => cache.state.value.teams.find((x) => x.id === teamId) ?? null
+const team = useRemote(async () => {
+  try {
+    const { data, response } = await api.GET('/api/teams/{team_id}/', { params: { path: { team_id: teamId } } })
+    if (data || response.status < 500) return data ?? null
+  } catch {
+    /* no connection: the copy below */
+  }
+  return cachedTeam()
+})
+const isCoach = computed(() => !offline.value && team.data.value?.my_role !== undefined && team.data.value.my_role !== 'archer')
 
 // The mode is remembered on this device.
 const MODE_KEY = 'agenda:mode'
@@ -57,7 +72,38 @@ const listFrom = new Date(Date.now() - 28 * DAY_MS).toISOString()
 const listTo = new Date(Date.now() + 56 * DAY_MS).toISOString()
 // The month mode asks for the days of the grid, the list mode for its fixed range.
 const range = computed(() => (mode.value === 'month' ? rangeOf(grid.value) : { from: listFrom, to: listTo }))
-const agenda = useRemote(async () => (await api.GET('/api/events/agenda/', { params: { query: { team: teamId, ...range.value } } })).data ?? null, { watch: [range] })
+// Server first; the copy when the server cannot be reached (no connection, or it is down).
+const agenda = useRemote(
+  async () => {
+    const query = { team: teamId, ...range.value }
+    try {
+      const { data, response } = await api.GET('/api/events/agenda/', { params: { query } })
+      if (data || response.status < 500) {
+        offline.value = false
+        return data ?? null
+      }
+    } catch {
+      /* no connection: the copy below */
+    }
+    if (!cache.state.value.pulledAt || !cachedTeam()) throw new Error('server not reachable')
+    offline.value = true
+    return itemsFor(cache.state.value, query)
+  },
+  { watch: [range] },
+)
+// Back online (the schedule was pulled again): show the server's agenda.
+watch(cache.pulls, () => {
+  if (offline.value) {
+    agenda.reload()
+    team.reload()
+  }
+})
+const savedAt = computed(() => {
+  const at = cache.state.value.pulledAt
+  return at ? new Date(at).toLocaleString(locale.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+})
+// A month outside the copy (a month back, three ahead) is not on the phone.
+const notOnPhone = computed(() => offline.value && !covers(cache.state.value, range.value.from, range.value.to))
 function shift(step: -1 | 1) {
   month.value = addMonths(month.value, step)
   picked.value = month.value === thisMonth ? today : `${month.value}-01`
@@ -110,8 +156,10 @@ function startAdding() {
   <AppPage :title="team.data.value ? $t('schedule.agendaOf', { name: team.data.value.name }) : $t('schedule.agenda')">
     <div class="screen">
       <ErrorText :message="agenda.error.value" />
+      <div v-if="offline" class="muted">{{ $t('schedule.savedAsOf', { time: savedAt }) }}</div>
+      <div v-if="notOnPhone" class="muted">{{ $t('schedule.notOnPhone') }}</div>
       <AppButton v-if="isCoach && !adding" secondary @click="startAdding">{{ $t('schedule.oneOff') }}</AppButton>
-      <div v-if="adding" class="d-flex flex-column gap-2">
+      <div v-if="adding && !offline" class="d-flex flex-column gap-2">
         <ChipGroup v-model="kind" :options="KINDS" />
         <FormField v-model="name" :label="$t('schedule.name')" capitalize="sentences" />
         <FormField v-model="start" type="datetime-local" :label="$t('schedule.start')" />
@@ -126,11 +174,11 @@ function startAdding() {
       <template v-else-if="mode === 'month'">
         <MonthGrid :month="month" :days="grid" :dots="dots" :selected="picked" :today="today" @select="picked = $event" @shift="shift" @today="goToday" />
         <div v-if="pickedDays.length === 0 && !agenda.error.value" class="muted">{{ $t('schedule.nothingThisDay') }}</div>
-        <AgendaDayList :days="pickedDays" :can-plan="() => isCoach" :members="members.data.value" @changed="agenda.reload()" />
+        <AgendaDayList :days="pickedDays" :can-plan="() => isCoach" :members="members.data.value" :read-only="offline" @changed="agenda.reload()" />
       </template>
       <template v-else>
         <div v-if="days.length === 0 && !agenda.error.value">{{ $t('schedule.nothing') }}</div>
-        <AgendaDayList :days="days" :can-plan="() => isCoach" :members="members.data.value" @changed="agenda.reload()" />
+        <AgendaDayList :days="days" :can-plan="() => isCoach" :members="members.data.value" :read-only="offline" @changed="agenda.reload()" />
       </template>
     </div>
   </AppPage>

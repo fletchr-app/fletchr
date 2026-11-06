@@ -79,6 +79,26 @@ test('a note the server refuses is marked failed with its reason and the next on
   assert.deepEqual(h.state().notes.map((n) => [n.uid, !!n.error]), [['a', true]]);
 });
 
+test('a note whose training is refused goes up again without it, in its team', async () => {
+  const link = { id: 'ev1', slot: 'sl1', date: '2026-10-21' };
+  const h = harness((call) => ((call.body as { event?: string }).event ? json(400, { event: ['The slot has no training on this date'], date: ['x'] }) : created()));
+  h.dispatch({ type: 'add', note: note('a', { event: link }) });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => (c.body as { event?: string }).event ?? null), ['ev1', null]);
+  const first = h.calls[0].body as { event_slot?: string; event_date?: string };
+  assert.deepEqual([first.event_slot, first.event_date], ['sl1', '2026-10-21']);
+  assert.equal((h.calls[1].body as { team: number }).team, 1);
+  assert.equal(h.state().notes.length, 0);
+});
+
+test('a note without a training that is refused on event is not sent again', async () => {
+  const h = harness(() => json(400, { event: ['No such event'] }));
+  h.dispatch({ type: 'add', note: note('a') });
+  await h.run();
+  assert.equal(h.calls.length, 1);
+  assert.ok(h.state().notes[0].error);
+});
+
 test('a note from somebody who may not write it stays failed', async () => {
   const h = harness(() => json(403, { detail: 'Only coaches can write notes' }));
   h.dispatch({ type: 'add', note: note('a') });

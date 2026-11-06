@@ -27,6 +27,7 @@ import EventChips from '@/components/EventChips.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
 import { useAgenda } from '@/composables/useAgenda'
+import { useScheduleCache } from '@/composables/useScheduleCache'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
@@ -237,10 +238,11 @@ async function add(source: PickSource) {
 // The training a new photo or clip is from: the one of your teams that takes place when it was taken, when exactly one does;
 // change it with the chips. A coach adding for an archer is offered the teams they may write notes about that archer in.
 const { suggest, load: loadAgenda } = useAgenda()
+const { writableTeams } = useScheduleCache()
 const archerTeams = ref<number[] | null>(null)
 onMounted(() => {
   void loadAgenda()
-  if (ownerParam && ownerParam !== me.value) void api.GET('/api/notes/teams/', { params: { query: { archer: ownerParam } } }).then(({ data: teams }) => (archerTeams.value = teams?.map((x) => x.id) ?? null)).catch(() => {})
+  if (ownerParam && ownerParam !== me.value) void writableTeams(ownerParam).then((teams) => (archerTeams.value = teams?.map((x) => x.id) ?? null))
 })
 const teamsOfOwner = () => (owner.value === me.value ? undefined : (archerTeams.value ?? []))
 // From the agenda: a training chosen in advance (the id, and slot and date when it is no row yet).
@@ -396,7 +398,7 @@ async function loadNotes(item: Shown) {
     // Your own photo: you can write about it without asking the server.
     if (remote.owner === Number(userId.value) && writable.value[remote.owner] === undefined) writable.value = { ...writable.value, [remote.owner]: true }
     if (writable.value[remote.owner] === undefined) {
-      const { data: teams } = await api.GET('/api/notes/teams/', { params: { query: { archer: remote.owner } } })
+      const teams = await writableTeams(remote.owner)
       if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 || remote.owner === Number(userId.value) }
     }
   } catch {

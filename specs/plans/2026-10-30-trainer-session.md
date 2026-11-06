@@ -1,8 +1,8 @@
 # Team schedule and training events: shared label for sessions, notes and media (#104)
 
-Status: phases 1 to 5 implemented (PR for #104); phase 6 (offline) open
+Status: phases 1 to 5 implemented (PR for #104); phase 6 (offline) implemented 2026-11-06 (19929f7, in Unreleased); its checklist below is not ticked yet
 Date: 2026-10-30
-Updated: 2026-10-30 (reworked after the design discussion: events are a shared label, not a shared session)
+Updated: 2026-10-30 (reworked after the design discussion: events are a shared label, not a shared session); 2026-11-05 (Phase 6 rewritten)
 
 ## Scope
 
@@ -12,7 +12,7 @@ Updated: 2026-10-30 (reworked after the design discussion: events are a shared l
 - **Linking is explicit.** The app suggests an event by time, the user confirms or picks "None". Nothing is linked by overlap alone.
 - **Lazy materialisation**: an occurrence becomes a row the first time something links to it, or when it is cancelled or moved. Id `uuid5(slot.id, date)` plus unique `(slot, date)`.
 - Coach UI: agenda per team and a slot editor in team settings.
-- Online first; offline (cached schedule, event notes) after #84 Phase 1b and its team cache.
+- Online first; offline (cached schedule, suggestions and links without a connection) in Phase 6, which builds the team cache of #84.
 - Out of scope: calendar grid and iCal feed (#106), results and rankings of tournaments, group notes that every participant reads, statistics per event, evaluations linked to an event.
 
 Markers: **[fact]** checked in the code, **[inferred]** my reading, not checked by running anything, **[check]** verify before relying on it.
@@ -220,12 +220,78 @@ Phone: team with two slots, an archer in two teams picks one of two suggestions;
 - [x] `POST /api/events/<uuid>/attach/` `{ archer, session }`: sets `session` on that archer's event rows without one (notes `.update`, media through `move_to_session`); rows keep `event`. Owner of the session or a coach of `event.team`; idempotent.
 - [x] "Put into a session" on `EventView` (`SessionPicker`). Moves earlier only if Phase 3 shows the opt-out case needs it.
 
-### Phase 6: offline (after #84 Phase 1b and the team cache of its Phase 2)
+### Phase 6: offline
 
-- [ ] Depends on the offline-sync plan's Phase 2 team cache, which that plan marks **optional**: it becomes required here (update that plan when this phase starts).
-- [ ] Cache the agenda per owner (`cache:<owner>:agenda`, full replace on pull) so `NewSessionView` and `NewNote` suggest offline. A session or clip queued with `event` + `event_slot`/`event_date` materialises on upload; no separate event queue needed for virtual occurrences.
-- [ ] Event notes offline need app-made note ids and `PUT /api/notes/<uuid>/` (offline-sync Phase 1b, not built **[fact]**); the notes queue carries `event`, `event_slot`, `event_date`.
-- [ ] Agenda edits (cancel, move, one-off, slots) stay online.
+Rewritten 2026-11-05 after a phone test (Dev app, signed in as a coach, server not reachable): Home, the training list, the new-session form and gear fill from the device; the Team tab is blank, so the agenda cannot be reached; the new-session form has no "Training" row although a training covers the time (online it is offered and preselected). Not tested: notes and photos queued with a link and their upload; linking an offline session to its training afterwards.
+
+Depends on: offline-sync Phase 1b (done **[fact]**) and the team cache of its Phase 2, which that plan marked optional. **The team cache is now required** and is built in this phase (offline-sync plan updated).
+
+What is there already:
+- [x] App-made note ids and `PUT /api/notes/<uuid>/` are built (offline-sync Phase 1b) **[fact]**: `note-sync.ts` `sendNote`, queue in `useNotes`. The old line here said they were not.
+- [x] The link rides in every queue: `LogSession.event`, `QueuedMedia.event`, `QueuedNote.event` are an `EventLink` (`id`, plus `slot` and `date` for an occurrence that is no row yet, from `linkOf`) **[fact]**. `log-sync.ts`, `media-queue.ts` (`appendEvent`) and `note-sync.ts` send `event`, `event_slot`, `event_date` **[fact]**.
+- [x] No event queue: the first upload that names an occurrence makes the row (`resolve_event` → `materialise`, `get_or_create` on `(slot, date)`, id `uuid5`), later ones find it **[fact]**.
+- [x] Upload order: sessions, then photos and clips, then notes; a note waits for its photo or session (`useNotes.blocked`), a photo for its session **[fact]**.
+- [x] Refused link **[fact]**: a 400 with an `event` key makes a session (`log-sync.ts` `withoutEvent` → `dropEvent`, since 317dc32) and a photo or clip (`media-queue.ts`) upload again without the link. A note is marked failed with the server's message and stays on the phone (`note-sync.ts`). So "a session is not retried without its event, a photo is" (design doc) is stale: today it is the note that is not.
+- [x] `materialise` refuses a date that is no longer an occurrence (slot ended by "change from <date>", or paused) with a 400 on `date`, not on `event` (`training/schedule.py`) **[fact]**. None of the three queues reads that as a refused link, so the item is marked failed **[fact]**. A deleted slot gives "No such event" on `event` **[fact]**.
+- [x] A training cancelled after the phone saw it can still be linked: `resolve_event` does not look at `cancelled` **[fact]**.
+
+Gaps found in the code:
+- `useAgenda` keeps the agenda in memory only, from yesterday to 8 weeks ahead **[fact]**. Cold start offline: nothing to suggest (the phone test). Also online: a session backdated by more than a day (allowed up to `MAX_BACKDATE_DAYS` = 31) gets no suggestion, and neither does "Change" on an older session (`SessionEvent`) **[fact]**.
+- `useTeams` is in memory only **[fact]**: cold start offline gives an empty Team tab.
+- `AgendaView` reads the team, the agenda and the members with `useRemote`, no copy **[fact]**.
+- A coach's chips for another archer (`NewSessionView ?for=`, `MediaView ?owner=`, `NewNote`) are filtered by `GET /api/notes/teams/?archer=` **[fact]**. Offline that answer is missing: no chips, and `NotesSection` hides the note form for another archer altogether **[fact]**. See Q3.
+
+Cache (the team cache of offline-sync Phase 2):
+- [x] New store `schedule` (`StoreName` in `store-owner.ts`, key `schedule:<owner>` like the other stores, through `useKeyedStore`). Holds `{ teams, members, agenda, from, to, pulledAt }`; only for an account (no key in local mode). Composable `useScheduleCache.ts`.
+- [x] `teams`: `GET /api/teams/` (your teams with `my_role`). Own teams only, no roster stats. Members: see Q3.
+- [x] `agenda`: `GET /api/events/agenda/` without `team` (all your teams, one request), window today − 31 days to today + 88 days (Q2). These are the server's occurrences merged with the event rows, so cancelled and moved trainings are in it.
+- [x] Full replace on every pull, no deltas: a training cancelled or moved elsewhere, and a team you left, are gone after the next pull (problem 4 of the offline-sync plan). A failed pull keeps the copy.
+- [x] The phone does not compute occurrences from cached slots; it keeps the server's agenda (Q1). No slot cache.
+- [x] Pure part `src/lib/schedule-cache.ts` (no Vue): `pulled(pull, at)` (a full replace needs no old state), `itemsFor(state, { team?, from, to })`, `covers(state, from, to)`, plus `noteTeams(state, archer)` (Q3) and `pullSchedule(api, at)` (teams, agenda, then members of coached teams; null when any request fails).
+- [x] Kept under its owner key on sign-out, like the libraries; removed with the account (`log.onAccountDeleted`) (Q7). Done the other way, as Q7 says once Q3 adds members: removed on sign-out (`addBeforeSignOut`, now a list) and with the account.
+
+When it is pulled:
+- [x] One pull, teams then agenda **[inferred]** (a team you left drops its trainings in the same step): on sign-in, on resume (`appStateChange`), on reconnect (`networkStatusChange`), the same triggers as `useLog` and `useMediaLibrary`. Keep the 5 min max age, except after a schedule write (`useSchedule.changed`) and after creating, joining or leaving a team (`useTeams.load`).
+- [x] `useAgenda` and `useTeams` read the store at start, so the copy is there before the first pull answers.
+
+Suggestions and links:
+- [x] `useAgenda.suggest` reads the cached items. `NewSessionView`, `SessionEvent` (link afterwards), `NewNote` and `MediaView` already show the chips when something is suggested **[fact]**, so they need no change of their own **[inferred]**.
+- [x] A link chosen offline is an `EventLink` from the cached item, with `slot` and `date` for a virtual one **[fact]** (`linkOf`); it is queued with the session, photo or note as today.
+- [x] Coach for another archer: the teams to offer come from the cache (Q3).
+- [x] Refused link: one rule for sessions, photos and notes (Q4).
+
+Agenda screen:
+- [x] `TeamListView` lists the cached teams; the roster in `TeamOverview` stays online **[check]** what it shows offline (expected: its "could not load" line). Roster offline not checked on a phone.
+- [x] `AgendaView` offline: read-only from the cache, filtered by team, list and month modes. A muted line "Saved on this phone, as of <time>" (like `notes.offlineList`); a month outside the window says it is not on the phone. Detection as in `useNoteLibrary.list`: server first, the copy when the request fails.
+- [x] Hidden offline: "+", Cancel, Move, Add note, Add media, Open event (`EventView` is online, and `useAgendaActions.row` makes a virtual training a row with a `PUT` before opening it **[fact]**).
+- [ ] Connection banner (PR 147, may not be merged yet): the red banner says the server is out of reach; the agenda line says what is shown and from when. The line does not depend on the banner and does not repeat "no connection" **[inferred]**. Not done here: the banner (`useConnection`, `ConnectionBanner.vue`) is on `develop` but not on this branch; the agenda line is written without it.
+- [x] Agenda edits (cancel, move, one-off, slots) stay online. `useSchedule` already answers "server not reachable" **[fact]**.
+- [x] Locales: `schedule.savedAsOf`, `schedule.notOnPhone` (`en.ts`, `de.ts`).
+
+Tests:
+- [x] `schedule-cache.test.ts`: a pull replaces (a cancelled-elsewhere training and the trainings of a left team are gone), a failed pull keeps the copy, `itemsFor` by team and range, `covers`, the window stays under 120 days.
+- [x] `store-owner.test.ts`: the `schedule` key.
+- [x] `schedule.test.ts`: a cached virtual item gives a link with `slot` and `date`; a cancelled one is not suggested.
+- [x] `note-sync.test.ts`: a refused link uploads the note without it (if Q4 as recommended). `log-sync.test.ts`, `media-queue.test.ts`: a 400 on `date` counts as a refused link, or the server test below. Server route taken, so `log-sync`/`media-queue` need no change (they already read `event`).
+- [x] `useAgenda.test.ts` (new, mocks for `useAuth`, `local-store`, `@capacitor/app`, `@capacitor/network`, as in `useDeviceCalendar.test.ts`): start with the server unreachable suggests from the store; a pull writes the store; a failed pull keeps it; another owner starts empty; resume pulls again. Written as `useScheduleCache.test.ts` (it covers `useAgenda` and `useTeams` too).
+- [x] Server (if Q4 takes the server route): `materialise` refusing a date is a 400 on `event`. `resolve_event` checks the date before `materialise`; test in `test_event_links.py`.
+- [ ] Phone, Dev app, one online start, then airplane mode:
+  - Team tab lists the teams; the agenda opens read-only with the "as of" line and no edit buttons.
+  - New session at a training time: "Training" is offered and preselected. A session backdated two weeks is offered its training.
+  - Coach: a note about an archer and a photo for them, both linked to the training; both wait. After reconnecting: session, photo, note go up in that order, the server has one event row, the event view shows both. (Untested case 1.)
+  - A session made offline without a link, linked afterwards on its screen ("Change"), then reconnect: the link arrives. (Untested case 2.)
+  - Refused link: end the slot in the browser with "change from", log offline at the old time, reconnect: the session uploads without the link, nothing stays failed (Q4).
+  - Cold start with the server down but the network on (red banner): same results as airplane mode.
+
+Open questions (recommended answers):
+1. **Q1, occurrences on the phone or the server's agenda?** Cache the server's agenda. Computing on the phone needs a TypeScript copy of `occurrences`, `is_occurrence` and `occurrence_times` with IANA zones and DST, plus `uuid5` (SHA-1; the app has only `crypto.randomUUID` **[fact]**), and must stay equal to the server forever. It only pays for dates outside the window, which a training log rarely needs.
+2. **Q2, window size.** Today − 31 days to today + 88 days: one request (the server allows 120 days **[fact]**), covers backdating (31 days) and the agenda list (4 weeks back, 8 ahead). The month view of a further month needs a connection. Also fixes the online gap for backdated sessions.
+3. **Q3, coach notes about another archer offline.** With "own teams only, no roster" this does not work: the note form needs `notes/teams` **[fact]**, and the archer's page cannot even be reached with the Team tab's roster offline **[inferred]**. Recommended: also cache the members of the teams you coach (user id, name, role, `also_shoots`, from `/api/teams/<id>/members/`; no statistics). `note_teams` is "teams I coach where the person is an archer or a coach who shoots" **[fact]**, so the phone can work out the teams from that, and the agenda's "Add note / Add media" archer picker works offline too. If that is too much, accept that a coach writes offline notes only on screens opened before the connection went (Ionic keeps them alive) and say so in the plan.
+4. **Q4, the server refuses a link.** Same rule for all three: upload without the link, keep the item, no failure. Notes get `withoutEvent` like sessions and photos (the note keeps its team). The server answers a date that is no longer an occurrence on `event`, not `date` (one line in `materialise` or `resolve_event`), so old apps benefit too. No notice: the item is still there, the link is a label, and the history shows it without one.
+5. **Q5, link a session afterwards offline?** Yes: `SessionEvent` uses the same suggestions, the change is a queued session `PUT` **[fact]**. Covered by the window in Q2.
+6. **Q6, a training cancelled after the phone cached it.** Accept the link (the server does today **[fact]**). The coach sees it on the cancelled training and can move it instead. Not worth a server rule.
+7. **Q7, sign-out.** Keep the copy under its owner key (only your teams' schedule and your coached teams' members; another account never sees it). Offline-sync Q2 says caches of other people's data go on sign-out: if Q3 adds members, remove the store on sign-out instead (`setBeforeSignOut` holds only one hook today **[fact]**, `usePush` uses it, so it needs a list).
+8. **Q8, size limit for the cached agenda?** No. About 17 weeks × a few slots per team, a few hundred items of a few hundred bytes **[inferred]**, under 100 KB. Revisit if a club with many teams shows up.
 
 ## Order
 
@@ -233,7 +299,7 @@ Phone: team with two slots, an archer in two teams picks one of two suggestions;
 - [ ] 2. Phase 2, `type-check`, `npm test`, phone test. Release.
 - [x] 3. Phase 3, release. Phase 4 can follow in the same release if small.
 - [x] 4. Phase 5 when needed.
-- [ ] 5. Phase 6 after offline-sync Phase 1b and the team cache.
+- [ ] 5. Phase 6 (offline-sync Phase 1b is done): Q1 to Q8 answered; then the `schedule` store and pull with `useTeams` and `useAgenda` on it (Team tab and suggestions offline); then the read-only agenda; then the refused-link rule (Q4). `type-check`, `npm test`, `pytest` if the server changes, the phone checklist in airplane mode. Release.
 - [x] 6. Docs and `CHANGELOG.md` per phase.
 
 ## Risks

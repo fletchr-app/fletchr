@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Fletchr API
-  version: 0.23.0
+  version: 0.24.0
 paths:
   /api/archers/{user_id}/:
     get:
@@ -5467,6 +5467,7 @@ components:
             for the format
         body:
           type: string
+          description: May be empty when the note has a drawing
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
         event:
@@ -5503,7 +5504,6 @@ components:
       - archer_name
       - author
       - author_name
-      - body
       - can_delete
       - can_edit
       - created_at
@@ -5574,7 +5574,7 @@ components:
             for the format
         body:
           type: string
-          minLength: 1
+          description: May be empty when the note has a drawing
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
         event:
@@ -5601,7 +5601,6 @@ components:
             note written afterwards
       required:
       - archer
-      - body
     NoteTeam:
       type: object
       properties:
@@ -5872,7 +5871,7 @@ components:
             for the format
         body:
           type: string
-          minLength: 1
+          description: May be empty when the note has a drawing
         visibility:
           $ref: '#/components/schemas/NoteVisibilityEnum'
         event:

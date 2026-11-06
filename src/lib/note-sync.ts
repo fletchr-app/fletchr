@@ -4,7 +4,8 @@ import type { components } from './api-types.ts';
 import { errorMessage } from './errors.ts';
 import type { NoteAction, NotesState, QueuedNote } from './note-store.ts';
 
-export type SendResult = { kind: 'ok' } | { kind: 'retry' } | { kind: 'failed'; message: string };
+/** `withoutEvent`: the server refused the team training the note is linked to. */
+export type SendResult = { kind: 'ok' } | { kind: 'retry' } | { kind: 'withoutEvent' } | { kind: 'failed'; message: string };
 
 type Body = components['schemas']['NoteRequest'];
 
@@ -30,6 +31,8 @@ export async function sendNote(api: ApiClient, note: QueuedNote): Promise<SendRe
     if (data) return { kind: 'ok' };
     // No login or a server error is tried again later; a note the server refuses is the note's fault.
     if (response.status === 401 || response.status >= 500) return { kind: 'retry' };
+    // The training is not usable any more (the archer left the team, the slot ended): the note is worth keeping without it, like a session or a photo.
+    if (response.status === 400 && note.event && (error as { event?: unknown } | undefined)?.event) return { kind: 'withoutEvent' };
     return { kind: 'failed', message: errorMessage(error) };
   } catch {
     return { kind: 'retry' }; // no connection
@@ -38,7 +41,8 @@ export async function sendNote(api: ApiClient, note: QueuedNote): Promise<SendRe
 
 /**
  * Send queued notes one by one, oldest first. A note whose photo, session or end is still waiting to go up is passed over
- * for now (`blocked`); one the server accepts leaves the queue; one it refuses is marked failed; no connection (or a
+ * for now (`blocked`); one the server accepts leaves the queue; one whose training is refused goes again without it; one
+ * it refuses otherwise is marked failed; no connection (or a
  * server error) ends the run and leaves everything for the next attempt.
  */
 export async function drainNotes(
@@ -55,6 +59,7 @@ export async function drainNotes(
     const result = await sendOne(note);
     if (result.kind === 'ok') dispatch({ type: 'remove', uid: note.uid });
     else if (result.kind === 'failed') dispatch({ type: 'failed', uid: note.uid, error: result.message });
+    else if (result.kind === 'withoutEvent') dispatch({ type: 'dropEvent', uid: note.uid });
     else return;
   }
 }

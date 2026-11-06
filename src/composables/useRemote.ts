@@ -1,3 +1,4 @@
+import { reachable } from '@/composables/reachability';
 import { t } from '@/i18n';
 import { onScopeDispose, ref, watch, type Ref, type WatchSource } from 'vue';
 
@@ -36,6 +37,8 @@ export function useRemote<T>(load: () => Promise<T | null>, options: Options<T> 
 
   void run();
   if (options.watch?.length) watch(options.watch, () => void run());
+  // A load that failed because the server could not be reached is tried again when it can: the banner says so, the screen should not stay empty.
+  watch(reachable, (now, before) => now && !before && error.value && void run());
 
   const { pollMs, keepPolling } = options;
   if (pollMs && keepPolling) {

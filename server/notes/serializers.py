@@ -65,6 +65,7 @@ class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
             "visibility", "event", "event_slot", "event_date", "event_info", "at", "can_edit", "can_delete", "created_at", "updated_at",
         ]
         read_only_fields = ["author", "created_at", "updated_at"]
+        extra_kwargs = {"body": {"required": False, "allow_blank": True, "help_text": "May be empty when the note has a drawing"}}
 
     @extend_schema_field(NotePictureSerializer(allow_null=True))
     def get_picture(self, note):
@@ -99,10 +100,7 @@ class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
         return self.get_can_edit(note) or note.team_id in self.context["admin_team_ids"]
 
     def validate_body(self, body):
-        body = body.strip()
-        if not body:
-            raise serializers.ValidationError(gettext("A note cannot be empty"))
-        return body
+        return body.strip()
 
     def validate_drawing(self, value):
         try:
@@ -111,6 +109,11 @@ class NoteSerializer(EventLinkSerializer, serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
 
     def validate(self, attrs):
+        # A note needs text or a drawing; the text may be empty when there is a drawing.
+        body = attrs["body"] if "body" in attrs else (self.instance.body if self.instance is not None else "")
+        drawing = attrs["drawing"] if "drawing" in attrs else (self.instance.drawing if self.instance is not None else None)
+        if not body and not drawing:
+            raise serializers.ValidationError({"body": gettext("A note cannot be empty")})
         if attrs.get("drawing") is not None:
             on_media = self.instance.media_id is not None if self.instance is not None else attrs.get("media") is not None
             if not on_media:

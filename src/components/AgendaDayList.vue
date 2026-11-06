@@ -12,11 +12,13 @@ import { dayPart, daysOf } from '@/lib/calendar'
 import { type AgendaItem, eventTitle } from '@/lib/schedule'
 
 // The trainings of some days, one list per day. Tapping one opens its actions below it; `canPlan` tells whether the viewer may
-// change it (cancel, move, add notes for an archer), everybody else can only open it.
+// change it (cancel, move, add notes for an archer), everybody else can only open it. `readOnly` (offline) only lists them.
 const props = defineProps<{
   days: { day: string; items: AgendaItem[] }[]
   canPlan: (item: AgendaItem) => boolean
   members: readonly { user_id: number; name: string }[] | null
+  /** The copy on the phone: nothing to tap, every action needs the server. */
+  readOnly?: boolean
 }>()
 const emit = defineEmits<{ changed: [] }>()
 
@@ -54,13 +56,13 @@ const dayTitle = (day: string) => new Date(`${day}T12:00`).toLocaleDateString(lo
     <h3 class="day">{{ dayTitle(d.day) }}</h3>
     <IonList inset>
       <template v-for="item in d.items" :key="item.id">
-        <IonItem button detail lines="full" @click="select(item)">
+        <IonItem :button="!readOnly" :detail="!readOnly" lines="full" @click="readOnly || select(item)">
           <IonLabel class="ion-text-wrap">
             <h3 :class="{ 'text-decoration-line-through': item.cancelled }">{{ times(item, d.day) }} · {{ title(item) }}</h3>
             <p>{{ [item.cancelled ? $t('schedule.cancelled') : '', until(item, d.day), item.location].filter(Boolean).join(' · ') }}</p>
           </IonLabel>
         </IonItem>
-        <div v-if="selected?.id === item.id" class="d-flex flex-column gap-2 p-3">
+        <div v-if="!readOnly && selected?.id === item.id" class="d-flex flex-column gap-2 p-3">
           <template v-if="mode === 'move'">
             <FormField v-model="start" type="datetime-local" :label="$t('schedule.start')" />
             <FormField v-model="end" type="datetime-local" :label="$t('schedule.end')" />

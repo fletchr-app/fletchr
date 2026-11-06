@@ -130,6 +130,11 @@ export default {
     deleteNote: 'Delete note',
     changeNote: 'Change note',
   },
+  connection: {
+    explain: 'The app keeps working with what is saved on this phone. What you enter is stored here and goes up as soon as the server can be reached again.',
+    nothingWaiting: 'Nothing is waiting to upload.',
+    showList: 'Show the list',
+  },
   sync: {
     waiting: '{n} item is waiting to upload. Saved on this device, it goes up when there is a connection. | {n} items are waiting to upload. Saved on this device, they go up when there is a connection.',
     failed: '{n} item was refused by the server: {error} | {n} items were refused by the server: {error}',
@@ -227,7 +232,7 @@ export default {
   },
   version: {
     appTooOld: 'This app is too old for the server. Please update the app: things may not work, or may not be saved correctly.',
-    serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it. Ask whoever runs the server to update it.',
+    serverOlder: 'The server is older than this app. Some functions may be missing there, and a note on a photo or a video frame, or a drawing, may be saved without it, and a note with a drawing but no text may be refused. Ask whoever runs the server to update it.',
   },
   media: {
     offlineList: 'No connection. This is what the phone has kept: small pictures only, videos and full photos need a connection.',
@@ -321,12 +326,8 @@ export default {
     unset: 'Session',
   },
   home: {
-    hello: 'Hello {name}',
     noTeam: 'You are not in a team yet. Under Settings you can join one with an invite code, or create your own.',
     yourTeams: 'Your teams',
-    thisWeek: 'This week',
-    arrowsShot: 'Arrows shot, scored or not.',
-    lastSession: 'Last session',
     noSessions: 'You have not logged a session yet.',
   },
   team: {
@@ -417,6 +418,8 @@ export default {
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
     nothingThisDay: 'Nothing on this day.',
+    savedAsOf: 'Saved on this phone, as of {time}. Changes need a connection.',
+    notOnPhone: 'This month is not saved on the phone. The phone keeps a month back and three months ahead.',
   },
   event: {
     kind: { training: 'Training', competition: 'Competition', camp: 'Camp' },
@@ -530,6 +533,7 @@ export default {
   gear: {
     none: 'None',
     noBows: 'No bows on this device yet. Add them under Equipment, with a connection, and they will be here next time.',
+    noBowsLocal: 'No bows on this device yet. Add them under Equipment and they will be here next time.',
     bow: 'Bow',
     arrowSet: 'Arrow set',
   },
@@ -806,6 +810,7 @@ export default {
     team: 'Team',
     add: 'Add note',
     noteEmpty: 'Write something first.',
+    drawingOnly: 'Drawing',
     waitingToUpload: 'waiting to upload',
     refused: 'refused by the server',
     takeBack: 'Take back',
@@ -867,6 +872,7 @@ export default {
     },
   },
   profile: {
+    offlineEvaluations: 'Evaluations need a connection.',
     title: 'Profile',
   },
   avatar: {

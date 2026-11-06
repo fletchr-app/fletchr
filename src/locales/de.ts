@@ -134,6 +134,11 @@ export default {
     deleteNote: 'Notiz löschen',
     changeNote: 'Notiz ändern',
   },
+  connection: {
+    explain: 'Die App arbeitet solange mit dem, was auf dem Handy gespeichert ist. Was du eingibst, wird hier abgelegt und hochgeladen, sobald der Server wieder erreichbar ist.',
+    nothingWaiting: 'Nichts wartet auf den Upload.',
+    showList: 'Liste anzeigen',
+  },
   sync: {
     waiting: '{n} Eintrag wartet auf den Upload. Auf diesem Gerät gespeichert, wird er hochgeladen, sobald eine Verbindung besteht. | {n} Einträge warten auf den Upload. Auf diesem Gerät gespeichert, werden sie hochgeladen, sobald eine Verbindung besteht.',
     failed: '{n} Eintrag wurde vom Server abgelehnt: {error} | {n} Einträge wurden vom Server abgelehnt: {error}',
@@ -231,7 +236,7 @@ export default {
   },
   version: {
     appTooOld: 'Diese App ist zu alt für den Server. Bitte aktualisiere die App: Manches funktioniert vielleicht nicht oder wird nicht richtig gespeichert.',
-    serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
+    serverOlder: 'Der Server ist älter als diese App. Manche Funktionen fehlen dort vielleicht, und eine Notiz zu einem Foto oder Videobild oder eine Zeichnung wird womöglich ohne das Bild gespeichert, und eine Notiz mit Zeichnung aber ohne Text wird womöglich abgelehnt. Bitte den Betreiber des Servers, ihn zu aktualisieren.',
   },
   media: {
     offlineList: 'Keine Verbindung. Das hat das Telefon gespeichert: nur kleine Bilder, Videos und ganze Fotos brauchen eine Verbindung.',
@@ -325,12 +330,8 @@ export default {
     unset: 'Training',
   },
   home: {
-    hello: 'Hallo {name}',
     noTeam: 'Du bist noch in keinem Team. Unter Einstellungen kannst du mit einem Einladungscode eins beitreten oder ein eigenes anlegen.',
     yourTeams: 'Deine Teams',
-    thisWeek: 'Diese Woche',
-    arrowsShot: 'Geschossene Pfeile, gewertet oder nicht.',
-    lastSession: 'Letztes Training',
     noSessions: 'Du hast noch kein Training eingetragen.',
   },
   team: {
@@ -421,6 +422,8 @@ export default {
     previousMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     nothingThisDay: 'An diesem Tag ist nichts geplant.',
+    savedAsOf: 'Auf dem Telefon gespeichert, Stand {time}. Ändern geht nur mit Verbindung.',
+    notOnPhone: 'Dieser Monat ist nicht auf dem Telefon gespeichert. Das Telefon behält einen Monat zurück und drei Monate voraus.',
   },
   event: {
     kind: { training: 'Trainingstermin', competition: 'Wettkampf', camp: 'Lager' },
@@ -534,6 +537,7 @@ export default {
   gear: {
     none: 'Keiner',
     noBows: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, mit Verbindung, dann sind sie beim nächsten Mal hier.',
+    noBowsLocal: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, dann sind sie beim nächsten Mal hier.',
     bow: 'Bogen',
     arrowSet: 'Pfeilsatz',
   },
@@ -810,6 +814,7 @@ export default {
     team: 'Team',
     add: 'Notiz hinzufügen',
     noteEmpty: 'Schreib zuerst etwas.',
+    drawingOnly: 'Zeichnung',
     waitingToUpload: 'wartet auf den Upload',
     refused: 'vom Server abgelehnt',
     takeBack: 'Zurücknehmen',
@@ -871,6 +876,7 @@ export default {
     },
   },
   profile: {
+    offlineEvaluations: 'Bewertungen brauchen eine Verbindung.',
     title: 'Profil',
   },
   avatar: {
