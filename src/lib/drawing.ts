@@ -19,6 +19,20 @@ export function pointOn(rect: { left: number; top: number; width: number; height
   return [clamp01((clientX - rect.left) / rect.width), clamp01((clientY - rect.top) / rect.height)]
 }
 
+/** While a finger draws, the picture is magnified this much around the point that is drawn. */
+export const ZOOM = 3;
+/** The point that is drawn sits this many pixels above the finger, so that the finger does not cover it. */
+export const LIFT = 64;
+
+/**
+ * The style that magnifies a picture around a point (in pixels of the picture, before the zoom): that point stays where
+ * it is on the screen and everything around it grows. Nothing when `at` is null.
+ */
+export function zoomStyle(at: { x: number; y: number } | null, zoom: number = ZOOM): Record<string, string> {
+  if (!at) return {};
+  return { transform: `translate(${(1 - zoom) * at.x}px, ${(1 - zoom) * at.y}px) scale(${zoom})`, transformOrigin: '0 0' };
+}
+
 /** The angle at `corner` between the two other points, in degrees (0 to 180), for a picture of `width` by `height`. */
 export function angleDegrees(a: Point, corner: Point, b: Point, width: number, height: number): number {
   const u = [(a[0] - corner[0]) * width, (a[1] - corner[1]) * height] as const
