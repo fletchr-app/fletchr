@@ -526,6 +526,7 @@ async function remove() {
   const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } }).catch(() => ({ response: null }))
   if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
   kept.forget([currentId.value])
+  void library.pull() // Home's tiles learn of the deletion from the tombstone
   router.back()
 }
 

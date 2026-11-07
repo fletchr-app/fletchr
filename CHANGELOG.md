@@ -9,6 +9,7 @@ What changed in each release. The version number and how a release is made: `spe
 - **Deleting a training deletes its notes** (#154): the notes written on the training and its ends, and still on the device, go with it instead of staying behind unseen. Notes on a photo stay with the photo.
 - **Drawing zooms the whole picture** (#163): while a finger is down on a photo or frame, the picture is magnified 3x around a cross that sits above the finger, like when an arrow is placed on the target. The small round loupe is gone.
 - **One screen for photos and clips** (#159): a photo in the photo grid opens in the player now, like a clip. Swipe left or right on the picture for the next or previous one, photos and clips. The old swipe viewer is gone. A photo that failed while it was prepared shows its error and can be deleted from the grid. An upload error shows in the player. Offline, a photo the phone did not keep shows its preview with a small cloud-off mark. When you choose a frame for an evaluation, photos are dimmed.
+- **Deleted photo gone from Home at once** (#165): after you delete a photo or clip in the player, its tile on Home goes away right away instead of staying until the app is reopened.
 - **Backup screen** (#150): the line "On this phone" counts equipment too (bows and arrow sets are in the backup file).
 
 ## 0.24.0 (2026-11-06)
