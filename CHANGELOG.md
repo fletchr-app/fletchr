@@ -8,6 +8,7 @@ What changed in each release. The version number and how a release is made: `spe
 - **Nothing is lost silently offline** (#84): a change to a training's own fields (notes, times, type) made offline is kept when the training was deleted elsewhere, and you are asked what to do, as for results. Before, it was dropped without a word.
 - **Pulls on reconnect, with an overlap** (#84): photos, notes and evaluations are fetched again when the connection returns, not only when the app comes to the front, and every pull asks from a minute before the last change it saw, so a change that was written to the server late is not missed.
 - **Team members and own statistics offline** (#84): the team tab shows who is in your teams from the copy on the phone, and your own statistics and heatmap are computed from the trainings on the phone when the server cannot be reached.
+- **Faster previous and next on photos** (#159): the player loads the photos next to the one on show ahead of time, so swiping does not wait for the download.
 
 ## 0.25.0 (2026-11-07)
 
