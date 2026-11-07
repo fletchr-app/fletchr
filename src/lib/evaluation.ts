@@ -31,7 +31,7 @@ export function toScores(rated: Record<string, { rating: number | null; comment:
       criterion,
       rating: r.rating!,
       comment: r.comment.trim(),
-      ...(r.media ? { media: r.media, frame: r.frame, time_ms: r.timeMs } : {}),
+      ...(r.media ? { media: r.media, ...(r.frame !== null ? { frame: r.frame, time_ms: r.timeMs } : {}) } : {}), // a photo has no frame
     }))
 }
 

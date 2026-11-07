@@ -40,12 +40,16 @@ const router = useRouter()
 const { api, userId } = useAuth()
 
 const PX_PER_FRAME = 12
-// Opened from an evaluation to choose the frame that shows a criterion: "Use this frame" goes back to the form.
+// Opened from an evaluation to choose the frame (or the photo) that shows a criterion: "Use this frame" goes back to the form.
 const frameDraft = useEvaluationDraft()
 const choosing = computed(() => !!route.query.pick && !!frameDraft.picking.value)
 function useFrame() {
   halt()
   const back = frameDraft.finishPick(currentId.value, frame.value, Math.round((frame.value / fps.value) * 1000))
+  if (back) void router.push(back)
+}
+function usePhoto() {
+  const back = frameDraft.finishPick(currentId.value, null, null)
   if (back) void router.push(back)
 }
 // Opened with ?frame=: start at that frame (a link from an evaluation).
@@ -603,6 +607,7 @@ async function moveTo(session: string | null) {
         </div>
         <button v-if="choosing" type="button" class="use" @click="useFrame">{{ $t('evaluations.useFrame', { n: frame + 1 }) }}</button>
       </template>
+      <button v-if="choosing && isPhoto" type="button" class="use" @click="usePhoto">{{ $t('evaluations.usePhoto') }}</button>
       <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body || $t('notes.drawingOnly') }}</button>
       <template v-if="clip?.kind === 'video' && videoUrl">
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
