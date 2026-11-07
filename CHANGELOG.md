@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.26.0 (2026-11-07)
+
 - **Evaluations work without a connection** (#84): fill in an evaluation (yours, or for an archer you coach) with no signal. It is saved on the phone, also when the app is closed meanwhile, and goes up by itself when the connection is back. A change to an evaluation you can read works the same way; the evaluations about you and by you can be read offline. If someone deleted the evaluation meanwhile, it stays on the phone as failed and can be sent again as a new one. Needs the new server (0.26.0): an older one keeps the online form.
 - **Nothing is lost silently offline** (#84): a change to a training's own fields (notes, times, type) made offline is kept when the training was deleted elsewhere, and you are asked what to do, as for results. Before, it was dropped without a word.
 - **Pulls on reconnect, with an overlap** (#84): photos, notes and evaluations are fetched again when the connection returns, not only when the app comes to the front, and every pull asks from a minute before the last change it saw, so a change that was written to the server late is not missed.
