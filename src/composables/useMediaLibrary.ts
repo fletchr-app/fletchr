@@ -1,4 +1,3 @@
-import { App } from '@capacitor/app';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
@@ -6,6 +5,7 @@ import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useKeptMedia } from '@/composables/useKeptMedia';
 import { useLog } from '@/composables/useLog';
 import { useMedia } from '@/composables/useMedia';
+import { useOnReconnect } from '@/composables/useOnReconnect';
 import { cachedThumbnailSrc, removeCachedThumbnails, saveCachedThumbnail } from '@/lib/media-files';
 import { EMPTY_LIBRARY, type KnownMedia, type LibraryAction, type LibraryState, missingThumbnails, pullMedia, reduceLibrary, withoutLinks } from '@/lib/media-library';
 import { storeKey } from '@/lib/store-owner';
@@ -84,7 +84,8 @@ effectScope(true).run(() => {
   watch([loaded, status], () => void pull(), { immediate: true });
   // An upload that finished is on the server now: learn it.
   watch(media.uploaded, () => void pull());
-  void App.addListener('appStateChange', ({ isActive }) => isActive && void pull());
+  // Back in the app, or the connection is back: learn what changed meanwhile.
+  useOnReconnect(() => void pull());
   // The media of an account that is deleted goes with it.
   log.onAccountDeleted(() => {
     void removeCachedThumbnails(state.value.items.map((m) => m.id));

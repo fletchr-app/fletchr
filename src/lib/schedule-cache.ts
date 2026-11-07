@@ -7,15 +7,24 @@ import type { AgendaItem } from './schedule.ts';
 
 type Team = components['schemas']['Team'];
 type Member = components['schemas']['Member'];
+type RosterMember = components['schemas']['RosterMember'];
+type EvaluationTemplate = components['schemas']['Template'];
 
 /** A member of a team you coach, as much as the phone needs to offer the archer offline (no address, no picture). */
 export type CachedMember = Pick<Member, 'user_id' | 'name' | 'role' | 'also_shoots' | 'managed'>;
+
+/** A person in a team as the other members see them: name and role. The picture is a link that runs out, so it is not kept. */
+export type CachedRosterMember = Pick<RosterMember, 'user_id' | 'name' | 'role'>;
 
 export type ScheduleCache = {
   /** Your teams with your role in each. */
   teams: Team[];
   /** The members of the teams you coach, by team id. */
   members: Record<string, CachedMember[]>;
+  /** Who is in each of your teams, as the Team tab shows them, by team id. A team whose roster could not be read is missing. */
+  rosters: Record<string, CachedRosterMember[]>;
+  /** The evaluation forms of a team, by team id, as they were when the form was last opened with a connection (#84). Not read by a pull, which would make a form where a team has none yet. */
+  templates: Record<string, EvaluationTemplate[]>;
   agenda: AgendaItem[];
   /** The span the agenda covers. */
   from: string | null;
@@ -23,7 +32,7 @@ export type ScheduleCache = {
   pulledAt: string | null;
 };
 
-export const EMPTY_SCHEDULE: ScheduleCache = { teams: [], members: {}, agenda: [], from: null, to: null, pulledAt: null };
+export const EMPTY_SCHEDULE: ScheduleCache = { teams: [], members: {}, rosters: {}, templates: {}, agenda: [], from: null, to: null, pulledAt: null };
 
 const DAY_MS = 86_400_000;
 /** Back as far as a session may be backdated (`MAX_BACKDATE_DAYS`), ahead for the agenda list; together under the server's 120 days. */
@@ -35,10 +44,19 @@ export const windowAt = (at: Date): { from: string; to: string } => ({
   to: new Date(at.getTime() + AHEAD_DAYS * DAY_MS).toISOString(),
 });
 
-export type SchedulePull = { teams: Team[]; members: Record<string, CachedMember[]>; agenda: AgendaItem[]; from: string; to: string };
+export type SchedulePull = { teams: Team[]; members: Record<string, CachedMember[]>; rosters?: Record<string, CachedRosterMember[]>; agenda: AgendaItem[]; from: string; to: string };
 
 /** The copy after a pull that went through: everything replaced, so a training cancelled or moved elsewhere and the trainings of a team you left are gone. */
-export const pulled = (pull: SchedulePull, at: Date): ScheduleCache => ({ ...pull, pulledAt: at.toISOString() });
+export const pulled = (pull: SchedulePull, at: Date, before?: ScheduleCache): ScheduleCache => ({
+  ...pull,
+  rosters: pull.rosters ?? {},
+  // The forms are not part of a pull; the ones of teams you are still in stay.
+  templates: Object.fromEntries(Object.entries(before?.templates ?? {}).filter(([team]) => pull.teams.some((t) => String(t.id) === team))),
+  pulledAt: at.toISOString(),
+});
+
+/** The copy with the forms of one team replaced by what the server just said. */
+export const withTemplates = (state: ScheduleCache, team: number, templates: EvaluationTemplate[]): ScheduleCache => ({ ...state, templates: { ...state.templates, [String(team)]: templates } });
 
 const overlaps = (item: AgendaItem, from: string, to: string) => new Date(item.start).getTime() < new Date(to).getTime() && new Date(item.end).getTime() > new Date(from).getTime();
 
@@ -78,7 +96,14 @@ export async function pullSchedule(api: ApiClient, at: Date): Promise<SchedulePu
       if (!list) return null;
       members[String(team.id)] = list.map(slim);
     }
-    return { teams, members, agenda, ...window };
+    // The roster of every team you are in. One that cannot be read (a server without the route, say) is left out and does not
+    // stop the rest of the copy from being renewed.
+    const rosters: Record<string, CachedRosterMember[]> = {};
+    for (const team of teams) {
+      const list = (await api.GET('/api/teams/{team_id}/roster/', { params: { path: { team_id: team.id } } }).catch(() => ({ data: undefined }))).data;
+      if (list) rosters[String(team.id)] = list.map(({ user_id, name, role }) => ({ user_id, name, role }));
+    }
+    return { teams, members, rosters, agenda, ...window };
   } catch {
     return null;
   }

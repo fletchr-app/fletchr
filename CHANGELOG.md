@@ -4,6 +4,14 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.26.0 (2026-11-07)
+
+- **Evaluations work without a connection** (#84): fill in an evaluation (yours, or for an archer you coach) with no signal. It is saved on the phone, also when the app is closed meanwhile, and goes up by itself when the connection is back. A change to an evaluation you can read works the same way; the evaluations about you and by you can be read offline. If someone deleted the evaluation meanwhile, it stays on the phone as failed and can be sent again as a new one. Needs the new server (0.26.0): an older one keeps the online form.
+- **Nothing is lost silently offline** (#84): a change to a training's own fields (notes, times, type) made offline is kept when the training was deleted elsewhere, and you are asked what to do, as for results. Before, it was dropped without a word.
+- **Pulls on reconnect, with an overlap** (#84): photos, notes and evaluations are fetched again when the connection returns, not only when the app comes to the front, and every pull asks from a minute before the last change it saw, so a change that was written to the server late is not missed.
+- **Team members and own statistics offline** (#84): the team tab shows who is in your teams from the copy on the phone, and your own statistics and heatmap are computed from the trainings on the phone when the server cannot be reached.
+- **Faster previous and next on photos** (#159): the player loads the photos next to the one on show ahead of time, so swiping does not wait for the download.
+
 ## 0.25.0 (2026-11-07)
 
 - **Who sees a photo or video** (#150): in the full-screen view you can change at any time whether your coaches see a photo or video that is in no session. A clip you set yourself keeps its choice, also after a change in Settings.

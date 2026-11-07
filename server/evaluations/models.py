@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -56,6 +58,8 @@ class Evaluation(models.Model):
         SHARED = "shared"
         COACH_ONLY = "coach_only"
 
+    # The phone gives an evaluation its uid when it is written offline, so that sending it twice writes it once.
+    uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     team = models.ForeignKey("core.Team", on_delete=models.CASCADE, related_name="evaluations")
     archer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="evaluations")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="written_evaluations")

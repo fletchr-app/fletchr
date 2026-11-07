@@ -254,7 +254,7 @@ class PasswordReset(models.Model):
 
 
 class Tombstone(models.Model):
-    """A photo, video or note that was deleted, for the phone of `owner`, who may have a copy and drops it.
+    """A photo, video, note or evaluation that was deleted, for the phone of `owner`, who may have a copy and drops it.
 
     Only the id and the time are kept, for everyone who could read the item (see `core.tombstones.forget`).
     Sessions have their own (`SessionTombstone`), because they can also be merged into another one.
@@ -263,9 +263,10 @@ class Tombstone(models.Model):
     class Kind(models.TextChoices):
         MEDIA = "media"
         NOTE = "note"
+        EVALUATION = "evaluation"
 
     kind = models.CharField(max_length=10, choices=Kind.choices)
-    uid = models.UUIDField(help_text="The id of a photo or video, the uid of a note")
+    uid = models.UUIDField(help_text="The id of a photo or video, the uid of a note or an evaluation")
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
     at = models.DateTimeField(default=timezone.now)
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onIonViewWillEnter } from '@ionic/vue'
 import AppPage from '@/components/AppPage.vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -14,6 +14,7 @@ import ScoreChart from '@/components/ScoreChart.vue'
 import VolumeChart from '@/components/VolumeChart.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
+import { useOnReconnect } from '@/composables/useOnReconnect'
 import { useRemote } from '@/composables/useRemote'
 import { computeArrowStats, computeStats, fromLog } from '@/lib/stats'
 
@@ -43,18 +44,31 @@ const { api, isLocal } = useAuth()
 // Without an account the numbers are computed from the sessions on the device (src/lib/stats.ts, tied to the server by shared/stats-vectors.json).
 const { sessions: onDevice } = useLog()
 const device = computed(() => fromLog(onDevice.value))
+// Your own numbers fall back to the sessions on the phone when the server cannot be reached (the phone holds your whole
+// history). An archer you coach is not on the phone: that stays an error.
+const fromPhone = ref(false)
 const { data, error, loading, reload } = useRemote(
-  async () =>
-    isLocal.value
-      ? computeStats(device.value.sessions, new Date().toISOString(), timeZone(), WEEKS)
-      : ((await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })).data ?? null),
+  async () => {
+    if (isLocal.value) return computeStats(device.value.sessions, new Date().toISOString(), timeZone(), WEEKS)
+    try {
+      const { data, response } = await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: WEEKS } } })
+      if (data || owner || response.status < 500) {
+        fromPhone.value = false
+        return data ?? null
+      }
+    } catch (e) {
+      if (owner) throw e
+    }
+    fromPhone.value = true
+    return computeStats(device.value.sessions, new Date().toISOString(), timeZone(), WEEKS)
+  },
   { watch: [onDevice] },
 )
 
 // The names of the equipment setups, for the comparison.
 const setups = useRemote(async () => (isLocal.value ? [] : ((await api.GET('/api/setups/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)))
 const setupLabels = computed(() =>
-  isLocal.value
+  isLocal.value || fromPhone.value
     ? device.value.setupLabels
     : Object.fromEntries(
         (setups.data.value ?? []).map((s) => [
@@ -66,9 +80,24 @@ const setupLabels = computed(() =>
 
 // Numbered arrows: which ones land away from the group. Empty for an archer who does not number them.
 const arrows = useRemote(
-  async () => (isLocal.value ? computeArrowStats(device.value.sessions) : ((await api.GET('/api/stats/arrows/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null)),
+  async () => {
+    if (isLocal.value || fromPhone.value) return computeArrowStats(device.value.sessions)
+    try {
+      return (await api.GET('/api/stats/arrows/', { params: { query: { owner: owner ? Number(owner) : undefined } } })).data ?? null
+    } catch (e) {
+      if (owner) throw e
+      return computeArrowStats(device.value.sessions)
+    }
+  },
   { watch: [onDevice] },
 )
+
+// The connection is back: show the server's numbers.
+useOnReconnect(() => {
+  if (!fromPhone.value) return
+  reload()
+  arrows.reload()
+})
 
 // The tab stays alive between visits: show fresh numbers each time it is opened again (the first time it has just loaded).
 let firstVisit = true
@@ -86,6 +115,7 @@ onIonViewWillEnter(() => {
   <AppPage :title="title" :back="hasBack">
     <div class="screen">
       <ErrorText :message="error" />
+      <div v-if="fromPhone" class="muted">{{ $t('stats.fromPhone') }}</div>
       <div v-if="loading">{{ $t('common.loading') }}</div>
       <template v-if="data">
         <div class="d-flex gap-3">

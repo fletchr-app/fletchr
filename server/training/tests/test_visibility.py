@@ -254,6 +254,7 @@ NO_TRAINING_DATA = {
     "api/notes/teams/", "api/teams/<int:team_id>/evaluation-templates/", "api/evaluation-templates/<int:pk>/",
     "api/^evaluations/$", "api/^evaluations/(?P<pk>[^/.]+)/$",  # evaluations do not read sessions; their clip links are tested below
     "api/notes/<uuid:uid>/",  # write only, author only: tested below
+    "api/evaluations/<uuid:uid>/",  # write only, author only: evaluations/tests/test_evaluation_put.py
 }
 COVERED_ELSEWHERE = {"api/events/<uuid:event_id>/archers/", "api/events/<uuid:event_id>/attach/", "api/events/mine/"}
 

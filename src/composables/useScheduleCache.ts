@@ -4,8 +4,9 @@ import { addBeforeSignOut, useAuth } from '@/composables/useAuth';
 import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useLog } from '@/composables/useLog';
 import { useOnReconnect } from '@/composables/useOnReconnect';
+import type { components } from '@/lib/api-types';
 import { dataStore } from '@/lib/local-store';
-import { EMPTY_SCHEDULE, noteTeams, pulled, pullSchedule, type ScheduleCache } from '@/lib/schedule-cache';
+import { EMPTY_SCHEDULE, noteTeams, pulled, pullSchedule, type ScheduleCache, withTemplates } from '@/lib/schedule-cache';
 import { storeKey } from '@/lib/store-owner';
 
 // Your teams, their trainings from a month back to three months ahead, and the members of the teams you coach, kept on the
@@ -13,6 +14,7 @@ import { storeKey } from '@/lib/store-owner';
 // sign-in, when the app comes back to the front and when the connection returns (at most every five minutes, unless
 // something was changed here). Removed on sign-out: it holds other people's names.
 const MAX_AGE_MS = 5 * 60_000;
+type Template = components['schemas']['Template'];
 
 const { api, storeOwner, status } = useAuth();
 const log = useLog();
@@ -48,7 +50,7 @@ async function pull(force = false): Promise<void> {
       triedAt = 0; // try again next time
       return;
     }
-    state.value = pulled(result, at);
+    state.value = pulled(result, at, state.value);
     pulls.value++;
   })();
   try {
@@ -81,6 +83,11 @@ async function writableTeams(archer: number): Promise<{ id: number; name: string
   return loaded.value && state.value.pulledAt ? noteTeams(state.value, archer) : null;
 }
 
+/** Keep the forms of a team the server just gave, for the evaluation form without a connection. */
+function rememberTemplates(team: number, templates: Template[]) {
+  if (loaded.value && status.value === 'signedIn') state.value = withTemplates(state.value, team, templates);
+}
+
 effectScope(true).run(() => {
   watch(
     [loaded, status],
@@ -96,5 +103,5 @@ effectScope(true).run(() => {
 });
 
 export function useScheduleCache() {
-  return { state: computed(() => state.value), loaded, pull, pulls, writableTeams, remove };
+  return { state: computed(() => state.value), loaded, pull, pulls, writableTeams, rememberTemplates, remove };
 }

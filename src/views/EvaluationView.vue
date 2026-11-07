@@ -9,6 +9,7 @@ import AppPage from '@/components/AppPage.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useEvaluationLibrary } from '@/composables/useEvaluationLibrary'
 import { useRemote } from '@/composables/useRemote'
 import { average, type Criterion, groupCriteria } from '@/lib/evaluation'
 import { errorMessage } from '@/lib/errors'
@@ -22,7 +23,9 @@ const router = useRouter()
 const { api } = useAuth()
 const id = Number(route.params.id)
 
-const evaluation = useRemote(async () => (await api.GET('/api/evaluations/{id}/', { params: { path: { id } } })).data ?? null)
+// Without a connection the copy on the phone: it can be read and changed (the change goes up later); deleting and who reads it need the server.
+const library = useEvaluationLibrary()
+const evaluation = useRemote(async () => await library.get(id))
 let first = true
 onIonViewWillEnter(() => (first ? (first = false) : evaluation.reload()))
 
@@ -91,13 +94,14 @@ const frameText = (s: { frame?: number | null; time_ms?: number | null }) =>
           <div class="fw-semibold">{{ $t('evaluations.goals') }}</div>
           <div style="white-space: pre-wrap">{{ e.goals }}</div>
         </div>
-        <template v-if="e.can_edit && e.kind === 'coach'">
+        <div v-if="library.offline.value" class="muted">{{ $t('evaluations.fromPhone') }}</div>
+        <template v-if="e.can_edit && e.kind === 'coach' && !library.offline.value">
           <ChipGroup :model-value="e.visibility ?? 'coach_only'" :label="$t('notes.whoCanRead')" :options="VISIBILITY" @update:model-value="setVisibility" />
           <div class="faint">{{ $t('evaluations.visibilityHint') }}</div>
         </template>
         <ErrorText :message="error" />
         <AppButton v-if="e.can_edit" :router-link="`/evaluate?archer=${e.archer}&kind=${e.kind}&edit=${e.id}&name=${encodeURIComponent(e.archer_name)}`">{{ $t('evaluations.edit') }}</AppButton>
-        <AppButton v-if="e.can_delete" secondary @click="remove">{{ confirmDelete ? $t('evaluations.deleteConfirm') : $t('common.delete') }}</AppButton>
+        <AppButton v-if="e.can_delete && !library.offline.value" secondary @click="remove">{{ confirmDelete ? $t('evaluations.deleteConfirm') : $t('common.delete') }}</AppButton>
       </template>
     </div>
   </AppPage>

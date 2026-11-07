@@ -1,6 +1,6 @@
 # Merge the photo viewer in the grid into the media player (#159)
 
-Status: implemented in the PR for #159 except step 3 (faster previous/next: neighbours are not preloaded, the detail request still runs for each photo); not yet tried on a phone
+Status: implemented in the PR for #159 with step 3 reduced to preloading (neighbour photos are fetched under the link from the list and the player keeps that link; the detail request still runs for each photo and the listed object is not shown before it); not yet tried on a phone
 Date: 2026-11-06
 
 Goal: one full-screen view for photos and clips, the player (`MediaPlayerView.vue`, `/media/:id`). The grid in `MediaView.vue` opens photos there, as it already does for clips, and its swipe viewer (`IonModal`) goes away. Nothing the viewer can do today is lost.

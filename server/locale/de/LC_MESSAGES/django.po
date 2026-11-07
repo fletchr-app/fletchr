@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 11:09+0100\n"
+"POT-Creation-Date: 2026-11-07 13:15+0100\n"
 "PO-Revision-Date: 2026-10-23 10:29+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -467,17 +467,21 @@ msgstr "Gib an, welches Formular benutzt wird"
 msgid "This form belongs to another team"
 msgstr "Dieses Formular gehört zu einem anderen Team"
 
-#: evaluations/views.py:29
+#: evaluations/views.py:31
 msgid "Only coaches can change the forms of a team"
 msgstr "Nur Trainer können die Formulare eines Teams ändern"
 
-#: evaluations/views.py:56
+#: evaluations/views.py:58
 msgid "A form needs a name and criteria"
 msgstr "Ein Formular braucht einen Namen und Kriterien"
 
-#: evaluations/views.py:97
+#: evaluations/views.py:99
 msgid "Evaluations were made with this form, so it stays"
 msgstr "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es"
+
+#: evaluations/views.py:203
+msgid "This evaluation was deleted"
+msgstr "Diese Bewertung wurde gelöscht"
 
 #: media/serializers.py:74
 msgid "This session belongs to another archer"

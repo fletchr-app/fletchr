@@ -93,6 +93,10 @@ async function keptClip(known: Parameters<typeof clipOfKept>[0]) {
 }
 // Offline, a photo the phone did not keep shows its thumbnail (a small cloud-off mark says so).
 const previewOnly = ref(false)
+// Links from the list open for an hour; ahead-of-time pictures are used for less than that.
+const PRELOAD_VALID_MS = 30 * 60 * 1000
+const listedLinks = new Map<string, string>()
+const preloaded = new Map<string, { url: string; at: number }>()
 const { data: clip, error, reload } = useRemote(
   async () => {
     previewOnly.value = false
@@ -110,7 +114,9 @@ const { data: clip, error, reload } = useRemote(
       return clipOfKept(known, { file: preview, thumbnail: preview })
     }
     if (unreachable) throw new Error('offline')
-    return data ?? null
+    // The picture was fetched ahead of time under the link from the list; the fresh link of the detail would fetch it again.
+    const ahead = data?.kind === 'photo' ? preloaded.get(id) : undefined
+    return data && ahead && Date.now() - ahead.at < PRELOAD_VALID_MS ? { ...data, file_url: ahead.url } : (data ?? null)
   },
   { watch: [currentId] },
 )
@@ -125,6 +131,7 @@ onMounted(async () => {
   if (!session && owner === undefined) return
   const query = session ? { session } : { owner, ...(unattached ? { without_session: true } : {}) }
   const { data } = await api.GET('/api/media/', { params: { query } }).catch(() => ({ data: null }))
+  for (const m of data ?? []) if (m.kind === 'photo') listedLinks.set(m.id, m.file_url)
   const offline = session || owner === Number(userId.value) ? library.known({ session: session ?? null, withoutSession: unattached }) : []
   everything.value = playerSiblings(media.items.value, (data ?? offline).map((m) => ({ id: m.id, kind: m.kind })), { session, owner, unattached }, Number(userId.value))
 })
@@ -137,6 +144,18 @@ const siblings = computed(() => {
 const index = computed(() => siblings.value.indexOf(currentId.value))
 const hasPrevious = computed(() => index.value > 0)
 const hasNext = computed(() => index.value >= 0 && index.value < siblings.value.length - 1)
+// Fetch the pictures next to the one on show, so that previous and next do not wait for the download.
+function preloadNeighbours() {
+  if (!isPhoto.value) return
+  for (const delta of [1, -1]) {
+    const id = siblings.value[index.value + delta]
+    const url = id ? listedLinks.get(id) : undefined
+    if (!id || !url || preloaded.has(id) || media.items.value.some((i) => i.id === id) || kept.has(id)) continue
+    preloaded.set(id, { url, at: Date.now() })
+    new Image().src = url
+  }
+}
+watch([clip, siblings], preloadNeighbours)
 function goTo(delta: number) {
   halt()
   currentId.value = siblings.value[index.value + delta]!
