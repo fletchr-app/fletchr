@@ -3,6 +3,7 @@ import { computed, onScopeDispose, reactive, ref, watch } from 'vue'
 import { useArcherSessions } from '@/composables/useArcherSessions'
 import { useAuth } from '@/composables/useAuth'
 import { useEquipment } from '@/composables/useEquipment'
+import { useEvaluationLibrary } from '@/composables/useEvaluationLibrary'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
@@ -157,7 +158,9 @@ export function useOwnProfile(): ProfileData {
 
   const noteLibrary = useNoteLibrary()
   const profile = fromServer(async () => (await api.GET('/api/me/')).data ?? null)
-  const evaluations = fromServer(async (id) => (await api.GET('/api/evaluations/', { params: { query: { archer: id } } })).data ?? null)
+  // The server's list, or the copy on the phone without a connection (what is about you and what you wrote).
+  const evaluationLibrary = useEvaluationLibrary()
+  const evaluations = fromServer(async (id) => await evaluationLibrary.list({ archer: id }))
   const sharedNotes = useRemote(async () => (me.value === null ? [] : ((await noteLibrary.list({ archer: me.value, visibility: 'shared' })) ?? [])), { watch: [me] })
   const remoteSessions = fromServer(async (id) => (await api.GET('/api/sessions/', { params: { query: { owner: id } } })).data ?? null)
   const { teams, loaded: teamsLoaded, load: loadTeams } = useTeams()

@@ -1,4 +1,3 @@
-import { App } from '@capacitor/app';
 import { computed, effectScope, ref, shallowRef, watch } from 'vue';
 
 import { useAuth } from '@/composables/useAuth';
@@ -6,6 +5,7 @@ import { useKeyedStore } from '@/composables/useKeyedStore';
 import { useLog } from '@/composables/useLog';
 import { useMediaLibrary } from '@/composables/useMediaLibrary';
 import { useNotes } from '@/composables/useNotes';
+import { useOnReconnect } from '@/composables/useOnReconnect';
 import {
   EMPTY_NOTE_LIBRARY,
   isKept,
@@ -85,7 +85,8 @@ effectScope(true).run(() => {
   watch([loaded, status], () => void pull(), { immediate: true });
   // A note that went up is on the server now: learn it.
   watch(notes.uploaded, () => void pull());
-  void App.addListener('appStateChange', ({ isActive }) => isActive && void pull());
+  // Back in the app, or the connection is back: learn what changed meanwhile.
+  useOnReconnect(() => void pull());
   log.onAccountDeleted(() => {
     state.value = EMPTY_NOTE_LIBRARY;
     offline.value = false;

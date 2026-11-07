@@ -267,6 +267,20 @@ def test_a_coach_only_evaluation_notifies_nobody_until_it_is_shared(api, club, f
     assert len(firebase.sent) == 1
 
 
+def test_sending_a_shared_evaluation_twice_notifies_once(api, club, firebase, phone):
+    import uuid
+
+    form = api("coach").get(f"/api/teams/{club['a'].pk}/evaluation-templates/").data[0]
+    body = {
+        "archer": club["archer1"].pk, "template": form["id"], "kind": "coach", "date": "2026-10-01", "comment": "", "goals": "", "visibility": "shared",
+        "scores": [{"criterion": form["criteria"][0]["key"], "rating": 4}],
+    }
+    uid = uuid.uuid4()
+    assert api("coach").put(f"/api/evaluations/{uid}/", body, format="json").status_code == 201
+    assert api("coach").put(f"/api/evaluations/{uid}/", body, format="json").status_code == 200
+    assert types(firebase) == ["evaluation"]
+
+
 def test_a_self_assessment_does_not_notify_the_archer(api, club, firebase, phone):
     res = rate(api, club, who="archer1", kind="self")
     assert res.status_code == 201

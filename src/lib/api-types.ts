@@ -301,6 +301,29 @@ export interface paths {
         patch: operations["evaluations_partial_update"];
         trace?: never;
     };
+    "/api/evaluations/{uid}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Write an evaluation by the uid the app gave it, or change it. Safe to repeat: the same request again changes nothing and sends no second push.
+         *
+         *     Only the author can write it; one of somebody else is answered like one that does not exist. An evaluation that was
+         *     deleted gives 410. The same rules as for `POST`, and the scores are replaced as a whole. A photo or clip the server
+         *     has not seen yet is a 400 on that field.
+         */
+        put: operations["evaluations_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{event_id}/": {
         parameters: {
             query?: never;
@@ -428,7 +451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Photos, videos and notes you may have a copy of that were deleted, oldest first. Sessions: `/api/sessions/gone/`. */
+        /** @description Photos, videos, notes and evaluations you may have a copy of that were deleted (or taken back from you), oldest first. Sessions: `/api/sessions/gone/`. */
         get: operations["gone_list"];
         put?: never;
         post?: never;
@@ -2014,6 +2037,8 @@ export interface components {
         EnvironmentEnum: "indoor" | "outdoor";
         Evaluation: {
             readonly id: number;
+            /** Format: uuid */
+            readonly uid: string;
             /** @description Only needed in several teams */
             team?: number;
             archer: number;
@@ -3256,7 +3281,7 @@ export interface components {
             kind: components["schemas"]["TombstoneKindEnum"];
             /**
              * Format: uuid
-             * @description The id of a photo or video, the uid of a note
+             * @description The id of a photo or video, the uid of a note or an evaluation
              */
             uid: string;
             /** Format: date-time */
@@ -3265,9 +3290,10 @@ export interface components {
         /**
          * @description * `media` - Media
          *     * `note` - Note
+         *     * `evaluation` - Evaluation
          * @enum {string}
          */
-        TombstoneKindEnum: "media" | "note";
+        TombstoneKindEnum: "media" | "note" | "evaluation";
         /**
          * @description * `me` - me
          *     * `coaches` - coaches
@@ -4033,6 +4059,8 @@ export interface operations {
                  */
                 kind?: "coach" | "self";
                 team?: number;
+                /** @description Changed after this time */
+                updated_after?: string;
             };
             header?: never;
             path?: never;
@@ -4143,6 +4171,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Evaluation"];
                 };
+            };
+        };
+    };
+    evaluations_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EvaluationRequest"];
+                "multipart/form-data": components["schemas"]["EvaluationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            /** @description No response body */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4346,8 +4416,9 @@ export interface operations {
                 /**
                  * @description * `media` - Media
                  *     * `note` - Note
+                 *     * `evaluation` - Evaluation
                  */
-                kind?: "media" | "note";
+                kind?: "evaluation" | "media" | "note";
                 /** @description Deleted after this time */
                 updated_after?: string;
             };

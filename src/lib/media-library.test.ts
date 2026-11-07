@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
 import type { ApiClient } from './auth-session.ts';
-import { EMPTY_LIBRARY, type KnownMedia, missingThumbnails, pullMedia, reduceLibrary, withoutLinks } from './media-library.ts';
+import { EMPTY_LIBRARY, type KnownMedia, type LibraryAction, missingThumbnails, pullMedia, reduceLibrary, withoutLinks } from './media-library.ts';
 
 const media = (id: string, takenAt: string, extra: Partial<KnownMedia> = {}): KnownMedia => ({
   id, owner: 7, owner_name: 'Me', uploaded_by: 7, uploaded_by_name: 'Me', session: null, event: '', event_info: null, kind: 'photo', taken_at: takenAt,
@@ -15,6 +15,12 @@ test('a pull adds new items and replaces changed ones, newest first', () => {
   s = reduceLibrary(s, { type: 'pulled', changed: [media('a', '2026-10-01T10:00:00Z', { note: 'slow' }), media('c', '2026-10-03T10:00:00Z')], gone: [], lastPull: 't2' });
   assert.deepEqual(s.items.map((m) => [m.id, m.note]), [['c', undefined], ['b', undefined], ['a', 'slow']]);
   assert.equal(s.lastPull, 't2');
+});
+
+test('the same pull applied twice gives the same list (a pull asks with an overlap)', () => {
+  const pull: LibraryAction = { type: 'pulled', changed: [media('a', '2026-10-01T10:00:00Z'), media('b', '2026-10-02T10:00:00Z')], gone: ['dead'], lastPull: 't1' };
+  const once = reduceLibrary(EMPTY_LIBRARY, pull);
+  assert.deepEqual(reduceLibrary(once, pull), once);
 });
 
 test('a pull without a newer time keeps where the last one got to', () => {
@@ -76,8 +82,9 @@ test('pull asks for your media and the deleted ones since the last time', async 
   const result = await pullMedia(api, 7, '2026-10-04T00:00:00Z');
   assert.ok(result);
   assert.deepEqual(calls.map((c) => [c.path, c.query]), [
-    ['/api/media/', { owner: 7, updated_after: '2026-10-04T00:00:00Z' }],
-    ['/api/gone/', { kind: 'media', updated_after: '2026-10-04T00:00:00Z' }],
+    // a minute before the stamp: a change that committed late is not missed (sync-overlap.ts)
+    ['/api/media/', { owner: 7, updated_after: '2026-10-03T23:59:00.000Z' }],
+    ['/api/gone/', { kind: 'media', updated_after: '2026-10-03T23:59:00.000Z' }],
   ]);
   assert.deepEqual(result.changed.map((m) => m.id), ['a']);
   assert.deepEqual(result.gone, ['dead']);

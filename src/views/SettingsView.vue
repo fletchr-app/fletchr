@@ -15,6 +15,7 @@ import { useEquipment } from '@/composables/useEquipment'
 import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
+import { useEvaluations } from '@/composables/useEvaluations'
 import { useNotes } from '@/composables/useNotes'
 import { usePush } from '@/composables/usePush'
 import { useServer, useServerHealth } from '@/composables/useServer'
@@ -35,6 +36,7 @@ const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
 const notes = useNotes()
+const evaluations = useEvaluations()
 const { teams } = useTeams()
 const coachedTeams = computed(() => teams.value.filter((x) => x.my_role !== 'archer'))
 
@@ -42,7 +44,7 @@ const coachedTeams = computed(() => teams.value.filter((x) => x.my_role !== 'arc
 // What has not reached the server stays too, but the person should know before leaving.
 async function confirmSignOut() {
   const unsent =
-    log.waiting.value + log.failed.value.length + media.items.value.length + equipment.waiting.value + equipment.failed.value.length + notes.waiting.value + notes.failed.value.length
+    log.waiting.value + log.failed.value.length + media.items.value.length + equipment.waiting.value + equipment.failed.value.length + notes.waiting.value + notes.failed.value.length + evaluations.waiting.value + evaluations.failed.value.length
   const alert = await alertController.create({
     header: t('settings.signOut'),
     message: [t('settings.signOutEmpty'), ...(unsent > 0 ? [t('settings.signOutWaiting', { n: unsent }, unsent)] : [])].join(' '),

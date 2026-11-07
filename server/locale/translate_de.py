@@ -173,6 +173,7 @@ DE = {
     "A form needs a name and criteria": "Ein Formular braucht einen Namen und Kriterien",
     "Evaluations were made with this form, so it stays": "Mit diesem Formular wurden Bewertungen gemacht, deshalb bleibt es",
     "A photo has no frame": "Ein Foto hat kein Bild",
+    "This evaluation was deleted": "Diese Bewertung wurde gelöscht",
     "Say which frame the rating is about": "Gib an, zu welchem Bild die Bewertung gehört",
     "Only the archer or whoever added it can change a photo or video": "Nur der Schütze oder wer es hinzugefügt hat, kann ein Foto oder Video ändern",
     "Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page.": "Für Videos von Schützen unter 18 braucht es zuerst die Einwilligung der Eltern. Ein Trainer kann sie auf der Seite des Schützen eintragen.",

@@ -4,7 +4,7 @@ import { test } from 'vitest';
 
 import type { components, paths } from './api-types.ts';
 import type { AgendaItem } from './schedule.ts';
-import { AHEAD_DAYS, BACK_DAYS, covers, EMPTY_SCHEDULE, itemsFor, noteTeams, pulled, pullSchedule, type ScheduleCache, windowAt } from './schedule-cache.ts';
+import { AHEAD_DAYS, BACK_DAYS, covers, EMPTY_SCHEDULE, itemsFor, noteTeams, pulled, pullSchedule, type ScheduleCache, windowAt, withTemplates } from './schedule-cache.ts';
 
 type Team = components['schemas']['Team'];
 
@@ -17,7 +17,7 @@ const window = windowAt(at);
 const tuesday = item('a', '2026-11-03T17:00:00Z', '2026-11-03T18:30:00Z');
 const other = item('b', '2026-11-04T17:00:00Z', '2026-11-04T18:30:00Z', { team: 2, team_name: 'Team B' });
 
-const state = (extra: Partial<Pick<ScheduleCache, 'teams' | 'members' | 'agenda'>> = {}): ScheduleCache =>
+const state = (extra: Partial<Pick<ScheduleCache, 'teams' | 'members' | 'rosters' | 'agenda'>> = {}): ScheduleCache =>
   pulled({ teams: [team(1), team(2, 'archer')], members: {}, agenda: [tuesday, other], ...window, ...extra }, at);
 
 test('a pull replaces the copy: a training gone elsewhere and the trainings of a team you left are gone', () => {
@@ -93,10 +93,38 @@ test('a pull asks for teams, the whole agenda in one request, and the members of
     return json(200, [{ user_id: 7, name: 'Ann', email: 'ann@example.org', managed: false, role: 'archer', also_shoots: false, joined_at: 'x', avatar_url: 'http://pic' }]);
   });
   const result = await pullSchedule(api, at);
-  assert.deepEqual(paths, ['/api/teams/', '/api/events/agenda/', '/api/teams/1/members/']);
+  assert.deepEqual(paths, ['/api/teams/', '/api/events/agenda/', '/api/teams/1/members/', '/api/teams/1/roster/', '/api/teams/2/roster/']);
   assert.equal(query!.get('team'), null);
   assert.equal(query!.get('from'), window.from);
   assert.deepEqual(result?.members, { '1': [{ user_id: 7, name: 'Ann', role: 'archer', also_shoots: false, managed: false }] }); // no address, no picture
+  // the roster of every team you are in, names and roles only: the picture link runs out
+  assert.deepEqual(result?.rosters, { '1': [{ user_id: 7, name: 'Ann', role: 'archer' }], '2': [{ user_id: 7, name: 'Ann', role: 'archer' }] });
+});
+
+test('a roster that cannot be read is left out and does not stop the rest of the copy', async () => {
+  const { api } = client((path) => {
+    if (path === '/api/teams/') return json(200, [team(1, 'archer'), team(2, 'archer')]);
+    if (path === '/api/events/agenda/') return json(200, [tuesday]);
+    if (path === '/api/teams/1/roster/') return json(404);
+    return json(200, [{ user_id: 7, name: 'Ann', role: 'archer', avatar_url: 'http://pic' }]);
+  });
+  const result = await pullSchedule(api, at);
+  assert.deepEqual(Object.keys(result?.rosters ?? {}), ['2']);
+  assert.equal(result?.agenda.length, 1);
+});
+
+test('a pull replaces the rosters whole: a member who left is gone, a team you left too', () => {
+  const ann = { user_id: 7, name: 'Ann', role: 'archer' as const };
+  const ben = { user_id: 8, name: 'Ben', role: 'coach' as const };
+  const before = state({ rosters: { '1': [ann, ben], '2': [ann] } });
+  const after = pulled({ teams: [team(1)], members: {}, rosters: { '1': [ann] }, agenda: [], ...window }, new Date('2026-11-06T10:00:00Z'));
+  assert.deepEqual(before.rosters['1'].map((m) => m.user_id), [7, 8]);
+  assert.deepEqual(after.rosters, { '1': [ann] });
+});
+
+test('a copy written before the rosters existed loads with none', () => {
+  const { rosters: _rosters, ...old } = state();
+  assert.deepEqual({ ...EMPTY_SCHEDULE, ...old }.rosters, {});
 });
 
 test('a failed pull gives nothing, so the copy stays', async () => {
@@ -108,4 +136,13 @@ test('a failed pull gives nothing, so the copy stays', async () => {
     throw new TypeError('offline');
   });
   assert.equal(await pullSchedule(api, at), null);
+});
+
+test('the forms of a team are kept from one pull to the next, as long as you are in the team', () => {
+  const form = { id: 3, name: 'Technique', scale: 5, criteria: [], version: 1 } as unknown as Parameters<typeof withTemplates>[2][number];
+  const before = withTemplates(withTemplates(state(), 1, [form]), 2, [form]);
+  assert.deepEqual(Object.keys(before.templates), ['1', '2']);
+  const after = pulled({ teams: [team(1)], members: {}, agenda: [], ...window }, new Date('2026-11-06T10:00:00Z'), before);
+  assert.deepEqual(Object.keys(after.templates), ['1']); // team 2 is gone, and with it its forms
+  assert.deepEqual(pulled({ teams: [team(1)], members: {}, agenda: [], ...window }, at).templates, {}); // a first pull has none
 });

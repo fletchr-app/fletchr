@@ -21,6 +21,10 @@ vi.mock('@/composables/useEquipment', () => ({ useEquipment: () => ({ bows: shal
 vi.mock('@/composables/useMedia', () => ({ useMedia: () => ({ items: shallowRef([queuedPhoto]) }) }))
 vi.mock('@/composables/useMediaLibrary', () => ({ useMediaLibrary: () => ({ items: shallowRef([]), thumbnails: ref({}) }) }))
 vi.mock('@/composables/useNoteLibrary', () => ({ useNoteLibrary: () => ({ list: async () => [] }) }))
+// The library asks the server first and falls back to its copy; the copy is empty here, so it is the server's answer or the failure.
+vi.mock('@/composables/useEvaluationLibrary', () => ({
+  useEvaluationLibrary: () => ({ list: async (query: unknown) => (await GET('/api/evaluations/', { params: { query } })).data ?? null }),
+}))
 vi.mock('@/composables/useTeams', () => ({ useTeams: () => ({ teams: ref([]), loaded: ref(false), load: async () => {} }) }))
 vi.mock('@/composables/useTrainingVisibility', () => ({ useTrainingVisibility: () => ({ visibility: ref('me') }) }))
 vi.mock('@/composables/useArcherSessions', () => ({ useArcherSessions: () => ({ rows: ref([]), error: ref(null), loading: ref(false) }) }))

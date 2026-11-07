@@ -155,7 +155,7 @@ class EvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evaluation
         fields = [
-            "id", "team", "archer", "archer_name", "author", "author_name", "kind", "date", "comment", "goals", "visibility", "scores",
+            "id", "uid", "team", "archer", "archer_name", "author", "author_name", "kind", "date", "comment", "goals", "visibility", "scores",
             "template", "template_id", "template_name", "version", "scale", "criteria", "can_edit", "can_delete", "created_at", "updated_at",
         ]
         read_only_fields = ["author", "created_at", "updated_at"]

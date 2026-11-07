@@ -45,12 +45,25 @@ const since = (period: Period) => {
   return localDay(from)
 }
 
-// The faces and distances the archer has shot are the choices.
+// The faces and distances the archer has shot are the choices. Your own numbers fall back to the sessions on the phone when
+// the server cannot be reached; an archer you coach is not on the phone.
+const fromPhone = ref(false)
 const stats = useRemote(
-  async () =>
-    isLocal.value
-      ? computeStats(fromLog(onDevice.value).sessions, new Date().toISOString(), timeZone(), 1)
-      : ((await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: 1 } } })).data ?? null),
+  async () => {
+    const own = () => computeStats(fromLog(onDevice.value).sessions, new Date().toISOString(), timeZone(), 1)
+    if (isLocal.value) return own()
+    try {
+      const { data, response } = await api.GET('/api/stats/', { params: { query: { owner: owner ? Number(owner) : undefined, tz: timeZone(), weeks: 1 } } })
+      if (data || owner || response.status < 500) {
+        fromPhone.value = false
+        return data ?? null
+      }
+    } catch (e) {
+      if (owner) throw e
+    }
+    fromPhone.value = true
+    return own()
+  },
   { watch: [onDevice] },
 )
 const choices = computed(() => (stats.data.value?.scores ?? []).map((g) => ({ value: `${g.face}|${g.distance_m}`, label: `${g.face_name} · ${formatDistance(g.distance_m)}` })))
@@ -66,12 +79,20 @@ const positions = useRemote(
   async () => {
     if (!choice.value) return null
     const [face, distance] = choice.value.split('|') as [string, string]
-    if (isLocal.value) return positionsOf(fromLog(onDevice.value).sessions, { face, distance_m: distance, from: since(period.value), tz: timeZone() })
-    return (
-      await api.GET('/api/stats/positions/', {
-        params: { query: { owner: owner ? Number(owner) : undefined, face, distance_m: Number(distance), from: since(period.value), tz: timeZone() } },
-      })
-    ).data ?? null
+    const own = () => positionsOf(fromLog(onDevice.value).sessions, { face, distance_m: distance, from: since(period.value), tz: timeZone() })
+    if (isLocal.value || fromPhone.value) return own()
+    try {
+      return (
+        (
+          await api.GET('/api/stats/positions/', {
+            params: { query: { owner: owner ? Number(owner) : undefined, face, distance_m: Number(distance), from: since(period.value), tz: timeZone() } },
+          })
+        ).data ?? null
+      )
+    } catch (e) {
+      if (owner) throw e
+      return own()
+    }
   },
   { watch: [choice, period] },
 )
@@ -103,6 +124,7 @@ const tiles = computed(() =>
 <template>
   <AppPage :title="title" back>
     <div class="screen">
+      <div v-if="fromPhone" class="muted">{{ $t('stats.fromPhone') }}</div>
       <ErrorText :message="stats.error.value ?? positions.error.value" />
       <div v-if="stats.loading.value">{{ $t('common.loading') }}</div>
       <div v-else-if="choices.length === 0">{{ $t('stats.noScored') }}</div>

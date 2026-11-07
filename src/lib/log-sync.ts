@@ -3,6 +3,7 @@ import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
 import type { Gear, LogAction, LogSession, LogState, Op } from './log-model.ts';
 import { fromServer } from './session-view.ts';
+import { askSince } from './sync-overlap.ts';
 
 /** `mergedInto`: the server put this session into another one, which has this id. `gone`: the server deleted it. `withoutEvent`: the server refused the team training it is linked to. */
 export type SendResult = { kind: 'ok'; mergedInto?: string } | { kind: 'retry' } | { kind: 'gone' } | { kind: 'withoutEvent' } | { kind: 'failed'; message: string };
@@ -151,7 +152,8 @@ export async function drain(
  */
 export async function pull(api: ApiClient, userId: number, since?: string, skip: ReadonlySet<string> = new Set(), owners: readonly number[] = []): Promise<LogAction[] | null> {
   try {
-    const query = { owner: userId, ...(since ? { updated_after: since } : {}) };
+    const asked = askSince(since);
+    const query = { owner: userId, ...(asked ? { updated_after: asked } : {}) };
     const [list, gone] = await Promise.all([api.GET('/api/sessions/', { params: { query } }), api.GET('/api/sessions/gone/', { params: { query } })]);
     if (!list.data || !gone.data) return null;
     const actions: LogAction[] = gone.data.map((g) => (g.merged_into ? { type: 'replaceSessionId', from: g.id, to: g.merged_into } : { type: 'sessionGone', id: g.id }));
