@@ -19,7 +19,7 @@ class TombstoneFilter(django_filters.FilterSet):
 
 
 class GoneListView(generics.ListAPIView):
-    """Photos, videos and notes you may have a copy of that were deleted, oldest first. Sessions: `/api/sessions/gone/`."""
+    """Photos, videos, notes and evaluations you may have a copy of that were deleted (or taken back from you), oldest first. Sessions: `/api/sessions/gone/`."""
 
     serializer_class = TombstoneSerializer
     filterset_class = TombstoneFilter

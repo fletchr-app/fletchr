@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
 import type { ApiClient } from './auth-session.ts';
-import { EMPTY_NOTE_LIBRARY, isKept, type KnownNote, pullNotes, reduceNoteLibrary, selectNotes, serverQuery } from './note-library.ts';
+import { EMPTY_NOTE_LIBRARY, isKept, type KnownNote, type NoteLibraryAction, pullNotes, reduceNoteLibrary, selectNotes, serverQuery } from './note-library.ts';
 
 const note = (uid: string, createdAt: string, extra: Partial<KnownNote> = {}): KnownNote => ({
   id: Number(uid.replace(/\D/g, '')) || 1, uid, author: 9, author_name: 'Coach', archer: 7, archer_name: 'Me', body: 'Watch the bow arm', visibility: 'shared', team: 1,
@@ -15,6 +15,12 @@ test('a pull adds new notes and replaces changed ones, newest first', () => {
   s = reduceNoteLibrary(s, { type: 'pulled', changed: [note('n1', '2026-10-01T10:00:00Z', { body: 'Better' })], gone: [], lastPull: 't2' });
   assert.deepEqual(s.notes.map((n) => [n.uid, n.body]), [['n2', 'Watch the bow arm'], ['n1', 'Better']]);
   assert.equal(s.lastPull, 't2');
+});
+
+test('the same pull applied twice gives the same copy (a pull asks with an overlap)', () => {
+  const pull: NoteLibraryAction = { type: 'pulled', changed: [note('n1', '2026-10-01T10:00:00Z'), note('n2', '2026-10-02T10:00:00Z')], gone: ['n9'], lastPull: 't1' };
+  const once = reduceNoteLibrary(EMPTY_NOTE_LIBRARY, pull);
+  assert.deepEqual(reduceNoteLibrary(once, pull), once);
 });
 
 test('a pull without a newer time keeps where the last one got to', () => {
@@ -95,9 +101,10 @@ test('a pull asks for notes about you, notes by you and the deleted ones, since 
   }, calls);
   const result = await pullNotes(api, 7, '2026-09-30T10:00:00Z');
   assert.deepEqual(calls.map((c) => [c.path, c.query]), [
-    ['/api/notes/', { archer: 7, updated_after: '2026-09-30T10:00:00Z' }],
-    ['/api/notes/', { author: 7, updated_after: '2026-09-30T10:00:00Z' }],
-    ['/api/gone/', { kind: 'note', updated_after: '2026-09-30T10:00:00Z' }],
+    // a minute before the stamp: a change that committed late is not missed (sync-overlap.ts)
+    ['/api/notes/', { archer: 7, updated_after: '2026-09-30T09:59:00.000Z' }],
+    ['/api/notes/', { author: 7, updated_after: '2026-09-30T09:59:00.000Z' }],
+    ['/api/gone/', { kind: 'note', updated_after: '2026-09-30T09:59:00.000Z' }],
   ]);
   assert.deepEqual(result?.changed.map((n) => n.uid), ['n1', 'n2', 'n3']);
   assert.deepEqual(result?.gone, ['n9']);

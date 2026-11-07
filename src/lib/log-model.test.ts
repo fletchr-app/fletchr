@@ -355,9 +355,26 @@ test('a coach\'s copy of a session that went into the archer\'s is dropped', () 
   assert.deepEqual(s.outbox, []);
 });
 
-test('a session the server deleted goes, with what was queued for it', () => {
-  const s = run({ type: 'startSession', session: session() }, { type: 'sessionGone', id: 's1' });
+test('a session the server deleted goes when nothing of it waits', () => {
+  const s = run({ type: 'pulled', sessions: [session()], lastPull: 't1' }, { type: 'sessionGone', id: 's1' });
   assert.deepEqual([s.sessions, s.outbox], [[], []]);
+});
+
+test('a session the server deleted is kept when a change of its own fields was not uploaded', () => {
+  const s = run({ type: 'pulled', sessions: [session()], lastPull: 't1' }, { type: 'updateSession', id: 's1', patch: { location: 'Range' } }, { type: 'sessionGone', id: 's1' });
+  assert.deepEqual(s.sessions.map((x) => [x.id, x.gone, x.location]), [['s1', true, 'Range']]);
+  assert.deepEqual(s.outbox, []);
+});
+
+test('keeping a session that was deleted with only a change of its fields queues the session under the new id', () => {
+  const s = run(
+    { type: 'pulled', sessions: [session()], lastPull: 't1' },
+    { type: 'updateSession', id: 's1', patch: { location: 'Range' } },
+    { type: 'sessionGone', id: 's1' },
+    { type: 'keepGoneAsNew', id: 's1', newId: 's2' },
+  );
+  assert.deepEqual(s.sessions.map((x) => [x.id, x.gone, x.location]), [['s2', undefined, 'Range']]);
+  assert.deepEqual(s.outbox.map((o) => o.key), ['session:s2:']);
 });
 
 test('a session the server deleted is kept when results of it were not uploaded', () => {

@@ -2,6 +2,7 @@
 // Only the list and the thumbnails are kept; the files stream from the server. No Vue here, so the rules can be tested.
 import type { ApiClient } from './auth-session.ts';
 import type { components } from './api-types.ts';
+import { askSince } from './sync-overlap.ts';
 
 type Media = components['schemas']['Media'];
 
@@ -53,7 +54,8 @@ export type MediaPull = { changed: Media[]; gone: string[]; lastPull?: string };
  */
 export async function pullMedia(api: ApiClient, userId: number, since?: string): Promise<MediaPull | null> {
   try {
-    const query = since ? { updated_after: since } : {};
+    const asked = askSince(since);
+    const query = asked ? { updated_after: asked } : {};
     const [list, gone] = await Promise.all([
       api.GET('/api/media/', { params: { query: { owner: userId, ...query } } }),
       api.GET('/api/gone/', { params: { query: { kind: 'media', ...query } } }),

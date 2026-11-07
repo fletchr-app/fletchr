@@ -267,11 +267,11 @@ test('the ends queued under the merged id go to the winner', async () => {
   assert.deepEqual(h.queued(), []);
 });
 
-test('410 on a session PUT drops the session', async () => {
+test('410 on a session PUT keeps the session for the archer to decide, its fields were not uploaded', async () => {
   const h = harness(() => json(410, { detail: 'gone' }));
   h.dispatch({ type: 'startSession', session });
   await h.run();
-  assert.deepEqual(h.state().sessions, []);
+  assert.deepEqual(h.state().sessions.map((s) => [s.id, s.gone]), [['s1', true]]);
   assert.deepEqual(h.queued(), []);
 });
 
@@ -327,7 +327,8 @@ test('pull turns the list and the tombstones into actions', async () => {
   });
   const actions = await pull(apiOf(h), 7, '2026-10-17T00:00:00Z', new Set(['queued']));
   assert.ok(actions);
-  assert.match(h.calls[0].search + h.calls[1].search, /updated_after=2026-10-17/);
+  // asked from a minute before the stamp (sync-overlap.ts)
+  assert.match(h.calls[0].search + h.calls[1].search, /updated_after=2026-10-16T23%3A59%3A00\.000Z/);
   assert.deepEqual(actions.slice(0, 2), [{ type: 'replaceSessionId', from: 'old', to: 'new' }, { type: 'sessionGone', id: 'dead' }]);
   const pulled = actions[2];
   assert.equal(pulled.type, 'pulled');

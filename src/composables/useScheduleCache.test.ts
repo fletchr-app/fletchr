@@ -55,8 +55,8 @@ async function load() {
   return { cache: useScheduleCache(), agenda: useAgenda(), teams: useTeams() };
 }
 
-const saved = (teams: unknown[] = [{ id: 1, name: 'Team A', my_role: 'archer', also_shoots: false }]) =>
-  JSON.stringify({ teams, members: {}, agenda: [training], from: '2026-10-01T00:00:00Z', to: '2027-01-30T00:00:00Z', pulledAt: '2026-11-01T08:00:00Z' });
+const saved = (teams: unknown[] = [{ id: 1, name: 'Team A', my_role: 'archer', also_shoots: false }], rosters: unknown = {}) =>
+  JSON.stringify({ teams, members: {}, ...(rosters ? { rosters, templates: {} } : {}), agenda: [training], from: '2026-10-01T00:00:00Z', to: '2027-01-30T00:00:00Z', pulledAt: '2026-11-01T08:00:00Z' });
 
 beforeEach(() => {
   disk.clear();
@@ -73,6 +73,14 @@ test('started without the server, the copy on the phone suggests the training an
   assert.deepEqual(teams.teams.value.map((t) => t.id), [1]);
   assert.equal(teams.loaded.value, true);
   assert.equal(disk.get(KEY), saved()); // a failed pull keeps the copy
+});
+
+test('a copy written before the rosters existed loads, with no rosters, and keeps its agenda', async () => {
+  disk.set(KEY, saved(undefined, null));
+  server(false);
+  const { agenda, cache } = await load();
+  assert.deepEqual(agenda.suggest('2026-11-03T17:30:00Z').map((i) => i.id), ['a']);
+  assert.deepEqual(cache.state.value.rosters, {});
 });
 
 test('a pull writes the copy to the phone', async () => {

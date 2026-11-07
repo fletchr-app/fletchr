@@ -27,3 +27,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-11-06-move-drawing-points.md](2026-11-06-move-drawing-points.md): Move tool for the points of a drawing, loupe while drawing. **implemented, not yet checked on a phone**
 - [2026-11-06-merge-photo-viewer.md](2026-11-06-merge-photo-viewer.md): the grid opens photos in the player, the swipe viewer goes, simple swipe in the player (#159). **plan, decisions open**
 - [2026-11-07-photo-as-evidence.md](2026-11-07-photo-as-evidence.md): a photo can be the evidence for an evaluation criterion, no frame; server refuses a frame on a photo (#161). **implemented, not yet checked on a phone**
+- [2026-11-07-offline-two-way-sync.md](2026-11-07-offline-two-way-sync.md): the rest of #84 after the 2026-10-29 plan: pull on reconnect with overlap, no silent loss of a session change, roster cache, own statistics offline, evaluations offline (server first). **implemented**

@@ -12,6 +12,9 @@ import FormField from '@/components/FormField.vue'
 import RatingRow from '@/components/RatingRow.vue'
 import { emptyRow, type Row, useEvaluationDraft } from '@/composables/useEvaluationDraft'
 import { useAuth } from '@/composables/useAuth'
+import { useEvaluationLibrary } from '@/composables/useEvaluationLibrary'
+import { useEvaluations } from '@/composables/useEvaluations'
+import { useScheduleCache } from '@/composables/useScheduleCache'
 import type { components } from '@/lib/api-types'
 import { errorMessage } from '@/lib/errors'
 import { type Criterion, groupCriteria, toScores } from '@/lib/evaluation'
@@ -21,12 +24,17 @@ type Template = components['schemas']['Template']
 type Evaluation = components['schemas']['Evaluation']
 
 // Rate an archer on a form: a coach's evaluation (?kind=coach, the default) or an archer's own (?kind=self). With ?edit=
-// an evaluation that exists is changed. A criterion can point at a frame of a clip of the archer.
+// an evaluation that exists is changed. A criterion can point at a frame of a clip of the archer, or at a photo.
+// Without a connection the teams, the forms and the evaluation to change come from the phone, and saving puts the evaluation
+// in the queue (`useEvaluations`), which sends it when it can (#84).
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { api, userId } = useAuth()
-const { draft, picked, clear, startPick } = useEvaluationDraft()
+const { draft, picked, clear, startPick, ready: draftReady } = useEvaluationDraft()
+const cache = useScheduleCache()
+const library = useEvaluationLibrary()
+const queue = useEvaluations()
 
 const archerId = Number(route.query.archer)
 const kind = (route.query.kind === 'self' ? 'self' : 'coach') as 'coach' | 'self'
@@ -51,41 +59,69 @@ const form = computed<{ scale: number; criteria: Criterion[] } | null>(() =>
 const groups = computed(() => groupCriteria(form.value?.criteria ?? []))
 
 async function loadTeams() {
-  if (kind === 'self') return (await api.GET('/api/teams/')).data?.map((x) => ({ id: x.id, name: x.name })) ?? null
-  return (await api.GET('/api/notes/teams/', { params: { query: { archer: archerId } } })).data ?? null
+  if (kind === 'self') {
+    try {
+      const data = (await api.GET('/api/teams/')).data
+      if (data) return data.map((x) => ({ id: x.id, name: x.name }))
+    } catch {
+      /* no connection: the copy below */
+    }
+    return cache.state.value.pulledAt ? cache.state.value.teams.map((x) => ({ id: x.id, name: x.name })) : null
+  }
+  return await cache.writableTeams(archerId)
 }
 async function loadTemplates() {
-  if (!teamId.value) return
-  const { data } = await api.GET('/api/teams/{team_id}/evaluation-templates/', { params: { path: { team_id: teamId.value } } })
-  templates.value = data ?? []
+  const id = teamId.value
+  if (!id) return
+  let data: Template[] | undefined
+  try {
+    data = (await api.GET('/api/teams/{team_id}/evaluation-templates/', { params: { path: { team_id: id } } })).data
+    if (data) cache.rememberTemplates(id, data)
+  } catch {
+    /* no connection: the forms the phone has seen */
+  }
+  templates.value = data ?? cache.state.value.templates[String(id)] ?? []
   if (draft.value && !templates.value.some((x) => x.id === draft.value!.templateId)) draft.value.templateId = templates.value[0]?.id ?? null
 }
+/** What a change to this evaluation that has not gone up yet says, so that opening the form again shows it and not the older copy. */
+const waitingChange = (uid: string) => queue.evaluations.value.find((e) => e.uid === uid)
 async function start() {
   loadError.value = null
   try {
+    await draftReady() // a draft kept on the phone is in memory before a new one is started
     if (draft.value?.key !== key) {
       let base = { templateId: null as number | null, teamId: null as number | null, date: new Date().toISOString().slice(0, 10), comment: '', goals: '', visibility: 'coach_only' as 'shared' | 'coach_only', rows: {} as Record<string, Row> }
       if (editId !== null) {
-        const { data } = await api.GET('/api/evaluations/{id}/', { params: { path: { id: editId } } })
+        const data = await library.get(editId)
         if (!data) return void (loadError.value = t('common.couldNotLoad'))
         existing.value = data
-        base = {
-          templateId: data.template_id,
-          teamId: data.team ?? null,
-          date: data.date ?? base.date,
-          comment: data.comment ?? '',
-          goals: data.goals ?? '',
-          visibility: data.visibility ?? 'shared',
-          rows: Object.fromEntries(data.scores.map((s) => [s.criterion, { rating: s.rating, comment: s.comment ?? '', media: s.media ?? null, frame: s.frame ?? null, timeMs: s.time_ms ?? null }])),
-        }
+        const waiting = waitingChange(data.uid)
+        base = waiting
+          ? {
+              templateId: waiting.template,
+              teamId: waiting.team,
+              date: waiting.date,
+              comment: waiting.comment,
+              goals: waiting.goals,
+              visibility: waiting.visibility,
+              rows: Object.fromEntries(waiting.scores.map((s) => [s.criterion, { rating: s.rating, comment: s.comment ?? '', media: s.media ?? null, frame: s.frame ?? null, timeMs: s.time_ms ?? null }])),
+            }
+          : {
+              templateId: data.template_id,
+              teamId: data.team ?? null,
+              date: data.date ?? base.date,
+              comment: data.comment ?? '',
+              goals: data.goals ?? '',
+              visibility: data.visibility ?? 'shared',
+              rows: Object.fromEntries(data.scores.map((s) => [s.criterion, { rating: s.rating, comment: s.comment ?? '', media: s.media ?? null, frame: s.frame ?? null, timeMs: s.time_ms ?? null }])),
+            }
       } else {
         teams.value = (await loadTeams()) ?? []
         base.teamId = teams.value[0]?.id ?? null
       }
       draft.value = { key, ...base }
     } else if (editId !== null && !existing.value) {
-      const { data } = await api.GET('/api/evaluations/{id}/', { params: { path: { id: editId } } })
-      existing.value = data ?? null
+      existing.value = await library.get(editId)
     }
     if (editId === null && teams.value.length === 0) teams.value = (await loadTeams()) ?? []
     if (draft.value!.teamId === null && teams.value[0]) draft.value!.teamId = teams.value[0].id
@@ -127,6 +163,37 @@ async function save() {
   error.value = null
   const scores = toScores(d.rows)
   try {
+    if (queue.queueing.value) {
+      // Saved on the phone and sent at once if it can be; without a connection it waits and goes later.
+      const written = existing.value
+      const team = written?.team ?? d.teamId
+      const template = written?.template_id ?? d.templateId
+      if (team == null || template == null) {
+        error.value = t('evaluations.noFormOffline')
+        busy.value = false
+        return
+      }
+      const saved = await queue.save({
+        uid: written?.uid,
+        archer: archerId,
+        archer_name: name ?? written?.archer_name ?? '',
+        team,
+        template,
+        kind,
+        date: d.date,
+        comment: d.comment,
+        goals: d.goals,
+        visibility: d.visibility,
+        scores,
+      })
+      if (saved.error) error.value = saved.error
+      else {
+        clear()
+        void (saved.id !== null ? router.replace(`/evaluations/${saved.id}`) : router.back())
+      }
+      busy.value = false
+      return
+    }
     const body = { date: d.date, comment: d.comment, goals: d.goals, scores, ...(kind === 'coach' ? { visibility: d.visibility } : {}) }
     const result =
       editId !== null
@@ -165,6 +232,7 @@ const VISIBILITY = computed<{ value: 'shared' | 'coach_only'; label: string }[]>
           :options="templates.map((x) => ({ value: String(x.id), label: x.name }))"
           @update:model-value="draft.templateId = Number($event)"
         />
+        <div v-if="!existing && templates.length === 0" class="muted">{{ $t('evaluations.noFormOffline') }}</div>
         <FormField v-model="draft.date" type="date" :label="$t('evaluations.date')" />
         <div v-if="existing" class="faint">{{ $t('evaluations.formVersion', { name: existing.template_name, version: existing.version }) }}</div>
         <div v-for="g in groups" :key="g.group" class="d-flex flex-column gap-3">

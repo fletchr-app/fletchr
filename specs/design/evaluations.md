@@ -2,10 +2,11 @@
 
 Status: implemented except trends and averages (#46), see [milestone 2](../plans/2026-10-23-milestone-2-media-and-evaluations.md)
 Date: 2026-10-23
-Updated: 2026-10-28
+Updated: 2026-11-07
 
 - **Default form** (editable per team): the shooting technique form, 20 criteria in 5 groups, in the structure of the DSB squad technique sheet with our own wording. A team gets it when first needed, in the language of whoever asks first. Each criterion is rated **1 to 5** with an optional comment. Editing a form makes a new version; criteria keep their keys, so old evaluations stay comparable.
 - **Coach-only by default**, the coach decides to share an evaluation with the archer (and can take it back), so a poor rating does not discourage an archer by accident. Archers can fill in a **self-assessment** on the same form, so coach and self ratings can be compared side by side.
 - **Sharing notifies the archer**: when a coach shares an evaluation (at creation or later), the archer's phone gets a generic push if they allowed it ([push-notifications.md](push-notifications.md)). A self-assessment does not notify the coaches yet.
 - **Relation to notes**: notes are quick, free-text, any time; evaluations are structured check-ups (e.g. monthly or per season). An evaluation can link a video frame or a photo to a criterion as evidence (a photo has no frame, the server refuses one; #161), and its goals should show on the archer's home screen until the next one (planned, #46).
+- **Without a connection** (#84): an evaluation has a `uid` and is written with `PUT /api/evaluations/<uid>/`, safe to repeat (a repeat changes nothing and sends no second push; another person's uid is 404; a deleted one is 410). The app queues it and sends it when it can; the evaluations about you and by you are kept on the phone to be read. Deleting or taking back a shared evaluation writes a tombstone (`GET /api/gone/?kind=evaluation`) for the author and the archer who could read it. Details in [offline-sync.md](offline-sync.md).
 - **Tracking over time (planned, #46)**: per archer, a chart per criterion and per group, a radar chart comparing the latest evaluation with an earlier one, and "biggest improvements / needs attention" lists. Team view: average per criterion across archers. Later, criteria can be shown next to related measured stats (e.g. "anchor" rating next to anchor consistency from skeleton detection, or "aiming" next to group size).

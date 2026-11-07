@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 11:09+0100\n"
+"POT-Creation-Date: 2026-11-07 13:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -458,16 +458,20 @@ msgstr ""
 msgid "This form belongs to another team"
 msgstr ""
 
-#: evaluations/views.py:29
+#: evaluations/views.py:31
 msgid "Only coaches can change the forms of a team"
 msgstr ""
 
-#: evaluations/views.py:56
+#: evaluations/views.py:58
 msgid "A form needs a name and criteria"
 msgstr ""
 
-#: evaluations/views.py:97
+#: evaluations/views.py:99
 msgid "Evaluations were made with this form, so it stays"
+msgstr ""
+
+#: evaluations/views.py:203
+msgid "This evaluation was deleted"
 msgstr ""
 
 #: media/serializers.py:74

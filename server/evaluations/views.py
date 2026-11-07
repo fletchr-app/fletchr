@@ -1,16 +1,18 @@
 import django_filters
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.access import is_coach_in, teams_of
-from core.models import COACH_ROLES, Role, TeamMember
+from core.models import COACH_ROLES, Role, TeamMember, Tombstone
+from core.tombstones import forget
 
 from push import notify
 
@@ -110,9 +112,25 @@ class EvaluationPermission(BasePermission):
         return request.method == "DELETE" and obj.team_id in view.admin_team_ids(request.user)
 
 
+def readers_with_a_copy(evaluation):
+    """Whose phone may keep this evaluation: its author, and the archer if they can read it (shared by the coach, or their own).
+    The other coaches of the team read evaluations online only."""
+    readers = [evaluation.author_id] if evaluation.author_id else []
+    if evaluation.kind == Evaluation.Kind.SELF or evaluation.visibility == Evaluation.Visibility.SHARED:
+        readers.append(evaluation.archer_id)
+    return readers
+
+
+def forget_withdrawn(evaluation, was_shared):
+    """An evaluation that was shared with the archer and no longer is: their phone drops it, as if it were deleted."""
+    if was_shared and evaluation.visibility != Evaluation.Visibility.SHARED:
+        forget(Tombstone.Kind.EVALUATION, evaluation.uid, [evaluation.archer_id])
+
+
 class EvaluationFilter(django_filters.FilterSet):
     date_from = django_filters.DateFilter(field_name="date", lookup_expr="gte")
     date_to = django_filters.DateFilter(field_name="date", lookup_expr="lte")
+    updated_after = django_filters.IsoDateTimeFilter(field_name="updated_at", lookup_expr="gt", help_text="Changed after this time")
 
     class Meta:
         model = Evaluation
@@ -135,22 +153,21 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             context["admin_team_ids"] = self.admin_team_ids(self.request.user)
         return context
 
+    @staticmethod
+    def visible_to(user):
+        coached = TeamMember.objects.filter(user=user, role__in=COACH_ROLES).values("team")
+        # A coach sees every evaluation of their teams (the archers' own too). An archer sees what a coach shared and what they wrote.
+        return Evaluation.objects.filter(
+            Q(team__in=coached)
+            | Q(archer=user, kind=Evaluation.Kind.COACH, visibility=Evaluation.Visibility.SHARED)
+            | Q(archer=user, kind=Evaluation.Kind.SELF)
+            | Q(author=user)
+        )
+
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Evaluation.objects.none()
-        user = self.request.user
-        coached = TeamMember.objects.filter(user=user, role__in=COACH_ROLES).values("team")
-        # A coach sees every evaluation of their teams (the archers' own too). An archer sees what a coach shared and what they wrote.
-        return (
-            Evaluation.objects.filter(
-                Q(team__in=coached)
-                | Q(archer=user, kind=Evaluation.Kind.COACH, visibility=Evaluation.Visibility.SHARED)
-                | Q(archer=user, kind=Evaluation.Kind.SELF)
-                | Q(author=user)
-            )
-            .select_related("author__profile", "archer__profile", "template_version")
-            .prefetch_related("scores")
-        )
+        return self.visible_to(self.request.user).select_related("author__profile", "archer__profile", "template_version").prefetch_related("scores")
 
     def perform_create(self, serializer):
         evaluation = serializer.save(author=self.request.user)
@@ -159,4 +176,38 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         was_shared = notify.evaluation_shared(serializer.instance)
         evaluation = serializer.save()
+        forget_withdrawn(evaluation, was_shared)
         notify.evaluation_saved(evaluation, was_shared)
+
+    def perform_destroy(self, instance):
+        with transaction.atomic():
+            forget(Tombstone.Kind.EVALUATION, instance.uid, readers_with_a_copy(instance))
+            instance.delete()
+
+
+@extend_schema(tags=["evaluations"], request=EvaluationSerializer, responses={200: EvaluationSerializer, 201: EvaluationSerializer, 410: None})
+class EvaluationPutView(APIView):
+    """Write an evaluation by the uid the app gave it, or change it. Safe to repeat: the same request again changes nothing and sends no second push.
+
+    Only the author can write it; one of somebody else is answered like one that does not exist. An evaluation that was
+    deleted gives 410. The same rules as for `POST`, and the scores are replaced as a whole. A photo or clip the server
+    has not seen yet is a 400 on that field.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, uid):
+        user = request.user
+        evaluation = Evaluation.objects.filter(uid=uid).select_related("author__profile", "archer__profile", "template_version").first()
+        if evaluation is None and Tombstone.objects.filter(kind=Tombstone.Kind.EVALUATION, uid=uid, owner=user).exists():
+            return Response({"detail": gettext("This evaluation was deleted")}, status=status.HTTP_410_GONE)
+        if evaluation is not None and (evaluation.author_id != user.id or not EvaluationViewSet.visible_to(user).filter(pk=evaluation.pk).exists()):
+            raise NotFound
+        context = {"request": request, "admin_team_ids": EvaluationViewSet.admin_team_ids(user)}
+        serializer = EvaluationSerializer(evaluation, data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        was_shared = evaluation is not None and notify.evaluation_shared(evaluation)
+        saved = serializer.save(author=user, uid=uid) if evaluation is None else serializer.save()
+        forget_withdrawn(saved, was_shared)
+        notify.evaluation_saved(saved, was_shared)
+        return Response(EvaluationSerializer(saved, context=context).data, status=200 if evaluation else 201)

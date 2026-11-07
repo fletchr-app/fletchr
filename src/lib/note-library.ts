@@ -3,6 +3,7 @@
 // be tested. Notes still waiting to upload are not here, they are in the notes queue.
 import type { ApiClient } from './auth-session.ts';
 import type { components } from './api-types.ts';
+import { askSince } from './sync-overlap.ts';
 
 export type KnownNote = components['schemas']['Note'];
 
@@ -83,7 +84,8 @@ export type NotePull = { changed: KnownNote[]; gone: string[]; lastPull?: string
 /** Notes about you and by you that changed since `since`, and the uids deleted since. Null if the server cannot be reached. */
 export async function pullNotes(api: ApiClient, userId: number, since?: string): Promise<NotePull | null> {
   try {
-    const query = since ? { updated_after: since } : {};
+    const asked = askSince(since);
+    const query = asked ? { updated_after: asked } : {};
     const [about, by, gone] = await Promise.all([
       api.GET('/api/notes/', { params: { query: { archer: userId, ...query } } }),
       api.GET('/api/notes/', { params: { query: { author: userId, ...query } } }),
