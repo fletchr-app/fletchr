@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 21:06+0100\n"
+"POT-Creation-Date: 2026-11-07 11:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr ""
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/access.py:152 training/views.py:160
+#: core/access.py:152 training/views.py:161
 msgid "Only the archer can choose who sees this"
 msgstr ""
 
@@ -255,11 +255,11 @@ msgstr ""
 msgid "Not your arrow set"
 msgstr ""
 
-#: equipment/views.py:62
+#: equipment/views.py:67
 msgid "This has been used in a session. Deactivate it instead of deleting it."
 msgstr ""
 
-#: equipment/views.py:117
+#: equipment/views.py:129
 msgid "This revision belongs to something else"
 msgstr ""
 
@@ -426,31 +426,35 @@ msgstr ""
 msgid "A rating goes from 1 to %(n)s"
 msgstr ""
 
-#: evaluations/serializers.py:231 notes/serializers.py:180
+#: evaluations/serializers.py:231 notes/serializers.py:183
 msgid "Give the clip the frame is in"
 msgstr ""
 
-#: evaluations/serializers.py:234 notes/serializers.py:167
+#: evaluations/serializers.py:234 notes/serializers.py:170
 msgid "This is not a photo or video of that archer"
 msgstr ""
 
-#: evaluations/serializers.py:236
+#: evaluations/serializers.py:237
+msgid "A photo has no frame"
+msgstr ""
+
+#: evaluations/serializers.py:240
 msgid "Say which frame the rating is about"
 msgstr ""
 
-#: evaluations/serializers.py:238 notes/serializers.py:174
+#: evaluations/serializers.py:242 notes/serializers.py:177
 msgid "The clip has no such frame"
 msgstr ""
 
-#: evaluations/serializers.py:244 evaluations/serializers.py:246
+#: evaluations/serializers.py:248 evaluations/serializers.py:250
 msgid "This cannot be changed after the evaluation is written"
 msgstr ""
 
-#: evaluations/serializers.py:256
+#: evaluations/serializers.py:260
 msgid "Say which form to use"
 msgstr ""
 
-#: evaluations/serializers.py:258
+#: evaluations/serializers.py:262
 msgid "This form belongs to another team"
 msgstr ""
 
@@ -506,7 +510,7 @@ msgid "Only the archer or whoever added it can change a photo or video"
 msgstr ""
 
 #: media/views.py:98 notes/views.py:146 training/schedule_views.py:268
-#: training/views.py:154
+#: training/views.py:155
 msgid "Give the id of the archer"
 msgstr ""
 
@@ -526,63 +530,63 @@ msgstr ""
 msgid "A drawing can have %(n)s shapes at most"
 msgstr ""
 
-#: notes/serializers.py:104
+#: notes/serializers.py:116
 msgid "A note cannot be empty"
 msgstr ""
 
-#: notes/serializers.py:117
+#: notes/serializers.py:120
 msgid "A drawing belongs to a photo or a frame of a clip"
 msgstr ""
 
-#: notes/serializers.py:121
+#: notes/serializers.py:124
 msgid "This cannot be changed after the note is written"
 msgstr ""
 
-#: notes/serializers.py:123 notes/serializers.py:141
+#: notes/serializers.py:126 notes/serializers.py:144
 msgid "A note about yourself is private"
 msgstr ""
 
-#: notes/serializers.py:127 notes/serializers.py:135
+#: notes/serializers.py:130 notes/serializers.py:138
 msgid "The event is in another team than the note"
 msgstr ""
 
-#: notes/serializers.py:139
+#: notes/serializers.py:142
 msgid "A note about yourself has no team"
 msgstr ""
 
-#: notes/serializers.py:146
+#: notes/serializers.py:149
 msgid "Only coaches can write notes"
 msgstr ""
 
-#: notes/serializers.py:151
+#: notes/serializers.py:154
 msgid "You cannot write notes about this archer in that team"
 msgstr ""
 
-#: notes/serializers.py:155
+#: notes/serializers.py:158
 msgid "You cannot write notes about this person"
 msgstr ""
 
-#: notes/serializers.py:157
+#: notes/serializers.py:160
 msgid "You coach this archer in several teams: say which one"
 msgstr ""
 
-#: notes/serializers.py:159
+#: notes/serializers.py:162
 msgid "This is not a session of that archer"
 msgstr ""
 
-#: notes/serializers.py:163
+#: notes/serializers.py:166
 msgid "Give the session this end belongs to"
 msgstr ""
 
-#: notes/serializers.py:170
+#: notes/serializers.py:173
 msgid "A photo has no frames"
 msgstr ""
 
-#: notes/serializers.py:172
+#: notes/serializers.py:175
 msgid "Say which frame the note is about"
 msgstr ""
 
-#: notes/serializers.py:178
+#: notes/serializers.py:181
 msgid "This clip is from another session"
 msgstr ""
 
@@ -626,7 +630,7 @@ msgstr ""
 msgid "Tap to see your team."
 msgstr ""
 
-#: training/schedule.py:88
+#: training/schedule.py:88 training/schedule.py:121
 msgid "The slot has no training on this date"
 msgstr ""
 
@@ -725,7 +729,7 @@ msgstr ""
 msgid "Position is out of range"
 msgstr ""
 
-#: training/serializers.py:56 training/views.py:417 training/views.py:478
+#: training/serializers.py:56 training/views.py:423 training/views.py:484
 msgid "Unknown target face"
 msgstr ""
 
@@ -773,75 +777,75 @@ msgstr ""
 msgid "The end can't be before the start"
 msgstr ""
 
-#: training/views.py:66 training/views.py:148
+#: training/views.py:67 training/views.py:149
 msgid "Only the archer can change a session"
 msgstr ""
 
-#: training/views.py:72
+#: training/views.py:73
 msgid "Choose the type of session first"
 msgstr ""
 
-#: training/views.py:135
+#: training/views.py:136
 msgid "This session was deleted"
 msgstr ""
 
-#: training/views.py:225
+#: training/views.py:222
 msgid "This end id belongs to another session"
 msgstr ""
 
-#: training/views.py:231
+#: training/views.py:228
 msgid "Another end of this session has this index"
 msgstr ""
 
-#: training/views.py:233
+#: training/views.py:230
 msgid "A shot id is already used in another end"
 msgstr ""
 
-#: training/views.py:262
+#: training/views.py:259
 msgid "This entry id belongs to another session"
 msgstr ""
 
-#: training/views.py:293 training/views.py:463
+#: training/views.py:290 training/views.py:469
 msgid "Only coaches can see the team overview"
 msgstr ""
 
-#: training/views.py:365
+#: training/views.py:371
 msgid "owner and weeks must be numbers"
 msgstr ""
 
-#: training/views.py:367
+#: training/views.py:373
 msgid "Between 1 and 52"
 msgstr ""
 
-#: training/views.py:371 training/views.py:414
+#: training/views.py:377 training/views.py:420
 msgid "Unknown time zone"
 msgstr ""
 
-#: training/views.py:410
+#: training/views.py:416
 msgid "owner, distance_m and setup must be numbers"
 msgstr ""
 
-#: training/views.py:424
+#: training/views.py:430
 msgid "Use a date like 2026-10-25"
 msgstr ""
 
-#: training/views.py:465
+#: training/views.py:471
 msgid "The ranking is switched off for this team"
 msgstr ""
 
-#: training/views.py:471
+#: training/views.py:477
 msgid "days and distance_m must be numbers"
 msgstr ""
 
-#: training/views.py:473
+#: training/views.py:479
 msgid "Between 1 and 365"
 msgstr ""
 
-#: training/views.py:476
+#: training/views.py:482
 msgid "Give face and distance_m together"
 msgstr ""
 
-#: training/views.py:508
+#: training/views.py:514
 msgid "owner must be a number"
 msgstr ""
 

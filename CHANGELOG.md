@@ -2,6 +2,19 @@
 
 What changed in each release. The version number and how a release is made: `specs/steering/releasing.md`.
 
+## Unreleased
+
+## 0.25.0 (2026-11-07)
+
+- **Who sees a photo or video** (#150): in the full-screen view you can change at any time whether your coaches see a photo or video that is in no session. A clip you set yourself keeps its choice, also after a change in Settings.
+- **Photo and video screens use icons** (#157): in the player and in the viewer of the photo grid, who sees it (eye), move into a training and delete are icons in the app bar instead of big buttons, so the picture gets more room. The player has the "who sees this" choice now too, and deleting asks first.
+- **Deleting a training deletes its notes** (#154): the notes written on the training and its ends, and still on the device, go with it instead of staying behind unseen. Notes on a photo stay with the photo.
+- **Drawing zooms the whole picture** (#163): while a finger is down on a photo or frame, the picture is magnified 3x around a cross that sits above the finger, like when an arrow is placed on the target. The small round loupe is gone.
+- **One screen for photos and clips** (#159): a photo in the photo grid opens in the player now, like a clip. Swipe left or right on the picture for the next or previous one, photos and clips. The old swipe viewer is gone. A photo that failed while it was prepared shows its error and can be deleted from the grid. An upload error shows in the player. Offline, a photo the phone did not keep shows its preview with a small cloud-off mark. When you choose a frame for an evaluation, photos are dimmed.
+- **Deleted photo gone from Home at once** (#165): after you delete a photo or clip in the player, its tile on Home goes away right away instead of staying until the app is reopened.
+- **A photo as evidence in an evaluation** (#161): for a criterion you can link a photo of the archer, not only a frame of a clip. In the photo grid, photos are no longer dimmed when you choose. Needs the new server.
+- **Backup screen** (#150): the line "On this phone" counts equipment too (bows and arrow sets are in the backup file).
+
 ## 0.24.0 (2026-11-06)
 
 - **Start page is your profile** (#143): Home shows the same profile a coach sees of an archer, for yourself. Sessions, equipment, photos and the arrow numbers come from the phone first, so it works offline and without an account. The server adds the picture, evaluations, goals, the latest coach note and your teams.

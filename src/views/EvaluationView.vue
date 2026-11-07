@@ -57,8 +57,10 @@ async function remove() {
   if (!response || !(response.ok || response.status === 404)) return (error.value = t('common.nothingDeleted'))
   router.back()
 }
-const frameLink = (s: { media?: string | null; frame?: number | null }) => (s.media ? { path: `/media/${s.media}`, query: { frame: String(s.frame ?? 0) } } : null)
-const frameText = (s: { frame?: number | null; time_ms?: number | null }) => t('evaluations.frameLinked', { n: (s.frame ?? 0) + 1, time: clock((s.time_ms ?? 0) / 1000) })
+// A score with a media and no frame points at a photo.
+const frameLink = (s: { media?: string | null; frame?: number | null }) => (s.media ? { path: `/media/${s.media}`, query: s.frame == null ? {} : { frame: String(s.frame) } } : null)
+const frameText = (s: { frame?: number | null; time_ms?: number | null }) =>
+  s.frame == null ? t('evaluations.photoLinked') : t('evaluations.frameLinked', { n: s.frame + 1, time: clock((s.time_ms ?? 0) / 1000) })
 </script>
 
 <template>

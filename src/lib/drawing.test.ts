@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { angleDegrees, circleRadii, clamp01, fitted, pointOn, readDrawing } from './drawing.ts';
+import { angleDegrees, circleRadii, clamp01, fitted, movedPoint, nearestPoint, pointOn, readDrawing, zoomStyle } from './drawing.ts';
+
+test('the zoom keeps the point where it is and grows everything around it', () => {
+  assert.deepEqual(zoomStyle(null), {});
+  const style = zoomStyle({ x: 100, y: 50 }, 3);
+  assert.equal(style.transform, 'translate(-200px, -100px) scale(3)');
+  assert.equal(style.transformOrigin, '0 0');
+  // a point p on the picture lands at translate + 3 * p: for the zoomed point that is the point itself
+  assert.equal(-200 + 3 * 100, 100);
+  assert.equal(-100 + 3 * 50, 50);
+});
 
 const near = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
 
@@ -47,4 +57,23 @@ test('an empty or odd value is an empty drawing', () => {
   assert.deepEqual(readDrawing(null), { v: 1, shapes: [] });
   assert.deepEqual(readDrawing({ shapes: 'x' }), { v: 1, shapes: [] });
   assert.equal(readDrawing({ v: 1, shapes: [{ t: 'line', p: [[0, 0], [1, 1]] }] }).shapes.length, 1);
+});
+
+test('the nearest point is found within reach, in pixels of the screen', () => {
+  const shapes = [
+    { t: 'line' as const, p: [[0.1, 0.1], [0.9, 0.1]] as [number, number][] },
+    { t: 'angle' as const, p: [[0.5, 0.5], [0.52, 0.5], [0.9, 0.9]] as [number, number][] },
+  ];
+  const size = { width: 1000, height: 500 };
+  assert.deepEqual(nearestPoint(shapes, [0.515, 0.5], size, 28), { shape: 1, point: 1 }); // 5 px from the second point
+  assert.equal(nearestPoint(shapes, [0.3, 0.3], size, 28), null);
+  assert.equal(nearestPoint(shapes, [0.1, 0.1 + 40 / 500], size, 28), null); // 40 px away is too far
+  assert.deepEqual(nearestPoint(shapes, [0.1, 0.1 + 20 / 500], size, 28), { shape: 0, point: 0 });
+});
+
+test('moving a point gives a new shape and leaves the old one alone', () => {
+  const old = { t: 'angle' as const, p: [[0, 0], [0.5, 0.5], [1, 0]] as [number, number][], c: '#fff' };
+  const moved = movedPoint(old, 1, [0.4, 0.6]);
+  assert.deepEqual(moved, { t: 'angle', p: [[0, 0], [0.4, 0.6], [1, 0]], c: '#fff' });
+  assert.deepEqual(old.p[1], [0.5, 0.5]);
 });

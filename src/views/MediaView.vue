@@ -1,18 +1,5 @@
 <script setup lang="ts">
-import {
-  actionSheetController,
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonFooter,
-  IonHeader,
-  IonIcon,
-  IonModal,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-  onIonViewWillEnter,
-} from '@ionic/vue'
+import { actionSheetController, alertController, IonIcon, IonSpinner, onIonViewWillEnter } from '@ionic/vue'
 import { checkmarkCircle, closeCircle, cloudUploadOutline, playCircleOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -20,7 +7,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
 import AppPage from '@/components/AppPage.vue'
-import DrawnPicture from '@/components/DrawnPicture.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import EventChips from '@/components/EventChips.vue'
@@ -31,20 +17,15 @@ import { useScheduleCache } from '@/composables/useScheduleCache'
 import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { useMedia } from '@/composables/useMedia'
-import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMediaLibrary } from '@/composables/useMediaLibrary'
-import { useNoteLibrary } from '@/composables/useNoteLibrary'
-import { useNotes } from '@/composables/useNotes'
 import { type MoveItem, useMoveMedia } from '@/composables/useMoveMedia'
 import { useRemote } from '@/composables/useRemote'
 import { useUploadSettings } from '@/composables/useUploadSettings'
 import type { components } from '@/lib/api-types'
-import { fitted, type Shape } from '@/lib/drawing'
 import { prepareImage } from '@/lib/image'
 import { type EventLink, linkOf, preselected } from '@/lib/schedule'
-import { drawnShapes, waitingOnMedia } from '@/lib/media-notes'
 import { byDay, dayTitle } from '@/lib/media-days'
-import { fromBase64, loadFiles, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
+import { fromBase64, loadThumbnail, removeFiles, saveThumbnail } from '@/lib/media-files'
 import type { QueuedMedia } from '@/lib/media-queue'
 import { canRecordVideo, type Picked, pickMedia, type PickSource } from '@/lib/pick-media'
 import { type ConvertErrorCode, VideoConverter } from '@/lib/video-converter'
@@ -67,9 +48,6 @@ const name = route.query.name as string | undefined
 const title = name ? t('media.titleFor', { name }) : t('media.title')
 
 const { api, userId, isLocal } = useAuth()
-const noteLibrary = useNoteLibrary()
-const notesQueue = useNotes()
-const kept = useKeptMedia()
 const media = useMedia()
 const { renamed } = useLog()
 // The server merged this session into another one: continue there.
@@ -113,7 +91,6 @@ onIonViewWillEnter(() => {
   if (firstVisit) return void (firstVisit = false)
   reload()
   consent.reload()
-  reopen()
 })
 watch(media.uploaded, reload)
 
@@ -139,7 +116,6 @@ watch(
 
 const preparing = ref<Preparing[]>([])
 onBeforeUnmount(() => {
-  Object.values(full.value).forEach((u) => URL.revokeObjectURL(u))
   Object.values(previews.value).forEach((u) => URL.revokeObjectURL(u))
   preparing.value.forEach((p) => p.src.startsWith('blob:') && URL.revokeObjectURL(p.src))
 })
@@ -335,153 +311,33 @@ function cancelConversion(tile: Preparing) {
   void VideoConverter.cancel().catch(() => stopPreparing(tile.key))
 }
 
-// The photos full screen: swipe to the next. A clip opens in the player instead.
-const photos = computed(() => shown.value.filter((i) => i.kind === 'photo' && !(i.preparing && !i.preparing.error)))
-const viewKey = ref<string | null>(null)
-const viewing = computed(() => photos.value.find((p) => p.key === viewKey.value) ?? null)
-const strip = ref<HTMLElement | null>(null)
-const full = ref<Record<string, string>>({}) // the photos that wait on the phone, in full size
-const confirmDelete = ref(false)
-const deleteError = ref<string | null>(null)
-
-async function loadFull(item: Shown) {
-  if (full.value[item.key]) return
-  try {
-    // A photo that waits for its upload, or one of yours the phone kept after it: from the file on the phone.
-    const files = item.queued ? await loadFiles(item.queued.id, 'image/jpeg') : item.remote && kept.has(item.remote.id) ? await kept.load(item.remote.id, 'image/jpeg') : null
-    if (files) full.value = { ...full.value, [item.key]: URL.createObjectURL(files.file) }
-  } catch {
-    /* the preview stays */
-  }
+// A photo or clip opens in the player (swipe, notes, drawing, who sees it, move, delete). A tile that failed while it was
+// prepared has no file to open: it shows the error and offers to delete it.
+async function failedTile(item: Shown) {
+  const tile = item.preparing!
+  const alert = await alertController.create({
+    header: t('media.couldNotAdd'),
+    message: tile.error,
+    buttons: [
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('common.delete'), role: 'destructive', handler: () => stopPreparing(tile.key) },
+    ],
+  })
+  await alert.present()
 }
 function open(item: Shown) {
-  if (item.preparing && !item.preparing.error) return // still working
+  if (item.preparing) return void (item.preparing.error ? failedTile(item) : undefined) // still working
   // Without an account the photo or video opens from its file, with notes and drawings.
   if (isLocal.value && item.queued) return void router.push(`/local-media/${item.queued.id}`)
-  const clipId = item.remote?.kind === 'video' ? item.remote.id : item.queued?.kind === 'video' ? item.queued.id : null
-  if (clipId) {
-    // The player page knows which clips are next to this one by the same query as this page. A clip that waits plays from the phone.
-    const query = { ...(sessionId ? { session: sessionId } : { owner: String(owner.value) }), ...(route.query.pick ? { pick: route.query.pick as string } : {}) }
-    return void router.push({ path: `/media/${clipId}`, query })
+  // The player knows which ones are next to this one by the same query as this page (and the "not in a session" chip).
+  const query = {
+    ...(sessionId ? { session: sessionId } : { owner: String(owner.value), ...(unattachedOnly.value ? { unattached: '1' } : {}) }),
+    ...(route.query.pick ? { pick: route.query.pick as string } : {}),
   }
-  viewKey.value = item.key
-  confirmDelete.value = false
-  deleteError.value = null
-  void loadFull(item)
-}
-/** Once the modal is there, the strip starts at the photo that was tapped. */
-function placeStrip() {
-  const at = photos.value.findIndex((p) => p.key === viewKey.value)
-  strip.value?.scrollTo({ left: Math.max(0, at) * strip.value.clientWidth })
-}
-function swiped() {
-  const el = strip.value
-  const item = el && photos.value[Math.round(el.scrollLeft / el.clientWidth)]
-  if (!item || item.key === viewKey.value) return
-  viewKey.value = item.key
-  confirmDelete.value = false
-  deleteError.value = null
-  void loadFull(item)
-}
-// The coach's notes and drawings, for the photos swiped to while the modal is open. Not polled.
-type MediaNotes = components['schemas']['Note'][]
-const photoNotes = ref<Record<string, MediaNotes>>({})
-const writable = ref<Record<number, boolean>>({}) // per archer: may I write notes about them
-async function loadNotes(item: Shown) {
-  const remote = item.remote
-  if (!remote) return
-  try {
-    if (photoNotes.value[remote.id] === undefined) {
-      const list = await noteLibrary.list({ media: remote.id })
-      if (list) photoNotes.value = { ...photoNotes.value, [remote.id]: list }
-    }
-    // Your own photo: you can write about it without asking the server.
-    if (remote.owner === Number(userId.value) && writable.value[remote.owner] === undefined) writable.value = { ...writable.value, [remote.owner]: true }
-    if (writable.value[remote.owner] === undefined) {
-      const teams = await writableTeams(remote.owner)
-      if (teams) writable.value = { ...writable.value, [remote.owner]: teams.length > 0 || remote.owner === Number(userId.value) }
-    }
-  } catch {
-    /* no drawings and no Notes button; the photo is still there */
-  }
-}
-const shapesOf = (item: Shown): Shape[] => (item.remote ? drawnShapes(photoNotes.value[item.remote.id] ?? []) : [])
-const notesButton = computed(() => {
-  const item = viewing.value
-  // A photo that waits for its upload: you can write notes on your own, they go up after it.
-  if (item?.queued) return !item.queued.owner || item.queued.owner === Number(userId.value)
-  const remote = item?.remote
-  if (!remote) return false
-  // Without the server the photo opens in the player only if the phone has its file.
-  if (noteLibrary.offline.value && !kept.has(remote.id)) return false
-  return (photoNotes.value[remote.id]?.length ?? 0) > 0 || writable.value[remote.owner] === true
-})
-const notesCount = computed(() => {
-  const queued = viewing.value?.queued
-  if (queued) return waitingOnMedia(notesQueue.notes.value, queued.id).length
-  return photoNotes.value[viewing.value?.remote?.id ?? '']?.length ?? 0
-})
-// Each slide is as large as the strip; a photo with a drawing is sized to fit, the drawing lies over exactly the photo.
-const stripBox = ref({ width: 0, height: 0 })
-let stripWatch: ResizeObserver | null = null
-watch(strip, (el) => {
-  stripWatch?.disconnect()
-  if (!el) return
-  const measure = () => (stripBox.value = { width: el.clientWidth, height: el.clientHeight })
-  measure()
-  stripWatch = new ResizeObserver(measure)
-  stripWatch.observe(el)
-})
-onBeforeUnmount(() => stripWatch?.disconnect())
-function fit(remote: Remote) {
-  const box = fitted(stripBox.value, remote.width / remote.height)
-  return { width: `${box.width}px`, height: `${box.height}px` }
-}
-watch(viewing, (item) => item && void loadNotes(item))
-
-// "Notes" opens the photo in the player, where the notes and the pencil are. Back lands on the same photo here again.
-let comeBackTo: string | null = null
-function openNotes() {
-  const id = (viewing.value!.queued ?? viewing.value!.remote!).id
-  comeBackTo = viewKey.value
-  const query = sessionId ? { session: sessionId } : { owner: String(owner.value) }
-  close()
-  void router.push({ path: `/media/${id}`, query })
-}
-function reopen() {
-  const item = comeBackTo && photos.value.find((p) => p.key === comeBackTo)
-  comeBackTo = null
-  photoNotes.value = {} // what was drawn in the player is new
-  if (item) open(item)
-}
-function close() {
-  viewKey.value = null
-  Object.values(full.value).forEach((u) => URL.revokeObjectURL(u))
-  full.value = {}
-}
-const canDelete = computed(() => !!viewing.value && (!!viewing.value.queued || !!viewing.value.preparing || viewing.value.remote?.can_edit === true))
-async function remove() {
-  const item = viewing.value!
-  if (!confirmDelete.value) return (confirmDelete.value = true)
-  if (item.preparing) {
-    const keep = item.preparing.src
-    preparing.value = preparing.value.filter((p) => p.key !== item.preparing!.key)
-    setTimeout(() => keep.startsWith('blob:') && URL.revokeObjectURL(keep), 500) // the modal still shows it while it closes
-  } else if (item.queued) media.remove(item.queued.id)
-  else {
-    const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: item.remote!.id } } }).catch(() => ({ response: null }))
-    if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
-    kept.forget([item.remote!.id])
-    reload()
-  }
-  close()
-}
-const taken = (item: Shown | null) => {
-  const when = item?.remote?.taken_at ?? item?.queued?.taken_at
-  return when ? new Date(when).toLocaleString() : ''
+  void router.push({ path: `/media/${item.queued?.id ?? item.remote!.id}`, query })
 }
 
-// Moving into a session, one photo from its full-screen view or several selected in the grid.
+// Moving into a session: several selected in the grid (one photo is moved in the player).
 const { move } = useMoveMedia()
 const selecting = ref(false)
 const selected = ref<ReadonlySet<string>>(new Set())
@@ -491,7 +347,6 @@ const canMove = (item: Shown) => !picking && !item.preparing && (!!item.queued |
 const sessionOf = (item: Shown) => (item.queued ? item.queued.session : (item.remote?.session ?? null))
 const takenOf = (item: Shown) => (item.queued?.taken_at ?? item.remote?.taken_at)!
 const selectedItems = computed(() => shown.value.filter((i) => selected.value.has(i.key) && canMove(i)))
-const canMoveViewing = computed(() => !!viewing.value && canMove(viewing.value))
 function endSelecting() {
   selecting.value = false
   selected.value = new Set()
@@ -521,7 +376,6 @@ async function moveTo(session: string | null) {
   pickerItems.value = null
   const { moved, failed } = await move(items.map((i): MoveItem => ({ id: i.queued?.id ?? i.remote!.id, queued: !!i.queued })), session)
   moveMessage.value = failed > 0 ? { text: t('media.moveFailed', { n: failed }, failed), failed: true } : { text: t('media.moved', { n: moved }, moved), failed: false }
-  close()
   endSelecting()
   reload()
 }
@@ -556,7 +410,7 @@ function removeSelected() {
       <template v-for="section in sections" :key="section.key">
         <h3 v-if="section.title" class="day">{{ section.title }}</h3>
         <div class="grid">
-        <button v-for="item in section.items" :key="item.key" type="button" class="cell" :class="{ chosen: selected.has(item.key) }" @click="tap(item)">
+        <button v-for="item in section.items" :key="item.key" type="button" class="cell" :class="{ chosen: selected.has(item.key)}" @click="tap(item)">
             <img v-if="item.src" :src="item.src" alt="" />
             <IonIcon v-if="selecting && selected.has(item.key)" :icon="checkmarkCircle" class="check" />
             <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
@@ -577,33 +431,6 @@ function removeSelected() {
         </div>
       </template>
     </div>
-    <IonModal :is-open="viewing !== null" class="viewer" @did-present="placeStrip" @did-dismiss="close">
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>{{ taken(viewing) }}</IonTitle>
-          <IonButtons slot="end"><IonButton @click="close">{{ $t('media.close') }}</IonButton></IonButtons>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent :scroll-y="false">
-        <div ref="strip" class="strip" @scroll.passive="swiped">
-          <div v-for="p in photos" :key="p.key" class="slide">
-            <DrawnPicture v-if="p.remote && shapesOf(p).length > 0" :src="full[p.key] ?? p.remote.file_url" :width="p.remote.width" :height="p.remote.height" :shapes="shapesOf(p)" :style="fit(p.remote)" />
-            <img v-else :src="full[p.key] ?? p.remote?.file_url ?? p.src" alt="" loading="lazy" />
-          </div>
-        </div>
-      </IonContent>
-      <IonFooter v-if="viewing">
-        <div class="screen">
-          <div v-if="viewing.remote && viewing.remote.uploaded_by !== viewing.remote.owner" class="muted">{{ $t('media.addedBy', { name: viewing.remote.uploaded_by_name }) }}</div>
-          <div v-if="viewing.queued?.error || viewing.preparing?.error" class="text-danger">{{ viewing.queued?.error ?? viewing.preparing?.error }}</div>
-          <ErrorText :message="deleteError" />
-          <AppButton v-if="notesButton" secondary @click="openNotes">{{ $t('media.openNotes') }}{{ notesCount > 0 ? ` (${notesCount})` : '' }}</AppButton>
-          <AppButton v-if="canMoveViewing" secondary @click="pickerItems = [viewing!]">{{ viewing && sessionOf(viewing) ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}</AppButton>
-          <AppButton v-if="canDelete" secondary @click="remove">{{ confirmDelete ? (notesCount > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</AppButton>
-        </div>
-      </IonFooter>
-    </IonModal>
-    <!-- After the viewer modal: Ionic moves an open modal out of this tree, and Vue inserts a new node before its next sibling. -->
     <SessionPicker
       v-if="pickerItems"
       open
@@ -694,42 +521,5 @@ function removeSelected() {
   margin: 12px 0 0;
   font-size: 1rem;
   font-weight: 600;
-}
-.viewer {
-  --background: #000;
-}
-.viewer ion-toolbar {
-  --background: #000;
-  --color: #fff;
-}
-.viewer ion-content {
-  --background: #000;
-}
-.viewer ion-footer .screen {
-  --ion-color-primary: #fff;
-  background: #000;
-  color: #fff;
-}
-.strip {
-  display: flex;
-  height: 100%;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-.slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-}
-.slide > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 </style>

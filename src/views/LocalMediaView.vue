@@ -12,7 +12,7 @@ import NewNote from '@/components/NewNote.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
-import { COLOURS, type Drawing, readDrawing, type Shape, type Tool } from '@/lib/drawing'
+import { COLOURS, type Drawing, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
 import { loadFiles, loadThumbnail } from '@/lib/media-files'
 
 // A photo or video of someone without an account: shown from the file on the phone, with notes and, on a photo,
@@ -50,7 +50,9 @@ const isPhoto = computed(() => item.value?.kind === 'photo')
 // Drawing: a new drawing goes with the note that is written next; the drawing of a note that exists is changed in place.
 const drawing = ref<{ shapes: Shape[]; noteUid: string | null } | null>(null)
 const attached = ref<Shape[]>([])
-const tool = ref<Tool>('line')
+const tool = ref<Mode>('line')
+// While a finger draws, the picture is magnified around the point that is drawn (DrawingLayer tells where).
+const zoomAt = ref<{ x: number; y: number } | null>(null)
 const colour = ref<string>(COLOURS[0])
 const saved = computed(() => about.value.flatMap((n) => readDrawing(n.drawing).shapes))
 const shown = computed(() => (drawing.value ? drawing.value.shapes : [...saved.value, ...attached.value]))
@@ -82,10 +84,10 @@ function remove() {
       <div v-if="failed" class="text-danger">{{ $t('media.fileLost') }}</div>
       <div class="stage" :style="{ aspectRatio: `${item.width} / ${item.height}` }">
         <video v-if="item.kind === 'video' && url" :src="url" :poster="poster ?? undefined" controls playsinline preload="metadata"></video>
-        <template v-else-if="isPhoto && url">
+        <div v-else-if="isPhoto && url" class="zoomable" :style="zoomStyle(zoomAt)">
           <img :src="url" alt="" />
-          <DrawingLayer :shapes="shown" :width="item.width" :height="item.height" :editing="!!drawing" :tool="tool" :colour="colour" @add="drawing?.shapes.push($event)" />
-        </template>
+          <DrawingLayer :shapes="shown" :width="item.width" :height="item.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+        </div>
       </div>
       <DrawingToolbar
         v-if="drawing"
@@ -120,6 +122,11 @@ function remove() {
   width: min(100%, 70vh * v-bind('item ? item.width / item.height : 1'));
   align-self: center;
   background: #000;
+  overflow: hidden; /* the magnified picture stays inside the stage */
+}
+.zoomable {
+  position: absolute;
+  inset: 0;
 }
 .stage img,
 .stage video {

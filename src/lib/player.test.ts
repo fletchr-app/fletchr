@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from './player.ts';
+import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, swipeStep, totalFrames } from './player.ts';
+
+test('a swipe goes to the next or the previous picture, a tap or a slow or crooked move does not', () => {
+  assert.equal(swipeStep(-120, 10, 200), 1);
+  assert.equal(swipeStep(120, -10, 200), -1);
+  assert.equal(swipeStep(30, 0, 100), 0);
+  assert.equal(swipeStep(-120, 0, 900), 0);
+  assert.equal(swipeStep(-100, 90, 200), 0);
+});
 
 test('the frame rate comes from count and length when the server has both', () => {
   assert.equal(frameRate({ frame_count: 240, duration_ms: 2000, capture_fps: 120 }), 120);

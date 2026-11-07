@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
-import { chatbubbleOutline, chevronBack, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline, swapHorizontalOutline, trashOutline } from 'ionicons/icons'
+import { chatbubbleOutline, chevronBack, cloudOfflineOutline, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -11,8 +11,10 @@ import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
 import MediaEvent from '@/components/MediaEvent.vue'
+import MediaActions from '@/components/MediaActions.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useClipVisibility } from '@/composables/useClipVisibility'
 import { useEvaluationDraft } from '@/composables/useEvaluationDraft'
 import { useKeptMedia } from '@/composables/useKeptMedia'
 import { useMedia } from '@/composables/useMedia'
@@ -21,13 +23,13 @@ import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
 import { useRemote } from '@/composables/useRemote'
-import { COLOURS, type Drawing, fitted, readDrawing, type Shape, type Tool } from '@/lib/drawing'
+import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
 import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
 import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
-import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
+import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, swipeStep, totalFrames } from '@/lib/player'
 
 // One uploaded photo or clip. A clip is looked at frame by frame: the video above, a tape below it that is dragged
 // sideways (one tick is one frame), and the controls. A photo has the picture and the same pencil and notes. The photos
@@ -38,12 +40,16 @@ const router = useRouter()
 const { api, userId } = useAuth()
 
 const PX_PER_FRAME = 12
-// Opened from an evaluation to choose the frame that shows a criterion: "Use this frame" goes back to the form.
+// Opened from an evaluation to choose the frame (or the photo) that shows a criterion: "Use this frame" goes back to the form.
 const frameDraft = useEvaluationDraft()
 const choosing = computed(() => !!route.query.pick && !!frameDraft.picking.value)
 function useFrame() {
   halt()
   const back = frameDraft.finishPick(currentId.value, frame.value, Math.round((frame.value / fps.value) * 1000))
+  if (back) void router.push(back)
+}
+function usePhoto() {
+  const back = frameDraft.finishPick(currentId.value, null, null)
   if (back) void router.push(back)
 }
 // Opened with ?frame=: start at that frame (a link from an evaluation).
@@ -85,8 +91,11 @@ async function keptClip(known: Parameters<typeof clipOfKept>[0]) {
   hold(known.id)
   return clipOfKept(known, { file: localUrls[0]!, thumbnail: localUrls[1]! })
 }
+// Offline, a photo the phone did not keep shows its thumbnail (a small cloud-off mark says so).
+const previewOnly = ref(false)
 const { data: clip, error, reload } = useRemote(
   async () => {
+    previewOnly.value = false
     const item = queuedItem.value
     if (item) return await localClip(item)
     const id = currentId.value
@@ -95,6 +104,11 @@ const { data: clip, error, reload } = useRemote(
     const known = data ?? library.items.value.find((m) => m.id === id)
     const fromPhone = known && kept.has(id) ? await keptClip(known) : null
     if (fromPhone) return fromPhone
+    const preview = library.thumbnails.value[id]
+    if (unreachable && known?.kind === 'photo' && preview) {
+      previewOnly.value = true
+      return clipOfKept(known, { file: preview, thumbnail: preview })
+    }
     if (unreachable) throw new Error('offline')
     return data ?? null
   },
@@ -102,13 +116,17 @@ const { data: clip, error, reload } = useRemote(
 )
 onBeforeUnmount(releaseLocal)
 
-// The other clips of the same session or archer, in the order of the grid.
+// The other photos and clips of the same session or archer, in the order of the grid ("unattached": only those in no
+// session, like the chip there). Without a connection: what the phone knows of your own.
 onMounted(async () => {
   const session = route.query.session as string | undefined
   const owner = route.query.owner ? Number(route.query.owner) : undefined
+  const unattached = !!route.query.unattached
   if (!session && owner === undefined) return
-  const { data } = await api.GET('/api/media/', { params: { query: session ? { session } : { owner } } }).catch(() => ({ data: null }))
-  everything.value = playerSiblings(media.items.value, (data ?? []).map((m) => ({ id: m.id, kind: m.kind })), { session, owner }, Number(userId.value))
+  const query = session ? { session } : { owner, ...(unattached ? { without_session: true } : {}) }
+  const { data } = await api.GET('/api/media/', { params: { query } }).catch(() => ({ data: null }))
+  const offline = session || owner === Number(userId.value) ? library.known({ session: session ?? null, withoutSession: unattached }) : []
+  everything.value = playerSiblings(media.items.value, (data ?? offline).map((m) => ({ id: m.id, kind: m.kind })), { session, owner, unattached }, Number(userId.value))
 })
 // Next and previous stay among the same kind: photos among photos, clips among clips.
 const isPhoto = computed(() => clip.value?.kind === 'photo')
@@ -173,7 +191,7 @@ function jump(f: number) {
 const canDraw = computed(() => !!clip.value && canNote.value)
 const drawing = ref<{ shapes: Shape[]; noteId: number | null } | null>(null)
 const attached = ref<Shape[]>([]) // drawn, not yet saved with a note
-const tool = ref<Tool>('line')
+const tool = ref<Mode>('line')
 const colour = ref<string>(COLOURS[0])
 const drawError = ref<string | null>(null)
 function startDrawing(shapes: Shape[], noteId: number | null) {
@@ -250,6 +268,8 @@ const pictureBox = computed(() => {
 })
 
 const video = ref<HTMLVideoElement | null>(null)
+// While a finger draws, the picture is magnified around the point that is drawn (DrawingLayer tells where).
+const zoomAt = ref<{ x: number; y: number } | null>(null)
 const duration = ref(0)
 const fps = computed(() => (clip.value ? frameRate(clip.value) : 30))
 const decodedFrames = ref(0) // the number of frames in the file, once the decoder has read it
@@ -479,11 +499,30 @@ watch(currentId, () => {
   loadError.value = null
 })
 
+// A swipe on the picture goes to the next or the previous one. The tape is outside the stage, so it keeps its own drag;
+// a touch right at the screen edge is left to the back gesture.
+let swipe: { x: number; y: number; at: number } | null = null
+function swipeDown(e: PointerEvent) {
+  swipe = null
+  if (drawing.value || notesOpen.value || e.clientX < 24 || e.clientX > window.innerWidth - 24) return
+  swipe = { x: e.clientX, y: e.clientY, at: performance.now() }
+}
+function swipeUp(e: PointerEvent) {
+  const s = swipe
+  swipe = null
+  if (!s || drawing.value) return
+  const direction = swipeStep(e.clientX - s.x, e.clientY - s.y, performance.now() - s.at)
+  if ((direction === 1 && hasNext.value) || (direction === -1 && hasPrevious.value)) goTo(direction)
+}
+function swipeCancel() {
+  swipe = null
+}
+
 const title = computed(() => (clip.value ? new Date(clip.value.taken_at).toLocaleString() : ''))
-const confirmDelete = ref(false)
 const deleteError = ref<string | null>(null)
+// Asked by the bin icon (MediaActions), so this only deletes.
 async function remove() {
-  if (!confirmDelete.value) return (confirmDelete.value = true)
+  deleteError.value = null
   if (queuedItem.value) {
     media.remove(currentId.value)
     return router.back()
@@ -491,9 +530,15 @@ async function remove() {
   const { response } = await api.DELETE('/api/media/{media_id}/', { params: { path: { media_id: currentId.value } } }).catch(() => ({ response: null }))
   if (!response || !(response.ok || response.status === 404)) return (deleteError.value = t('common.nothingDeleted'))
   kept.forget([currentId.value])
+  void library.pull() // Home's tiles learn of the deletion from the tombstone
   router.back()
 }
-watch(currentId, () => (confirmDelete.value = false))
+
+// Who sees a clip that is in no session: the owner can change it at any time (a clip in a session follows the session).
+const clipVisibility = useClipVisibility()
+const ownOutsideSession = computed(() => !!clip.value?.can_edit && clip.value.owner === Number(userId.value) && !clip.value.session && !choosing.value)
+const shownVisibility = computed(() => (ownOutsideSession.value && clip.value ? clipVisibility.effective(currentId.value, queuedItem.value ? queuedItem.value.visibility : clip.value.visibility) : null))
+const moveLabel = computed(() => (clip.value?.can_edit && !choosing.value ? (clip.value.session ? t('media.moveToOtherSession') : t('media.moveToSession')) : undefined))
 
 // Into a session, or out of it. The notes on the clip go with it (the server moves them).
 const { move: moveMedia } = useMoveMedia()
@@ -511,11 +556,24 @@ async function moveTo(session: string | null) {
 
 <template>
   <AppPage :title="title" fixed back-href="/media">
+    <template #actions>
+      <MediaActions
+        id="player"
+        :visibility="shownVisibility"
+        :follows-session="!!(clip?.session && clip.can_edit)"
+        :move-label="moveLabel"
+        :deletable="!!clip?.can_edit"
+        :notes="notes.data.value?.length ?? 0"
+        @visibility="(v) => clipVisibility.save({ id: currentId, queued: !!queuedItem }, v)"
+        @move="pickerOpen = true"
+        @delete="remove"
+      />
+    </template>
     <div class="player">
       <ErrorText v-if="error && !clip" :message="error" class="px-3 pt-3" />
       <ErrorText :message="loadError" class="px-3 pt-3" />
-      <div ref="stage" class="stage">
-        <div v-if="clip?.kind === 'video'" class="picture" :style="pictureBox">
+      <div ref="stage" class="stage" @pointerdown="swipeDown" @pointerup="swipeUp" @pointercancel="swipeCancel">
+        <div v-if="clip?.kind === 'video'" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
           <video
             v-if="videoUrl"
             v-show="!canvasOn"
@@ -534,11 +592,12 @@ async function moveTo(session: string | null) {
           ></video>
           <img v-else :src="clip.thumbnail_url" alt="" />
           <canvas v-show="canvasOn" ref="canvas"></canvas>
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @add="drawing?.shapes.push($event)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
-        <div v-else-if="isPhoto && clip" class="picture" :style="pictureBox">
+        <div v-else-if="isPhoto && clip" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
           <img :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @add="drawing?.shapes.push($event)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+          <IonIcon v-if="previewOnly" :icon="cloudOfflineOutline" class="preview-only" role="img" :aria-label="$t('media.previewOnly')" />
         </div>
       </div>
       <template v-if="clip?.kind === 'video' && videoUrl">
@@ -548,6 +607,7 @@ async function moveTo(session: string | null) {
         </div>
         <button v-if="choosing" type="button" class="use" @click="useFrame">{{ $t('evaluations.useFrame', { n: frame + 1 }) }}</button>
       </template>
+      <button v-if="choosing && isPhoto" type="button" class="use" @click="usePhoto">{{ $t('evaluations.usePhoto') }}</button>
       <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body || $t('notes.drawingOnly') }}</button>
       <template v-if="clip?.kind === 'video' && videoUrl">
         <input v-if="!drawing" type="range" class="coarse" min="0" :max="total - 1" step="1" :value="frame" :aria-label="$t('media.position')" @input="slide" />
@@ -603,16 +663,12 @@ async function moveTo(session: string | null) {
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
+      <div v-if="queuedItem?.error" class="text-danger px-3">{{ queuedItem.error }}</div>
       <div v-if="queuedItem && !canNote" class="muted px-3">{{ $t('media.notesAfterUpload') }}</div>
       <MediaEvent v-if="clip && !queuedItem" :clip="clip" @changed="reload(); notes.reload()" />
       <ErrorText :message="deleteError" class="px-3" />
+      <ErrorText :message="clipVisibility.error.value" class="px-3" />
       <ErrorText :message="moveError" class="px-3" />
-      <button v-if="clip?.can_edit && !choosing" type="button" class="remove" @click="pickerOpen = true">
-        <IonIcon :icon="swapHorizontalOutline" /> {{ clip.session ? $t('media.moveToOtherSession') : $t('media.moveToSession') }}
-      </button>
-      <button v-if="clip?.can_edit" type="button" class="remove" @click="remove">
-        <IonIcon :icon="trashOutline" /> {{ confirmDelete ? ((notes.data.value?.length ?? 0) > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}
-      </button>
     </div>
     <SessionPicker
       v-if="clip"
@@ -661,9 +717,19 @@ async function moveTo(session: string | null) {
   align-items: center;
   justify-content: center;
   background: #000;
+  overflow: hidden; /* the magnified picture stays inside the stage */
+  touch-action: pan-y;
 }
 .picture {
   position: relative;
+}
+.preview-only {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 24px;
+  color: #fff;
+  filter: drop-shadow(0 0 3px rgb(0 0 0 / 70%));
 }
 .picture video,
 .picture img,
@@ -723,8 +789,7 @@ async function moveTo(session: string | null) {
   justify-content: space-around;
   padding-inline: 8px;
 }
-.controls button,
-.remove {
+.controls button {
   min-width: 48px;
   height: 48px;
   border: 0;
@@ -792,9 +857,5 @@ async function moveTo(session: string | null) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.remove {
-  align-self: center;
-  font-size: 1rem;
 }
 </style>

@@ -2,6 +2,8 @@
 // any screen; an angle or a length has to be worked out in the real shape of the picture, not in those fractions.
 
 export type Tool = 'line' | 'angle' | 'circle'
+/** What a finger does on the picture: draws one of the tools, or moves a point that is already there. */
+export type Mode = Tool | 'move'
 export type Point = [number, number]
 export type Shape = { t: Tool; p: Point[]; c?: string }
 export type Drawing = { v: 1; shapes: Shape[] }
@@ -15,6 +17,20 @@ export const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
 /** Where a pointer is on the picture, as fractions. */
 export function pointOn(rect: { left: number; top: number; width: number; height: number }, clientX: number, clientY: number): Point {
   return [clamp01((clientX - rect.left) / rect.width), clamp01((clientY - rect.top) / rect.height)]
+}
+
+/** While a finger draws, the picture is magnified this much around the point that is drawn. */
+export const ZOOM = 3;
+/** The point that is drawn sits this many pixels above the finger, so that the finger does not cover it. */
+export const LIFT = 64;
+
+/**
+ * The style that magnifies a picture around a point (in pixels of the picture, before the zoom): that point stays where
+ * it is on the screen and everything around it grows. Nothing when `at` is null.
+ */
+export function zoomStyle(at: { x: number; y: number } | null, zoom: number = ZOOM): Record<string, string> {
+  if (!at) return {};
+  return { transform: `translate(${(1 - zoom) * at.x}px, ${(1 - zoom) * at.y}px) scale(${zoom})`, transformOrigin: '0 0' };
 }
 
 /** The angle at `corner` between the two other points, in degrees (0 to 180), for a picture of `width` by `height`. */
@@ -46,3 +62,22 @@ export function fitted(box: { width: number; height: number }, ratio: number): {
   if (box.width <= 0 || box.height <= 0 || !(ratio > 0)) return { width: 0, height: 0 }
   return box.width / box.height > ratio ? { width: box.height * ratio, height: box.height } : { width: box.width, height: box.width / ratio }
 }
+
+/** The point of a shape that is nearest to `at` and within `reach` pixels (the picture being `size` pixels on the screen), or null. A shape drawn later wins a tie. */
+export function nearestPoint(shapes: Shape[], at: Point, size: { width: number; height: number }, reach: number): { shape: number; point: number } | null {
+  let best: { shape: number; point: number } | null = null
+  let bestDistance = reach
+  shapes.forEach((s, shape) =>
+    s.p.forEach((q, point) => {
+      const d = Math.hypot((q[0] - at[0]) * size.width, (q[1] - at[1]) * size.height)
+      if (d <= bestDistance) {
+        bestDistance = d
+        best = { shape, point }
+      }
+    }),
+  )
+  return best
+}
+
+/** The shape with one of its points somewhere else. The old shape is left alone (it may belong to a saved note). */
+export const movedPoint = (shape: Shape, point: number, to: Point): Shape => ({ ...shape, p: shape.p.map((q, i) => (i === point ? to : q)) })

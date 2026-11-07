@@ -45,10 +45,10 @@ describe('latestTiles', () => {
     expect(latestTiles([], [m('a', '3'), m('b', '2'), m('c', '1')], src, false, 2).map((t) => t.id)).toEqual(['a', 'b']);
   });
 
-  it('opens a queued item on the device without an account, a queued clip in its player, a photo on the media page', () => {
+  it('opens a queued item on the device without an account, anything else in the player', () => {
     const queue = [m('p', '2'), m('v', '1', 'video')];
     expect(latestTiles(queue, [], src, true, 6).map((t) => t.to)).toEqual(['/local-media/p', '/local-media/v']);
-    expect(latestTiles(queue, [], src, false, 6).map((t) => t.to)).toEqual(['/media', '/media/v']);
+    expect(latestTiles(queue, [], src, false, 6).map((t) => t.to)).toEqual(['/media/p', '/media/v']);
     expect(latestTiles([], [m('x', '1')], src, false, 6)[0]?.to).toBe('/media/x');
   });
 });

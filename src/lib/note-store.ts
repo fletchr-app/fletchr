@@ -41,6 +41,8 @@ export type NoteAction =
   | { type: 'edit'; uid: string; patch: Partial<Pick<QueuedNote, 'body' | 'drawing'>> }
   /** The photo or clip is deleted: so are the notes about it. */
   | { type: 'removeAboutMedia'; media: string }
+  /** The training is deleted: so are the notes about it (on the training or its ends). Notes on a photo stay with the photo. */
+  | { type: 'removeAboutSession'; session: string }
   /** Notes from an exported file: new ones are added, those the device has already are left as they are. */
   | { type: 'imported'; notes: QueuedNote[] }
   | { type: 'failed'; uid: string; error: string }
@@ -63,6 +65,8 @@ export function reduce(state: NotesState, action: NoteAction): NotesState {
       return { notes: state.notes.map((n) => (n.uid === action.uid ? { ...n, ...action.patch } : n)) };
     case 'removeAboutMedia':
       return { notes: state.notes.filter((n) => n.media !== action.media) };
+    case 'removeAboutSession':
+      return { notes: state.notes.filter((n) => n.session !== action.session || n.media !== null) };
     case 'imported': {
       const known = new Set(state.notes.map((n) => n.uid));
       return { notes: [...state.notes, ...action.notes.filter((n) => !known.has(n.uid))] };

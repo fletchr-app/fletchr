@@ -85,6 +85,7 @@ const actions = {
   remove: (uid: string) => dispatch({ type: 'remove', uid }),
   edit: (uid: string, patch: Partial<Pick<QueuedNote, 'body' | 'drawing'>>) => dispatch({ type: 'edit', uid, patch }),
   removeAboutMedia: (media: string) => dispatch({ type: 'removeAboutMedia', media }),
+  removeAboutSession: (session: string) => dispatch({ type: 'removeAboutSession', session }),
   /** Notes from an exported file (local mode). */
   importNotes: (notes: QueuedNote[]) => dispatch({ type: 'imported', notes }),
   pendingFor: (about: { archer: number; session?: string; media?: string }) => pendingNotes({ notes: notes.value }, about),
