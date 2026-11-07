@@ -325,11 +325,8 @@ async function failedTile(item: Shown) {
   })
   await alert.present()
 }
-// Choosing a frame for an evaluation: only clips have frames, photos are dimmed.
-const pickable = (item: Shown) => !picking || item.kind === 'video'
 function open(item: Shown) {
   if (item.preparing) return void (item.preparing.error ? failedTile(item) : undefined) // still working
-  if (!pickable(item)) return
   // Without an account the photo or video opens from its file, with notes and drawings.
   if (isLocal.value && item.queued) return void router.push(`/local-media/${item.queued.id}`)
   // The player knows which ones are next to this one by the same query as this page (and the "not in a session" chip).
@@ -413,7 +410,7 @@ function removeSelected() {
       <template v-for="section in sections" :key="section.key">
         <h3 v-if="section.title" class="day">{{ section.title }}</h3>
         <div class="grid">
-        <button v-for="item in section.items" :key="item.key" type="button" class="cell" :class="{ chosen: selected.has(item.key), dimmed: !pickable(item) }" :disabled="!pickable(item)" @click="tap(item)">
+        <button v-for="item in section.items" :key="item.key" type="button" class="cell" :class="{ chosen: selected.has(item.key)}" @click="tap(item)">
             <img v-if="item.src" :src="item.src" alt="" />
             <IonIcon v-if="selecting && selected.has(item.key)" :icon="checkmarkCircle" class="check" />
             <IonIcon v-if="item.kind === 'video' && !item.preparing" :icon="playCircleOutline" class="play" />
@@ -470,9 +467,6 @@ function removeSelected() {
 }
 .chosen img {
   opacity: 0.55;
-}
-.dimmed img {
-  opacity: 0.3;
 }
 .check {
   position: absolute;

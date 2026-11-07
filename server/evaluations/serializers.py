@@ -232,6 +232,10 @@ class EvaluationSerializer(serializers.ModelSerializer):
                 continue
             if media.owner_id != archer.id:
                 raise serializers.ValidationError({"scores": gettext("This is not a photo or video of that archer")})
+            if media.kind == Media.Kind.PHOTO:
+                if frame is not None or s.get("time_ms") is not None:
+                    raise serializers.ValidationError({"scores": gettext("A photo has no frame")})
+                continue
             if frame is None:
                 raise serializers.ValidationError({"scores": gettext("Say which frame the rating is about")})
             if media.frame_count and frame >= media.frame_count:

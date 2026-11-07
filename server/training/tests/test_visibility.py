@@ -387,7 +387,7 @@ def test_an_evaluation_leaves_out_a_clip_the_coach_may_not_see(world, club, clie
     c = client_for(club["coach"])
     form = c.get(f"/api/teams/{club['a'].pk}/evaluation-templates/").data[0]
     clip = world["clips"]["cS"].pk
-    score = {"criterion": form["criteria"][0]["key"], "rating": 4, "media": str(clip), "frame": 0}
+    score = {"criterion": form["criteria"][0]["key"], "rating": 4, "media": str(clip)}
     made = c.post("/api/evaluations/", {"archer": club["archer1"].pk, "template": form["id"], "scores": [score]}, format="json")
     assert made.status_code == 201, made.data
     assert made.data["scores"][0]["media"] == clip

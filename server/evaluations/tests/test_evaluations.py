@@ -112,6 +112,30 @@ def test_the_frame_must_exist(api, club, extra):
     assert rate(api, club, scores=s).status_code == 400
 
 
+def test_a_score_can_point_at_a_photo_of_the_archer_without_a_frame(api, club):
+    photo = give(club["archer1"], "photo")
+    res = rate(api, club, scores=[{"criterion": "pre_back", "rating": 3, "media": str(photo.pk)}])
+    assert res.status_code == 201, res.data
+    score = res.data["scores"][0]
+    assert (str(score["media"]), score["frame"], score["time_ms"]) == (str(photo.pk), None, None)
+
+
+@pytest.mark.parametrize("extra", [{"frame": 0}, {"time_ms": 0}, {"frame": 3, "time_ms": 100}])
+def test_a_photo_has_no_frame(api, club, extra):
+    photo = give(club["archer1"], "photo")
+    assert rate(api, club, scores=[{"criterion": "pre_back", "rating": 3, "media": str(photo.pk), **extra}]).status_code == 400
+
+
+def test_the_photo_must_be_the_archers(api, club):
+    photo = give(club["archer2"], "photo")
+    assert rate(api, club, scores=[{"criterion": "pre_back", "rating": 3, "media": str(photo.pk)}]).status_code == 400
+
+
+def test_a_clip_still_needs_a_frame(api, club):
+    clip = clip_of(club["archer1"])
+    assert rate(api, club, scores=[{"criterion": "pre_back", "rating": 3, "media": str(clip.pk)}]).status_code == 400
+
+
 def test_the_clip_must_be_the_archers(api, club):
     clip = clip_of(club["archer2"])
     assert rate(api, club, scores=[{"criterion": "pre_back", "rating": 3, "media": str(clip.pk), "frame": 1}]).status_code == 400

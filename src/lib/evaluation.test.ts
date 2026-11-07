@@ -22,8 +22,9 @@ test('only rated criteria go to the server, with the frame where there is one', 
     a: { rating: 4, comment: ' good ', media: 'm1', frame: 10, timeMs: 83 },
     b: { rating: null, comment: 'x', media: null, frame: null, timeMs: null },
     c: { rating: 2, comment: '', media: null, frame: null, timeMs: null },
+    d: { rating: 3, comment: '', media: 'p1', frame: null, timeMs: null },
   });
-  assert.deepEqual(scores, [{ criterion: 'a', rating: 4, comment: 'good', media: 'm1', frame: 10, time_ms: 83 }, { criterion: 'c', rating: 2, comment: '' }]);
+  assert.deepEqual(scores, [{ criterion: 'a', rating: 4, comment: 'good', media: 'm1', frame: 10, time_ms: 83 }, { criterion: 'c', rating: 2, comment: '' }, { criterion: 'd', rating: 3, comment: '', media: 'p1' }]);
 });
 
 test('an item moves up or down and stops at the ends', () => {

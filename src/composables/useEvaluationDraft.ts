@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-// An evaluation that is being filled in survives a walk to the player to choose a frame: the form is left and comes back.
+// An evaluation that is being filled in survives a walk to the player to choose a frame or a photo: the form is left and comes back.
 export type Row = { rating: number | null; comment: string; media: string | null; frame: number | null; timeMs: number | null }
 export type Draft = { key: string; templateId: number | null; teamId: number | null; date: string; comment: string; goals: string; visibility: 'shared' | 'coach_only'; rows: Record<string, Row> }
 
@@ -9,7 +9,7 @@ export const emptyRow = (): Row => ({ rating: null, comment: '', media: null, fr
 const draft = ref<Draft | null>(null)
 /** Set while the person is choosing a frame for a criterion: where to come back to, and whose clips. */
 const picking = ref<{ criterion: string; archer: number; returnTo: string } | null>(null)
-const picked = ref<{ criterion: string; media: string; frame: number; timeMs: number } | null>(null)
+const picked = ref<{ criterion: string; media: string; frame: number | null; timeMs: number | null } | null>(null)
 
 export function useEvaluationDraft() {
   return {
@@ -25,8 +25,8 @@ export function useEvaluationDraft() {
       picking.value = { criterion, archer, returnTo }
       picked.value = null
     },
-    /** The frame is chosen: remember it and say where to go back to. */
-    finishPick(media: string, frame: number, timeMs: number): string | null {
+    /** The frame (or, with frame and time null, the photo) is chosen: remember it and say where to go back to. */
+    finishPick(media: string, frame: number | null, timeMs: number | null): string | null {
       const p = picking.value
       if (!p) return null
       picked.value = { criterion: p.criterion, media, frame, timeMs }

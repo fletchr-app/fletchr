@@ -26,3 +26,4 @@ Implementation plans, checklist-style. Files are named `YYYY-MM-DD-topic.md`. Ne
 - [2026-11-05-start-page-profile.md](2026-11-05-start-page-profile.md): Home becomes the archer profile for every user, own data from the device first, section components with a data source switch (#143). **implemented**
 - [2026-11-06-move-drawing-points.md](2026-11-06-move-drawing-points.md): Move tool for the points of a drawing, loupe while drawing. **implemented, not yet checked on a phone**
 - [2026-11-06-merge-photo-viewer.md](2026-11-06-merge-photo-viewer.md): the grid opens photos in the player, the swipe viewer goes, simple swipe in the player (#159). **plan, decisions open**
+- [2026-11-07-photo-as-evidence.md](2026-11-07-photo-as-evidence.md): a photo can be the evidence for an evaluation criterion, no frame; server refuses a frame on a photo (#161). **implemented, not yet checked on a phone**

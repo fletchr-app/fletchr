@@ -110,7 +110,7 @@ watch(teamId, () => void loadTemplates())
 
 const row = (k: string): Row => (draft.value!.rows[k] ??= emptyRow())
 const open = ref<Record<string, boolean>>({})
-const frameText = (r: Row) => (r.media ? t('evaluations.frameLinked', { n: (r.frame ?? 0) + 1, time: clock((r.timeMs ?? 0) / 1000) }) : '')
+const frameText = (r: Row) => (!r.media ? '' : r.frame === null ? t('evaluations.photoLinked') : t('evaluations.frameLinked', { n: r.frame + 1, time: clock((r.timeMs ?? 0) / 1000) }))
 
 function chooseFrame(criterion: string) {
   startPick(criterion, archerId, route.fullPath)
