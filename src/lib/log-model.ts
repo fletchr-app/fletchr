@@ -79,7 +79,18 @@ export type LogSession = {
   noResults?: boolean;
   /** The server deleted it while results of it were still waiting to upload. Kept until the archer chooses (`keepGoneAsNew` or `discardGone`). */
   gone?: boolean;
+  /** The server has had it once. Set after the first upload of the session itself. */
+  sent?: boolean;
 };
+
+/**
+ * A session that is still empty stays on the phone: one that is started and left again (to change the equipment, say) would
+ * otherwise go up and be deleted a minute later. It goes up with its first end or volume entry, or when it is finished.
+ * Not held: a session of a coach or from the server (`keep`), one without results by nature (technique), one the server has.
+ */
+export function holdsUpload(session: LogSession): boolean {
+  return !session.keep && !session.sent && !session.ended_at && session.type !== 'technique' && session.ends.length === 0 && session.volume.length === 0;
+}
 
 /**
  * One upload still to do. The body of a PUT is read from the current local data when it is sent, so
@@ -134,6 +145,11 @@ export type LogAction =
   | { type: 'discardFailed' };
 
 const opKey = (kind: Op['kind'], sessionId: string, itemId?: string) => `${kind}:${sessionId}:${itemId ?? ''}`;
+
+function markSent(state: LogState, op?: Op): LogState {
+  if (!op || op.kind !== 'session' || op.delete) return state;
+  return { ...state, sessions: state.sessions.map((s) => (s.id === op.sessionId && !s.sent ? { ...s, sent: true } : s)) };
+}
 
 /** Replaces the op for the same item in place (so a session still goes up before its ends), else appends. */
 function queue(state: LogState, kind: Op['kind'], sessionId: string, itemId?: string, del = false): LogState {
@@ -327,13 +343,19 @@ export function reduce(state: LogState, action: LogAction): LogState {
     case 'deleteSession': {
       // The server deletes everything under a session, so one op replaces all the pending ones.
       const rest = { ...state, sessions: state.sessions.filter((s) => s.id !== action.id), outbox: state.outbox.filter((o) => o.sessionId !== action.id) };
+      // The server never heard of a session that was held back: there is nothing to delete there.
+      const held = state.sessions.find((s) => s.id === action.id);
+      if (held && holdsUpload(held)) return rest;
       return queue(rest, 'session', action.id, undefined, true);
     }
     case 'dropEvent':
       return mapSession(state, action.id, ({ event: _event, ...s }) => s);
     case 'opDone':
       // An edit made during the upload has a newer rev and stays queued.
-      return { ...state, outbox: state.outbox.filter((o) => !(o.key === action.key && o.rev === action.rev)) };
+      return {
+        ...markSent(state, state.outbox.find((o) => o.key === action.key && o.rev === action.rev)),
+        outbox: state.outbox.filter((o) => !(o.key === action.key && o.rev === action.rev)),
+      };
     case 'opFailed':
       return { ...state, outbox: state.outbox.map((o) => (o.key === action.key && o.rev === action.rev ? { ...o, error: action.error } : o)) };
     case 'retryFailed':

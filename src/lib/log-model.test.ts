@@ -8,6 +8,7 @@ import {
   chosenKeys,
   gearFor,
   gearLine,
+  holdsUpload,
   keypadFor,
   nextEndDefaults,
   reduce,
@@ -422,4 +423,27 @@ test('a pull from a server that does not know visibility keeps the local value',
   let s = uploaded({ type: 'startSession', session: { ...session('s1'), visibility: 'me' } });
   s = reduce(s, { type: 'pulled', sessions: [server()] });
   assert.equal(s.sessions[0].visibility, 'me');
+});
+
+// --- an empty session stays on the phone ---------------------------------------------------------------
+
+test('deleting a session that was never sent leaves nothing to upload', () => {
+  const s = run({ type: 'startSession', session: session('s1') }, { type: 'deleteSession', id: 's1' });
+  assert.deepEqual(s.outbox, []);
+  assert.deepEqual(s.sessions, []);
+});
+
+test('deleting an empty session that the server has is sent', () => {
+  const sent = run({ type: 'startSession', session: session('s1') });
+  const s = reduce(reduce(sent, { type: 'opDone', key: sent.outbox[0].key, rev: sent.outbox[0].rev }), { type: 'deleteSession', id: 's1' });
+  assert.equal(s.sessions.length, 0);
+  assert.deepEqual(keys(s), ['session-delete']);
+});
+
+test('a session with an end, a finished one, a technique one and a coach\'s are not held', () => {
+  assert.equal(holdsUpload(session('s1')), true);
+  assert.equal(holdsUpload({ ...session('s1'), ends: [end('e1', 0)] }), false);
+  assert.equal(holdsUpload({ ...session('s1'), ended_at: '2026-10-18T10:00:00Z' }), false);
+  assert.equal(holdsUpload({ ...session('s1'), type: 'technique' }), false);
+  assert.equal(holdsUpload({ ...session('s1'), keep: true }), false);
 });

@@ -36,6 +36,7 @@ const apiOf = (h: { api: ReturnType<typeof createClient<paths>> }) => h.api;
 const ok = (call: Call) => (call.method === 'DELETE' ? noContent() : json(200));
 const session: LogSession = {
   id: 's1', started_at: '2026-10-18T09:00:00Z', ended_at: null, type: 'scoring', environment: 'indoor', location: 'Hall', ends: [], volume: [],
+  keep: true, // most tests are about requests, not about holding an empty session back
 };
 const end = (shots: string[]): LogEnd => ({
   id: 'e1', index: 0, distance_m: '18.0', face: 'wa-40', arrows_per_end: 3,
@@ -462,4 +463,23 @@ test('visibility is sent once it is chosen and left out before, and never for a 
   const bodies = h.calls.map((c) => c.body as Record<string, unknown>);
   assert.deepEqual(bodies.map((b) => 'visibility' in b), [false, true, false, false]);
   assert.equal(bodies[1]!.visibility, 'me');
+});
+
+test('an empty session is not uploaded until its first end, and does not hold up the others', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session: { ...session, keep: false } });
+  h.dispatch({ type: 'startSession', session: { ...session, keep: false, id: 's2', type: 'technique' } });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => c.path), ['/api/sessions/s2/']);
+  h.dispatch({ type: 'saveEnd', sessionId: 's1', end: end(['a']) });
+  await h.run();
+  assert.deepEqual(h.calls.map((c) => `${c.method} ${c.path}`), ['PUT /api/sessions/s2/', 'PUT /api/sessions/s1/', 'PUT /api/sessions/s1/ends/e1/']);
+});
+
+test('an empty session that is started and deleted never reaches the server', async () => {
+  const h = harness(ok);
+  h.dispatch({ type: 'startSession', session: { ...session, keep: false } });
+  h.dispatch({ type: 'deleteSession', id: 's1' });
+  await h.run();
+  assert.deepEqual(h.calls, []);
 });
