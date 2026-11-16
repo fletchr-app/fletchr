@@ -12,7 +12,8 @@ import NewNote from '@/components/NewNote.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useMedia } from '@/composables/useMedia'
 import { useNotes } from '@/composables/useNotes'
-import { COLOURS, type Drawing, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
+import { usePinchZoom } from '@/composables/usePinchZoom'
+import { COLOURS, type Drawing, readDrawing, type Mode, type Shape } from '@/lib/drawing'
 import { loadFiles, loadThumbnail } from '@/lib/media-files'
 
 // A photo or video of someone without an account: shown from the file on the phone, with notes and, on a photo,
@@ -51,8 +52,9 @@ const isPhoto = computed(() => item.value?.kind === 'photo')
 const drawing = ref<{ shapes: Shape[]; noteUid: string | null } | null>(null)
 const attached = ref<Shape[]>([])
 const tool = ref<Mode>('line')
-// While a finger draws, the picture is magnified around the point that is drawn (DrawingLayer tells where).
-const zoomAt = ref<{ x: number; y: number } | null>(null)
+// Two fingers pinch and move the picture, also while drawing; one finger moves it when it is magnified and nothing is drawn.
+const picture = ref<HTMLElement | null>(null)
+const zoom = usePinchZoom(picture, () => !drawing.value, () => !(drawing.value && tool.value === 'angle')) // an angle is three taps: no double tap then
 const colour = ref<string>(COLOURS[0])
 const saved = computed(() => about.value.flatMap((n) => readDrawing(n.drawing).shapes))
 const shown = computed(() => (drawing.value ? drawing.value.shapes : [...saved.value, ...attached.value]))
@@ -82,11 +84,12 @@ function remove() {
     <div v-if="!item" class="screen">{{ $t('media.empty') }}</div>
     <div v-else class="screen">
       <div v-if="failed" class="text-danger">{{ $t('media.fileLost') }}</div>
-      <div class="stage" :style="{ aspectRatio: `${item.width} / ${item.height}` }">
+      <div class="stage" :style="{ aspectRatio: `${item.width} / ${item.height}` }" @pointerdown="zoom.down" @pointermove="zoom.move" @pointerup="zoom.up" @pointercancel="zoom.cancel">
+        <button v-if="zoom.zoomed.value" type="button" class="unzoom" :aria-label="$t('media.unzoom')" @click="zoom.reset">1×</button>
         <video v-if="item.kind === 'video' && url" :src="url" :poster="poster ?? undefined" controls playsinline preload="metadata"></video>
-        <div v-else-if="isPhoto && url" class="zoomable" :style="zoomStyle(zoomAt)">
+        <div v-else-if="isPhoto && url" ref="picture" class="zoomable" :style="zoom.style.value">
           <img :src="url" alt="" />
-          <DrawingLayer :shapes="shown" :width="item.width" :height="item.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+          <DrawingLayer :shapes="shown" :width="item.width" :height="item.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
       </div>
       <DrawingToolbar
@@ -123,10 +126,25 @@ function remove() {
   align-self: center;
   background: #000;
   overflow: hidden; /* the magnified picture stays inside the stage */
+  touch-action: none; /* the fingers are read as pointer events */
+}
+.unzoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-width: 44px;
+  height: 36px;
+  border: 0;
+  border-radius: 18px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-weight: 600;
 }
 .zoomable {
   position: absolute;
   inset: 0;
+  will-change: transform; /* one layer for the picture and its drawing, so a pinch or a drawn line does not paint it again at every step */
 }
 .stage img,
 .stage video {

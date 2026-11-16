@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped, ZOOM } from '@/lib/drawing'
+import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped } from '@/lib/drawing'
 
 // Lines, angles and circles over a picture. The layer has the shape of the picture, so the points (fractions of it) are
-// drawn where they were put. With `editing` a finger draws: drag for a line or a circle, three taps for an angle. With
-// the tool `move` it takes hold of a point that is already there and drags it. While a finger is down, the point that is
-// drawn sits a little above the finger (marked by a cross) and the picture is magnified around it: the parent applies
-// the `zoom` it is told about (`zoomStyle` in lib/drawing) to the box that holds the picture and this layer, and clips it.
-const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string }>(), {
+// drawn where they were put, also while the picture is pinched bigger (its on-screen box is measured when a finger goes
+// down). With `editing` a finger draws: drag for a line or a circle, three taps for an angle. While a finger draws, the
+// point that is drawn sits a little above the finger (marked by a cross). With the tool `move` a finger takes hold of a point
+// that is already there, with every point at the same place, and drags it: the point stays under the finger. A second finger
+// is for pinching and stops what the first one began. `scale` is how much the picture is magnified, so that marks keep their size.
+const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string; scale?: number }>(), {
   editing: false,
+  scale: 1,
   tool: 'line',
   colour: '#ff3b30',
 })
 const emit = defineEmits<{
   add: [shape: Shape]
   change: [index: number, shape: Shape]
-  /** Where the picture is magnified around (pixels of the picture), or null when no finger is down. */
-  zoom: [at: { x: number; y: number } | null]
 }>()
 
 const REACH = 28 // pixels: how far from a point a finger may touch it to take hold of it
@@ -30,7 +30,7 @@ let dragging = false
 let grabbed: { shape: number; point: number }[] | null = null // the grabbed point and every point at the same place
 let grabAt: Point = [0, 0] // where the grabbed point was
 let grabFrom = { x: 0, y: 0 } // where the finger went down
-// The size of the layer before the zoom: while the picture is magnified the layer is too, so it is measured when the finger goes down.
+// Where the layer is on the screen (with the picture pinched, its box is the magnified one), measured when the finger goes down.
 let box: { left: number; top: number; width: number; height: number } | null = null
 watch(() => [props.tool, props.editing], () => (pending.value = []))
 
@@ -46,24 +46,25 @@ function meant(e: PointerEvent): Point {
   const p = pointOn(box!, e.clientX, e.clientY - LIFT)
   return props.tool === 'angle' ? snapped(props.shapes, p, box!, REACH) : p // an angle takes its points from the joints that are there
 }
-/** Where the grabbed point goes. The picture is magnified around the grab and stays there, so on the screen the point follows the finger one to one (under it), which in the picture is 1 / ZOOM of the way. */
+/** Where the grabbed point goes: as far as the finger moved since it took hold, so the point stays where it was under the finger. */
 function carried(e: PointerEvent): Point {
-  return [clamp01(grabAt[0] + (e.clientX - grabFrom.x) / ZOOM / box!.width), clamp01(grabAt[1] + (e.clientY - grabFrom.y) / ZOOM / box!.height)]
+  return [clamp01(grabAt[0] + (e.clientX - grabFrom.x) / box!.width), clamp01(grabAt[1] + (e.clientY - grabFrom.y) / box!.height)]
 }
 function moveGrabbed(to: Point) {
   for (const { index, shape } of movedGroup(props.shapes, grabbed!, to)) emit('change', index, shape)
 }
-function aim(p: Point) {
-  tip.value = p
-  emit('zoom', { x: p[0] * box!.width, y: p[1] * box!.height })
-}
-function release() {
+/** Stops what a finger began: a second finger means a pinch, and nothing is to be drawn or moved by it. */
+function cancel() {
   tip.value = null
-  emit('zoom', null)
+  if (props.tool !== 'angle') pending.value = [] // the points of an angle already put stay
+  cursor.value = null
+  dragging = false
+  grabbed = null
 }
 
 function down(e: PointerEvent) {
   if (!props.editing) return
+  if (!e.isPrimary) return cancel()
   box = root.value!.getBoundingClientRect()
   if (props.tool === 'move') {
     const hit = nearestPoint(props.shapes, pointOn(box, e.clientX, e.clientY), box, REACH)
@@ -73,28 +74,29 @@ function down(e: PointerEvent) {
     const at = props.shapes[hit.shape]!.p[hit.point]!
     grabAt = at
     grabFrom = { x: e.clientX, y: e.clientY }
-    aim(at)
+    tip.value = at
     return
   }
   root.value!.setPointerCapture(e.pointerId)
   dragging = true
   cursor.value = meant(e)
-  aim(cursor.value)
+  tip.value = cursor.value
   if (props.tool !== 'angle') pending.value = [cursor.value]
 }
 function move(e: PointerEvent) {
-  if (!props.editing) return
+  if (!props.editing || !e.isPrimary) return
   if (grabbed) {
     const to = carried(e)
     moveGrabbed(to)
-    tip.value = to // the picture is not magnified around the new place: it stays
+    tip.value = to
   } else if (dragging) {
     cursor.value = meant(e)
-    aim(cursor.value)
+    tip.value = cursor.value
   }
 }
 function up(e: PointerEvent) {
-  release()
+  if (!e.isPrimary) return
+  tip.value = null
   if (grabbed) {
     grabbed = null
     return
@@ -132,7 +134,7 @@ const labels = computed(() =>
 </script>
 
 <template>
-  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': tip ? 1 / ZOOM : 1 }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
+  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': 1 / scale }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
     <svg viewBox="0 0 1 1" preserveAspectRatio="none">
       <!-- first a dark outline under every shape, then the shapes: a CSS drop-shadow filter on each line is far too slow to paint while the picture is magnified -->
       <template v-for="pass in ['halo', 'main']" :key="pass">
@@ -164,7 +166,6 @@ const labels = computed(() =>
   inset: 0;
   touch-action: none;
   pointer-events: none;
-  will-change: transform; /* its own layer: drawing a line does not paint the magnified picture again */
 }
 .layer.editing {
   pointer-events: auto;

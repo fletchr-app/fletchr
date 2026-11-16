@@ -1,17 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { angleDegrees, circleRadii, clamp01, fitted, movedGroup, movedPoint, nearestPoint, pointOn, pointsAt, readDrawing, snapped, zoomStyle } from './drawing.ts';
-
-test('the zoom keeps the point where it is and grows everything around it', () => {
-  assert.deepEqual(zoomStyle(null), {});
-  const style = zoomStyle({ x: 100, y: 50 }, 3);
-  assert.equal(style.transform, 'translate(-200px, -100px) scale(3)');
-  assert.equal(style.transformOrigin, '0 0');
-  // a point p on the picture lands at translate + 3 * p: for the zoomed point that is the point itself
-  assert.equal(-200 + 3 * 100, 100);
-  assert.equal(-100 + 3 * 50, 50);
-});
+import { angleDegrees, circleRadii, clamp01, fitted, movedGroup, movedPoint, nearestPoint, pointOn, pointsAt, readDrawing, snapped } from './drawing.ts';
 
 const near = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
 

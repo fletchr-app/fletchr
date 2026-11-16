@@ -50,6 +50,9 @@ describe('latestTiles', () => {
     expect(latestTiles(queue, [], src, true, 6).map((t) => t.to)).toEqual(['/local-media/p', '/local-media/v']);
     expect(latestTiles(queue, [], src, false, 6).map((t) => t.to)).toEqual(['/media/p', '/media/v']);
     expect(latestTiles([], [m('x', '1')], src, false, 6)[0]?.to).toBe('/media/x');
+    // with a query the player knows whose pictures are next to this one; a photo that is only on the device opens as before
+    expect(latestTiles(queue, [m('x', '1')], src, false, 6, '?owner=3').map((t) => t.to)).toEqual(['/media/p?owner=3', '/media/v?owner=3', '/media/x?owner=3']);
+    expect(latestTiles(queue, [], src, true, 6, '?owner=3').map((t) => t.to)).toEqual(['/local-media/p', '/local-media/v']);
   });
 });
 

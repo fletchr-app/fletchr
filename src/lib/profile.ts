@@ -37,9 +37,9 @@ const newestFirst = <T extends MediaStub>(list: T[]) => [...list].sort((a, b) =>
 
 /**
  * The latest photos and clips of yourself: what waits for its upload first, then what the server has, never one twice.
- * A photo or clip opens in the player; without an account what waits is on the device.
+ * A photo or clip opens in the player (with `query`, e.g. `?owner=3`, so that the player knows the ones next to it); without an account what waits is on the device.
  */
-export function latestTiles(queue: MediaStub[], library: MediaStub[], src: (id: string, queued: boolean) => string, isLocal: boolean, n: number): Tile[] {
+export function latestTiles(queue: MediaStub[], library: MediaStub[], src: (id: string, queued: boolean) => string, isLocal: boolean, n: number, query = ''): Tile[] {
   const queuedIds = new Set(queue.map((q) => q.id));
   const queued = newestFirst(queue).map((m) => ({ m, queued: true }));
   const known = newestFirst(library)
@@ -50,7 +50,7 @@ export function latestTiles(queue: MediaStub[], library: MediaStub[], src: (id: 
     kind: m.kind,
     src: src(m.id, q),
     queued: q,
-    to: q && isLocal ? `/local-media/${m.id}` : `/media/${m.id}`,
+    to: q && isLocal ? `/local-media/${m.id}` : `/media/${m.id}${query}`,
   }));
 }
 
