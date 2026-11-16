@@ -105,6 +105,9 @@ class MediaDetailView(APIView):
             raise PermissionDenied(gettext("Video of an archer under 18 needs the consent of the parents first. A coach can record it on the archer's page."))
         if existing is None:
             file, thumbnail = data.pop("file"), data.pop("thumbnail")
+            # What the bucket stores as the type: the upload's own header comes from the client, and the type was checked by content.
+            file.content_type = "video/mp4" if data.get("kind") == Media.Kind.VIDEO else "image/jpeg"
+            thumbnail.content_type = "image/jpeg"
             media = Media(id=media_id, owner=owner, uploaded_by=request.user, size=file.size + thumbnail.size, **data)
             media.file.save("file", file, save=False)  # the name comes from the owner and the id (models.file_path)
             media.thumbnail.save("thumbnail", thumbnail, save=False)

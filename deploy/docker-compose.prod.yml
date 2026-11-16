@@ -26,6 +26,12 @@ services:
       DJANGO_EMAIL_PASSWORD: ${DJANGO_EMAIL_PASSWORD:-}
       DJANGO_SITE_URL: ${DJANGO_SITE_URL:-}
       DJANGO_FCM_CREDENTIALS: ${DJANGO_FCM_CREDENTIALS:-}
+      DJANGO_S3_BUCKET: ${DJANGO_S3_BUCKET:-}
+      DJANGO_S3_ENDPOINT: ${DJANGO_S3_ENDPOINT:-}
+      DJANGO_S3_REGION: ${DJANGO_S3_REGION:-}
+      DJANGO_S3_ACCESS_KEY: ${DJANGO_S3_ACCESS_KEY:-}
+      DJANGO_S3_SECRET_KEY: ${DJANGO_S3_SECRET_KEY:-}
+      DJANGO_S3_ADDRESSING: ${DJANGO_S3_ADDRESSING:-auto}
       DJANGO_EMAIL_FROM: ${DJANGO_EMAIL_FROM:-Fletchr <noreply@fletchr.de>}
       # Three workers for two CPUs; a slow request does not block the others.
       # The access log shows the client's address (nginx passes it in X-Real-IP), not Docker's gateway.

@@ -12,3 +12,4 @@ Short decision records for choices that had genuine considered-and-rejected alte
 - [0008-events-are-labels.md](0008-events-are-labels.md): a team training is a label on sessions, notes and media, not a shared session. *accepted*
 - [0009-ordered-audience-scale.md](0009-ordered-audience-scale.md): one ordered scale `me` < `coaches` < `team` < `everyone`, a field per subject, one server filter. *accepted*
 - [0010-push-via-fcm-http-v1.md](0010-push-via-fcm-http-v1.md): push through FCM's HTTP v1 API with our own few lines, sent after the commit, off without a key. *accepted*
+- [0011-media-in-s3.md](0011-media-in-s3.md): uploads in a private S3 bucket, served by a redirect to a short-lived link. *accepted*

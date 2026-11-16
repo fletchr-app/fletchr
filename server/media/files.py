@@ -4,7 +4,7 @@ import re
 
 from django.conf import settings
 from django.core import signing
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
 
 LINK_SALT = "media-link"
 CHUNK = 64 * 1024
@@ -40,7 +40,13 @@ def read_link(token, media_id):
 
 
 def serve(request, field, content_type):
-    """The file with support for the Range header (the player seeks with it). Django's FileResponse has none."""
+    """The file with support for the Range header (the player seeks with it). Django's FileResponse has none.
+    In an S3 bucket the file is not read here: the answer is a redirect to a link that expires in minutes, and the
+    bucket answers Range requests itself."""
+    if settings.S3_BUCKET:
+        response = HttpResponseRedirect(field.storage.url(field.name))
+        response["Cache-Control"] = "no-store"  # the target expires; a cached redirect would send the player to a dead link
+        return response
     size = field.size
     start, end, status = 0, size - 1, 200
     match = re.fullmatch(r"bytes=(\d*)-(\d*)", request.headers.get("Range", "").strip())

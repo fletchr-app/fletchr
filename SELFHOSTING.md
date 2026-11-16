@@ -48,6 +48,12 @@ curl -s https://app.example.org/api/health/        # {"status":"ok","version":".
 
 The database and uploads are in `deploy/data/django/` (photos and videos in `media/`). Migrations run on every start. The limits are in `server/config/settings.py` (`MEDIA_MAX_*`, and the quota per archer, `DJANGO_MEDIA_QUOTA_MB`, 2048 by default). The links to media files carry a token in the address, which gunicorn's access log shows; the token works for one user and one clip for an hour.
 
+### Photos and videos in an S3 bucket (optional)
+
+Set `DJANGO_S3_BUCKET`, `DJANGO_S3_ENDPOINT`, `DJANGO_S3_REGION`, `DJANGO_S3_ACCESS_KEY` and `DJANGO_S3_SECRET_KEY` in `deploy/.env.prod` (see the example file) and restart. New uploads and profile pictures then go to the bucket; the server checks who may see a file and redirects the app to a link that expires after 5 minutes, so the bucket must stay **private** (no public ACL, no static website) and the key should reach only this bucket. Check it: `curl -I https://<endpoint>/<bucket>/<some object>` must answer 403.
+
+Files already in `deploy/data/django/media` are not moved by the server. Copy them once with the same names, e.g. `rclone sync deploy/data/django/media remote:<bucket>`, before you switch. The restic backup in section 4 only covers the local `media` folder: with a bucket, the backup of the files is up to the bucket's provider or a copy you make yourself. A bucket in another country than yours needs a data processing agreement (AVV) with the provider, because the files show people.
+
 Google sign-in is not available for self-hosted servers: the Google project it needs is tied to the app's package name and signing key, so only the operator of the app in the Play Store can run it. Leave `DJANGO_GOOGLE_CLIENT_IDS` unset; the app then shows no Google button for your server. Email and password work as always.
 
 First account (signup is invite-only):
