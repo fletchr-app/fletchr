@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedPoint, nearestPoint, POINTS, type Point, pointOn, type Shape, ZOOM } from '@/lib/drawing'
+import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped, ZOOM } from '@/lib/drawing'
 
 // Lines, angles and circles over a picture. The layer has the shape of the picture, so the points (fractions of it) are
 // drawn where they were put. With `editing` a finger draws: drag for a line or a circle, three taps for an angle. With
@@ -27,7 +27,9 @@ const pending = ref<Point[]>([]) // the points of the shape that is being drawn
 const cursor = ref<Point | null>(null)
 const tip = ref<Point | null>(null) // the point that is drawn while a finger is down
 let dragging = false
-let grabbed: { shape: number; point: number } | null = null
+let grabbed: { shape: number; point: number }[] | null = null // the grabbed point and every point at the same place
+let grabAt: Point = [0, 0] // where the grabbed point was
+let grabFrom = { x: 0, y: 0 } // where the finger went down
 // The size of the layer before the zoom: while the picture is magnified the layer is too, so it is measured when the finger goes down.
 let box: { left: number; top: number; width: number; height: number } | null = null
 watch(() => [props.tool, props.editing], () => (pending.value = []))
@@ -41,7 +43,15 @@ const handles = computed(() => (props.editing && props.tool === 'move' ? props.s
 
 /** The point a finger means: LIFT pixels above it. */
 function meant(e: PointerEvent): Point {
-  return pointOn(box!, e.clientX, e.clientY - LIFT)
+  const p = pointOn(box!, e.clientX, e.clientY - LIFT)
+  return props.tool === 'angle' ? snapped(props.shapes, p, box!, REACH) : p // an angle takes its points from the joints that are there
+}
+/** Where the grabbed point goes. The picture is magnified around the grab and stays there, so on the screen the point follows the finger one to one (under it), which in the picture is 1 / ZOOM of the way. */
+function carried(e: PointerEvent): Point {
+  return [clamp01(grabAt[0] + (e.clientX - grabFrom.x) / ZOOM / box!.width), clamp01(grabAt[1] + (e.clientY - grabFrom.y) / ZOOM / box!.height)]
+}
+function moveGrabbed(to: Point) {
+  for (const { index, shape } of movedGroup(props.shapes, grabbed!, to)) emit('change', index, shape)
 }
 function aim(p: Point) {
   tip.value = p
@@ -58,11 +68,12 @@ function down(e: PointerEvent) {
   if (props.tool === 'move') {
     const hit = nearestPoint(props.shapes, pointOn(box, e.clientX, e.clientY), box, REACH)
     if (!hit) return
-    grabbed = hit
+    grabbed = pointsAt(props.shapes, hit, box)
     root.value!.setPointerCapture(e.pointerId)
-    const to = meant(e)
-    emit('change', hit.shape, movedPoint(props.shapes[hit.shape]!, hit.point, to))
-    aim(to)
+    const at = props.shapes[hit.shape]!.p[hit.point]!
+    grabAt = at
+    grabFrom = { x: e.clientX, y: e.clientY }
+    aim(at)
     return
   }
   root.value!.setPointerCapture(e.pointerId)
@@ -74,9 +85,9 @@ function down(e: PointerEvent) {
 function move(e: PointerEvent) {
   if (!props.editing) return
   if (grabbed) {
-    const to = meant(e)
-    emit('change', grabbed.shape, movedPoint(props.shapes[grabbed.shape]!, grabbed.point, to))
-    aim(to)
+    const to = carried(e)
+    moveGrabbed(to)
+    tip.value = to // the picture is not magnified around the new place: it stays
   } else if (dragging) {
     cursor.value = meant(e)
     aim(cursor.value)
@@ -123,18 +134,22 @@ const labels = computed(() =>
 <template>
   <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': tip ? 1 / ZOOM : 1 }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
     <svg viewBox="0 0 1 1" preserveAspectRatio="none">
-      <template v-for="(s, i) in all" :key="i">
-        <line v-if="s.t === 'line' && s.p.length === 2" :x1="s.p[0]![0]" :y1="s.p[0]![1]" :x2="s.p[1]![0]" :y2="s.p[1]![1]" :stroke="colourOf(s)" />
-        <polyline v-else-if="s.t === 'angle'" :points="s.p.map((p) => p.join(',')).join(' ')" fill="none" :stroke="colourOf(s)" />
-        <ellipse
-          v-else-if="s.t === 'circle' && s.p.length === 2"
-          :cx="s.p[0]![0]"
-          :cy="s.p[0]![1]"
-          :rx="circleRadii(s.p[0]!, s.p[1]!, width, height).rx"
-          :ry="circleRadii(s.p[0]!, s.p[1]!, width, height).ry"
-          fill="none"
-          :stroke="colourOf(s)"
-        />
+      <!-- first a dark outline under every shape, then the shapes: a CSS drop-shadow filter on each line is far too slow to paint while the picture is magnified -->
+      <template v-for="pass in ['halo', 'main']" :key="pass">
+        <template v-for="(s, i) in all" :key="i">
+          <line v-if="s.t === 'line' && s.p.length === 2" :class="pass" :x1="s.p[0]![0]" :y1="s.p[0]![1]" :x2="s.p[1]![0]" :y2="s.p[1]![1]" :stroke="pass === 'halo' ? '#000' : colourOf(s)" />
+          <polyline v-else-if="s.t === 'angle'" :class="pass" :points="s.p.map((p) => p.join(',')).join(' ')" fill="none" :stroke="pass === 'halo' ? '#000' : colourOf(s)" />
+          <ellipse
+            v-else-if="s.t === 'circle' && s.p.length === 2"
+            :class="pass"
+            :cx="s.p[0]![0]"
+            :cy="s.p[0]![1]"
+            :rx="circleRadii(s.p[0]!, s.p[1]!, width, height).rx"
+            :ry="circleRadii(s.p[0]!, s.p[1]!, width, height).ry"
+            fill="none"
+            :stroke="pass === 'halo' ? '#000' : colourOf(s)"
+          />
+        </template>
       </template>
     </svg>
     <span v-for="(h, i) in handles" :key="`h${i}`" class="handle" :style="{ left: pct(h[0]), top: pct(h[1]) }"></span>
@@ -149,6 +164,7 @@ const labels = computed(() =>
   inset: 0;
   touch-action: none;
   pointer-events: none;
+  will-change: transform; /* its own layer: drawing a line does not paint the magnified picture again */
 }
 .layer.editing {
   pointer-events: auto;
@@ -165,7 +181,10 @@ svg :where(line, polyline, ellipse) {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 1px rgb(0 0 0 / 70%));
+}
+svg .halo {
+  stroke-width: 5;
+  opacity: 0.45;
 }
 /* While the picture is magnified, marks keep their size on the screen (--inv is 1 / zoom). */
 .handle {

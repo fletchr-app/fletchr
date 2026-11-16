@@ -22,11 +22,13 @@ import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
+import { detectPoses, poseBusy } from '@/composables/usePose'
 import { useRemote } from '@/composables/useRemote'
 import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
+import { pickPose, skeletonShapes } from '@/lib/skeleton'
 import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
 import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, swipeStep, totalFrames } from '@/lib/player'
@@ -221,6 +223,31 @@ function startDrawing(shapes: Shape[], noteId: number | null) {
 }
 function undo() {
   drawing.value?.shapes.pop()
+}
+// The skeleton: the model finds the body in the picture that is shown, and its lines join the drawing. Pressing again replaces them.
+let skeletonLines: Shape[] = []
+async function findSkeleton() {
+  const d = drawing.value
+  if (!d || !clip.value) return
+  drawError.value = null
+  try {
+    let source: HTMLCanvasElement | ImageBitmap | null = null
+    if (isPhoto.value) source = await createImageBitmap(await (await fetch(clip.value.file_url)).blob())
+    else if (canvasOn.value) source = canvas.value
+    if (!source) return void (drawError.value = t('media.skeleton.failed'))
+    const found = await detectPoses(source)
+    if ('close' in source) source.close()
+    console.info('skeleton', found.delegate, `load ${found.loadMs} ms, detect ${found.detectMs} ms`, found.poses.length, 'people')
+    const pose = pickPose(found.poses)
+    if (!pose) return void (drawError.value = t('media.skeleton.none'))
+    d.shapes = d.shapes.filter((s) => !skeletonLines.includes(s))
+    skeletonLines = skeletonShapes(pose, colour.value)
+    d.shapes.push(...skeletonLines)
+    drawError.value = `${found.delegate}: ${found.loadMs} ms, ${found.detectMs} ms` // prototype: shows the timings
+  } catch (e) {
+    console.error('skeleton', e)
+    drawError.value = `${t('media.skeleton.failed')} (${e instanceof Error ? e.message : String(e)})`
+  }
 }
 function cancelDrawing() {
   drawing.value = null
@@ -642,6 +669,8 @@ async function moveTo(session: string | null) {
           :count="drawing.shapes.length"
           :error="drawError"
           :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
+          :skeleton="poseBusy ? 'busy' : 'idle'"
+          @skeleton="findSkeleton"
           @undo="undo"
           @cancel="cancelDrawing"
           @done="finishDrawing"
@@ -667,6 +696,8 @@ async function moveTo(session: string | null) {
           :count="drawing.shapes.length"
           :error="drawError"
           :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
+          :skeleton="poseBusy ? 'busy' : 'idle'"
+          @skeleton="findSkeleton"
           @undo="undo"
           @cancel="cancelDrawing"
           @done="finishDrawing"
@@ -758,6 +789,7 @@ async function moveTo(session: string | null) {
   width: 100%;
   height: 100%;
   object-fit: fill;
+  will-change: transform; /* the picture is its own layer: it is not painted again when the drawing on it changes */
 }
 .readout {
   display: flex;

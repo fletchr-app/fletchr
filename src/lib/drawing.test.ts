@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { angleDegrees, circleRadii, clamp01, fitted, movedPoint, nearestPoint, pointOn, readDrawing, zoomStyle } from './drawing.ts';
+import { angleDegrees, circleRadii, clamp01, fitted, movedGroup, movedPoint, nearestPoint, pointOn, pointsAt, readDrawing, snapped, zoomStyle } from './drawing.ts';
 
 test('the zoom keeps the point where it is and grows everything around it', () => {
   assert.deepEqual(zoomStyle(null), {});
@@ -76,4 +76,30 @@ test('moving a point gives a new shape and leaves the old one alone', () => {
   const moved = movedPoint(old, 1, [0.4, 0.6]);
   assert.deepEqual(moved, { t: 'angle', p: [[0, 0], [0.4, 0.6], [1, 0]], c: '#fff' });
   assert.deepEqual(old.p[1], [0.5, 0.5]);
+});
+
+test('lines that end at the same place are connected and move together', () => {
+  const shapes = [
+    { t: 'line' as const, p: [[0.2, 0.2], [0.5, 0.5]] as [number, number][] },
+    { t: 'line' as const, p: [[0.5, 0.5], [0.8, 0.3]] as [number, number][] },
+    { t: 'line' as const, p: [[0.5005, 0.5], [0.9, 0.9]] as [number, number][], c: '#fff' }, // 0.5 px away on a 1000 px picture
+    { t: 'line' as const, p: [[0.6, 0.6], [0.7, 0.7]] as [number, number][] },
+  ];
+  const size = { width: 1000, height: 500 };
+  const group = pointsAt(shapes, { shape: 0, point: 1 }, size);
+  assert.deepEqual(group, [{ shape: 0, point: 1 }, { shape: 1, point: 0 }, { shape: 2, point: 0 }]);
+  const changed = movedGroup(shapes, group, [0.4, 0.6]);
+  assert.deepEqual(changed.map((c) => c.index), [0, 1, 2]);
+  assert.deepEqual(changed[0]!.shape.p, [[0.2, 0.2], [0.4, 0.6]]);
+  assert.deepEqual(changed[1]!.shape.p, [[0.4, 0.6], [0.8, 0.3]]);
+  assert.equal(changed[2]!.shape.c, '#fff');
+  assert.deepEqual(shapes[1]!.p[0], [0.5, 0.5]); // the old shapes are left alone
+  assert.deepEqual(pointsAt(shapes, { shape: 9, point: 0 }, size), []);
+});
+
+test('a point near an existing point snaps to it, otherwise it stays', () => {
+  const shapes = [{ t: 'line' as const, p: [[0.2, 0.2], [0.5, 0.5]] as [number, number][] }];
+  const size = { width: 1000, height: 500 };
+  assert.deepEqual(snapped(shapes, [0.51, 0.5], size, 28), [0.5, 0.5]); // 10 px away
+  assert.deepEqual(snapped(shapes, [0.6, 0.5], size, 28), [0.6, 0.5]);
 });

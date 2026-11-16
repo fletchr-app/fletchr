@@ -81,3 +81,33 @@ export function nearestPoint(shapes: Shape[], at: Point, size: { width: number; 
 
 /** The shape with one of its points somewhere else. The old shape is left alone (it may belong to a saved note). */
 export const movedPoint = (shape: Shape, point: number, to: Point): Shape => ({ ...shape, p: shape.p.map((q, i) => (i === point ? to : q)) })
+
+type Size = { width: number; height: number }
+
+/** Every point (of any shape) that sits where the point `hit` is, within `within` pixels, the grabbed one included. Lines that end at the same place are connected: they move together. */
+export function pointsAt(shapes: Shape[], hit: { shape: number; point: number }, size: Size, within = 1): { shape: number; point: number }[] {
+  const at = shapes[hit.shape]?.p[hit.point]
+  if (!at) return []
+  const found: { shape: number; point: number }[] = []
+  shapes.forEach((s, shape) =>
+    s.p.forEach((q, point) => {
+      if (Math.hypot((q[0] - at[0]) * size.width, (q[1] - at[1]) * size.height) <= within) found.push({ shape, point })
+    }),
+  )
+  return found
+}
+
+/** The shapes that change when the points in `group` are moved to `to`, each with its index. The old shapes are left alone. */
+export function movedGroup(shapes: Shape[], group: { shape: number; point: number }[], to: Point): { index: number; shape: Shape }[] {
+  const indexes = [...new Set(group.map((g) => g.shape))]
+  return indexes.map((index) => ({
+    index,
+    shape: { ...shapes[index]!, p: shapes[index]!.p.map((q, i) => (group.some((g) => g.shape === index && g.point === i) ? to : q)) },
+  }))
+}
+
+/** `at`, or the existing point within `reach` pixels of it, so that a new angle can take its corner or ends exactly from a joint. */
+export function snapped(shapes: Shape[], at: Point, size: Size, reach: number): Point {
+  const hit = nearestPoint(shapes, at, size, reach)
+  return hit ? shapes[hit.shape]!.p[hit.point]! : at
+}
