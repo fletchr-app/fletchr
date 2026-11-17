@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AppPage from '@/components/AppPage.vue'
 import DrawingLayer from '@/components/DrawingLayer.vue'
+import DrawingMenus from '@/components/DrawingMenus.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import LocalNoteText from '@/components/LocalNoteText.vue'
 import NewNote from '@/components/NewNote.vue'
@@ -162,20 +163,11 @@ function remove() {
             <DrawingLayer :shapes="shown" :backdrop="backdrop" :width="item.width" :height="item.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" @loupe="onLoupe" />
           </div>
         </div>
+        <DrawingMenus v-if="drawing" v-model:tool="tool" v-model:colour="colour" />
+        <DrawingToolbar v-if="drawing" :count="drawing.shapes.length" :error="null" :done-label="drawing.noteUid === null ? $t('media.drawingDone') : $t('common.save')" @undo="drawing.shapes.pop()" @cancel="drawing = null" @done="finishDrawing" />
         <PictureMenu v-if="!drawing" :draw-label="isPhoto ? $t('media.drawPhoto') : undefined" :notes-label="about.length > 0 ? $t('media.notesTitle') : undefined" :add-label="$t('media.addNote')" :notes="about.length" @draw="startDrawing(attached, null)" @notes="notesOpen = true" @add="addOpen = true" />
       </div>
-      <DrawingToolbar
-        v-if="drawing"
-        v-model:tool="tool"
-        v-model:colour="colour"
-        :count="drawing.shapes.length"
-        :error="null"
-        :done-label="drawing.noteUid === null ? $t('media.drawingDone') : $t('common.save')"
-        @undo="drawing.shapes.pop()"
-        @cancel="drawing = null"
-        @done="finishDrawing"
-      />
-      <template v-else>
+      <template v-if="!drawing">
         <IonButton fill="clear" color="danger" class="m-0" @click="remove"><IonIcon slot="start" :icon="trashOutline" />{{ confirmDelete ? (about.length > 0 ? $t('media.deleteConfirmNotes') : $t('media.deleteConfirm')) : $t('media.delete') }}</IonButton>
       </template>
     </div>

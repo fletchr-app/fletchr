@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AppPage from '@/components/AppPage.vue'
 import DrawingLayer from '@/components/DrawingLayer.vue'
+import DrawingMenus from '@/components/DrawingMenus.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
@@ -764,6 +765,8 @@ async function moveTo(session: string | null) {
           @notes="notesOpen = true"
           @add="addOpen = true"
         />
+        <DrawingMenus v-if="drawing" v-model:tool="tool" v-model:colour="colour" :skeleton="poseBusy ? 'busy' : 'idle'" @skeleton="findSkeleton" />
+        <DrawingToolbar v-if="drawing" :count="drawing.shapes.length" :error="drawError" :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')" @undo="undo" @cancel="cancelDrawing" @done="finishDrawing" />
         <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @pointerdown.stop @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body || $t('notes.drawingOnly') }}</button>
       </div>
       <template v-if="clip?.kind === 'video' && videoUrl">
@@ -781,40 +784,12 @@ async function moveTo(session: string | null) {
             <span v-for="n in marks" :key="n.id" class="mark" :style="{ left: `${n.frame! * PX_PER_FRAME - 4}px` }"></span>
           </div>
         </div>
-        <DrawingToolbar
-          v-if="drawing"
-          v-model:tool="tool"
-          v-model:colour="colour"
-          :count="drawing.shapes.length"
-          :error="drawError"
-          :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
-          :skeleton="poseBusy ? 'busy' : 'idle'"
-          @skeleton="findSkeleton"
-          @undo="undo"
-          @cancel="cancelDrawing"
-          @done="finishDrawing"
-        />
-        <div v-else class="controls">
+        <div v-if="!drawing" class="controls">
           <button type="button" class="speed" :aria-label="$t('media.speed')" @click="cycleSpeed">{{ speedLabel(speed) }}</button>
           <button type="button" :aria-label="$t('media.stepBack')" @click="step(-1)"><IonIcon :icon="chevronBack" /></button>
           <button type="button" class="main" :aria-label="playing ? $t('media.pause') : $t('media.play')" @click="toggle"><IonIcon :icon="playing ? pause : play" /></button>
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
         </div>
-      </template>
-      <template v-if="isPhoto && clip">
-        <DrawingToolbar
-          v-if="drawing"
-          v-model:tool="tool"
-          v-model:colour="colour"
-          :count="drawing.shapes.length"
-          :error="drawError"
-          :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
-          :skeleton="poseBusy ? 'busy' : 'idle'"
-          @skeleton="findSkeleton"
-          @undo="undo"
-          @cancel="cancelDrawing"
-          @done="finishDrawing"
-        />
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>

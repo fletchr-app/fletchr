@@ -252,6 +252,8 @@ export default {
     actions: 'Aktionen',
     drawPhoto: 'Auf dem Foto zeichnen',
     undo: 'Rückgängig',
+    colour: 'Farbe',
+    tools: 'Werkzeuge',
     drawingDone: 'Fertig',
     drawingAttached: 'Eine Zeichnung mit {n} Formen gehört zur nächsten Notiz.',
     drawingRemove: 'Entfernen',

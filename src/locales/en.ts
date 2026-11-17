@@ -248,6 +248,8 @@ export default {
     actions: 'Actions',
     drawPhoto: 'Draw on this photo',
     undo: 'Undo',
+    colour: 'Colour',
+    tools: 'Tools',
     drawingDone: 'Done',
     drawingAttached: 'A drawing with {n} shapes goes with the next note.',
     drawingRemove: 'Remove',
