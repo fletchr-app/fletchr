@@ -23,5 +23,6 @@ Private bucket and a redirect. `DJANGO_S3_BUCKET` switches the default storage t
 - Outgoing traffic of the bucket is paid by the hoster's tariff (IONOS: first 2 TB per month free, to be confirmed on their price page).
 - Existing files are copied by hand; the restic backup in `deploy/backup.sh` does not cover the bucket.
 - The app's `<video>` and `<img>` follow the redirect. Tested on 2026-11-16 with the Dev app on an Android phone against an IONOS bucket (Frankfurt, `eu-central-4`): photos show, a video plays and seeks.
+- The app reads thumbnails and photos with `fetch()` (`useMediaLibrary.ts`, the skeleton in `MediaPlayerView.vue`), which needs CORS on the bucket for the app's origins (`https://localhost`, `http://localhost`); `<img>` and `<video>` do not. Without the rule these fetches fail after the redirect, in every app version.
 - The bucket is private and reached with a key of a separate technical user, allowed by a bucket policy on that one bucket (IONOS keys cannot be limited to a bucket themselves).
 - Deleting a clip deletes the object through the storage, as before.
