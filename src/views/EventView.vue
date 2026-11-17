@@ -119,7 +119,7 @@ const reloadAll = () => {
         <ErrorText :message="media.error.value" />
         <div v-if="media.data.value?.length === 0" class="muted">{{ $t('event.noMedia') }}</div>
         <div class="grid">
-          <RouterLink v-for="m in media.data.value" :key="m.id" :to="`/media/${m.id}`"><img :src="m.thumbnail_url" alt="" /></RouterLink>
+          <RouterLink v-for="m in media.data.value" :key="m.id" :to="`/media/${m.id}?event=${id}${archer !== null ? `&archer=${archer}` : ''}`"><img :src="m.thumbnail_url" alt="" /></RouterLink>
         </div>
       </template>
     </div>
