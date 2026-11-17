@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { angleDegrees, circleRadii, clamp01, fitted, movedGroup, movedPoint, nearestPoint, pointOn, pointsAt, readDrawing, snapped } from './drawing.ts';
+import { angleDegrees, circleRadii, clamp01, fitted, loupeStyle, movedGroup, movedPoint, nearestPoint, pointOn, pointsAt, readDrawing, snapped } from './drawing.ts';
 
 const near = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
 
@@ -92,4 +92,9 @@ test('a point near an existing point snaps to it, otherwise it stays', () => {
   const size = { width: 1000, height: 500 };
   assert.deepEqual(snapped(shapes, [0.51, 0.5], size, 28), [0.5, 0.5]); // 10 px away
   assert.deepEqual(snapped(shapes, [0.6, 0.5], size, 28), [0.6, 0.5]);
+});
+
+test('the loupe keeps the drawn point where it is and grows what is around it', () => {
+  assert.deepEqual(loupeStyle(null), {});
+  assert.deepEqual(loupeStyle({ x: 100, y: 50 }, 3), { transform: 'translate(-200px, -100px) scale(3)', transformOrigin: '0 0' });
 });

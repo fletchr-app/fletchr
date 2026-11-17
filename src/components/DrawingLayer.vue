@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped } from '@/lib/drawing'
+import { angleDegrees, circleRadii, clamp01, LIFT, LOUPE, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped } from '@/lib/drawing'
 
 // Lines, angles and circles over a picture. The layer has the shape of the picture, so the points (fractions of it) are
 // drawn where they were put, also while the picture is pinched bigger (its on-screen box is measured when a finger goes
@@ -9,7 +9,11 @@ import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, neares
 // point that is drawn sits a little above the finger (marked by a cross). With the tool `move` a finger takes hold of a point
 // that is already there, with every point at the same place, and drags it: the point stays under the finger. A second finger
 // is for pinching and stops what the first one began. `scale` is how much the picture is magnified, so that marks keep their size.
-const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string; scale?: number }>(), {
+// While a finger draws a new shape (not with Move) the layer says where the drawn point is on the screen (`loupe`, null when the finger is up): the
+// screen shows the picture magnified around that point meanwhile (LOUPE), which is why the marks shrink with it.
+// `backdrop` is what is drawn on the picture already (the drawings of other notes): shown, and new angle points snap to its joints, but it is not touched.
+const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string; scale?: number; backdrop?: Shape[] }>(), {
+  backdrop: () => [],
   editing: false,
   scale: 1,
   tool: 'line',
@@ -18,6 +22,7 @@ const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height:
 const emit = defineEmits<{
   add: [shape: Shape]
   change: [index: number, shape: Shape]
+  loupe: [at: { x: number; y: number } | null]
 }>()
 
 const REACH = 28 // pixels: how far from a point a finger may touch it to take hold of it
@@ -33,18 +38,24 @@ let grabFrom = { x: 0, y: 0 } // where the finger went down
 // Where the layer is on the screen (with the picture pinched, its box is the magnified one), measured when the finger goes down.
 let box: { left: number; top: number; width: number; height: number } | null = null
 watch(() => [props.tool, props.editing], () => (pending.value = []))
+const magnifying = computed(() => !!tip.value && props.tool !== 'move')
+// Where the drawn point is on the screen (client coordinates), measured against the layer as it was when the finger went down.
+watch([tip, magnifying], () => {
+  const t = tip.value
+  emit('loupe', magnifying.value && t && box ? { x: box.left + t[0] * box.width, y: box.top + t[1] * box.height } : null)
+})
 
 const preview = computed<Shape | null>(() => {
   if (!cursor.value || pending.value.length === 0 || props.tool === 'move') return null
   return { t: props.tool, p: [...pending.value, cursor.value], c: props.colour }
 })
-const all = computed(() => (preview.value ? [...props.shapes, preview.value] : props.shapes))
+const all = computed(() => [...props.backdrop, ...(preview.value ? [...props.shapes, preview.value] : props.shapes)])
 const handles = computed(() => (props.editing && props.tool === 'move' ? props.shapes.flatMap((s) => s.p) : []))
 
 /** The point a finger means: LIFT pixels above it. */
 function meant(e: PointerEvent): Point {
   const p = pointOn(box!, e.clientX, e.clientY - LIFT)
-  return props.tool === 'angle' ? snapped(props.shapes, p, box!, REACH) : p // an angle takes its points from the joints that are there
+  return props.tool === 'angle' ? snapped([...props.backdrop, ...props.shapes], p, box!, REACH) : p // an angle takes its points from the joints that are there
 }
 /** Where the grabbed point goes: as far as the finger moved since it took hold, so the point stays where it was under the finger. */
 function carried(e: PointerEvent): Point {
@@ -134,7 +145,7 @@ const labels = computed(() =>
 </script>
 
 <template>
-  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': 1 / scale }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
+  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': 1 / (scale * (magnifying ? LOUPE : 1)) }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
     <svg viewBox="0 0 1 1" preserveAspectRatio="none">
       <!-- first a dark outline under every shape, then the shapes: a CSS drop-shadow filter on each line is far too slow to paint while the picture is magnified -->
       <template v-for="pass in ['halo', 'main']" :key="pass">
