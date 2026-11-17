@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
-import { chatbubbleOutline, chevronBack, cloudOfflineOutline, chevronForward, pause, play, playSkipBack, playSkipForward, createOutline } from 'ionicons/icons'
+import { chevronBack, cloudOfflineOutline, chevronForward, pause, play } from 'ionicons/icons'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -10,6 +10,7 @@ import DrawingLayer from '@/components/DrawingLayer.vue'
 import DrawingToolbar from '@/components/DrawingToolbar.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import MediaNotesSheet from '@/components/MediaNotesSheet.vue'
+import PictureMenu from '@/components/PictureMenu.vue'
 import MediaEvent from '@/components/MediaEvent.vue'
 import MediaActions from '@/components/MediaActions.vue'
 import SessionPicker from '@/components/SessionPicker.vue'
@@ -25,13 +26,13 @@ import { useNotes } from '@/composables/useNotes'
 import { detectPoses, poseBusy } from '@/composables/usePose'
 import { usePinchZoom } from '@/composables/usePinchZoom'
 import { useRemote } from '@/composables/useRemote'
-import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape } from '@/lib/drawing'
+import { COLOURS, type Drawing, fitted, loupeStyle, readDrawing, type Mode, type Shape } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
 import { pickPose, skeletonShapes } from '@/lib/skeleton'
 import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
-import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
+import { clipOfKept, clipOfQueued, neighbourQuery, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, totalFrames } from '@/lib/player'
 
 // One uploaded photo or clip. A clip is looked at frame by frame: the video above, a tape below it that is dragged
@@ -131,23 +132,17 @@ onMounted(async () => {
   const session = route.query.session as string | undefined
   const owner = route.query.owner ? Number(route.query.owner) : undefined
   const unattached = !!route.query.unattached
-  if (!session && owner === undefined) return
-  const query = session ? { session } : { owner, ...(unattached ? { without_session: true } : {}) }
+  const event = route.query.event as string | undefined
+  const archer = route.query.archer ? Number(route.query.archer) : undefined
+  const query = neighbourQuery({ session, owner, unattached, event, archer })
+  if (!query) return
   const { data } = await api.GET('/api/media/', { params: { query } }).catch(() => ({ data: null }))
   for (const m of data ?? []) if (m.kind === 'photo') listedLinks.set(m.id, m.file_url)
   const offline = session || owner === Number(userId.value) ? library.known({ session: session ?? null, withoutSession: unattached }) : []
-  everything.value = playerSiblings(media.items.value, (data ?? offline).map((m) => ({ id: m.id, kind: m.kind })), { session, owner, unattached }, Number(userId.value))
+  everything.value = playerSiblings(media.items.value, (data ?? offline).map((m) => ({ id: m.id, kind: m.kind })), event && !session ? {} : { session, owner, unattached }, Number(userId.value))
 })
-// Next and previous stay among the same kind: photos among photos, clips among clips.
 const isPhoto = computed(() => clip.value?.kind === 'photo')
-const siblings = computed(() => {
-  const kind = everything.value.find((m) => m.id === currentId.value)?.kind ?? clip.value?.kind
-  return everything.value.filter((m) => m.kind === kind).map((m) => m.id)
-})
-const index = computed(() => siblings.value.indexOf(currentId.value))
-const hasPrevious = computed(() => index.value > 0)
-const hasNext = computed(() => index.value >= 0 && index.value < siblings.value.length - 1)
-// A swipe goes through everything in the order of the grid, photos and clips; the buttons stay among the same kind.
+// A swipe goes to the next or previous one in the order of the grid, photos and clips alike.
 const order = computed(() => everything.value.map((m) => m.id))
 const placeInOrder = computed(() => order.value.indexOf(currentId.value))
 function swipeTo(delta: number) {
@@ -168,11 +163,6 @@ function preloadNeighbours() {
   }
 }
 watch([clip, order], preloadNeighbours)
-function goTo(delta: number) {
-  halt()
-  currentId.value = siblings.value[index.value + delta]!
-  pos.value = 0
-}
 
 // Coach notes on single frames: the tape shows where they are, a tap on a note jumps to its frame.
 const notesFor = ref('') // the picture the notes in `notes` belong to (they stay until the next ones are there)
@@ -210,7 +200,8 @@ const noteCount = computed(() => listed.value.length + (isPhoto.value ? notesOnP
 const marks = computed(() => [...frameNotes.value, ...waiting.value].filter((n) => n.frame !== null && n.frame !== undefined))
 // The note to show under the picture: at this frame, or the newest on a photo.
 const noteHere = computed(() => (isPhoto.value ? photoNotes.value[photoNotes.value.length - 1] : frameNotes.value.find((n) => n.frame === frame.value)))
-const notesOpen = ref(false)
+const notesOpen = ref(false) // the list of the notes
+const addOpen = ref(false) // the form for a new note
 // What a new note in the sheet is about: the photo, or the frame on show.
 const sheetTarget = computed(() => {
   if (!clip.value) return undefined
@@ -235,6 +226,7 @@ const drawError = ref<string | null>(null)
 function startDrawing(shapes: Shape[], noteId: number | null) {
   halt()
   notesOpen.value = false
+  addOpen.value = false
   drawError.value = null
   drawing.value = { shapes: [...shapes], noteId }
 }
@@ -274,7 +266,7 @@ async function finishDrawing() {
   if (d.noteId === null) {
     attached.value = d.shapes
     drawing.value = null
-    notesOpen.value = true // the note that goes with the drawing
+    addOpen.value = true // the note that goes with the drawing
     return
   }
   const body = { drawing: d.shapes.length > 0 ? ({ v: 1, shapes: d.shapes } satisfies Drawing) : null }
@@ -306,6 +298,10 @@ watch(
 )
 const savedHere = computed(() => drawnShapes(notesOnPicture([...freshNotes.value, ...waiting.value], isPhoto.value ? null : frame.value)))
 const shownShapes = computed(() => (drawing.value ? drawing.value.shapes : [...savedHere.value, ...attached.value]))
+// While drawing, what the other notes drew stays on the picture (not the drawing of the note that is being changed).
+const backdrop = computed(() =>
+  drawing.value ? drawnShapes(notesOnPicture([...freshNotes.value.filter((n) => n.id !== drawing.value!.noteId), ...waiting.value], isPhoto.value ? null : frame.value)) : [],
+)
 // The picture is shown whole in the stage; the drawing layer has exactly its shape.
 const stage = ref<HTMLElement | null>(null)
 const stageBox = ref({ width: 0, height: 0 })
@@ -574,6 +570,12 @@ const swiping = ref(false) // the pictures next to this one are shown and move w
 const settling = ref(false) // the slide finishes or springs back (animated)
 const landing = ref<string | null>(null) // the picture that just slid in (or '' for none), shown until the real one has loaded
 const SLIDE_MS = 200
+// While a finger draws, the layer says where the drawn point is: the whole picture is magnified around it (LOUPE) until the finger is up.
+const loupeAt = ref<{ x: number; y: number } | null>(null)
+function onLoupe(at: { x: number; y: number } | null) {
+  const box = stage.value?.getBoundingClientRect()
+  loupeAt.value = at && box ? { x: at.x - box.left, y: at.y - box.top } : null
+}
 let landingTimer: ReturnType<typeof setTimeout> | undefined
 const neighbours = computed(() => {
   if (!swiping.value) return []
@@ -603,7 +605,7 @@ function stageCancel(e: PointerEvent) {
 function swipeDown(e: PointerEvent) {
   if (zoom.fingers() > 1) return abortSwipe()
   swipe = null
-  if (settling.value || drawing.value || zoom.zoomed.value || notesOpen.value || e.clientX < 24 || e.clientX > window.innerWidth - 24) return
+  if (settling.value || drawing.value || zoom.zoomed.value || notesOpen.value || addOpen.value || e.clientX < 24 || e.clientX > window.innerWidth - 24) return
   swipe = { x: e.clientX, y: e.clientY, at: performance.now(), drag: false }
 }
 function swipeMove(e: PointerEvent) {
@@ -721,7 +723,7 @@ async function moveTo(session: string | null) {
       <ErrorText :message="loadError" class="px-3 pt-3" />
       <div ref="stage" class="stage" @pointerdown="stageDown" @pointermove="stageMove" @pointerup="stageUp" @pointercancel="stageCancel">
         <button v-if="zoom.zoomed.value" type="button" class="unzoom" :aria-label="$t('media.unzoom')" @click="zoom.reset">1×</button>
-        <div class="slider" :class="{ swiping, settling }" :style="swiping ? { transform: `translateX(${dragX}px)` } : undefined">
+        <div class="slider" :class="{ swiping, settling, loupe: !!loupeAt }" :style="swiping ? { transform: `translateX(${dragX}px)` } : loupeStyle(loupeAt)">
           <div v-if="clip?.kind === 'video'" class="picture"  ref="picture" :style="{ ...pictureBox, ...zoom.style.value }">
             <video
               v-if="videoUrl"
@@ -741,17 +743,27 @@ async function moveTo(session: string | null) {
             ></video>
             <img v-else :src="clip.thumbnail_url" alt="" />
             <canvas v-show="canvasOn" ref="canvas"></canvas>
-            <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+            <DrawingLayer :shapes="shownShapes" :backdrop="backdrop" @loupe="onLoupe" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
           </div>
           <div v-else-if="isPhoto && clip" class="picture"  ref="picture" :style="{ ...pictureBox, ...zoom.style.value }">
             <img :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
-            <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+            <DrawingLayer :shapes="shownShapes" :backdrop="backdrop" @loupe="onLoupe" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
             <IonIcon v-if="previewOnly" :icon="cloudOfflineOutline" class="preview-only" role="img" :aria-label="$t('media.previewOnly')" />
           </div>
       
           <div v-for="n in neighbours" :key="n.delta" class="neighbour" :style="{ transform: `translateX(${n.delta * 100}%)` }"><img :src="n.url" alt="" /></div>
           <div v-if="landing !== null" class="neighbour landing"><img v-if="landing" :src="landing" alt="" /></div>
         </div>
+        <PictureMenu
+          v-if="!drawing && (isPhoto || videoUrl) && (canDraw || noteCount > 0 || canNote)"
+          :draw-label="canDraw ? (isPhoto ? $t('media.drawPhoto') : $t('media.draw')) : undefined"
+          :notes-label="noteCount > 0 ? $t('media.notesTitle') : undefined"
+          :add-label="canNote ? $t('media.addNote') : undefined"
+          :notes="noteCount"
+          @draw="startDrawing(attached, null)"
+          @notes="notesOpen = true"
+          @add="addOpen = true"
+        />
         <button v-if="noteHere && (isPhoto || videoUrl)" type="button" class="here" @pointerdown.stop @click="notesOpen = true">{{ noteHere.author_name }}: {{ noteHere.body || $t('notes.drawingOnly') }}</button>
       </div>
       <template v-if="clip?.kind === 'video' && videoUrl">
@@ -784,15 +796,9 @@ async function moveTo(session: string | null) {
         />
         <div v-else class="controls">
           <button type="button" class="speed" :aria-label="$t('media.speed')" @click="cycleSpeed">{{ speedLabel(speed) }}</button>
-          <button type="button" :disabled="!hasPrevious" :aria-label="$t('media.previousClip')" @click="goTo(-1)"><IonIcon :icon="playSkipBack" /></button>
           <button type="button" :aria-label="$t('media.stepBack')" @click="step(-1)"><IonIcon :icon="chevronBack" /></button>
           <button type="button" class="main" :aria-label="playing ? $t('media.pause') : $t('media.play')" @click="toggle"><IonIcon :icon="playing ? pause : play" /></button>
           <button type="button" :aria-label="$t('media.stepForward')" @click="step(1)"><IonIcon :icon="chevronForward" /></button>
-          <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextClip')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
-          <button v-if="canDraw" type="button" :aria-label="$t('media.draw')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notes')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
-          </button>
         </div>
       </template>
       <template v-if="isPhoto && clip">
@@ -809,14 +815,6 @@ async function moveTo(session: string | null) {
           @cancel="cancelDrawing"
           @done="finishDrawing"
         />
-        <div v-else class="controls">
-          <button type="button" :disabled="!hasPrevious" :aria-label="$t('media.previousPhoto')" @click="goTo(-1)"><IonIcon :icon="playSkipBack" /></button>
-          <button v-if="canDraw" type="button" :aria-label="$t('media.drawPhoto')" @click="startDrawing(attached, null)"><IonIcon :icon="createOutline" /></button>
-          <button v-if="noteCount > 0 || canNote" type="button" class="notes" :aria-label="$t('media.notesPhoto')" @click="notesOpen = true">
-            <IonIcon :icon="chatbubbleOutline" /><span v-if="noteCount > 0" class="count">{{ noteCount }}</span>
-          </button>
-          <button type="button" :disabled="!hasNext" :aria-label="$t('media.nextPhoto')" @click="goTo(1)"><IonIcon :icon="playSkipForward" /></button>
-        </div>
       </template>
       <div v-if="clip?.kind === 'video' && !videoUrl && !loadError" class="faint px-3">{{ $t('common.loading') }}</div>
       <div v-if="clip && clip.owner !== clip.uploaded_by" class="muted px-3">{{ $t('media.addedBy', { name: clip.uploaded_by_name }) }}</div>
@@ -839,8 +837,25 @@ async function moveTo(session: string | null) {
       @pick="moveTo"
     />
     <MediaNotesSheet
+      :open="addOpen"
+      mode="add"
+      :title="$t('media.addNote')"
+      :empty="''"
+      :error="notes.error.value"
+      :notes="[]"
+      :attached="attached"
+      :archer-id="clip?.owner"
+      :teams="teams.data.value ?? []"
+      :can-write="canNote"
+      :on="sheetTarget"
+      @close="addOpen = false"
+      @remove-attached="attached = []"
+      @added="() => { attached = []; addOpen = false; notes.reload() }"
+    />
+    <MediaNotesSheet
       :open="notesOpen"
-      :title="isPhoto ? $t('media.notesPhoto') : $t('media.notes')"
+      mode="list"
+      :title="$t('media.notesTitle')"
       :empty="isPhoto ? $t('media.noNotesPhoto') : $t('media.noNotes')"
       :error="notes.error.value"
       :notes="listed"
@@ -886,7 +901,8 @@ async function moveTo(session: string | null) {
   align-items: center;
   justify-content: center;
 }
-.slider.swiping {
+.slider.swiping,
+.slider.loupe {
   will-change: transform;
 }
 .slider.settling {
@@ -1048,11 +1064,12 @@ async function moveTo(session: string | null) {
   font-size: 1rem;
   font-weight: 700;
 }
-/* over the picture, so that it comes and goes without moving the picture */
+/* over the picture, so that it comes and goes without moving the picture; the menu button has the right side */
 .here {
+  /* room for the menu button */
   position: absolute;
   left: 8px;
-  right: 8px;
+  right: 88px;
   bottom: 8px;
   z-index: 2;
   padding: 6px 10px;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { IonButton } from '@ionic/vue'
+import { IonButton, IonIcon } from '@ionic/vue'
+import { brushOutline, createOutline, trashOutline } from 'ionicons/icons'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -29,7 +30,7 @@ const VISIBILITY = computed<{ value: Visibility; label: string }[]>(() => [
 ])
 
 // `picture`: show the photo of a photo note with its drawing (not where the photo is on screen already).
-const props = defineProps<{ note: Note; ends: { id: string; index: number }[]; picture?: boolean }>()
+const props = defineProps<{ note: Note; ends: { id: string; index: number }[]; picture?: boolean; icons?: boolean }>()
 const emit = defineEmits<{ changed: []; jump: [frame: number]; editDrawing: [note: Note]; open: [note: Note] }>()
 
 const { api } = useAuth()
@@ -115,12 +116,18 @@ const remove = () =>
     <IonButton v-if="note.frame !== null && note.frame !== undefined && !editing" fill="outline" size="small" class="m-0 align-self-start" @click="emit('jump', note.frame)">
       {{ $t('notes.frameLink', { n: note.frame + 1, time: clock((note.time_ms ?? 0) / 1000) }) }}
     </IonButton>
-    <IonButton v-if="note.can_edit && note.media && !editing" fill="clear" size="small" class="m-0 align-self-start" @click="emit('editDrawing', note)">
+    <IonButton v-if="!icons && note.can_edit && note.media && !editing" fill="clear" size="small" class="m-0 align-self-start" @click="emit('editDrawing', note)">
       {{ note.drawing ? $t('notes.editDrawing') : $t('notes.addDrawing') }}
     </IonButton>
     <RouterLink v-if="note.session && !editing" :to="`/sessions/${note.session}`">{{ $t('notes.aboutSession') }}</RouterLink>
     <ErrorText :message="error" />
-    <div v-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">
+    <div v-if="icons && !editing && (note.can_edit || note.can_delete)" class="d-flex gap-2 align-items-center">
+      <IonButton v-if="note.can_edit && note.media" fill="clear" size="small" class="m-0" :aria-label="note.drawing ? $t('notes.editDrawing') : $t('notes.addDrawing')" @click="emit('editDrawing', note)"><IonIcon slot="icon-only" :icon="brushOutline" /></IonButton>
+      <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" :aria-label="$t('notes.edit')" @click="startEditing"><IonIcon slot="icon-only" :icon="createOutline" /></IonButton>
+      <IonButton v-if="note.can_delete && !confirmDelete" fill="clear" size="small" class="m-0" :aria-label="$t('common.delete')" @click="confirmDelete = true"><IonIcon slot="icon-only" :icon="trashOutline" /></IonButton>
+      <IonButton v-if="note.can_delete && confirmDelete" fill="clear" color="danger" size="small" class="m-0" @click="remove">{{ $t('notes.deleteConfirm') }}</IonButton>
+    </div>
+    <div v-else-if="!editing && (note.can_edit || note.can_delete)" class="d-flex gap-3">
       <IonButton v-if="note.can_edit" fill="clear" size="small" class="m-0" @click="startEditing">{{ $t('notes.edit') }}</IonButton>
       <IonButton v-if="note.can_delete" fill="clear" size="small" class="m-0" @click="confirmDelete ? remove() : (confirmDelete = true)">{{ confirmDelete ? $t('notes.deleteConfirm') : $t('common.delete') }}</IonButton>
     </div>

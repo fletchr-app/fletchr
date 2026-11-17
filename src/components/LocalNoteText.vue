@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { IonButton } from '@ionic/vue'
+import { IonButton, IonIcon } from '@ionic/vue'
+import { createOutline } from 'ionicons/icons'
 import { ref } from 'vue'
 
 import FormField from '@/components/FormField.vue'
 import { useNotes } from '@/composables/useNotes'
 
 // The text of a note on this device without an account, with a button to change it (#93). The slot is for more buttons next to Change.
-const props = defineProps<{ uid: string; body: string; hasDrawing?: boolean }>()
+const props = defineProps<{ uid: string; body: string; hasDrawing?: boolean; icons?: boolean }>()
 
 const { edit } = useNotes()
 const editing = ref(false)
@@ -34,7 +35,8 @@ function save() {
   <template v-else>
     <div style="white-space: pre-wrap">{{ body || $t('notes.drawingOnly') }}</div>
     <div class="d-flex gap-2">
-      <IonButton fill="clear" size="small" class="m-0" @click="start">{{ $t('local.changeNote') }}</IonButton>
+      <IonButton v-if="icons" fill="clear" size="small" class="m-0" :aria-label="$t('local.changeNote')" @click="start"><IonIcon slot="icon-only" :icon="createOutline" /></IonButton>
+      <IonButton v-else fill="clear" size="small" class="m-0" @click="start">{{ $t('local.changeNote') }}</IonButton>
       <slot />
     </div>
   </template>
