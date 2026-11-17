@@ -7,10 +7,10 @@ import ErrorText from '@/components/ErrorText.vue'
 import { COLOURS, type Mode } from '@/lib/drawing'
 
 // The tools for drawing on a photo or a frame: line, angle, circle, move, five colours, undo, cancel and done.
-defineProps<{ count: number; error: string | null; doneLabel: string }>()
+defineProps<{ count: number; error: string | null; doneLabel: string; skeleton?: 'idle' | 'busy' }>()
 const tool = defineModel<Mode>('tool', { required: true })
 const colour = defineModel<string>('colour', { required: true })
-const emit = defineEmits<{ undo: []; cancel: []; done: [] }>()
+const emit = defineEmits<{ undo: []; cancel: []; done: []; skeleton: [] }>()
 
 const { t } = useI18n()
 const TOOLS: Mode[] = ['line', 'angle', 'circle', 'move']
@@ -23,6 +23,7 @@ const toolLabel = (x: Mode) => t(`media.tool.${x}`)
     <div class="row">
       <button v-for="x in TOOLS" :key="x" type="button" class="tool" :class="{ on: tool === x }" @click="tool = x">{{ toolLabel(x) }}</button>
       <button type="button" :disabled="count === 0" :aria-label="$t('media.undo')" @click="emit('undo')"><IonIcon :icon="arrowUndoOutline" /></button>
+      <button v-if="skeleton" type="button" class="tool" :disabled="skeleton === 'busy'" @click="emit('skeleton')">{{ skeleton === 'busy' ? $t('media.skeleton.finding') : $t('media.skeleton.find') }}</button>
     </div>
     <div class="row">
       <button v-for="c in COLOURS" :key="c" type="button" class="swatch" :class="{ on: colour === c }" :style="{ background: c }" :aria-label="c" @click="colour = c"></button>

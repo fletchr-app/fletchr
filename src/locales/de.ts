@@ -255,6 +255,8 @@ export default {
     drawingAttached: 'Eine Zeichnung mit {n} Formen gehört zur nächsten Notiz.',
     drawingRemove: 'Entfernen',
     tool: { line: 'Linie', angle: 'Winkel', circle: 'Kreis', move: 'Verschieben' },
+    unzoom: 'Ganzes Bild zeigen',
+    skeleton: { find: 'Skelett', finding: 'Suche eine Person', none: 'Keine Person gefunden', failed: 'Die Skeletterkennung läuft auf diesem Handy nicht' },
     noNotes: 'Noch keine Notizen zu diesem Video.',
     notes: 'Notizen zu diesem Video',
     noNotesPhoto: 'Noch keine Notizen zu diesem Foto.',

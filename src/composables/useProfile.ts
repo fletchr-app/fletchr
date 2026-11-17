@@ -197,7 +197,7 @@ export function useOwnProfile(): ProfileData {
   const queued = computed(() => media.items.value.filter((i) => i.owner === null || i.owner === me.value))
   const previews = ref<Record<string, string>>({})
   const tiles = computed(() =>
-    latestTiles(queued.value, library.items.value, (id, isQueued) => (isQueued ? (previews.value[id] ?? '') : (library.thumbnails.value[id] ?? '')), isLocal.value, TILES),
+    latestTiles(queued.value, library.items.value, (id, isQueued) => (isQueued ? (previews.value[id] ?? '') : (library.thumbnails.value[id] ?? '')), isLocal.value, TILES, me.value ? `?owner=${me.value}` : ''),
   )
   watch(
     () => tiles.value.filter((tile) => tile.queued && previews.value[tile.id] === undefined).map((tile) => tile.id),

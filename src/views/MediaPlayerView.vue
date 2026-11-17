@@ -22,11 +22,14 @@ import { useMediaLibrary } from '@/composables/useMediaLibrary'
 import { useNoteLibrary } from '@/composables/useNoteLibrary'
 import { useMoveMedia } from '@/composables/useMoveMedia'
 import { useNotes } from '@/composables/useNotes'
+import { detectPoses, poseBusy } from '@/composables/usePose'
+import { usePinchZoom } from '@/composables/usePinchZoom'
 import { useRemote } from '@/composables/useRemote'
-import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape, zoomStyle } from '@/lib/drawing'
+import { COLOURS, type Drawing, fitted, readDrawing, type Mode, type Shape } from '@/lib/drawing'
 import { errorMessage } from '@/lib/errors'
 import { FrameDecoder } from '@/lib/frame-decoder'
 import { loadFiles } from '@/lib/media-files'
+import { pickPose, skeletonShapes } from '@/lib/skeleton'
 import { drawnShapes, notesOnPicture, waitingOnMedia } from '@/lib/media-notes'
 import { clipOfKept, clipOfQueued, playerSiblings } from '@/lib/queued-clip'
 import { clock, frameAt, frameRate, nextSpeed, scrubbed, seekTime, speedLabel, stepped, swipeStep, totalFrames } from '@/lib/player'
@@ -222,6 +225,31 @@ function startDrawing(shapes: Shape[], noteId: number | null) {
 function undo() {
   drawing.value?.shapes.pop()
 }
+// The skeleton: the model finds the body in the picture that is shown, and its lines join the drawing. Pressing again replaces them.
+let skeletonLines: Shape[] = []
+async function findSkeleton() {
+  const d = drawing.value
+  if (!d || !clip.value) return
+  drawError.value = null
+  try {
+    let source: HTMLCanvasElement | ImageBitmap | null = null
+    if (isPhoto.value) source = await createImageBitmap(await (await fetch(clip.value.file_url)).blob())
+    else if (canvasOn.value) source = canvas.value
+    if (!source) return void (drawError.value = t('media.skeleton.failed'))
+    const found = await detectPoses(source)
+    if ('close' in source) source.close()
+    console.info('skeleton', found.delegate, `load ${found.loadMs} ms, detect ${found.detectMs} ms`, found.poses.length, 'people')
+    const pose = pickPose(found.poses)
+    if (!pose) return void (drawError.value = t('media.skeleton.none'))
+    d.shapes = d.shapes.filter((s) => !skeletonLines.includes(s))
+    skeletonLines = skeletonShapes(pose, colour.value)
+    d.shapes.push(...skeletonLines)
+    drawError.value = `${found.delegate}: ${found.loadMs} ms, ${found.detectMs} ms` // prototype: shows the timings
+  } catch (e) {
+    console.error('skeleton', e)
+    drawError.value = `${t('media.skeleton.failed')} (${e instanceof Error ? e.message : String(e)})`
+  }
+}
 function cancelDrawing() {
   drawing.value = null
 }
@@ -287,8 +315,10 @@ const pictureBox = computed(() => {
 })
 
 const video = ref<HTMLVideoElement | null>(null)
-// While a finger draws, the picture is magnified around the point that is drawn (DrawingLayer tells where).
-const zoomAt = ref<{ x: number; y: number } | null>(null)
+// Two fingers pinch and move the picture, also while drawing; one finger moves it when it is magnified and nothing is drawn;
+// a double tap magnifies it or shows it whole.
+const picture = ref<HTMLElement | null>(null)
+const zoom = usePinchZoom(picture, () => !drawing.value, () => !(drawing.value && tool.value === 'angle')) // an angle is three taps: no double tap then
 const duration = ref(0)
 const fps = computed(() => (clip.value ? frameRate(clip.value) : 30))
 const decodedFrames = ref(0) // the number of frames in the file, once the decoder has read it
@@ -511,6 +541,7 @@ function failed() {
   reload()
 }
 watch(currentId, () => {
+  zoom.reset()
   attached.value = []
   drawing.value = null
   pictureSize.value = { width: 0, height: 0 }
@@ -521,20 +552,29 @@ watch(currentId, () => {
 // A swipe on the picture goes to the next or the previous one. The tape is outside the stage, so it keeps its own drag;
 // a touch right at the screen edge is left to the back gesture.
 let swipe: { x: number; y: number; at: number } | null = null
+function stageDown(e: PointerEvent) {
+  zoom.down(e)
+  swipeDown(e)
+}
+function stageUp(e: PointerEvent) {
+  swipeUp(e)
+  zoom.up(e)
+}
+function stageCancel(e: PointerEvent) {
+  swipe = null
+  zoom.cancel(e)
+}
 function swipeDown(e: PointerEvent) {
   swipe = null
-  if (drawing.value || notesOpen.value || e.clientX < 24 || e.clientX > window.innerWidth - 24) return
+  if (drawing.value || zoom.zoomed.value || zoom.fingers() > 1 || notesOpen.value || e.clientX < 24 || e.clientX > window.innerWidth - 24) return
   swipe = { x: e.clientX, y: e.clientY, at: performance.now() }
 }
 function swipeUp(e: PointerEvent) {
   const s = swipe
   swipe = null
-  if (!s || drawing.value) return
+  if (!s || drawing.value || zoom.zoomed.value || zoom.fingers() > 1) return
   const direction = swipeStep(e.clientX - s.x, e.clientY - s.y, performance.now() - s.at)
   if ((direction === 1 && hasNext.value) || (direction === -1 && hasPrevious.value)) goTo(direction)
-}
-function swipeCancel() {
-  swipe = null
 }
 
 const title = computed(() => (clip.value ? new Date(clip.value.taken_at).toLocaleString() : ''))
@@ -591,8 +631,9 @@ async function moveTo(session: string | null) {
     <div class="player">
       <ErrorText v-if="error && !clip" :message="error" class="px-3 pt-3" />
       <ErrorText :message="loadError" class="px-3 pt-3" />
-      <div ref="stage" class="stage" @pointerdown="swipeDown" @pointerup="swipeUp" @pointercancel="swipeCancel">
-        <div v-if="clip?.kind === 'video'" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
+      <div ref="stage" class="stage" @pointerdown="stageDown" @pointermove="zoom.move" @pointerup="stageUp" @pointercancel="stageCancel">
+        <button v-if="zoom.zoomed.value" type="button" class="unzoom" :aria-label="$t('media.unzoom')" @click="zoom.reset">1×</button>
+        <div v-if="clip?.kind === 'video'" class="picture"  ref="picture" :style="{ ...pictureBox, ...zoom.style.value }">
           <video
             v-if="videoUrl"
             v-show="!canvasOn"
@@ -611,11 +652,11 @@ async function moveTo(session: string | null) {
           ></video>
           <img v-else :src="clip.thumbnail_url" alt="" />
           <canvas v-show="canvasOn" ref="canvas"></canvas>
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
         </div>
-        <div v-else-if="isPhoto && clip" class="picture" :style="{ ...pictureBox, ...zoomStyle(zoomAt) }">
+        <div v-else-if="isPhoto && clip" class="picture"  ref="picture" :style="{ ...pictureBox, ...zoom.style.value }">
           <img :src="clip.file_url" alt="" @load="photoLoaded" @error="failed" />
-          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" @zoom="zoomAt = $event" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
+          <DrawingLayer :shapes="shownShapes" :width="shape.width" :height="shape.height" :editing="!!drawing" :tool="tool" :colour="colour" :scale="zoom.view.value.scale" @add="drawing?.shapes.push($event)" @change="(i, s) => drawing && (drawing.shapes[i] = s)" />
           <IonIcon v-if="previewOnly" :icon="cloudOfflineOutline" class="preview-only" role="img" :aria-label="$t('media.previewOnly')" />
         </div>
       </div>
@@ -642,6 +683,8 @@ async function moveTo(session: string | null) {
           :count="drawing.shapes.length"
           :error="drawError"
           :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
+          :skeleton="poseBusy ? 'busy' : 'idle'"
+          @skeleton="findSkeleton"
           @undo="undo"
           @cancel="cancelDrawing"
           @done="finishDrawing"
@@ -667,6 +710,8 @@ async function moveTo(session: string | null) {
           :count="drawing.shapes.length"
           :error="drawError"
           :done-label="drawing.noteId === null ? $t('media.drawingDone') : $t('common.save')"
+          :skeleton="poseBusy ? 'busy' : 'idle'"
+          @skeleton="findSkeleton"
           @undo="undo"
           @cancel="cancelDrawing"
           @done="finishDrawing"
@@ -737,10 +782,25 @@ async function moveTo(session: string | null) {
   justify-content: center;
   background: #000;
   overflow: hidden; /* the magnified picture stays inside the stage */
-  touch-action: pan-y;
+  touch-action: none; /* the fingers are read as pointer events: pinch and pan, draw, swipe to the next picture */
+  position: relative;
+}
+.unzoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-width: 44px;
+  height: 36px;
+  border: 0;
+  border-radius: 18px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-weight: 600;
 }
 .picture {
   position: relative;
+  will-change: transform; /* one layer for the picture and its drawing: pinching or drawing on it does not paint it again at every step (measured on a phone: faster than separate layers) */
 }
 .preview-only {
   position: absolute;

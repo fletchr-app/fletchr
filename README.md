@@ -13,15 +13,15 @@ src/       Vue app: views/ (screens), components/, composables/ (auth, log, team
 android/   Capacitor Android project
 public/    static files of the web build
 resources/ source icon and splash image for the phone apps (`uv run resources/generate.py` draws the icon and writes every size)
-server/    Django project (DRF, SQLite), Dockerfile
+server/    Django project (DRF, SQLite), Dockerfile, own README
 deploy/    docker-compose.yml, Caddyfile, .env.example
 shared/    files used by both server and app (target faces, scoring test cases)
 worker/    pose detection worker (milestone 5)
 specs/     design docs, plans, ADRs, steering (index.md in each)
-android/   Capacitor Android project
-public/    static files for the web build
 site/      static website for fletchr.de
 ```
+
+The server is documented in [server/README.md](server/README.md). Issues are labelled `app` or `server` (the issue templates set them).
 
 ## What it does
 

@@ -1,12 +1,13 @@
 [project]
 name = "fletchr-server"
-version = "0.26.0"
+version = "0.27.0"
 requires-python = ">=3.14"
 license = "AGPL-3.0-or-later"
 dependencies = [
     "django>=6.1.2",
     "django-cors-headers>=4.9.0",
     "django-filter>=26.2",
+    "django-storages[s3]>=1.14.6",
     "djangorestframework>=3.18.3",
     "djangorestframework-simplejwt>=5.5.1",
     "drf-spectacular>=0.30.0",

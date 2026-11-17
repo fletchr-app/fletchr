@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedPoint, nearestPoint, POINTS, type Point, pointOn, type Shape, ZOOM } from '@/lib/drawing'
+import { angleDegrees, circleRadii, clamp01, LIFT, type Mode, movedGroup, nearestPoint, POINTS, type Point, pointOn, pointsAt, type Shape, snapped } from '@/lib/drawing'
 
 // Lines, angles and circles over a picture. The layer has the shape of the picture, so the points (fractions of it) are
-// drawn where they were put. With `editing` a finger draws: drag for a line or a circle, three taps for an angle. With
-// the tool `move` it takes hold of a point that is already there and drags it. While a finger is down, the point that is
-// drawn sits a little above the finger (marked by a cross) and the picture is magnified around it: the parent applies
-// the `zoom` it is told about (`zoomStyle` in lib/drawing) to the box that holds the picture and this layer, and clips it.
-const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string }>(), {
+// drawn where they were put, also while the picture is pinched bigger (its on-screen box is measured when a finger goes
+// down). With `editing` a finger draws: drag for a line or a circle, three taps for an angle. While a finger draws, the
+// point that is drawn sits a little above the finger (marked by a cross). With the tool `move` a finger takes hold of a point
+// that is already there, with every point at the same place, and drags it: the point stays under the finger. A second finger
+// is for pinching and stops what the first one began. `scale` is how much the picture is magnified, so that marks keep their size.
+const props = withDefaults(defineProps<{ shapes: Shape[]; width: number; height: number; editing?: boolean; tool?: Mode; colour?: string; scale?: number }>(), {
   editing: false,
+  scale: 1,
   tool: 'line',
   colour: '#ff3b30',
 })
 const emit = defineEmits<{
   add: [shape: Shape]
   change: [index: number, shape: Shape]
-  /** Where the picture is magnified around (pixels of the picture), or null when no finger is down. */
-  zoom: [at: { x: number; y: number } | null]
 }>()
 
 const REACH = 28 // pixels: how far from a point a finger may touch it to take hold of it
@@ -27,8 +27,10 @@ const pending = ref<Point[]>([]) // the points of the shape that is being drawn
 const cursor = ref<Point | null>(null)
 const tip = ref<Point | null>(null) // the point that is drawn while a finger is down
 let dragging = false
-let grabbed: { shape: number; point: number } | null = null
-// The size of the layer before the zoom: while the picture is magnified the layer is too, so it is measured when the finger goes down.
+let grabbed: { shape: number; point: number }[] | null = null // the grabbed point and every point at the same place
+let grabAt: Point = [0, 0] // where the grabbed point was
+let grabFrom = { x: 0, y: 0 } // where the finger went down
+// Where the layer is on the screen (with the picture pinched, its box is the magnified one), measured when the finger goes down.
 let box: { left: number; top: number; width: number; height: number } | null = null
 watch(() => [props.tool, props.editing], () => (pending.value = []))
 
@@ -41,49 +43,60 @@ const handles = computed(() => (props.editing && props.tool === 'move' ? props.s
 
 /** The point a finger means: LIFT pixels above it. */
 function meant(e: PointerEvent): Point {
-  return pointOn(box!, e.clientX, e.clientY - LIFT)
+  const p = pointOn(box!, e.clientX, e.clientY - LIFT)
+  return props.tool === 'angle' ? snapped(props.shapes, p, box!, REACH) : p // an angle takes its points from the joints that are there
 }
-function aim(p: Point) {
-  tip.value = p
-  emit('zoom', { x: p[0] * box!.width, y: p[1] * box!.height })
+/** Where the grabbed point goes: as far as the finger moved since it took hold, so the point stays where it was under the finger. */
+function carried(e: PointerEvent): Point {
+  return [clamp01(grabAt[0] + (e.clientX - grabFrom.x) / box!.width), clamp01(grabAt[1] + (e.clientY - grabFrom.y) / box!.height)]
 }
-function release() {
+function moveGrabbed(to: Point) {
+  for (const { index, shape } of movedGroup(props.shapes, grabbed!, to)) emit('change', index, shape)
+}
+/** Stops what a finger began: a second finger means a pinch, and nothing is to be drawn or moved by it. */
+function cancel() {
   tip.value = null
-  emit('zoom', null)
+  if (props.tool !== 'angle') pending.value = [] // the points of an angle already put stay
+  cursor.value = null
+  dragging = false
+  grabbed = null
 }
 
 function down(e: PointerEvent) {
   if (!props.editing) return
+  if (!e.isPrimary) return cancel()
   box = root.value!.getBoundingClientRect()
   if (props.tool === 'move') {
     const hit = nearestPoint(props.shapes, pointOn(box, e.clientX, e.clientY), box, REACH)
     if (!hit) return
-    grabbed = hit
+    grabbed = pointsAt(props.shapes, hit, box)
     root.value!.setPointerCapture(e.pointerId)
-    const to = meant(e)
-    emit('change', hit.shape, movedPoint(props.shapes[hit.shape]!, hit.point, to))
-    aim(to)
+    const at = props.shapes[hit.shape]!.p[hit.point]!
+    grabAt = at
+    grabFrom = { x: e.clientX, y: e.clientY }
+    tip.value = at
     return
   }
   root.value!.setPointerCapture(e.pointerId)
   dragging = true
   cursor.value = meant(e)
-  aim(cursor.value)
+  tip.value = cursor.value
   if (props.tool !== 'angle') pending.value = [cursor.value]
 }
 function move(e: PointerEvent) {
-  if (!props.editing) return
+  if (!props.editing || !e.isPrimary) return
   if (grabbed) {
-    const to = meant(e)
-    emit('change', grabbed.shape, movedPoint(props.shapes[grabbed.shape]!, grabbed.point, to))
-    aim(to)
+    const to = carried(e)
+    moveGrabbed(to)
+    tip.value = to
   } else if (dragging) {
     cursor.value = meant(e)
-    aim(cursor.value)
+    tip.value = cursor.value
   }
 }
 function up(e: PointerEvent) {
-  release()
+  if (!e.isPrimary) return
+  tip.value = null
   if (grabbed) {
     grabbed = null
     return
@@ -121,20 +134,24 @@ const labels = computed(() =>
 </script>
 
 <template>
-  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': tip ? 1 / ZOOM : 1 }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
+  <div ref="root" class="layer" :class="{ editing }" :style="{ '--inv': 1 / scale }" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up">
     <svg viewBox="0 0 1 1" preserveAspectRatio="none">
-      <template v-for="(s, i) in all" :key="i">
-        <line v-if="s.t === 'line' && s.p.length === 2" :x1="s.p[0]![0]" :y1="s.p[0]![1]" :x2="s.p[1]![0]" :y2="s.p[1]![1]" :stroke="colourOf(s)" />
-        <polyline v-else-if="s.t === 'angle'" :points="s.p.map((p) => p.join(',')).join(' ')" fill="none" :stroke="colourOf(s)" />
-        <ellipse
-          v-else-if="s.t === 'circle' && s.p.length === 2"
-          :cx="s.p[0]![0]"
-          :cy="s.p[0]![1]"
-          :rx="circleRadii(s.p[0]!, s.p[1]!, width, height).rx"
-          :ry="circleRadii(s.p[0]!, s.p[1]!, width, height).ry"
-          fill="none"
-          :stroke="colourOf(s)"
-        />
+      <!-- first a dark outline under every shape, then the shapes: a CSS drop-shadow filter on each line is far too slow to paint while the picture is magnified -->
+      <template v-for="pass in ['halo', 'main']" :key="pass">
+        <template v-for="(s, i) in all" :key="i">
+          <line v-if="s.t === 'line' && s.p.length === 2" :class="pass" :x1="s.p[0]![0]" :y1="s.p[0]![1]" :x2="s.p[1]![0]" :y2="s.p[1]![1]" :stroke="pass === 'halo' ? '#000' : colourOf(s)" />
+          <polyline v-else-if="s.t === 'angle'" :class="pass" :points="s.p.map((p) => p.join(',')).join(' ')" fill="none" :stroke="pass === 'halo' ? '#000' : colourOf(s)" />
+          <ellipse
+            v-else-if="s.t === 'circle' && s.p.length === 2"
+            :class="pass"
+            :cx="s.p[0]![0]"
+            :cy="s.p[0]![1]"
+            :rx="circleRadii(s.p[0]!, s.p[1]!, width, height).rx"
+            :ry="circleRadii(s.p[0]!, s.p[1]!, width, height).ry"
+            fill="none"
+            :stroke="pass === 'halo' ? '#000' : colourOf(s)"
+          />
+        </template>
       </template>
     </svg>
     <span v-for="(h, i) in handles" :key="`h${i}`" class="handle" :style="{ left: pct(h[0]), top: pct(h[1]) }"></span>
@@ -165,7 +182,10 @@ svg :where(line, polyline, ellipse) {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 1px rgb(0 0 0 / 70%));
+}
+svg .halo {
+  stroke-width: 5;
+  opacity: 0.45;
 }
 /* While the picture is magnified, marks keep their size on the screen (--inv is 1 / zoom). */
 .handle {

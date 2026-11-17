@@ -1,7 +1,7 @@
 // Uploading the queue of a local log. No React here, so the retry rules can be tested with `npm test`.
 import type { ApiClient } from './auth-session.ts';
 import { errorMessage } from './errors.ts';
-import type { Gear, LogAction, LogSession, LogState, Op } from './log-model.ts';
+import { holdsUpload, type Gear, type LogAction, type LogSession, type LogState, type Op } from './log-model.ts';
 import { fromServer } from './session-view.ts';
 import { askSince } from './sync-overlap.ts';
 
@@ -115,6 +115,13 @@ export async function send(api: ApiClient, state: LogState, op: Op): Promise<Sen
 }
 
 
+/** The upload of a session that is still empty waits for its first result (see `holdsUpload`); the rest of the queue goes on. */
+export function isHeld(state: LogState, op: Op): boolean {
+  if (op.kind !== 'session' || op.delete) return false;
+  const session = state.sessions.find((s) => s.id === op.sessionId);
+  return !!session && holdsUpload(session);
+}
+
 /**
  * Send queued items one by one, oldest first. An item the server accepts leaves the queue; one it
  * refuses is marked failed and skipped; no connection (or a server error) ends the run and leaves
@@ -129,7 +136,7 @@ export async function drain(
   for (;;) {
     if (stop()) return;
     const state = get();
-    const op = state.outbox.find((o) => !o.error);
+    const op = state.outbox.find((o) => !o.error && !isHeld(state, o));
     if (!op) return;
     const result = await sendOp(state, op);
     if (result.kind === 'ok') {

@@ -180,6 +180,32 @@ MEDIA_QUOTA_BYTES = int(os.environ.get("DJANGO_MEDIA_QUOTA_MB", "2048")) * 1024 
 # The links the app gets for its <video> and <img> elements stop working after this time.
 MEDIA_LINK_SECONDS = 60 * 60
 
+# Uploads in an S3-compatible bucket instead of DATA_DIR/media (specs/adrs/0011-media-in-s3.md). Off without DJANGO_S3_BUCKET.
+# The bucket stays private: the server checks the right to see a file and then redirects to a link that expires after
+# MEDIA_S3_LINK_SECONDS. DJANGO_S3_ENDPOINT is the hoster's address, e.g. https://s3.eu-central-4.ionoscloud.com.
+S3_BUCKET = os.environ.get("DJANGO_S3_BUCKET", "")
+MEDIA_S3_LINK_SECONDS = 5 * 60
+if S3_BUCKET:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": S3_BUCKET,
+                "endpoint_url": os.environ["DJANGO_S3_ENDPOINT"],
+                "region_name": os.environ.get("DJANGO_S3_REGION", ""),
+                "access_key": os.environ["DJANGO_S3_ACCESS_KEY"],
+                "secret_key": os.environ["DJANGO_S3_SECRET_KEY"],
+                "default_acl": "private",
+                "querystring_auth": True,
+                "querystring_expire": MEDIA_S3_LINK_SECONDS,
+                "file_overwrite": False,
+                "addressing_style": os.environ.get("DJANGO_S3_ADDRESSING", "auto"),
+                "object_parameters": {"CacheControl": "private, max-age=3600"},
+            },
+        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -251,7 +277,7 @@ MIN_APP_VERSION = "0.1.0"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Fletchr API",
-    "VERSION": "0.26.0",
+    "VERSION": "0.27.0",
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "HandEnum": "core.models.Profile.Hand",

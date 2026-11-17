@@ -27,7 +27,7 @@ import {
   type SessionType,
   type Visibility,
 } from '@/lib/log-model';
-import { drain, pull, send, waitsForEquipment } from '@/lib/log-sync';
+import { drain, isHeld, pull, send, waitsForEquipment } from '@/lib/log-sync';
 import { storeKey } from '@/lib/store-owner';
 import { newId } from '@/lib/uuid';
 
@@ -108,7 +108,7 @@ const keyed = effectScope(true).run(() =>
 )!;
 const { loaded } = keyed;
 // Without an account nothing is uploaded, so nothing is waiting (the outbox keeps the list for the upload of a later account).
-const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error).length));
+const waiting = computed(() => (isLocal.value ? 0 : state.value.outbox.filter((o) => !o.error && !isHeld(state.value, o)).length));
 const failed = computed(() => (isLocal.value ? [] : state.value.outbox.filter((o) => o.error)));
 // Sessions the server deleted while results of them were waiting: the archer chooses what happens to them.
 const conflicts = computed(() => state.value.sessions.filter((s) => s.gone));

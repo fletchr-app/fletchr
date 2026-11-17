@@ -4,6 +4,14 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.27.0 (2026-11-17)
+
+- **Photos and videos in an S3 bucket** (optional, server only): with `DJANGO_S3_BUCKET` set, the server keeps photos, videos and profile pictures in a private S3-compatible bucket instead of on its disk. It still checks who may see a file, then sends the app to a link that works for 5 minutes. Nothing changes without the setting. Setup, the CORS rule the bucket needs and what it means for backups are in `SELFHOSTING.md` (section 3) and `specs/adrs/0011-media-in-s3.md`. Existing files are not moved by the server.
+- **Skeleton on a photo or a frame** (#50): a Skeleton button in the drawing toolbar finds the body in the picture on the phone (MediaPipe Pose Landmarker, nothing is sent anywhere) and adds it to the drawing as lines. Move takes every point at the same place along, and a new angle point snaps to an existing point. Dragging is fast again.
+- **Pinch zoom and pan** (#50): two fingers pinch and pan a picture in the player and in the local photo view, a double tap magnifies it or shows it whole, and a "1x" button resets. The automatic 3x zoom while drawing is gone: Move keeps the point under the finger and the picture still.
+- **Swiping from Home**: the latest-pictures tiles on Home open the player so that the next picture is a swipe away.
+- **No empty sessions on the server**: a session that is started and left again (to change the equipment) is no longer uploaded and deleted a minute later. It goes up with its first end or volume entry, or when finished.
+
 ## 0.26.0 (2026-11-07)
 
 - **Evaluations work without a connection** (#84): fill in an evaluation (yours, or for an archer you coach) with no signal. It is saved on the phone, also when the app is closed meanwhile, and goes up by itself when the connection is back. A change to an evaluation you can read works the same way; the evaluations about you and by you can be read offline. If someone deleted the evaluation meanwhile, it stays on the phone as failed and can be sent again as a new one. Needs the new server (0.26.0): an older one keeps the online form.
