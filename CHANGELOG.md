@@ -4,6 +4,14 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.28.0 (2026-11-18)
+
+- **Upload limit per person** (server): what a person uploads (photos, videos and previews) is capped at 100 MB by default (`DJANGO_MEDIA_QUOTA_MB`, was 2048 per archer). It now counts on who uploads, not on whose clip it is. An admin can set another limit for one person (Django admin, Profile, "Media quota mb"). Settings shows how much is used. **People who have more than 100 MB already keep it, but cannot upload more**: raise `DJANGO_MEDIA_QUOTA_MB` before updating if that is not wanted. One new migration (`core`).
+- **Swiping in the player**: the picture follows the finger with the next and previous one beside it, across photos and clips. The event page opens the player with its own pictures, and the local view (no account) swipes through the photos on the phone too. The prev/next buttons are gone.
+- **One menu button over the picture** (lower right): draw, notes (a list with icons to change the drawing, edit and delete) and add note (a small sheet). The notes of other people stay visible while you draw.
+- **Drawing**: colour (a round button with the current colour) and tools (a menu with line, angle, circle, move and Skeleton) sit over the top right of the picture; undo, cancel and done are round buttons over the lower right, so the picture no longer moves. Touching the picture while drawing magnifies it around the drawn point (as on the target face), in addition to pinch and pan.
+- **Privacy pages** say that media files are kept in IONOS object storage.
+
 ## 0.27.0 (2026-11-17)
 
 - **Photos and videos in an S3 bucket** (optional, server only): with `DJANGO_S3_BUCKET` set, the server keeps photos, videos and profile pictures in a private S3-compatible bucket instead of on its disk. It still checks who may see a file, then sends the app to a link that works for 5 minutes. Nothing changes without the setting. Setup, the CORS rule the bucket needs and what it means for backups are in `SELFHOSTING.md` (section 3) and `specs/adrs/0011-media-in-s3.md`. Existing files are not moved by the server.
