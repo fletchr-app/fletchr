@@ -116,7 +116,7 @@ DE = {
     "A photo must be a JPEG file": "Ein Foto muss eine JPEG-Datei sein",
     "The photo is larger than %(n)s MB": "Das Foto ist größer als %(n)s MB",
     "The preview must be a small JPEG file": "Die Vorschau muss eine kleine JPEG-Datei sein",
-    "There is no room left for this archer's photos and videos": "Für die Fotos und Videos dieses Schützen ist kein Platz mehr",
+    "There is no room left for your photos and videos": "Für deine Fotos und Videos ist kein Platz mehr",
     "This is not a photo or video of that archer": "Das ist kein Foto oder Video dieses Schützen",
     "Say which frame the note is about": "Gib an, zu welchem Bild die Notiz gehört",
     "The clip has no such frame": "Das Video hat dieses Bild nicht",

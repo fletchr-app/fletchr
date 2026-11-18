@@ -10,6 +10,8 @@ export const PROFILE_VISIBILITIES: ProfileVisibility[] = ['team', 'coaches', 'me
 
 const visibility = ref<ProfileVisibility | null>(null)
 const error = ref('')
+// What I have uploaded and may upload, in bytes (`null` until the server has said, or when it does not tell).
+const storage = ref<{ used: number; quota: number } | null>(null)
 let started = false
 
 function isProfileVisibility(value: unknown): value is ProfileVisibility {
@@ -23,6 +25,8 @@ export function useProfileVisibility() {
     try {
       const { data } = await api.GET('/api/me/')
       visibility.value = isProfileVisibility(data?.profile.visibility) ? data.profile.visibility : null
+      const p = data?.profile
+      storage.value = typeof p?.media_quota_bytes === 'number' && typeof p.media_used_bytes === 'number' ? { used: p.media_used_bytes, quota: p.media_quota_bytes } : null
     } catch {
       // Offline: what was read stays.
     }
@@ -46,11 +50,14 @@ export function useProfileVisibility() {
       status,
       (s) => {
         if (s === 'signedIn') void sync()
-        else visibility.value = null
+        else {
+          visibility.value = null
+          storage.value = null
+        }
       },
       { immediate: true },
     )
   }
 
-  return { visibility, error, save }
+  return { visibility, storage, error, save }
 }

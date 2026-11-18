@@ -53,3 +53,11 @@ export function playerSiblings(
   const ids = new Set(mine.map((q) => q.id));
   return [...mine.map((q) => ({ id: q.id, kind: q.kind })), ...listed.filter((m) => !ids.has(m.id))];
 }
+
+/** The `/api/media/` filter for the pictures next to the one in the player, from how the player was opened; null when it was opened without any (no neighbours). */
+export function neighbourQuery(from: { session?: string; owner?: number; unattached?: boolean; event?: string; archer?: number }): Record<string, string | number | boolean> | null {
+  if (from.session) return { session: from.session };
+  if (from.event) return { event: from.event, ...(from.archer !== undefined ? { owner: from.archer } : {}) }; // as the event page lists them
+  if (from.owner !== undefined) return { owner: from.owner, ...(from.unattached ? { without_session: true } : {}) };
+  return null;
+}

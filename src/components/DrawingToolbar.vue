@@ -1,79 +1,68 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue'
-import { arrowUndoOutline } from 'ionicons/icons'
-import { useI18n } from 'vue-i18n'
+import { arrowUndoOutline, checkmark, close } from 'ionicons/icons'
 
 import ErrorText from '@/components/ErrorText.vue'
-import { COLOURS, type Mode } from '@/lib/drawing'
 
-// The tools for drawing on a photo or a frame: line, angle, circle, move, five colours, undo, cancel and done.
-defineProps<{ count: number; error: string | null; doneLabel: string; skeleton?: 'idle' | 'busy' }>()
-const tool = defineModel<Mode>('tool', { required: true })
-const colour = defineModel<string>('colour', { required: true })
-const emit = defineEmits<{ undo: []; cancel: []; done: []; skeleton: [] }>()
-
-const { t } = useI18n()
-const TOOLS: Mode[] = ['line', 'angle', 'circle', 'move']
-const toolLabel = (x: Mode) => t(`media.tool.${x}`)
+// The bottom bar while drawing on a photo or a frame: undo, cancel (red) and done (green). Colour and tools are in DrawingMenus, over the picture.
+defineProps<{ count: number; error: string | null; doneLabel: string }>()
+const emit = defineEmits<{ undo: []; cancel: []; done: [] }>()
 </script>
 
 <template>
-  <div class="toolbar">
-    <ErrorText :message="error" />
+  <div class="toolbar" @pointerdown.stop>
+    <div v-if="error" class="error"><ErrorText :message="error" /></div>
     <div class="row">
-      <button v-for="x in TOOLS" :key="x" type="button" class="tool" :class="{ on: tool === x }" @click="tool = x">{{ toolLabel(x) }}</button>
       <button type="button" :disabled="count === 0" :aria-label="$t('media.undo')" @click="emit('undo')"><IonIcon :icon="arrowUndoOutline" /></button>
-      <button v-if="skeleton" type="button" class="tool" :disabled="skeleton === 'busy'" @click="emit('skeleton')">{{ skeleton === 'busy' ? $t('media.skeleton.finding') : $t('media.skeleton.find') }}</button>
-    </div>
-    <div class="row">
-      <button v-for="c in COLOURS" :key="c" type="button" class="swatch" :class="{ on: colour === c }" :style="{ background: c }" :aria-label="c" @click="colour = c"></button>
-    </div>
-    <div class="row">
-      <button type="button" class="text" @click="emit('cancel')">{{ $t('common.cancel') }}</button>
-      <button type="button" class="text main-text" @click="emit('done')">{{ doneLabel }}</button>
+      <button type="button" class="cancel" :aria-label="$t('common.cancel')" @click="emit('cancel')"><IonIcon :icon="close" /></button>
+      <button type="button" class="done" :aria-label="doneLabel" @click="emit('done')"><IonIcon :icon="checkmark" /></button>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Same corner and size as the round button of PictureMenu, so the buttons line up in every view. Over the lower right of the picture, so that the picture does not move. */
 .toolbar {
+  position: absolute;
+  right: 24px;
+  bottom: 28px;
+  z-index: 3;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
-  padding-inline: 16px;
+}
+.error {
+  max-width: 70vw;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 70%);
 }
 .toolbar .row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 28px;
 }
 .toolbar button {
-  min-width: 48px;
-  height: 44px;
-  border: 0;
-  border-radius: 22px;
-  background: color-mix(in srgb, currentcolor 10%, transparent);
-  color: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ion-background-color, #000);
+  color: var(--ion-text-color, #fff);
+  border: 2px solid currentcolor;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
 }
-.toolbar .tool.on,
-.toolbar .main-text {
-  background: var(--ion-color-primary);
-  color: var(--ion-color-primary-contrast);
+.toolbar button:disabled {
+  opacity: 0.4;
 }
-.toolbar .swatch {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  border: 2px solid color-mix(in srgb, currentcolor 30%, transparent);
+.toolbar .cancel {
+  color: #ff3b30;
 }
-.toolbar .swatch.on {
-  border-color: var(--ion-color-primary);
-  outline: 2px solid var(--ion-color-primary);
-}
-.toolbar .text {
-  flex: 1;
+.toolbar .done {
+  color: #34c759;
 }
 </style>

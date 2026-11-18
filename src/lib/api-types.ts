@@ -2726,6 +2726,10 @@ export interface components {
             readonly avatar_allowed: boolean;
             /** @description Empty without a picture; opens for an hour, fetch again for a new link */
             readonly avatar_url: string;
+            /** @description Photos and videos this person uploaded (the file and its preview) */
+            readonly media_used_bytes: number;
+            /** @description How much they may upload; new uploads are refused above it */
+            readonly media_quota_bytes: number;
         };
         ProfileRequest: {
             name?: string;

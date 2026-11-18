@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db.models import Sum
 from django.utils.translation import gettext
 from rest_framework import serializers
 
@@ -106,7 +105,7 @@ class MediaWriteSerializer(EventLinkSerializer):
                 attrs[field] = None
         if not is_jpeg(thumbnail) or thumbnail.size > settings.MEDIA_MAX_THUMBNAIL_BYTES:
             raise serializers.ValidationError({"thumbnail": gettext("The preview must be a small JPEG file")})
-        used = Media.objects.filter(owner=self.context["owner"]).aggregate(total=Sum("size"))["total"] or 0
-        if used + file.size + thumbnail.size > settings.MEDIA_QUOTA_BYTES:
-            raise serializers.ValidationError(gettext("There is no room left for this archer's photos and videos"))
+        uploader = self.context["request"].user.profile  # whoever uploads pays, also when it is for an archer
+        if uploader.media_used_bytes + file.size + thumbnail.size > uploader.media_quota_bytes:
+            raise serializers.ValidationError(gettext("There is no room left for your photos and videos"))
         return attrs

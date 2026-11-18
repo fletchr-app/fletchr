@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
 import type { QueuedMedia } from './media-queue.ts';
-import { clipOfQueued, playerSiblings } from './queued-clip.ts';
+import { clipOfQueued, neighbourQuery, playerSiblings } from './queued-clip.ts';
 
 const item = (id: string, extra: Partial<QueuedMedia> = {}): QueuedMedia => ({
   id, kind: 'video', owner: null, session: null, taken_at: '2026-10-30T10:00:00Z', width: 1080, height: 1920, duration_ms: 4000, capture_fps: 120, frame_count: 480, ...extra,
@@ -34,4 +34,12 @@ test('without a session the clips of that archer are meant, no archer is yoursel
   const queued = [item('q1'), item('q2', { owner: 9 }), item('q3', { session: 's1' })];
   assert.deepEqual(playerSiblings(queued, [], { owner: 7 }, 7).map((m) => m.id), ['q1', 'q3']);
   assert.deepEqual(playerSiblings(queued, [], { owner: 9 }, 7).map((m) => m.id), ['q2']);
+});
+
+test('the pictures next to the one in the player are asked for as the page it was opened from lists them', () => {
+  assert.deepEqual(neighbourQuery({ session: 's1', owner: 7 }), { session: 's1' });
+  assert.deepEqual(neighbourQuery({ event: 'e1' }), { event: 'e1' });
+  assert.deepEqual(neighbourQuery({ event: 'e1', archer: 9 }), { event: 'e1', owner: 9 });
+  assert.deepEqual(neighbourQuery({ owner: 7, unattached: true }), { owner: 7, without_session: true });
+  assert.equal(neighbourQuery({}), null);
 });

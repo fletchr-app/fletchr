@@ -32,6 +32,7 @@ import type { Units } from '@/lib/units'
 // The tab for everything that is not training: equipment, teams, account and data, and how the app looks and
 // where it connects. Theme and language are picked in a sheet; the server address has its own page.
 const { signOut, isLocal } = useAuth()
+const mb = (bytes: number) => Math.round((bytes / (1024 * 1024)) * 10) / 10
 const log = useLog()
 const media = useMedia()
 const equipment = useEquipment()
@@ -66,7 +67,7 @@ const { units, saveUnits } = useUnits()
 const UNITS: Units[] = ['metric', 'imperial']
 const { visibility: trainingVisibility, error: visibilityError, save: saveVisibility } = useTrainingVisibility()
 const VISIBILITIES: Visibility[] = ['coaches', 'me']
-const { visibility: profileVisibility, error: profileVisibilityError, save: saveProfileVisibility } = useProfileVisibility()
+const { storage, visibility: profileVisibility, error: profileVisibilityError, save: saveProfileVisibility } = useProfileVisibility()
 const push = usePush()
 const PUSH_TYPES = ['notes', 'evaluations', 'team'] as const
 // Android asks when the switch is turned on. After two refusals it shows no dialog, and only the system settings help.
@@ -139,6 +140,15 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       </IonList>
       <div v-if="!isLocal && profileVisibility" class="muted px-3">{{ $t('settings.profileVisibilityHint') }}</div>
       <ErrorText :message="profileVisibilityError" />
+      <IonList v-if="!isLocal && storage" inset>
+        <IonItem lines="none" class="ion-text-wrap">
+          <IonLabel>
+            {{ $t('settings.storage') }}
+            <progress class="storage" :class="{ full: storage.used >= storage.quota }" :value="storage.used" :max="storage.quota || 1"></progress>
+            <p>{{ $t('settings.storageUsed', { used: mb(storage.used), quota: mb(storage.quota) }) }}</p>
+          </IonLabel>
+        </IonItem>
+      </IonList>
       <IonList v-if="push.available.value" inset>
         <IonListHeader>{{ $t('push.settings.title') }}</IonListHeader>
         <IonItem :lines="push.on.value ? 'full' : 'none'" class="ion-text-wrap">
@@ -264,6 +274,16 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
 </template>
 
 <style scoped>
+progress.storage {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: 8px;
+  accent-color: var(--ion-color-primary);
+}
+progress.storage.full {
+  accent-color: #ff3b30;
+}
 .server-note {
   max-width: 55%;
   overflow: hidden;

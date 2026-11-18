@@ -22,6 +22,18 @@ export function pointOn(rect: { left: number; top: number; width: number; height
 /** The point that is drawn sits this many pixels above the finger, so that the finger does not cover it. */
 export const LIFT = 64;
 
+/** While a finger draws a new shape, the picture is magnified this much around the point that is drawn (the loupe). */
+export const LOUPE = 3;
+
+/**
+ * The style that magnifies what is in a box around a point of that box (in pixels, as they are on the screen without the
+ * loupe): that point stays where it is and everything around it grows. Nothing when `at` is null.
+ */
+export function loupeStyle(at: { x: number; y: number } | null, zoom: number = LOUPE): Record<string, string> {
+  if (!at) return {};
+  return { transform: `translate(${(1 - zoom) * at.x}px, ${(1 - zoom) * at.y}px) scale(${zoom})`, transformOrigin: '0 0' };
+}
+
 /** The angle at `corner` between the two other points, in degrees (0 to 180), for a picture of `width` by `height`. */
 export function angleDegrees(a: Point, corner: Point, b: Point, width: number, height: number): number {
   const u = [(a[0] - corner[0]) * width, (a[1] - corner[1]) * height] as const

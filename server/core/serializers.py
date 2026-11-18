@@ -23,10 +23,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     video_allowed = serializers.BooleanField(read_only=True, help_text="False for an archer under 18 whose parents' consent is not on record")
     avatar_allowed = serializers.BooleanField(read_only=True, help_text="False for an archer under 18 whose parents' consent is not on record")
     avatar_url = serializers.SerializerMethodField(help_text="Empty without a picture; opens for an hour, fetch again for a new link")
+    media_used_bytes = serializers.IntegerField(read_only=True, help_text="Photos and videos this person uploaded (the file and its preview)")
+    media_quota_bytes = serializers.IntegerField(read_only=True, help_text="How much they may upload; new uploads are refused above it")
 
     class Meta:
         model = Profile
-        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "visibility", "push_notes", "push_evaluations", "push_team", "video_allowed", "avatar_allowed", "avatar_url"]
+        fields = ["name", "dominant_hand", "dominant_eye", "date_of_birth", "units", "training_visibility", "visibility", "push_notes", "push_evaluations", "push_team", "video_allowed", "avatar_allowed", "avatar_url", "media_used_bytes", "media_quota_bytes"]
         extra_kwargs = {
             "training_visibility": {"help_text": "Who sees a new session unless the session says otherwise: `me` or `coaches`. `team` and `everyone` are refused for now"},
             "visibility": {"help_text": "Who sees my name and picture in the team: `team`, `coaches` or `me`. `everyone` is refused for now"},
