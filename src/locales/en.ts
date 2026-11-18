@@ -949,6 +949,8 @@ export default {
     trainingVisibility: 'New sessions are seen by',
     profileVisibility: 'My name and picture are seen by',
     profileVisibilityOptions: { team: 'My team', coaches: 'My coaches', me: 'Only me' },
+    storage: 'Storage for photos and videos',
+    storageUsed: '{used} MB of {quota} MB used',
     profileVisibilityHint: 'Name and picture only, not your training. Coaches always see the names of the archers in their team. Needs a connection.',
     trainingVisibilityHint: 'Applies to new sessions and to photos and videos that are in no session and have no choice of their own. A photo or video you set yourself keeps it. You can change a session on its notes screen and a photo or video in its full-screen view. Needs a connection.',
     teams: 'Teams',

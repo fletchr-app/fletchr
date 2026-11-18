@@ -46,7 +46,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 curl -s https://app.example.org/api/health/        # {"status":"ok","version":"...","min_app_version":"..."}
 ```
 
-The database and uploads are in `deploy/data/django/` (photos and videos in `media/`). Migrations run on every start. The limits are in `server/config/settings.py` (`MEDIA_MAX_*`, and the quota per archer, `DJANGO_MEDIA_QUOTA_MB`, 2048 by default). The links to media files carry a token in the address, which gunicorn's access log shows; the token works for one user and one clip for an hour.
+The database and uploads are in `deploy/data/django/` (photos and videos in `media/`). Migrations run on every start. The limits are in `server/config/settings.py` (`MEDIA_MAX_*`, and the quota per uploader, `DJANGO_MEDIA_QUOTA_MB`, 100 by default, changeable per person in the Django admin (Profile, media quota mb)). The links to media files carry a token in the address, which gunicorn's access log shows; the token works for one user and one clip for an hour.
 
 ### Photos and videos in an S3 bucket (optional)
 

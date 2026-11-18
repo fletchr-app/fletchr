@@ -515,8 +515,8 @@ msgid "The preview must be a small JPEG file"
 msgstr "Die Vorschau muss eine kleine JPEG-Datei sein"
 
 #: media/serializers.py:111
-msgid "There is no room left for this archer's photos and videos"
-msgstr "Für die Fotos und Videos dieses Schützen ist kein Platz mehr"
+msgid "There is no room left for your photos and videos"
+msgstr "Für deine Fotos und Videos ist kein Platz mehr"
 
 #: media/views.py:35
 msgid "Only the archer or whoever added it can change a photo or video"

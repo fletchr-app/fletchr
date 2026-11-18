@@ -97,6 +97,8 @@ class Profile(models.Model):
     # A JPEG of at most 512 px (core/avatar.py). A new name on every change, so a cached link never shows an old picture.
     avatar = models.FileField(upload_to=avatar_path, blank=True, max_length=200)
     avatar_updated_at = models.DateTimeField(null=True, blank=True)
+    # What this person may upload, in MB (an admin sets it in the Django admin); empty follows the server's `MEDIA_QUOTA_BYTES`.
+    media_quota_mb = models.PositiveIntegerField(null=True, blank=True, help_text="Empty: the server's default")
     # The visibility new sessions start with (specs/design/session-visibility.md). Never above `coaches` for now.
     training_visibility = models.CharField(max_length=10, choices=audience.CHOICES, default=audience.DEFAULT)
     # Who sees this person's name and picture in the team roster (not their training data, that is `training_visibility`).
@@ -112,6 +114,15 @@ class Profile(models.Model):
     @property
     def age(self):
         return age_in_years(self.date_of_birth)
+
+    @property
+    def media_quota_bytes(self) -> int:
+        """What this person may have uploaded (counted on who uploaded: `Media.uploaded_by`)."""
+        return settings.MEDIA_QUOTA_BYTES if self.media_quota_mb is None else self.media_quota_mb * 1024 * 1024
+
+    @property
+    def media_used_bytes(self) -> int:
+        return self.user.uploaded_media.aggregate(total=models.Sum("size"))["total"] or 0
 
     @property
     def video_allowed(self) -> bool:

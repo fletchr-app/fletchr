@@ -6074,9 +6074,19 @@ components:
           readOnly: true
           description: Empty without a picture; opens for an hour, fetch again for
             a new link
+        media_used_bytes:
+          type: integer
+          readOnly: true
+          description: Photos and videos this person uploaded (the file and its preview)
+        media_quota_bytes:
+          type: integer
+          readOnly: true
+          description: How much they may upload; new uploads are refused above it
       required:
       - avatar_allowed
       - avatar_url
+      - media_quota_bytes
+      - media_used_bytes
       - video_allowed
     ProfileRequest:
       type: object

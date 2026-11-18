@@ -953,6 +953,8 @@ export default {
     trainingVisibility: 'Neue Trainings sehen',
     profileVisibility: 'Mein Name und mein Bild sehen',
     profileVisibilityOptions: { team: 'Mein Team', coaches: 'Meine Trainer', me: 'Nur ich' },
+    storage: 'Speicher für Fotos und Videos',
+    storageUsed: '{used} MB von {quota} MB belegt',
     profileVisibilityHint: 'Nur Name und Bild, nicht dein Training. Trainer sehen die Namen der Schützen in ihrem Team immer. Braucht eine Verbindung.',
     trainingVisibilityHint: 'Gilt für neue Trainings und für Fotos und Videos ohne Training, für die du nichts Eigenes gewählt hast. Was du selbst gewählt hast, bleibt. Ein einzelnes Training änderst du auf seiner Notizen-Seite, ein Foto oder Video in der Vollbildansicht. Braucht eine Verbindung.',
     teams: 'Teams',

@@ -136,13 +136,26 @@ def test_the_limits(api, settings):
     assert not Media.objects.exists()
 
 
-def test_the_quota_is_per_archer(api, settings):
+def test_the_quota_counts_on_who_uploads(api, settings):
     settings.MEDIA_QUOTA_BYTES = 2 * (len(MP4) + len(JPEG))
     upload(api)
     upload(api)
     res = put(api("archer1"), video())
     assert res.status_code == 400 and "no room" in str(res.data)
     upload(api, "archer2")  # the quota is not shared
+
+
+def test_a_person_can_have_their_own_quota(api, club, settings):
+    settings.MEDIA_QUOTA_BYTES = len(MP4) + len(JPEG)
+    upload(api)
+    assert put(api("archer1"), video()).status_code == 400
+    profile = club["archer1"].profile  # the test client keeps this very object, so change it and not only the row
+    profile.media_quota_mb = 1
+    profile.save()
+    res = put(api("archer1"), video())
+    assert res.status_code in (200, 201), res.data
+    me = api("archer1").get("/api/me/").data["profile"]
+    assert me["media_quota_bytes"] == 1024 * 1024 and me["media_used_bytes"] > 0
 
 
 def test_nothing_without_signing_in(client_for):

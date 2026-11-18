@@ -175,8 +175,8 @@ MEDIA_MAX_THUMBNAIL_BYTES = 300 * 1024
 AVATAR_MAX_BYTES = 512 * 1024
 AVATAR_MAX_SIDE = 512
 AVATAR_MAX_INPUT_SIDE = 1024
-# What one archer may keep on the server (the disk is finite); DJANGO_MEDIA_QUOTA_MB changes it.
-MEDIA_QUOTA_BYTES = int(os.environ.get("DJANGO_MEDIA_QUOTA_MB", "2048")) * 1024 * 1024
+# What one person may upload to the server (the disk is finite); DJANGO_MEDIA_QUOTA_MB changes it.
+MEDIA_QUOTA_BYTES = int(os.environ.get("DJANGO_MEDIA_QUOTA_MB", "100")) * 1024 * 1024
 # The links the app gets for its <video> and <img> elements stop working after this time.
 MEDIA_LINK_SECONDS = 60 * 60
 
