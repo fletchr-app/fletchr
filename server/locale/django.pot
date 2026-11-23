@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Fletchr VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 13:15+0100\n"
+"POT-Creation-Date: 2026-11-23 20:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,28 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: core/access.py:92
+#: core/access.py:44
+#, python-format
+msgid "This team has reached the limit of %(n)s members on this server."
+msgstr ""
+
+#: core/access.py:52
+msgid "This server takes no new accounts at the moment."
+msgstr ""
+
+#: core/access.py:114
 msgid "Invalid or expired invite code"
 msgstr ""
 
-#: core/access.py:94
+#: core/access.py:116
 msgid "You are already a member of this team"
 msgstr ""
 
-#: core/access.py:152 training/views.py:161
+#: core/access.py:176 training/views.py:161
 msgid "Only the archer can choose who sees this"
 msgstr ""
 
-#: core/access.py:154 core/serializers.py:50
+#: core/access.py:178 core/serializers.py:52
 msgid "Not available yet"
 msgstr ""
 
@@ -49,7 +58,7 @@ msgstr ""
 msgid "The picture is larger than 512 KB"
 msgstr ""
 
-#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:161
+#: core/claims.py:51 core/claims.py:54 core/resets.py:57 core/views.py:163
 msgid "Invalid or expired code"
 msgstr ""
 
@@ -106,57 +115,57 @@ msgstr ""
 msgid "Enter a date of birth in the past"
 msgstr ""
 
-#: core/serializers.py:41
+#: core/serializers.py:43
 msgid "Enter your name"
 msgstr ""
 
-#: core/serializers.py:96
+#: core/serializers.py:102
 msgid "An account with this email already exists"
 msgstr ""
 
-#: core/serializers.py:129
+#: core/serializers.py:135
 msgid "A team needs a name"
 msgstr ""
 
-#: core/serializers.py:142
+#: core/serializers.py:148
 msgid "Give a name or show_ranking"
 msgstr ""
 
-#: core/serializers.py:223 core/serializers.py:238
+#: core/serializers.py:229 core/serializers.py:244
 msgid "An archer needs a name"
 msgstr ""
 
-#: core/serializers.py:288 privacy/serializers.py:17
+#: core/serializers.py:294 privacy/serializers.py:17
 msgid "Wrong password"
 msgstr ""
 
-#: core/serializers.py:298
+#: core/serializers.py:304
 msgid "Choose a different password"
 msgstr ""
 
-#: core/serializers.py:312
+#: core/serializers.py:318
 msgid "This address is not available"
 msgstr ""
 
-#: core/social.py:50 core/social.py:53 core/social.py:55
+#: core/social.py:51 core/social.py:54 core/social.py:56
 msgid "Google sign-in failed. Please try again."
 msgstr ""
 
-#: core/social.py:72
+#: core/social.py:73
 msgid "This account cannot sign in."
 msgstr ""
 
-#: core/social.py:82
+#: core/social.py:83
 msgid ""
 "There is no account for this Google sign-in yet. Register with your "
 "invite code."
 msgstr ""
 
-#: core/social.py:84
+#: core/social.py:85
 msgid "Google did not confirm your email address."
 msgstr ""
 
-#: core/social.py:86
+#: core/social.py:87
 msgid ""
 "This email address already has an account. Ask an admin to connect it "
 "with your Google sign-in."
@@ -190,60 +199,64 @@ msgid ""
 "of them first."
 msgstr ""
 
-#: core/views.py:211
+#: core/views.py:213
 msgid "No picture sent"
 msgstr ""
 
-#: core/views.py:262
+#: core/views.py:264
 msgid "This account signs in with Google and has no password."
 msgstr ""
 
 #: core/views.py:358
+msgid "Creating teams is not open on this server yet. Ask its operator."
+msgstr ""
+
+#: core/views.py:362
 #, python-format
 msgid "You already manage %(n)s teams"
 msgstr ""
 
-#: core/views.py:404
+#: core/views.py:408
 msgid "Only team admins can delete the team"
 msgstr ""
 
-#: core/views.py:413
+#: core/views.py:417
 msgid "Only team admins can change the team"
 msgstr ""
 
-#: core/views.py:458
+#: core/views.py:462
 msgid "Only team admins can change roles"
 msgstr ""
 
-#: core/views.py:464 core/views.py:478
+#: core/views.py:468 core/views.py:482
 msgid "A team needs at least one admin"
 msgstr ""
 
-#: core/views.py:475
+#: core/views.py:479
 msgid "Only team admins can remove members"
 msgstr ""
 
-#: core/views.py:489 core/views.py:506
+#: core/views.py:493 core/views.py:513
 msgid "Only team admins can manage invites"
 msgstr ""
 
-#: core/views.py:514
+#: core/views.py:521
 msgid "Only coaches can manage the archers of a team"
 msgstr ""
 
-#: core/views.py:641
+#: core/views.py:650
 msgid ""
 "Only coaches can choose this: archers' sessions are always visible to "
 "their coaches"
 msgstr ""
 
-#: core/views.py:653
+#: core/views.py:662
 msgid ""
 "You are the only admin. Make someone else an admin first, or delete the "
 "team."
 msgstr ""
 
-#: core/views.py:665
+#: core/views.py:674
 msgid "This account no longer exists"
 msgstr ""
 
@@ -474,39 +487,39 @@ msgstr ""
 msgid "This evaluation was deleted"
 msgstr ""
 
-#: media/serializers.py:74
+#: media/serializers.py:73
 msgid "This session belongs to another archer"
 msgstr ""
 
-#: media/serializers.py:93
+#: media/serializers.py:92
 msgid "A video must be an MP4 file"
 msgstr ""
 
-#: media/serializers.py:95
+#: media/serializers.py:94
 #, python-format
 msgid "The video is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:99
+#: media/serializers.py:98
 #, python-format
 msgid "The video is longer than %(n)s seconds"
 msgstr ""
 
-#: media/serializers.py:102
+#: media/serializers.py:101
 msgid "A photo must be a JPEG file"
 msgstr ""
 
-#: media/serializers.py:104
+#: media/serializers.py:103
 #, python-format
 msgid "The photo is larger than %(n)s MB"
 msgstr ""
 
-#: media/serializers.py:108
+#: media/serializers.py:107
 msgid "The preview must be a small JPEG file"
 msgstr ""
 
-#: media/serializers.py:111
-msgid "There is no room left for this archer's photos and videos"
+#: media/serializers.py:110
+msgid "There is no room left for your photos and videos"
 msgstr ""
 
 #: media/views.py:35

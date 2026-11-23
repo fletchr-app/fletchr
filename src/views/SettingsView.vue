@@ -195,8 +195,8 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
       <template v-else>
       <IonList inset>
         <IonListHeader>{{ $t('settings.teams') }}</IonListHeader>
-        <IonItem router-link="/join-team" detail lines="full"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
-        <IonItem button detail :lines="calendar.supported || coachedTeams.length > 0 ? 'full' : 'none'" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
+        <IonItem router-link="/join-team" detail :lines="creating.allowed.value || calendar.supported || coachedTeams.length > 0 ? 'full' : 'none'"><IonLabel>{{ $t('settings.joinTeam') }}</IonLabel></IonItem>
+        <IonItem v-if="creating.allowed.value" button detail :lines="calendar.supported || coachedTeams.length > 0 ? 'full' : 'none'" @click="creating.ask"><IonLabel>{{ $t('settings.createTeam') }}</IonLabel></IonItem>
         <IonItem v-for="team in coachedTeams" :key="team.id" :lines="calendar.supported ? 'full' : 'none'" class="ion-text-wrap">
           <div class="w-100 py-2">
             <div class="muted">{{ team.name }}</div>

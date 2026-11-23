@@ -13,6 +13,11 @@ export function useCreateTeam() {
   const { api } = useAuth()
   const { load } = useTeams()
   const error = ref<string | null>(null)
+  // A server can limit who creates teams. Shown until the server says no (offline, or a server from before the setting).
+  const allowed = ref(true)
+  void api.GET('/api/me/').then(({ data }) => {
+    if (data) allowed.value = data.can_create_teams !== false
+  }).catch(() => {})
 
   async function create(name: string) {
     error.value = null
@@ -41,5 +46,5 @@ export function useCreateTeam() {
     await alert.present()
   }
 
-  return { ask, error }
+  return { ask, error, allowed }
 }

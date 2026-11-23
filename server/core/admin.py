@@ -26,11 +26,12 @@ class SocialIdentityInline(admin.TabularInline):
 class UserAdmin(BaseUserAdmin):
     inlines = [SocialIdentityInline]
     ordering = ["email"]
-    list_display = ["email", "is_staff", "is_active", "is_managed"]
+    list_display = ["email", "is_staff", "is_active", "is_managed", "can_create_teams"]
+    list_filter = ["is_staff", "is_superuser", "is_active", "is_managed", "can_create_teams"]
     search_fields = ["email"]
     fieldsets = [
         (None, {"fields": ["email", "password"]}),
-        ("Permissions", {"fields": ["is_active", "is_staff", "is_superuser", "groups", "user_permissions"]}),
+        ("Permissions", {"fields": ["is_active", "can_create_teams", "is_staff", "is_superuser", "groups", "user_permissions"]}),
     ]
     add_fieldsets = [(None, {"classes": ["wide"], "fields": ["email", "password1", "password2"]})]
     actions = ["transfer_data"]

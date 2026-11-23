@@ -26,7 +26,7 @@ Needs Python 3.14+ and [uv](https://docs.astral.sh/uv/). To use it from the Vite
 
 ## Settings
 
-All settings come from environment variables, read in `config/settings.py`. The ones you will meet most: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CORS_ORIGINS`, `DJANGO_BEHIND_PROXY`, `DJANGO_SITE_URL`, `DJANGO_DATA_DIR`, `DJANGO_MEDIA_QUOTA_MB`, `DJANGO_EMAIL_*` (without `DJANGO_EMAIL_HOST` mails are printed to the log), `DJANGO_FCM_CREDENTIALS`, `DJANGO_GOOGLE_CLIENT_IDS`. Production values go in `deploy/.env`, see `deploy/.env.example`.
+All settings come from environment variables, read in `config/settings.py`. The ones you will meet most: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CORS_ORIGINS`, `DJANGO_BEHIND_PROXY`, `DJANGO_SITE_URL`, `DJANGO_DATA_DIR`, `DJANGO_MEDIA_QUOTA_MB`, `DJANGO_TEAM_CREATION_OPEN`, `DJANGO_MAX_ACCOUNTS`, `DJANGO_MAX_TEAM_MEMBERS`, `DJANGO_EMAIL_*` (without `DJANGO_EMAIL_HOST` mails are printed to the log), `DJANGO_FCM_CREDENTIALS`, `DJANGO_GOOGLE_CLIENT_IDS`. Production values go in `deploy/.env`, see `deploy/.env.example`.
 
 ## Tests
 

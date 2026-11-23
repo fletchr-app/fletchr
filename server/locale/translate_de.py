@@ -194,6 +194,9 @@ DE = {
     "%(email)s is deactivated": "%(email)s ist deaktiviert",
     "%(email)s already has data (%(what)s). Only an account without data can receive one.": "%(email)s hat schon Daten (%(what)s). Nur ein Konto ohne Daten kann eines übernehmen.",
     "Both are in %(team)s with different roles (%(a)s and %(b)s). Change one of them first.": "Beide sind in %(team)s, mit verschiedenen Rollen (%(a)s und %(b)s). Ändere zuerst eine davon.",
+    "This team has reached the limit of %(n)s members on this server.": "Dieses Team hat die Grenze von %(n)s Mitgliedern auf diesem Server erreicht.",
+    "This server takes no new accounts at the moment.": "Dieser Server nimmt im Moment keine neuen Konten an.",
+    "Creating teams is not open on this server yet. Ask its operator.": "Auf diesem Server können noch nicht alle Teams anlegen. Frag den Betreiber.",
 }
 
 PATH ="locale/de/LC_MESSAGES/django.po"

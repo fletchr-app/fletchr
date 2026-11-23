@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+- **Limits on who gets in** (server): `DJANGO_TEAM_CREATION_OPEN=0` lets only superusers and accounts with "Can create teams" (Django admin, User) create teams; the app hides "Create a team" for everybody else. `DJANGO_MAX_TEAM_MEMBERS` caps the members per team (invites and profiles without an account), `DJANGO_MAX_ACCOUNTS` the accounts on the server. All off by default, so nothing changes until you set them. One new migration (`core`).
+
 ## 0.28.0 (2026-11-18)
 
 - **Upload limit per person** (server): what a person uploads (photos, videos and previews) is capped at 100 MB by default (`DJANGO_MEDIA_QUOTA_MB`, was 2048 per archer). It now counts on who uploads, not on whose clip it is. An admin can set another limit for one person (Django admin, Profile, "Media quota mb"). Settings shows how much is used. **People who have more than 100 MB already keep it, but cannot upload more**: raise `DJANGO_MEDIA_QUOTA_MB` before updating if that is not wanted. One new migration (`core`).

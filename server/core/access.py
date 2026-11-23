@@ -1,5 +1,6 @@
 """Who may see what. Every endpoint that returns team or archer data goes through here."""
 
+from django.conf import settings
 from django.utils.translation import gettext
 from django.db import transaction
 from django.db.models import Q
@@ -29,6 +30,27 @@ def is_coach_in(user, team):
 
 def is_admin_in(user, team):
     return role_in(user, team) == Role.ADMIN
+
+
+def can_create_teams(user):
+    """Everybody, unless the server limits it (settings.TEAM_CREATION_OPEN); then superusers and the accounts allowed in the admin."""
+    return settings.TEAM_CREATION_OPEN or user.is_superuser or user.can_create_teams
+
+
+def team_full_message(team):
+    """Why nobody else can join `team`, or None while it has room (settings.MAX_TEAM_MEMBERS, 0 is no limit)."""
+    cap = settings.MAX_TEAM_MEMBERS
+    if cap and TeamMember.objects.filter(team=team).count() >= cap:
+        return gettext("This team has reached the limit of %(n)s members on this server.") % {"n": cap}
+    return None
+
+
+def accounts_full_message():
+    """Why no new account can be made, or None (settings.MAX_ACCOUNTS counts accounts that can sign in, 0 is no limit)."""
+    cap = settings.MAX_ACCOUNTS
+    if cap and User.objects.filter(is_managed=False, is_active=True).count() >= cap:
+        return gettext("This server takes no new accounts at the moment.")
+    return None
 
 
 def members_visible_to(user, team):
@@ -92,6 +114,8 @@ def redeem_invite(code, user):
         raise InviteError(gettext("Invalid or expired invite code"))
     if TeamMember.objects.filter(team=invite.team, user=user).exists():
         raise InviteError(gettext("You are already a member of this team"))
+    if full := team_full_message(invite.team):
+        raise InviteError(full)
     TeamMember.objects.create(team=invite.team, user=user, role=invite.role)
     invite.used_by = user
     invite.used_at = timezone.now()

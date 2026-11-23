@@ -5182,7 +5182,12 @@ components:
             type: string
           readOnly: true
           description: Providers (google) that can sign in to this account
+        can_create_teams:
+          type: boolean
+          readOnly: true
+          description: Whether this account may create a team on this server
       required:
+      - can_create_teams
       - email
       - has_password
       - id
