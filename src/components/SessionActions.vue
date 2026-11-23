@@ -52,6 +52,7 @@ async function remove() {
     <IonList lines="none">
       <IonItem v-if="reopen" button :detail="false" @click="emit('reopen')">{{ $t('session.reopenSession') }}</IonItem>
       <IonItem v-if="live" button :detail="false" :router-link="`/training/${id}/setup`">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</IonItem>
+      <IonItem v-if="!live && !session.owner && !session.noResults" button :detail="false" :router-link="`/training/${id}/gear`">{{ $t('gear.change') }}</IonItem>
       <IonItem v-if="!session.owner" button :detail="false" :router-link="`/training/${id}/details`">{{ $t('details.link') }}</IonItem>
       <IonItem v-if="live" button :detail="false" :router-link="`/training/${id}/ends`">{{ $t('session.allEnds') }}</IonItem>
       <IonItem button :detail="false" @click="remove">{{ $t('session.delete') }}</IonItem>

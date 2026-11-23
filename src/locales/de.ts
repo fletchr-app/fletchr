@@ -544,6 +544,8 @@ export default {
     enterHow: 'Gib ein, wie viele Pfeile du geschossen hast',
   },
   gear: {
+    title: 'Ausrüstung',
+    change: 'Ausrüstung ändern',
     none: 'Keiner',
     noBows: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, mit Verbindung, dann sind sie beim nächsten Mal hier.',
     noBowsLocal: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, dann sind sie beim nächsten Mal hier.',
