@@ -55,6 +55,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # A profile that a coach keeps for an archer without an account. It has no password and an address
     # that cannot receive mail; when the archer joins, they take it over (see core/claims.py).
     is_managed = models.BooleanField(default=False)
+    # Only matters while DJANGO_TEAM_CREATION_OPEN is 0: then only these accounts (and superusers) create teams.
+    can_create_teams = models.BooleanField(default=False, help_text="May create teams while DJANGO_TEAM_CREATION_OPEN is 0")
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = "email"

@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext
 
+from . import access
 from . import claims as claim_codes
 from .models import SocialIdentity, User
 
@@ -86,6 +87,8 @@ def sign_in(provider, claims, invite_code="") -> tuple[User, bool]:
     taken = SocialError("email_taken", gettext("This email address already has an account. Ask an admin to connect it with your Google sign-in."), 409)
     if User.objects.filter(email__iexact=email).exists():
         _refuse("email taken", provider, claims, taken)
+    if full := access.accounts_full_message():
+        _refuse("server full", provider, claims, SocialError("server_full", full, 403))
     try:
         with transaction.atomic():  # a bad code rolls back everything
             user = User.objects.create_user(email)

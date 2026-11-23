@@ -2272,6 +2272,8 @@ export interface components {
             readonly has_password: boolean;
             /** @description Providers (google) that can sign in to this account */
             readonly sign_in_providers: string[];
+            /** @description Whether this account may create a team on this server */
+            readonly can_create_teams: boolean;
         };
         /** @description For read serializers: `event` (the id) and `event_info` next to it. */
         Media: {

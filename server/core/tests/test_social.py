@@ -223,3 +223,10 @@ def test_core_logger_passes_info():
     import logging
 
     assert logging.getLogger("core").getEffectiveLevel() <= logging.INFO
+
+
+def test_a_full_server_refuses_a_new_google_account(settings, client_for, token_of, club, invite):
+    settings.MAX_ACCOUNTS = User.objects.filter(is_managed=False).count()
+    res = sign_in(client_for, token_of(email="new@gmail.test"), invite.code)
+    assert res.status_code == 403 and res.data["code"] == "server_full"
+    assert not User.objects.filter(email="new@gmail.test").exists() and not SocialIdentity.objects.exists()

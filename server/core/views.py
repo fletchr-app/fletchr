@@ -81,6 +81,8 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        if full := access.accounts_full_message():
+            raise PermissionDenied(full)
         user = User.objects.create_user(data["email"], data["password"])
         user.profile.name = data["name"]
         user.profile.save()
@@ -352,6 +354,8 @@ class TeamListView(generics.ListAPIView):
     @transaction.atomic
     def post(self, request):
         """Create a team. You become its admin; invite archers and coaches from there."""
+        if not access.can_create_teams(request.user):
+            raise PermissionDenied(gettext("Creating teams is not open on this server yet. Ask its operator."))
         serializer = TeamNameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if TeamMember.objects.filter(user=request.user, role=Role.ADMIN).count() >= MAX_TEAMS_PER_USER:
@@ -495,7 +499,10 @@ class InviteListCreateView(generics.ListCreateAPIView):
         return Invite.objects.filter(team=self.get_team(), used_at__isnull=True, expires_at__gt=timezone.now()).order_by("-created_at")
 
     def perform_create(self, serializer):
-        serializer.save(team=self.get_team(), created_by=self.request.user)
+        team = self.get_team()
+        if full := access.team_full_message(team):
+            raise ValidationError(full)  # an invite nobody could use
+        serializer.save(team=team, created_by=self.request.user)
 
 
 class InviteDetailView(APIView):
@@ -523,6 +530,8 @@ class ManagedArcherListView(APIView):
         team = coached_team(request, team_id)
         serializer = ArcherNameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        if full := access.team_full_message(team):
+            raise ValidationError(full)
         user = User.objects.create_managed(serializer.validated_data["name"])
         member = TeamMember.objects.create(team=team, user=user, role=Role.ARCHER)
         return Response(MemberSerializer(member, context={"request": request}).data, status=status.HTTP_201_CREATED)

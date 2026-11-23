@@ -66,10 +66,11 @@ class MeSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
     has_password = serializers.SerializerMethodField(help_text="False for an account made with Google: no password, no email change")
     sign_in_providers = serializers.SerializerMethodField(help_text="Providers (google) that can sign in to this account")
+    can_create_teams = serializers.SerializerMethodField(help_text="Whether this account may create a team on this server")
 
     class Meta:
         model = User
-        fields = ["id", "email", "profile", "has_password", "sign_in_providers"]
+        fields = ["id", "email", "profile", "has_password", "sign_in_providers", "can_create_teams"]
         read_only_fields = ["id", "email"]
 
     def get_has_password(self, user) -> bool:
@@ -77,6 +78,9 @@ class MeSerializer(serializers.ModelSerializer):
 
     def get_sign_in_providers(self, user) -> list[str]:
         return sorted(user.social_identities.values_list("provider", flat=True))
+
+    def get_can_create_teams(self, user) -> bool:
+        return access.can_create_teams(user)
 
     def update(self, instance, validated_data):
         profile = validated_data.pop("profile", {})
