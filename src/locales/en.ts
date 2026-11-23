@@ -518,6 +518,8 @@ export default {
   },
   end: {
     title: 'New end',
+    changeTitle: 'Change setup',
+    gearOnly: 'Save equipment only',
     number: 'End {n}',
     hint: 'Next screen: touch the face and move to the exact spot, then lift to place the arrow. Touch an arrow to move it. An arrow touching a line counts for the higher ring: move it over the line.',
     startEntering: 'Start entering arrows',
