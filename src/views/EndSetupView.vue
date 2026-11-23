@@ -16,7 +16,7 @@ import { FACES } from '@/lib/faces'
 import { chosenKeys, gearFor, nextEndDefaults } from '@/lib/log-model'
 
 // Before each end: distance, face, arrows per end and equipment. "Start" opens the arrow entry.
-// Shown before the first end of a session, and from the "change" link on the session page.
+// Shown before the first end of a session, and from "Change setup" in the session menu.
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +27,8 @@ const { distanceField, distanceUnit, parseDistance } = useUnits()
 const sessionId = route.params.id as string
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
 const start = session.value ? nextEndDefaults(session.value) : null
+// From "Change setup" during a session: equipment is saved at once, distance and face only go with the next end.
+const changing = (session.value?.ends.length ?? 0) > 0
 
 const distance = ref(start ? distanceField(start.distance_m) : '')
 const faceSlug = ref(start?.face ?? FACES[0]!.slug)
@@ -43,7 +45,7 @@ function begin() {
 </script>
 
 <template>
-  <AppPage :title="$t('end.title')">
+  <AppPage :title="$t(changing ? 'end.changeTitle' : 'end.title')">
     <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <div v-else class="screen">
       <h2 class="h5 m-0">{{ $t('end.number', { n: (start?.index ?? 0) + 1 }) }}</h2>
@@ -65,6 +67,7 @@ function begin() {
       <div class="faint">{{ $t('end.hint') }}</div>
       <ErrorText :message="error" />
       <AppButton @click="begin">{{ $t('end.startEntering') }}</AppButton>
+      <AppButton v-if="changing && !session.owner" secondary @click="router.back()">{{ $t('end.gearOnly') }}</AppButton>
     </div>
   </AppPage>
 </template>

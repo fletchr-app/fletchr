@@ -522,6 +522,8 @@ export default {
   },
   end: {
     title: 'Neue Passe',
+    changeTitle: 'Einstellungen ändern',
+    gearOnly: 'Nur Ausrüstung speichern',
     number: 'Passe {n}',
     hint: 'Nächster Bildschirm: Tippe auf die Scheibe und bewege den Finger an die genaue Stelle, dann hebe ihn, um den Pfeil zu setzen. Tippe einen Pfeil an, um ihn zu verschieben. Ein Pfeil auf der Linie zählt für den höheren Ring: Schiebe ihn über die Linie.',
     startEntering: 'Pfeile eintragen',
@@ -544,6 +546,8 @@ export default {
     enterHow: 'Gib ein, wie viele Pfeile du geschossen hast',
   },
   gear: {
+    title: 'Ausrüstung',
+    change: 'Ausrüstung ändern',
     none: 'Keiner',
     noBows: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, mit Verbindung, dann sind sie beim nächsten Mal hier.',
     noBowsLocal: 'Auf diesem Gerät sind noch keine Bögen. Leg sie unter Ausrüstung an, dann sind sie beim nächsten Mal hier.',
