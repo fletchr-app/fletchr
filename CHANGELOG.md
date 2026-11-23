@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.29.0 (2026-11-23)
+
 - **Limits on who gets in** (server): `DJANGO_TEAM_CREATION_OPEN=0` lets only superusers and accounts with "Can create teams" (Django admin, User) create teams; the app hides "Create a team" for everybody else. `DJANGO_MAX_TEAM_MEMBERS` caps the members per team (invites and profiles without an account), `DJANGO_MAX_ACCOUNTS` the accounts on the server. All off by default, so nothing changes until you set them. One new migration (`core`).
 
 ## 0.28.0 (2026-11-18)
