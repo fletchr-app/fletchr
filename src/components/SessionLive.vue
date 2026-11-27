@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { IonIcon } from '@ionic/vue'
-import { cloudUploadOutline } from 'ionicons/icons'
+import { alertController, IonIcon } from '@ionic/vue'
+import { addOutline, cloudUploadOutline, exitOutline, listOutline } from 'ionicons/icons'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AppButton from '@/components/AppButton.vue'
@@ -13,10 +14,11 @@ import { useAuth } from '@/composables/useAuth'
 import { useLog } from '@/composables/useLog'
 import { gearLine, type LogSession, nextEndDefaults, sessionTotals, sessionTypeKey } from '@/lib/log-model'
 
-// A session with ends that is being shot: the arrows so far, a new end, finish. One screen that does not scroll.
+// A session with ends that is being shot: the arrows so far, and buttons to finish, list all ends and add a new end. One screen that does not scroll.
 // Photos, notes, changing the setup and deleting are in the app bar (`SessionActions`).
 const props = defineProps<{ session: LogSession }>()
 const router = useRouter()
+const { t } = useI18n()
 const { waiting, failed, finishSession } = useLog()
 const { userId } = useAuth()
 
@@ -28,6 +30,18 @@ function newEnd() {
   if (s.ends.length === 0) return void router.push(`/training/${s.id}/setup`)
   const d = nextEndDefaults(s)
   void router.push({ path: `/training/${s.id}/end`, query: { distance: d.distance_m, face: d.face, arrows: String(d.arrows_per_end) } })
+}
+// Asked first: the button sits next to New end. A finished session can be reopened the same day.
+async function askFinish() {
+  const alert = await alertController.create({
+    header: t('session.finishHeader'),
+    message: t('session.finishMessage'),
+    buttons: [
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('session.finish'), handler: () => finish() },
+    ],
+  })
+  await alert.present()
 }
 // Back to the home screen, or for a coach to the archer's page.
 function finish() {
@@ -55,7 +69,10 @@ function finish() {
     <SessionPlots fill :session="session" />
     <div v-if="totals.arrows === 0" class="flex-grow-1"></div>
     <UnattachedHint compact :owner="archer" :session="session" :event-id="session.event?.id" :name="session.owner_name" class="text-center" />
-    <AppButton @click="newEnd">{{ $t('session.newEnd') }}</AppButton>
-    <AppButton secondary @click="finish">{{ $t('session.finish') }}</AppButton>
+    <div class="d-flex gap-2">
+      <AppButton secondary class="flex-fill" :aria-label="$t('session.finish')" @click="askFinish"><IonIcon slot="icon-only" :icon="exitOutline" /></AppButton>
+      <AppButton secondary class="flex-fill" :disabled="session.ends.length === 0" :aria-label="$t('session.allEnds')" :router-link="`/training/${session.id}/ends`"><IonIcon slot="icon-only" :icon="listOutline" /></AppButton>
+      <AppButton class="flex-fill" :aria-label="$t('session.newEnd')" @click="newEnd"><IonIcon slot="icon-only" :icon="addOutline" /></AppButton>
+    </div>
   </div>
 </template>

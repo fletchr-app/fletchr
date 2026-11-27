@@ -382,6 +382,8 @@ export default {
     changeSetupArcher: 'Change distance or face',
     newEnd: 'New end',
     allEnds: 'All ends',
+    finishHeader: 'Finish this session?',
+    finishMessage: 'You can reopen it today from the session menu.',
     finish: 'Finish session',
     reopen: 'Reopen',
     reopenSession: 'Reopen session',

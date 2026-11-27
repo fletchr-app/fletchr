@@ -6,7 +6,8 @@ import { useRoute, useRouter } from 'vue-router'
 import EndEditor from '@/components/EndEditor.vue'
 import { useLog } from '@/composables/useLog'
 
-// The arrow entry for one end. The settings come from the setup screen in the query.
+// The arrow entry, one end after the other: a confirmed new end is followed by the next new end, the back
+// button in the app bar leads to the session overview. The settings come from the setup screen in the query.
 const route = useRoute()
 const router = useRouter()
 const { loaded, sessions } = useLog()
@@ -22,6 +23,8 @@ const editing = computed(() => sorted.value.find((e) => e.id === endId.value) ??
 const position = computed(() => (endId.value === null ? sorted.value.length : sorted.value.findIndex((e) => e.id === endId.value)))
 const prev = computed(() => (position.value > 0 ? sorted.value[position.value - 1]!.id : null))
 const next = computed(() => (position.value < 0 || position.value >= sorted.value.length ? null : (sorted.value[position.value + 1]?.id ?? 'new')))
+// Counts the confirmed new ends, so the editor starts afresh for the next one.
+const round = ref(0)
 const arrows = Math.max(1, Math.min(12, Math.round(Number(query.arrows)) || 3))
 
 // Back to the session overview, without leaving it twice in the history.
@@ -37,7 +40,7 @@ function done() {
     <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <EndEditor
       v-else
-      :key="endId ?? 'new'"
+      :key="endId ?? `new-${round}`"
       :session="session"
       :editing="editing"
       :distance="editing ? editing.distance_m : String(query.distance ?? '')"
@@ -46,6 +49,7 @@ function done() {
       :prev="prev"
       :next="next"
       @go="endId = $event === 'new' ? null : $event"
+      @next="round++"
       @done="done"
     />
   </AppPage>

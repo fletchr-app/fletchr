@@ -10,7 +10,7 @@ import { useNotes } from '@/composables/useNotes'
 import { type LogSession, usesEnds } from '@/lib/log-model'
 
 // The right of the app bar of a session: photos and notes as icons, the rest in a menu. What the menu offers depends on
-// whether the session is still being shot (change the setup, all ends) or finished (reopen).
+// whether the session is still being shot (change the setup; all ends is a button on the screen) or finished (reopen).
 const props = defineProps<{ session: LogSession; mediaLink: RouteLocationRaw; canReopen?: boolean }>()
 const emit = defineEmits<{ reopen: [] }>()
 
@@ -54,7 +54,6 @@ async function remove() {
       <IonItem v-if="live" button :detail="false" :router-link="`/training/${id}/setup`">{{ session.owner ? $t('session.changeSetupArcher') : $t('session.changeSetup') }}</IonItem>
       <IonItem v-if="!live && !session.owner && !session.noResults" button :detail="false" :router-link="`/training/${id}/gear`">{{ $t('gear.change') }}</IonItem>
       <IonItem v-if="!session.owner" button :detail="false" :router-link="`/training/${id}/details`">{{ $t('details.link') }}</IonItem>
-      <IonItem v-if="live" button :detail="false" :router-link="`/training/${id}/ends`">{{ $t('session.allEnds') }}</IonItem>
       <IonItem button :detail="false" @click="remove">{{ $t('session.delete') }}</IonItem>
     </IonList>
   </IonPopover>

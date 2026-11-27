@@ -386,6 +386,8 @@ export default {
     changeSetupArcher: 'Entfernung oder Scheibe ändern',
     newEnd: 'Neue Passe',
     allEnds: 'Alle Passen',
+    finishHeader: 'Training beenden?',
+    finishMessage: 'Du kannst es heute noch über das Menü des Trainings wieder öffnen.',
     finish: 'Training beenden',
     reopen: 'Wieder öffnen',
     reopenSession: 'Training wieder öffnen',

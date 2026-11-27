@@ -119,9 +119,10 @@ function start() {
   const { bowKey, arrowSetKey } = choice.value
   const gear = archer || bowKey === null ? undefined : gearFor(equipment.value, bowKey, arrowSetKey)
   const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear, archer, when)}`
-  void router.replace(overview)
-  // Straight to the first end, with the overview behind it.
-  if (ends) void router.push({ path: `${overview}/end`, query: { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) } })
+  // Straight to the first end, with the overview behind it. The push waits for the replace: started at once, it would
+  // cancel it, and the back button would lead to this screen instead of the overview.
+  const replaced = router.replace(overview)
+  if (ends) void replaced.then(() => router.push({ path: `${overview}/end`, query: { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) } }))
 }
 </script>
 

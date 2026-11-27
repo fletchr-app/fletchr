@@ -20,7 +20,7 @@ import { newId } from '@/lib/uuid'
 // gives it and never scrolls, so touching the face cannot move the page.
 // `prev` and `next` are the ids of the neighbouring ends in the session; the new end comes after the last one and is called 'new' (null at the ends of the list).
 const props = defineProps<{ session: LogSession; editing: LogEnd | null; distance: string; face: string; arrows: number; prev?: string | null; next?: string | null }>()
-const emit = defineEmits<{ done: []; go: [id: string] }>()
+const emit = defineEmits<{ done: []; go: [id: string]; next: [] }>()
 
 const { t } = useI18n()
 const { saveEnd, deleteEnd, equipment } = useLog()
@@ -84,9 +84,9 @@ function save() {
     arrows_per_end: props.arrows,
     shots: shots.value,
   })
-  // A saved existing end stays on the screen, so Back and Next can go on from it. A new end is finished.
+  // A saved existing end stays on the screen, so Back and Next can go on from it. A confirmed new end is followed by the next new end.
   if (props.editing) saved.value = JSON.stringify(shots.value)
-  else emit('done')
+  else emit('next')
 }
 
 // Back and next show another end of the session. Changes that are not saved are only dropped after asking.
