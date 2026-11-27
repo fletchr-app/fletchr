@@ -32,11 +32,9 @@ async function askFinish() {
   })
   await alert.present()
 }
-// Back to the home screen, or for a coach to the archer's page.
+// Stays on the session page, which then shows the summary of the finished session.
 function finish() {
-  const s = props.session
-  finishSession(s.id, true)
-  void router.replace(s.owner ? { path: `/archers/${s.owner}`, query: { name: s.owner_name } } : '/')
+  finishSession(props.session.id, true)
 }
 </script>
 
