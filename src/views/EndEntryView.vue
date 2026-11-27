@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import AppPage from '@/components/AppPage.vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import EndEditor from '@/components/EndEditor.vue'
 import { useLog } from '@/composables/useLog'
 
-// The arrow entry for one end. The settings come from the setup screen in the query.
+// The arrow entry, one end after the other: a confirmed new end is followed by the next new end, the back
+// button in the app bar leads to the session overview. The settings come from the setup screen in the query.
 const route = useRoute()
 const router = useRouter()
 const { loaded, sessions } = useLog()
@@ -14,7 +15,16 @@ const { loaded, sessions } = useLog()
 const sessionId = route.params.id as string
 const session = computed(() => sessions.value.find((s) => s.id === sessionId))
 const query = route.query
-const editing = session.value?.ends.find((e) => e.id === query.end) ?? null
+// The end being edited. Back and next change it without leaving the screen.
+const endId = ref(typeof query.end === 'string' ? query.end : null)
+const sorted = computed(() => [...(session.value?.ends ?? [])].sort((a, b) => a.index - b.index))
+const editing = computed(() => sorted.value.find((e) => e.id === endId.value) ?? null)
+// The new end comes after the last existing one.
+const position = computed(() => (endId.value === null ? sorted.value.length : sorted.value.findIndex((e) => e.id === endId.value)))
+const prev = computed(() => (position.value > 0 ? sorted.value[position.value - 1]!.id : null))
+const next = computed(() => (position.value < 0 || position.value >= sorted.value.length ? null : (sorted.value[position.value + 1]?.id ?? 'new')))
+// Counts the confirmed new ends, so the editor starts afresh for the next one.
+const round = ref(0)
 const arrows = Math.max(1, Math.min(12, Math.round(Number(query.arrows)) || 3))
 
 // Back to the session overview, without leaving it twice in the history.
@@ -30,11 +40,16 @@ function done() {
     <div v-if="!session" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <EndEditor
       v-else
+      :key="endId ?? `new-${round}`"
       :session="session"
       :editing="editing"
-      :distance="String(query.distance ?? '')"
-      :face="String(query.face ?? '')"
-      :arrows="arrows"
+      :distance="editing ? editing.distance_m : String(query.distance ?? '')"
+      :face="editing ? editing.face : String(query.face ?? '')"
+      :arrows="editing ? editing.arrows_per_end : arrows"
+      :prev="prev"
+      :next="next"
+      @go="endId = $event === 'new' ? null : $event"
+      @next="round++"
       @done="done"
     />
   </AppPage>

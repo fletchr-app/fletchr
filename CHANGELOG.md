@@ -4,6 +4,15 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.31.0 (2026-11-27)
+
+- **Ends one after the other**: confirming a new end saves it and opens the next one on the same screen, with the same distance, face and arrows per end; the session page no longer appears in between. The back arrow leads to the session page (also when the session was just started, which used to lead back to the new training screen).
+- **Back and next on the end screen** (#172): arrow buttons at the bottom step through the ends of the session; a new end comes after the last one, and there Next is replaced by Confirm. An existing end has Undo, Delete and Save at the top, as icons: Undo and Save are enabled only after a change and stay on the screen, Delete asks first. Unsaved arrows are dropped only after asking.
+- **Session page while shooting**: it scrolls and shows the plots and the list of ends (tap to edit). Finish and New end are icon buttons fixed to the bottom edge; Finish asks first and stays on the session, which then shows its summary. The separate "All ends" screen and its delete button are gone; deleting a session stays in the menu.
+- **Buttons at the bottom**: "Start training" on the Training tab and the start button of a new training are fixed to the bottom edge; the error of the new training screen shows above its button.
+- **What's new**: after an update the app shows once what changed since the version seen last (all skipped versions), and under Settings, "What's new". Not on a fresh install. The texts are in `src/locales/whats-new.ts`, a release adds its entry (`specs/steering/releasing.md`).
+- **Tall faces** (#171): on a face with 3 spots on top of each other, a touch beside the face places an arrow too (the touch area was only as wide as the face).
+
 ## 0.30.0 (2026-11-23)
 
 - **Change the equipment of a finished session**: "Change equipment" in the session menu (⋮) opens bow and arrow set with Save, no reopening needed. Also for volume and technique sessions; not for a session logged for another archer.

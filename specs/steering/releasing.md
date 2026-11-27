@@ -21,8 +21,9 @@ Counting: `0.x` while things can still change, `1.0.0` when the Play Store relea
 ## Making a release
 
 1. On `develop`: all tests pass (`npm run type-check`, `npm test`, `cd server && uv run pytest`).
-2. Change the version in the three places, run `npm run types:api` (the schema carries the version), commit "Version X.Y.Z" on `develop`, push.
-3. Merge into `main` and tag:
+2. Check the "what's new" entry for this version in `src/locales/whats-new.ts` (English and German, app changes only, no server or operator notes; the version must match). The app shows it once after the update and under Settings, "What's new". A release without app changes needs no entry.
+3. Change the version in the three places, run `npm run types:api` (the schema carries the version), commit "Version X.Y.Z" on `develop`, push.
+4. Merge into `main` and tag:
 
 ```bash
 git switch main && git pull
@@ -32,7 +33,7 @@ git push origin main vX.Y.Z
 git switch develop && git merge main      # keeps develop level with the merge commit
 ```
 
-4. Build the release bundle from `main` (../../SELFHOSTING.md, "The app") and upload it to Google Play, by hand or by `release-android.yml`: pushing the tag builds the signed bundle and uploads it to the internal track and the closed test "Alpha" once you approve the run in GitHub Actions (on while the variable `PLAY_RELEASE_ENABLED` is `true`, secrets in the header of the file, #54). Then update the server: pushing the tag does it (`deploy.yml`, ../../SELFHOSTING.md, section 5), or by hand with `deploy/update.sh vX.Y.Z` on the server.
+5. Build the release bundle from `main` (../../SELFHOSTING.md, "The app") and upload it to Google Play, by hand or by `release-android.yml`: pushing the tag builds the signed bundle and uploads it to the internal track and the closed test "Alpha" once you approve the run in GitHub Actions (on while the variable `PLAY_RELEASE_ENABLED` is `true`, secrets in the header of the file, #54). Then update the server: pushing the tag does it (`deploy.yml`, ../../SELFHOSTING.md, section 5), or by hand with `deploy/update.sh vX.Y.Z` on the server.
 
 A fix to a released version that cannot wait for the work on `develop`: branch from `main` (`hotfix/…`), fix, bump PATCH, merge into `main`, tag, then merge `main` into `develop`.
 

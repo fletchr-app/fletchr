@@ -262,6 +262,9 @@ const serverName = computed(() => url.value.replace(/^https?:\/\//, ''))
           <IonLabel>{{ $t('settings.server') }}</IonLabel>
           <IonNote slot="end" class="server-note">{{ health === 'unreachable' ? `${serverName} (${$t('settings.unreachable')})` : serverName }}</IonNote>
         </IonItem>
+        <IonItem router-link="/settings/whats-new" detail lines="full">
+          <IonLabel>{{ $t('whatsNew.title') }}</IonLabel>
+        </IonItem>
         <IonItem router-link="/settings/about" detail lines="none">
           <IonLabel>{{ $t('settings.about') }}</IonLabel>
           <IonNote slot="end">{{ APP_VERSION }}</IonNote>

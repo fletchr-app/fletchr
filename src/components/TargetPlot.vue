@@ -24,6 +24,7 @@ const emit = defineEmits<{ change: [shots: LogShot[]] }>()
 
 const box = ref<HTMLElement | null>(null)
 const boxSize = useElementSize(box)
+const faceEl = ref<HTMLElement | null>(null)
 const boxWidth = computed(() => boxSize.value.width)
 // px, py: the arrow's spot, in the unzoomed face, which the view zooms around.
 const touch = ref<{ px: number; py: number } | null>(null)
@@ -55,7 +56,7 @@ const clamp = (v: number, hi: number) => Math.max(0, Math.min(v, hi))
 function onDown(e: PointerEvent) {
   if (pointerId >= 0) return
   const target = e.currentTarget as HTMLElement
-  const rect = target.getBoundingClientRect()
+  const rect = (faceEl.value ?? target).getBoundingClientRect()
   pointerId = e.pointerId
   target.setPointerCapture(e.pointerId)
   rectLeft = rect.left
@@ -117,9 +118,10 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <div ref="box" class="w-100 d-flex justify-content-center align-items-center overflow-hidden" style="flex: 1 1 0; min-height: 0">
+  <div ref="box" class="position-relative w-100 d-flex justify-content-center align-items-center overflow-hidden" style="flex: 1 1 0; min-height: 0">
     <div
       v-if="boxWidth > 0 && boxSize.height > 0"
+      ref="faceEl"
       class="position-relative"
       :style="{ width: `${width}px`, height: `${height}px`, ...(touch ? { transform: `translate(${(1 - ZOOM) * touch.px}px, ${(1 - ZOOM) * touch.py}px) scale(${ZOOM})`, transformOrigin: '0 0' } : {}) }"
     >
@@ -132,14 +134,6 @@ const preview = computed(() => {
         :markers="markers"
       />
       <div
-        class="position-absolute top-0 start-0 w-100 h-100"
-        style="touch-action: none; user-select: none; cursor: crosshair"
-        @pointerdown="onDown"
-        @pointermove="onMove"
-        @pointerup="onUp"
-        @pointercancel="onUp"
-      ></div>
-      <div
         v-if="touch"
         class="position-absolute"
         :style="{ left: `${touch.px}px`, top: `${touch.py}px`, width: `${CROSS_PX}px`, height: `${CROSS_PX}px`, transform: `translate(-50%, -50%) scale(${1 / ZOOM})`, pointerEvents: 'none' }"
@@ -151,5 +145,15 @@ const preview = computed(() => {
         </div>
       </div>
     </div>
+    <!-- Touch area is the whole box, not just the face, so a stroke can start beside a tall face (3 spots). -->
+    <div
+      v-if="boxWidth > 0 && boxSize.height > 0"
+      class="position-absolute top-0 start-0 w-100 h-100"
+      style="touch-action: none; user-select: none; cursor: crosshair"
+      @pointerdown="onDown"
+      @pointermove="onMove"
+      @pointerup="onUp"
+      @pointercancel="onUp"
+    ></div>
   </div>
 </template>

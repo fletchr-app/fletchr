@@ -2,7 +2,7 @@
 
 Status: implemented except where marked planned; see [the milestone plans](../plans/index.md)
 Date: 2026-10-23
-Updated: 2026-10-29
+Updated: 2026-11-27
 
 **Archer**
 1. Home: your own profile (see "Start page")
@@ -25,7 +25,9 @@ Updated: 2026-10-29
 
 Media page (#91): "Select" turns the grid into a selection (check marks, "Move to session", and in a session also "Remove from session"); on an archer's page the chips "All" and "Not in a session" limit the list. Session screens show a hint when the archer has photos or videos near the session's time that are in no session.
 
-Session page (`/training/:id`): one address, two views by `ended_at`. A session with ends that is being shot (`SessionLive`) is one screen that does not scroll: the plot, "New end" and "Finish". A finished one (`SessionSummary`) scrolls: figures, points per end, arrows per ring, the first half against the second, the plot with group figures, ratings and notes, and the list of ends (tap to edit). Photos and notes are icons in the app bar, the rest (change setup, session notes, all ends, reopen, delete) is in its three-dot menu (`SessionActions`). Sessions without ends (volume, technique) keep one page with the same app bar.
+Session page (`/training/:id`): one address, two views by `ended_at`. A session with ends that is being shot (`SessionLive`) is the overview between ends, not part of shooting: it scrolls and shows the header, the plots and the list of ends (tap to edit); Finish (asks first, can be reopened the same day) and New end are icon buttons fixed to the bottom edge (`SessionLiveButtons`, in the `footer` slot of `AppPage`). A finished one (`SessionSummary`) scrolls: figures, points per end, arrows per ring, the first half against the second, the plot with group figures, ratings and notes, and the list of ends (tap to edit). Photos and notes are icons in the app bar, the rest (change setup, session notes, reopen, delete) is in its three-dot menu (`SessionActions`). Sessions without ends (volume, technique) keep one page with the same app bar.
+
+End screen (`/training/:id/end`, `EndEntryView` with `EndEditor`): ends follow one another on this screen. A new end has Back and Confirm in a row at the bottom; Confirm saves it and opens the next new end with the same settings. Back and Next step through the existing ends without leaving the screen (the new end comes after the last one). Back and Next are at the bottom. An existing end has Undo, Delete (asks first) and Save at the top; Undo and Save are enabled only after a change and stay on the screen. Unsaved arrows are dropped only after asking. The back arrow in the app bar leads to the session overview; a new training opens the first end with the overview behind it.
 
 Archer page (coach): a profile. Picture as a cover (initials without one) with hand, eye and age, the name in the app bar, then the current bow and arrow set (link to the equipment page), the latest training (plus: new training, arrow: all trainings), the latest evaluation (plus: new evaluation, arrow: all), the arrows this week, month and in total (link to the statistics), the latest six photos and clips (plus: add one, which opens the media page with the choice of source; arrow: the media page) and the latest coach note (plus: new note, which opens the notes page where it is written; arrow: all notes). The app bar has a menu: open a session (archer without account), video consent (archers under 18), and for an archer without an account edit details, link to an account, rename and delete.
 

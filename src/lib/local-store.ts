@@ -20,6 +20,8 @@ export const localStore = {
     if (native) await Preferences.remove({ key });
     else globalThis.localStorage?.removeItem(key);
   },
+  keys: async (): Promise<string[]> =>
+    native ? (await Preferences.keys()).keys : Object.keys(globalThis.localStorage ?? {}),
 };
 
 // The log, the media queue and other data that grows go into one file each (Directory.Data/stores), not into Preferences:

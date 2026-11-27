@@ -119,9 +119,10 @@ function start() {
   const { bowKey, arrowSetKey } = choice.value
   const gear = archer || bowKey === null ? undefined : gearFor(equipment.value, bowKey, arrowSetKey)
   const overview = `/training/${startSession(type.value, environment.value, location.value.trim(), gear, archer, when)}`
-  void router.replace(overview)
-  // Straight to the first end, with the overview behind it.
-  if (ends) void router.push({ path: `${overview}/end`, query: { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) } })
+  // Straight to the first end, with the overview behind it. The push waits for the replace: started at once, it would
+  // cancel it, and the back button would lead to this screen instead of the overview.
+  const replaced = router.replace(overview)
+  if (ends) void replaced.then(() => router.push({ path: `${overview}/end`, query: { distance: String(metres), face: faceSlug.value, arrows: String(Math.round(Number(arrows.value))) } }))
 }
 </script>
 
@@ -151,8 +152,11 @@ function start() {
         <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       </template>
       <GearPicker v-if="!archer && !open" :equipment="equipment" :bow-key="choice.bowKey" :arrow-set-key="choice.arrowSetKey" @change="(b, a) => (picked = { bowKey: b, arrowSetKey: a })" />
-      <ErrorText :message="error" />
-      <AppButton @click="start">{{ open ? $t('newSession.openStart') : past ? $t('newSession.save') : $t('newSession.start') }}</AppButton>
     </div>
+    <!-- The error sits above the button, so it is seen without scrolling. -->
+    <template #footer>
+      <ErrorText :message="error" class="mb-2" />
+      <AppButton @click="start">{{ open ? $t('newSession.openStart') : past ? $t('newSession.save') : $t('newSession.start') }}</AppButton>
+    </template>
   </AppPage>
 </template>

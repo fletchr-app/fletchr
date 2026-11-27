@@ -42,11 +42,13 @@ const rows = computed(() =>
   <AppPage :title="$t('training.title')" :back="false">
     <div class="screen">
       <SyncBanner />
-      <AppButton router-link="/training/new">{{ $t('training.start') }}</AppButton>
       <ErrorText :message="remote.error.value" />
       <IonList v-if="rows.length > 0" inset>
         <SessionListItem v-for="row in rows" :key="row.id" :row="row" />
       </IonList>
     </div>
+    <template #footer>
+      <AppButton router-link="/training/new">{{ $t('training.start') }}</AppButton>
+    </template>
   </AppPage>
 </template>

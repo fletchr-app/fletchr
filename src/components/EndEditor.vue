@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue'
-import { backspaceOutline, trashOutline } from 'ionicons/icons'
+import { alertController, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue'
+import { arrowUndoOutline, backspaceOutline, checkmarkOutline, chevronBackOutline, chevronForwardOutline, trashOutline } from 'ionicons/icons'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -18,8 +18,9 @@ import { newId } from '@/lib/uuid'
 // One end: place the arrows on the face (or type the scores) and confirm. Distance, face and arrow
 // count come from the setup screen. Uploads as soon as it is confirmed. Fills the height its parent
 // gives it and never scrolls, so touching the face cannot move the page.
-const props = defineProps<{ session: LogSession; editing: LogEnd | null; distance: string; face: string; arrows: number }>()
-const emit = defineEmits<{ done: [] }>()
+// `prev` and `next` are the ids of the neighbouring ends in the session; the new end comes after the last one and is called 'new' (null at the ends of the list).
+const props = defineProps<{ session: LogSession; editing: LogEnd | null; distance: string; face: string; arrows: number; prev?: string | null; next?: string | null }>()
+const emit = defineEmits<{ done: []; go: [id: string]; next: [] }>()
 
 const { t } = useI18n()
 const { saveEnd, deleteEnd, equipment } = useLog()
@@ -29,6 +30,9 @@ const { formatDistance } = useUnits()
 const start = props.editing ?? { index: nextEndDefaults(props.session).index, id: newId() }
 // Arrows from another face do not carry over.
 const shots = ref<LogShot[]>(props.editing && props.editing.face === props.face ? props.editing.shots : [])
+// The arrows as last saved (as opened, for a new end none), for undo and to know whether anything changed.
+const saved = ref(JSON.stringify(shots.value))
+const changed = computed(() => JSON.stringify(shots.value) !== saved.value)
 const mode = ref<'plot' | 'pad'>('plot')
 const selectedId = ref<string | null>(null)
 const error = ref<string | null>(null)
@@ -80,12 +84,49 @@ function save() {
     arrows_per_end: props.arrows,
     shots: shots.value,
   })
-  emit('done')
+  // A saved existing end stays on the screen, so Back and Next can go on from it. A confirmed new end is followed by the next new end.
+  if (props.editing) saved.value = JSON.stringify(shots.value)
+  else emit('next')
+}
+
+// Back and next show another end of the session. Changes that are not saved are only dropped after asking.
+async function go(id: string | null | undefined) {
+  if (!id) return
+  if (!changed.value) return void emit('go', id)
+  const alert = await alertController.create({
+    header: t('end.discardHeader'),
+    message: t('end.discardMessage'),
+    buttons: [
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('end.discard'), role: 'destructive', handler: () => void emit('go', id) },
+    ],
+  })
+  await alert.present()
+}
+
+// Back to the arrows as last saved. Only for an existing end; stays on the screen.
+function undo() {
+  shots.value = JSON.parse(saved.value) as LogShot[]
+  selectedId.value = null
+  chosen.value = null
+  error.value = null
 }
 
 function deleteSelected() {
   shots.value = shots.value.filter((s) => s.id !== selectedId.value)
   selectedId.value = null
+}
+
+async function askRemove() {
+  const alert = await alertController.create({
+    header: t('end.deleteHeader'),
+    message: t('end.deleteMessage', { n: start.index + 1 }),
+    buttons: [
+      { text: t('common.cancel'), role: 'cancel' },
+      { text: t('common.delete'), role: 'destructive', handler: () => remove() },
+    ],
+  })
+  await alert.present()
 }
 
 function remove() {
@@ -96,6 +137,11 @@ function remove() {
 
 <template>
   <div class="entry">
+    <div v-if="editing" class="d-flex gap-2">
+      <AppButton secondary :disabled="!changed" class="flex-fill" :aria-label="$t('end.undo')" @click="undo"><IonIcon slot="icon-only" :icon="arrowUndoOutline" /></AppButton>
+      <AppButton secondary color="danger" class="flex-fill" :aria-label="$t('common.delete')" @click="askRemove"><IonIcon slot="icon-only" :icon="trashOutline" /></AppButton>
+      <AppButton color="success" :disabled="!changed" class="flex-fill" :aria-label="$t('end.saveEnd')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
+    </div>
     <div class="d-flex align-items-center gap-2">
       <div class="flex-grow-1 text-truncate">
         <span class="fw-semibold">{{ $t('end.number', { n: start.index + 1 }) }}</span>
@@ -168,12 +214,11 @@ function remove() {
     </div>
 
     <ErrorText :message="error" />
-    <div class="d-flex gap-2">
-      <template v-if="editing">
-        <AppButton secondary @click="emit('done')">{{ $t('common.cancel') }}</AppButton>
-        <AppButton secondary @click="remove">{{ $t('common.delete') }}</AppButton>
-      </template>
-      <AppButton @click="save">{{ editing ? $t('end.saveEnd') : $t('end.confirm') }}</AppButton>
+    <!-- On a new end, which always comes last, Next is replaced by Confirm. -->
+    <div v-if="!editing || prev || next" class="d-flex gap-2">
+      <AppButton secondary :disabled="!prev" class="flex-fill" :aria-label="$t('end.previous')" @click="go(prev)"><IonIcon slot="icon-only" :icon="chevronBackOutline" /></AppButton>
+      <AppButton v-if="editing" secondary :disabled="!next" class="flex-fill" :aria-label="$t('end.next')" @click="go(next)"><IonIcon slot="icon-only" :icon="chevronForwardOutline" /></AppButton>
+      <AppButton v-else color="success" :disabled="shots.length === 0" class="flex-fill" :aria-label="$t('end.confirm')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
     </div>
   </div>
 </template>
