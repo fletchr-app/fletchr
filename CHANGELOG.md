@@ -4,6 +4,8 @@ What changed in each release. The version number and how a release is made: `spe
 
 ## Unreleased
 
+## 0.31.0 (2026-11-27)
+
 - **Ends one after the other**: confirming a new end saves it and opens the next one on the same screen, with the same distance, face and arrows per end; the session page no longer appears in between. The back arrow leads to the session page (also when the session was just started, which used to lead back to the new training screen).
 - **Back and next on the end screen** (#172): arrow buttons at the bottom step through the ends of the session; a new end comes after the last one, and there Next is replaced by Confirm. An existing end has Undo, Delete and Save at the top, as icons: Undo and Save are enabled only after a change and stay on the screen, Delete asks first. Unsaved arrows are dropped only after asking.
 - **Session page while shooting**: it scrolls and shows the plots and the list of ends (tap to edit). Finish and New end are icon buttons fixed to the bottom edge; Finish asks first and stays on the session, which then shows its summary. The separate "All ends" screen and its delete button are gone; deleting a session stays in the menu.
