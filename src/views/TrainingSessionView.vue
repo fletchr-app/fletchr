@@ -10,6 +10,7 @@ import SessionEvent from '@/components/SessionEvent.vue'
 import SessionDetailsText from '@/components/SessionDetailsText.vue'
 import SessionActions from '@/components/SessionActions.vue'
 import SessionLive from '@/components/SessionLive.vue'
+import SessionLiveButtons from '@/components/SessionLiveButtons.vue'
 import SessionSummary from '@/components/SessionSummary.vue'
 import UnattachedHint from '@/components/UnattachedHint.vue'
 import SyncBanner from '@/components/SyncBanner.vue'
@@ -43,7 +44,6 @@ const TYPES = computed<{ value: SessionType; label: string }[]>(() =>
   (['scoring', 'competition', 'volume', 'technique'] as const).map((value) => ({ value, label: t(sessionTypeKey(value)) })),
 )
 const chosen = computed({ get: () => '' as SessionType, set: (type) => setType(sessionId, type) })
-// Only the session being shot is a screen that does not scroll; the finished one has more to show.
 const live = computed(() => !!session.value && usesEnds(session.value.type) && !session.value.ended_at)
 const totals = computed(() => (session.value ? sessionTotals(session.value) : null))
 
@@ -65,9 +65,12 @@ function finish() {
 </script>
 
 <template>
-  <AppPage :title="$t('session.title')" :fixed="live">
+  <AppPage :title="$t('session.title')">
     <template v-if="session && totals" #actions>
       <SessionActions :session="session" :media-link="mediaLink" :can-reopen="canToggle" @reopen="finishSession(session.id, false)" />
+    </template>
+    <template v-if="session && session.type && live" #footer>
+      <SessionLiveButtons :session="session" />
     </template>
     <div v-if="!session || !totals" class="screen">{{ loaded ? $t('session.notOnDevice') : $t('common.loading') }}</div>
     <!-- Opened without a type: the archer chooses it before adding results. -->

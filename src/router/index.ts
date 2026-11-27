@@ -29,7 +29,6 @@ const router = createRouter({
     { path: '/training/:id/gear', component: () => import('@/views/SessionGearView.vue'), meta: { title: 'Equipment', auth: 'in' } },
     { path: '/training/:id/setup', component: () => import('@/views/EndSetupView.vue'), meta: { title: 'End setup', auth: 'in' } },
     { path: '/training/:id/end', component: () => import('@/views/EndEntryView.vue'), meta: { title: 'Arrows', auth: 'in' } },
-    { path: '/training/:id/ends', component: () => import('@/views/SessionEndsView.vue'), meta: { title: 'Ends', auth: 'in' } },
     { path: '/profile', component: () => import('@/views/ProfileView.vue'), meta: { title: 'Profile', auth: 'account' } },
     { path: '/account', component: () => import('@/views/AccountView.vue'), meta: { title: 'Account', auth: 'account' } },
     { path: '/privacy', component: () => import('@/views/PrivacyView.vue'), meta: { title: 'Your data', auth: 'account' } },
