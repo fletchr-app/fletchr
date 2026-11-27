@@ -1003,6 +1003,11 @@ export default {
     signOutWaiting: '{n} Eintrag wurde noch nicht hochgeladen. Er bleibt auf diesem Handy und wird hochgeladen, wenn du dich wieder anmeldest. | {n} Einträge wurden noch nicht hochgeladen. Sie bleiben auf diesem Handy und werden hochgeladen, wenn du dich wieder anmeldest.',
     about: 'Über Fletchr',
   },
+  whatsNew: {
+    title: 'Neuigkeiten',
+    version: 'Version {version}',
+    ok: 'OK',
+  },
   about: {
     title: 'Über Fletchr',
     version: 'Version {version}',

@@ -4,6 +4,7 @@ import { home, listCircle, people, settings, statsChart } from 'ionicons/icons'
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import WhatsNewSheet from '@/components/WhatsNewSheet.vue'
 import { useAppLinks } from '@/composables/useAppLinks'
 import { useAuth } from '@/composables/useAuth'
 import { useDeviceCalendar } from '@/composables/useDeviceCalendar'
@@ -60,5 +61,6 @@ const showTabs = computed(() => route.meta.tab === true && (status.value === 'si
         </IonTabButton>
       </IonTabBar>
     </IonTabs>
+    <WhatsNewSheet />
   </IonApp>
 </template>

@@ -64,6 +64,7 @@ const router = createRouter({
     { path: '/reset-password', component: () => import('@/views/ResetPasswordView.vue'), meta: { title: 'Reset password', auth: 'out' } },
     { path: '/settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'Settings', auth: 'in', tab: true } },
     { path: '/settings/data', component: () => import('@/views/LocalDataView.vue'), meta: { title: 'Your data', auth: 'in' } },
+    { path: '/settings/whats-new', component: () => import('@/views/WhatsNewView.vue'), meta: { title: "What's new", auth: 'in' } },
     { path: '/settings/about', component: () => import('@/views/SettingsAboutView.vue'), meta: { title: 'About', auth: 'in' } },
     { path: '/:rest(.*)*', redirect: '/' },
   ],
