@@ -137,11 +137,10 @@ function remove() {
 
 <template>
   <div class="entry">
-    <!-- On a new end, which always comes last, Next is replaced by Confirm. -->
-    <div v-if="!editing || prev || next" class="d-flex gap-2">
-      <AppButton secondary :disabled="!prev" class="flex-fill" :aria-label="$t('end.previous')" @click="go(prev)"><IonIcon slot="icon-only" :icon="chevronBackOutline" /></AppButton>
-      <AppButton v-if="editing" secondary :disabled="!next" class="flex-fill" :aria-label="$t('end.next')" @click="go(next)"><IonIcon slot="icon-only" :icon="chevronForwardOutline" /></AppButton>
-      <AppButton v-else color="success" :disabled="shots.length === 0" class="flex-fill" :aria-label="$t('end.confirm')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
+    <div v-if="editing" class="d-flex gap-2">
+      <AppButton secondary :disabled="!changed" class="flex-fill" :aria-label="$t('end.undo')" @click="undo"><IonIcon slot="icon-only" :icon="arrowUndoOutline" /></AppButton>
+      <AppButton secondary color="danger" class="flex-fill" :aria-label="$t('common.delete')" @click="askRemove"><IonIcon slot="icon-only" :icon="trashOutline" /></AppButton>
+      <AppButton color="success" :disabled="!changed" class="flex-fill" :aria-label="$t('end.saveEnd')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
     </div>
     <div class="d-flex align-items-center gap-2">
       <div class="flex-grow-1 text-truncate">
@@ -215,10 +214,11 @@ function remove() {
     </div>
 
     <ErrorText :message="error" />
-    <div v-if="editing" class="d-flex gap-2">
-      <AppButton secondary :disabled="!changed" class="flex-fill" :aria-label="$t('end.undo')" @click="undo"><IonIcon slot="icon-only" :icon="arrowUndoOutline" /></AppButton>
-      <AppButton secondary color="danger" class="flex-fill" :aria-label="$t('common.delete')" @click="askRemove"><IonIcon slot="icon-only" :icon="trashOutline" /></AppButton>
-      <AppButton color="success" :disabled="!changed" class="flex-fill" :aria-label="$t('end.saveEnd')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
+    <!-- On a new end, which always comes last, Next is replaced by Confirm. -->
+    <div v-if="!editing || prev || next" class="d-flex gap-2">
+      <AppButton secondary :disabled="!prev" class="flex-fill" :aria-label="$t('end.previous')" @click="go(prev)"><IonIcon slot="icon-only" :icon="chevronBackOutline" /></AppButton>
+      <AppButton v-if="editing" secondary :disabled="!next" class="flex-fill" :aria-label="$t('end.next')" @click="go(next)"><IonIcon slot="icon-only" :icon="chevronForwardOutline" /></AppButton>
+      <AppButton v-else color="success" :disabled="shots.length === 0" class="flex-fill" :aria-label="$t('end.confirm')" @click="save"><IonIcon slot="icon-only" :icon="checkmarkOutline" /></AppButton>
     </div>
   </div>
 </template>

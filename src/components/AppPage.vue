@@ -26,7 +26,7 @@ withDefaults(defineProps<{ title: string; back?: boolean; backHref?: string; fix
       <slot />
     </IonContent>
     <IonFooter v-if="$slots.footer">
-      <div class="footer"><slot name="footer" /></div>
+      <div class="footer" :class="{ tab: !back }"><slot name="footer" /></div>
     </IonFooter>
   </IonPage>
 </template>
@@ -36,6 +36,10 @@ withDefaults(defineProps<{ title: string; back?: boolean; backHref?: string; fix
   max-width: 600px;
   margin: 0 auto;
   padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+}
+/* Tab screens have the tab bar below, which keeps clear of the gesture bar itself. */
+.footer.tab {
+  padding-bottom: 8px;
 }
 .mark {
   display: flex;

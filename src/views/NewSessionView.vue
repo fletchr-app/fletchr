@@ -152,8 +152,11 @@ function start() {
         <IonToggle :checked="numbering" class="ion-text-wrap" @ion-change="setNumbering($event.detail.checked)">{{ $t('newSession.numberArrows') }}</IonToggle>
       </template>
       <GearPicker v-if="!archer && !open" :equipment="equipment" :bow-key="choice.bowKey" :arrow-set-key="choice.arrowSetKey" @change="(b, a) => (picked = { bowKey: b, arrowSetKey: a })" />
-      <ErrorText :message="error" />
-      <AppButton @click="start">{{ open ? $t('newSession.openStart') : past ? $t('newSession.save') : $t('newSession.start') }}</AppButton>
     </div>
+    <!-- The error sits above the button, so it is seen without scrolling. -->
+    <template #footer>
+      <ErrorText :message="error" class="mb-2" />
+      <AppButton @click="start">{{ open ? $t('newSession.openStart') : past ? $t('newSession.save') : $t('newSession.start') }}</AppButton>
+    </template>
   </AppPage>
 </template>
